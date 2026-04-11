@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Hesabım — Autonax Premium Araç Koruma</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & ROOT ── */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --r:#B01C2E;--rd:#8A1522;
+  --ink:#0D0D0D;--ink2:#1A1A1A;--ink3:#444;--ink4:#777;--ink5:#C0C0C0;
+  --bg:#F2F2F2;--w:#fff;--bd:#E0E0E0;
+  --sidebar:240px;
+  --header-h:60px;
+}
+html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+
+/* ══════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════ */
+.header{
+  position:fixed;top:0;left:0;right:0;height:var(--header-h);z-index:300;
+  background:var(--ink);border-bottom:2.5px solid var(--r);
+  display:flex;align-items:center;padding:0 24px;gap:16px;
+}
+.header-logo{
+  font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:5px;
+  color:var(--r);line-height:1;text-decoration:none;flex-shrink:0;
+}
+.header-logo small{display:block;font-family:'Outfit',sans-serif;font-size:9px;letter-spacing:2px;color:#555;font-weight:300}
+.header-back{
+  display:flex;align-items:center;gap:6px;font-size:12px;color:#666;
+  text-decoration:none;margin-left:8px;padding:6px 10px;border-radius:6px;
+  border:1px solid #333;transition:.15s;
+}
+.header-back:hover{color:#fff;border-color:#555}
+.header-back svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.header-spacer{flex:1}
+.header-user{display:flex;align-items:center;gap:10px}
+.header-avatar{
+  width:34px;height:34px;border-radius:50%;background:var(--r);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:15px;color:#fff;letter-spacing:1px;
+  border:2px solid rgba(176,28,46,.4);flex-shrink:0;
+}
+.header-username{font-size:13px;font-weight:600;color:#fff}
+.header-usersub{font-size:11px;color:#666}
+.header-notif{
+  width:34px;height:34px;border-radius:8px;background:#1a1a1a;border:1px solid #2a2a2a;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;
+}
+.header-notif svg{width:16px;height:16px;stroke:#888;fill:none;stroke-width:1.5;stroke-linecap:round}
+.notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--r);border-radius:50%;border:1.5px solid var(--ink)}
+
+/* ══════════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════════ */
+.layout{display:flex;padding-top:var(--header-h);min-height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:var(--sidebar);flex-shrink:0;
+  background:var(--ink2);border-right:1px solid #222;
+  position:fixed;top:var(--header-h);left:0;bottom:0;
+  overflow-y:auto;z-index:200;
+  display:flex;flex-direction:column;
+}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:#333}
+.sidebar-section{padding:16px 0 8px}
+.sidebar-label{
+  font-size:10px;font-weight:700;color:#444;letter-spacing:1.5px;
+  text-transform:uppercase;padding:0 20px;margin-bottom:4px;
+}
+.sn{
+  display:flex;align-items:center;gap:10px;padding:10px 20px;
+  font-size:13px;font-weight:500;color:#888;cursor:pointer;
+  border-left:3px solid transparent;transition:.15s;text-decoration:none;
+}
+.sn:hover{color:#fff;background:rgba(255,255,255,.04)}
+.sn.on{color:#fff;background:rgba(176,28,46,.08);border-color:var(--r)}
+.sn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;flex-shrink:0}
+.sn .sn-badge{
+  margin-left:auto;background:var(--r);color:#fff;
+  font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;
+}
+.sidebar-sep{height:1px;background:#222;margin:8px 0}
+.sidebar-bottom{margin-top:auto;padding:16px}
+.sidebar-bottom-btn{
+  width:100%;padding:10px;border-radius:8px;background:#1a1a1a;
+  border:1px solid #2a2a2a;color:#888;font-size:12px;font-weight:600;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+  font-family:'Outfit',sans-serif;transition:.15s;
+}
+.sidebar-bottom-btn:hover{color:#fff;border-color:#444}
+.sidebar-bottom-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar);flex:1;padding:24px;min-width:0}
+
+/* ══════════════════════════════════════════
+   SAYFA BAŞLIĞI
+══════════════════════════════════════════ */
+.page-header{margin-bottom:24px}
+.page-eyebrow{font-size:11px;font-weight:700;color:var(--r);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;color:var(--ink)}
+.page-sub{font-size:13px;color:var(--ink4);margin-top:4px}
+
+/* ══════════════════════════════════════════
+   KARTLAR / GRID
+══════════════════════════════════════════ */
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:24px}
+.grid-12{display:grid;grid-template-columns:1fr 2fr;gap:16px;margin-bottom:24px}
+
+.kart{background:var(--w);border-radius:14px;border:1px solid var(--bd);overflow:hidden}
+.kart-head{padding:16px 18px;border-bottom:1px solid var(--bg);display:flex;align-items:center;justify-content:space-between}
+.kart-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1.5px;color:var(--ink)}
+.kart-more{font-size:11px;font-weight:700;color:var(--r);cursor:pointer;text-transform:uppercase;letter-spacing:.5px}
+.kart-body{padding:18px}
+
+/* ── STAT KARTLARI ── */
+.stat-kart{
+  background:var(--w);border-radius:14px;border:1px solid var(--bd);
+  padding:18px;display:flex;flex-direction:column;gap:4px;
+  position:relative;overflow:hidden;
+}
+.stat-kart::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--r);
+}
+.stat-kart.blue::before{background:#2563EB}
+.stat-kart.green::before{background:#16A34A}
+.stat-kart.amber::before{background:#D97706}
+.stat-icon{
+  width:36px;height:36px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;margin-bottom:8px;
+}
+.stat-icon svg{width:18px;height:18px;fill:none;stroke-width:1.5;stroke-linecap:round}
+.stat-kart .stat-icon{background:rgba(176,28,46,.08)} .stat-kart .stat-icon svg{stroke:var(--r)}
+.stat-kart.blue .stat-icon{background:rgba(37,99,235,.08)} .stat-kart.blue .stat-icon svg{stroke:#2563EB}
+.stat-kart.green .stat-icon{background:rgba(22,163,74,.08)} .stat-kart.green .stat-icon svg{stroke:#16A34A}
+.stat-kart.amber .stat-icon{background:rgba(217,119,6,.08)} .stat-kart.amber .stat-icon svg{stroke:#D97706}
+.stat-val{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--ink);line-height:1}
+.stat-label{font-size:12px;color:var(--ink4);font-weight:500}
+.stat-sub{font-size:11px;color:var(--ink5);margin-top:2px}
+
+/* ── TAB ── */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--bd);margin-bottom:20px}
+.tab{
+  padding:10px 18px;font-size:13px;font-weight:600;color:var(--ink4);
+  cursor:pointer;border-bottom:2px solid transparent;transition:.15s;white-space:nowrap;
+}
+.tab.on{color:var(--r);border-color:var(--r)}
+.tab-panel{display:none}.tab-panel.on{display:block}
+
+/* ── ARAÇ KARTI ── */
+.arac-kart{
+  background:#fff;border:1px solid var(--bd);border-radius:12px;
+  margin-bottom:12px;overflow:hidden;transition:.2s;
+}
+.arac-kart:hover{border-color:rgba(176,28,46,.3);box-shadow:0 4px 16px rgba(176,28,46,.08)}
+.arac-kart-top{
+  display:flex;align-items:center;gap:14px;padding:14px 16px;
+}
+.arac-plaka-box{
+  background:var(--bg);border:1.5px solid var(--bd);border-radius:8px;
+  padding:5px 12px;font-family:'Bebas Neue',sans-serif;
+  font-size:20px;letter-spacing:3px;color:var(--ink);flex-shrink:0;
+}
+.arac-meta{flex:1;min-width:0}
+.arac-model{font-size:14px;font-weight:700;color:var(--ink)}
+.arac-yil{font-size:12px;color:var(--ink4);margin-top:2px}
+.arac-badge{
+  font-size:10px;font-weight:700;padding:3px 9px;border-radius:8px;
+  background:rgba(22,163,74,.08);color:#16A34A;border:1px solid rgba(22,163,74,.2);
+  white-space:nowrap;flex-shrink:0;
+}
+.arac-badge.warn{background:rgba(217,119,6,.08);color:#D97706;border-color:rgba(217,119,6,.2)}
+
+/* Koruma Skoru */
+.skor-bar{padding:12px 16px 14px;border-top:1px solid var(--bg);background:linear-gradient(to right,rgba(176,28,46,.02),transparent)}
+.skor-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.skor-label{font-size:11px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.5px}
+.skor-val{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--r)}
+.skor-track{height:5px;background:var(--bg);border-radius:3px;overflow:hidden;border:1px solid var(--bd)}
+.skor-fill{height:100%;border-radius:3px;background:linear-gradient(to right,var(--r),#e85d04);transition:width .8s cubic-bezier(.4,0,.2,1)}
+
+/* Garanti Pills */
+.garanti-row{display:flex;gap:8px;padding:10px 16px 14px;flex-wrap:wrap}
+.gpill{
+  flex:1;min-width:100px;background:var(--bg);border-radius:9px;
+  padding:8px 10px;border:1px solid var(--bd);
+}
+.gpill-label{font-size:10px;color:var(--ink4);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.gpill-val{font-size:12px;font-weight:700;color:var(--ink)}
+.gpill-val.ok{color:#16A34A}
+.gpill-val.warn{color:#D97706}
+.gpill-track{height:3px;background:#e0e0e0;border-radius:2px;margin-top:5px}
+.gpill-fill{height:100%;border-radius:2px;background:linear-gradient(to right,#16A34A,#4ADE80)}
+
+/* ── HİZMET GEÇMİŞİ ── */
+.hizmet-item{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 0;border-bottom:1px solid var(--bg);
+}
+.hizmet-item:last-child{border-bottom:none;padding-bottom:0}
+.hizmet-icon{
+  width:38px;height:38px;border-radius:9px;
+  background:rgba(176,28,46,.07);border:1px solid rgba(176,28,46,.12);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.hizmet-icon svg{width:18px;height:18px;stroke:var(--r);fill:none;stroke-width:1.5;stroke-linecap:round}
+.hizmet-body{flex:1;min-width:0}
+.hizmet-name{font-size:13px;font-weight:600;color:var(--ink)}
+.hizmet-date{font-size:11px;color:var(--ink4);margin-top:2px}
+.hizmet-fiyat{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--ink);letter-spacing:.5px;flex-shrink:0}
+.hizmet-tag{
+  font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;flex-shrink:0;
+}
+.hizmet-tag.aktif{background:#E8F5E9;color:#16A34A;border:1px solid #A5D6A7}
+.hizmet-tag.bekl{background:#FFF8E1;color:#D97706;border:1px solid #FFD54F}
+.hizmet-tag.tamam{background:var(--bg);color:var(--ink4);border:1px solid var(--bd)}
+
+/* ── RANDEVU KARTI ── */
+.rdv-kart{
+  background:var(--bg);border-radius:12px;border:1px solid var(--bd);
+  padding:14px 16px;margin-bottom:10px;
+  display:flex;align-items:center;gap:14px;
+}
+.rdv-tarih{
+  text-align:center;background:var(--r);color:#fff;border-radius:8px;
+  padding:8px 12px;flex-shrink:0;
+}
+.rdv-gun{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px;line-height:1}
+.rdv-ay{font-size:10px;font-weight:700;letter-spacing:1px;opacity:.85}
+.rdv-body{flex:1;min-width:0}
+.rdv-isim{font-size:13px;font-weight:700;color:var(--ink)}
+.rdv-plaka{font-size:11px;color:var(--ink4);margin-top:2px}
+.rdv-saat{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--ink3);letter-spacing:.5px;flex-shrink:0}
+.rdv-status{
+  font-size:10px;font-weight:700;padding:3px 9px;border-radius:8px;flex-shrink:0;
+}
+.rdv-status.onay{background:rgba(22,163,74,.08);color:#16A34A;border:1px solid rgba(22,163,74,.2)}
+.rdv-status.bekl{background:rgba(217,119,6,.08);color:#D97706;border:1px solid rgba(217,119,6,.2)}
+.rdv-status.tamam{background:var(--bg);color:var(--ink4);border:1px solid var(--bd)}
+
+/* ── GARANTİ BELGELERİ ── */
+.belge-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 0;border-bottom:1px solid var(--bg);
+}
+.belge-item:last-child{border-bottom:none;padding-bottom:0}
+.belge-icon{
+  width:40px;height:48px;background:var(--bg);border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--bd);flex-shrink:0;
+}
+.belge-icon svg{width:20px;height:20px;stroke:var(--r);fill:none;stroke-width:1.5;stroke-linecap:round}
+.belge-body{flex:1;min-width:0}
+.belge-name{font-size:13px;font-weight:600;color:var(--ink)}
+.belge-meta{font-size:11px;color:var(--ink4);margin-top:2px}
+.belge-dl{
+  padding:6px 12px;border:1.5px solid var(--bd);border-radius:7px;
+  background:#fff;font-size:11px;font-weight:700;color:var(--ink3);
+  cursor:pointer;display:flex;align-items:center;gap:5px;transition:.15s;flex-shrink:0;
+}
+.belge-dl:hover{border-color:var(--r);color:var(--r)}
+.belge-dl svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+
+/* ── PROFİL FORMU ── */
+.profil-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-field{display:flex;flex-direction:column;gap:5px}
+.form-field label{font-size:11px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.5px}
+.form-field input,.form-field select{
+  border:1.5px solid var(--bd);border-radius:9px;padding:10px 12px;
+  font-size:13px;font-family:'Outfit',sans-serif;color:var(--ink);
+  background:#fff;outline:none;transition:border-color .15s,box-shadow .15s;
+}
+.form-field input:focus,.form-field select:focus{border-color:var(--r);box-shadow:0 0 0 3px rgba(176,28,46,.08)}
+.form-field.full{grid-column:1/-1}
+.form-actions{display:flex;gap:10px;margin-top:6px;grid-column:1/-1}
+.btn-primary{
+  padding:11px 22px;background:var(--r);color:#fff;border:none;
+  border-radius:9px;font-family:'Bebas Neue',sans-serif;font-size:14px;
+  letter-spacing:1.5px;cursor:pointer;transition:.15s;
+  box-shadow:0 4px 12px rgba(176,28,46,.25);
+}
+.btn-primary:hover{background:var(--rd)}
+.btn-secondary{
+  padding:11px 22px;background:#fff;color:var(--ink3);border:1.5px solid var(--bd);
+  border-radius:9px;font-family:'Bebas Neue',sans-serif;font-size:14px;
+  letter-spacing:1.5px;cursor:pointer;transition:.15s;
+}
+.btn-secondary:hover{border-color:var(--ink3);color:var(--ink)}
+
+/* ── BOŞ STATE ── */
+.empty-state{
+  text-align:center;padding:40px 20px;
+}
+.empty-icon{
+  width:60px;height:60px;background:var(--bg);border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 14px;border:1px solid var(--bd);
+}
+.empty-icon svg{width:28px;height:28px;stroke:var(--ink5);fill:none;stroke-width:1;stroke-linecap:round}
+.empty-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--ink3);margin-bottom:6px}
+.empty-sub{font-size:13px;color:var(--ink4);line-height:1.6;margin-bottom:18px}
+
+/* ── PUAN / SADAKAT ── */
+.puan-box{
+  background:linear-gradient(135deg,var(--ink),#1a0508);
+  border-radius:12px;padding:20px;color:#fff;
+  display:flex;align-items:center;gap:16px;margin-bottom:16px;
+  border:1px solid rgba(176,28,46,.3);
+}
+.puan-icon{font-size:36px}
+.puan-body{flex:1}
+.puan-val{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:2px;color:var(--r);line-height:1}
+.puan-label{font-size:12px;color:#888;margin-top:2px}
+.puan-next{font-size:11px;color:#666;margin-top:8px}
+.puan-track{height:4px;background:rgba(255,255,255,.1);border-radius:2px;margin-top:6px}
+.puan-fill{height:100%;border-radius:2px;background:var(--r);width:35%}
+
+/* ── ARAÇ EKLE FORM ── */
+.arac-ekle-form{
+  background:var(--bg);border-radius:12px;padding:16px;
+  border:1px solid var(--bd);margin-bottom:16px;
+}
+.arac-ekle-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.arac-ekle-grid .form-field input,
+.arac-ekle-grid .form-field select{padding:9px 11px;font-size:13px}
+
+/* ── SAYFA YÜKLENİYOR ANİMASYONU ── */
+@keyframes fadeInUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.main > *{animation:fadeInUp .3s ease both}
+.main > *:nth-child(1){animation-delay:.05s}
+.main > *:nth-child(2){animation-delay:.1s}
+.main > *:nth-child(3){animation-delay:.15s}
+
+/* ══════════════════════════════════════════
+   MOBİL BOTTOM NAV
+══════════════════════════════════════════ */
+.mbnav{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:500;
+  background:rgba(255,255,255,.97);border-top:1px solid var(--bd);
+  backdrop-filter:blur(20px);
+}
+.mbnav-in{
+  display:flex;align-items:center;justify-content:space-around;
+  height:56px;padding:0 4px;
+}
+.mbi{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;cursor:pointer;padding:6px 0;
+  color:var(--ink5);transition:.15s;
+}
+.mbi.on{color:var(--r)}
+.mbi svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round}
+.mbi span{font-size:9px;font-weight:600;letter-spacing:.3px}
+
+/* ══════════════════════════════════════════
+   RESPONSİVE
+══════════════════════════════════════════ */
+@media(max-width:1100px){
+  :root{--sidebar:200px}
+  .grid-3{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:767px){
+  :root{--sidebar:0px}
+  .sidebar{transform:translateX(-100%);transition:transform .3s;width:240px}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0;padding:16px 14px 80px}
+  .grid-3,.grid-2,.grid-12{grid-template-columns:1fr}
+  .profil-grid{grid-template-columns:1fr}
+  .arac-ekle-grid{grid-template-columns:1fr}
+  .mbnav{display:block}
+  .header{padding:0 14px}
+  .header-username,.header-usersub{display:none}
+  .stat-val{font-size:24px}
+}
+@media(max-width:420px){
+  .main{padding:12px 12px 76px}
+  .garanti-row{flex-wrap:wrap}
+  .gpill{min-width:calc(50% - 4px)}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<div class="header">
+  <div class="hbg-mob" style="display:none" onclick="sidebarToggle()">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </div>
+  <a class="header-logo" href="#" onclick="event.preventDefault();geriDon()">AUTONAX<small>Premium Araç Koruma</small></a>
+  <a class="header-back" href="#" onclick="event.preventDefault();geriDon()" id="alisverise-devam">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    Ana Site
+  </a>
+  <div class="header-spacer"></div>
+  <div class="header-notif">
+    <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    <div class="notif-dot"></div>
+  </div>
+  <div class="header-user" id="header-user">
+    <div>
+      <div class="header-username" id="hdr-name">Misafir</div>
+      <div class="header-usersub" id="hdr-email">Giriş yapılmadı</div>
+    </div>
+    <div class="header-avatar" id="hdr-avatar">?</div>
+  </div>
+</div>
+
+<!-- ══ LAYOUT ══ -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Genel</div>
+      <div class="sn on" onclick="goster('dashboard')">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </div>
+      <div class="sn" onclick="goster('garajim')">
+        <svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+        Garajım
+        <span class="sn-badge" id="garaj-badge">0</span>
+      </div>
+      <div class="sn" onclick="goster('randevular')">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Randevularım
+        <span class="sn-badge">1</span>
+      </div>
+      <div class="sn" onclick="goster('hizmetler')">
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Hizmet Geçmişi
+      </div>
+      <div class="sn" onclick="goster('belgeler')">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Garanti Belgeleri
+      </div>
+    </div>
+    <div class="sidebar-sep"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Hesap</div>
+      <div class="sn" onclick="goster('sadakat')">
+        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Sadakat Puanı
+      </div>
+      <div class="sn" onclick="goster('profil')">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Profilim
+      </div>
+      <div class="sn" onclick="goster('ayarlar')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Ayarlar
+      </div>
+    </div>
+    <div class="sidebar-bottom">
+      <button class="sidebar-bottom-btn" onclick="cikisYap()">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Çıkış Yap
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main" id="main-content">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div id="pg-dashboard">
+      <div class="page-header">
+        <div class="page-eyebrow">Müşteri Paneli</div>
+        <div class="page-title" id="pg-title">Hoşgeldiniz 👋</div>
+        <div class="page-sub">Araçlarınızın koruma durumunu ve hizmet geçmişinizi buradan takip edin.</div>
+      </div>
+
+      <div class="grid-3">
+        <div class="stat-kart">
+          <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/></svg></div>
+          <div class="stat-val" id="stat-arac">0</div>
+          <div class="stat-label">Kayıtlı Araç</div>
+          <div class="stat-sub">Garajınızdaki araç sayısı</div>
+        </div>
+        <div class="stat-kart green">
+          <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
+          <div class="stat-val">2</div>
+          <div class="stat-label">Aktif Garanti</div>
+          <div class="stat-sub">Geçerli PPF garantisi</div>
+        </div>
+        <div class="stat-kart blue">
+          <div class="stat-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <div class="stat-val">1</div>
+          <div class="stat-label">Yaklaşan Randevu</div>
+          <div class="stat-sub">15 Nisan 2026 · 10:00</div>
+        </div>
+      </div>
+
+      <!-- Son randevu + Hızlı erişim -->
+      <div class="grid-12">
+        <div class="kart">
+          <div class="kart-head">
+            <div class="kart-title">Yaklaşan Randevu</div>
+          </div>
+          <div class="kart-body">
+            <div class="rdv-kart">
+              <div class="rdv-tarih">
+                <div class="rdv-gun">15</div>
+                <div class="rdv-ay">NİSAN</div>
+              </div>
+              <div class="rdv-body">
+                <div class="rdv-isim">NiDOJP N8 220 Mikron PPF</div>
+                <div class="rdv-plaka">34 ABC 123 — BMW 5 Serisi</div>
+              </div>
+              <div>
+                <div class="rdv-saat">10:00</div>
+                <div class="rdv-status onay" style="margin-top:4px">Onaylı</div>
+              </div>
+            </div>
+            <button class="btn-secondary" style="width:100%;margin-top:8px;font-size:12px;padding:9px" onclick="goster('randevular')">Tüm Randevular →</button>
+          </div>
+        </div>
+
+        <div class="kart">
+          <div class="kart-head">
+            <div class="kart-title">Son Hizmetler</div>
+            <span class="kart-more" onclick="goster('hizmetler')">Tümü →</span>
+          </div>
+          <div class="kart-body">
+            <div class="hizmet-item">
+              <div class="hizmet-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
+              <div class="hizmet-body">
+                <div class="hizmet-name">NiDOJP N8 220 Mikron PPF — Full Araç</div>
+                <div class="hizmet-date">15 Mart 2025 · 34 ABC 123 · 10 Yıl Garanti</div>
+              </div>
+              <div class="hizmet-fiyat">₺70.000</div>
+              <div class="hizmet-tag aktif">Aktif</div>
+            </div>
+            <div class="hizmet-item">
+              <div class="hizmet-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10"/></svg></div>
+              <div class="hizmet-body">
+                <div class="hizmet-name">Nano Seramik Kaplama</div>
+                <div class="hizmet-date">15 Mart 2025 · 34 ABC 123</div>
+              </div>
+              <div class="hizmet-fiyat">₺12.000</div>
+              <div class="hizmet-tag tamam">Tamamlandı</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ GARAJIM ══ -->
+    <div id="pg-garajim" style="display:none">
+      <div class="page-header">
+        <div class="page-eyebrow">Garajım</div>
+        <div class="page-title">Araçlarım</div>
+        <div class="page-sub">Kayıtlı araçlarınızı yönetin, koruma skorunu ve garanti durumunu takip edin.</div>
+      </div>
+
+      <!-- Araç Ekle -->
+      <div class="arac-ekle-form">
+        <div style="font-size:12px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">+ Yeni Araç Ekle</div>
+        <div class="arac-ekle-grid">
+          <div class="form-field">
+            <label>Plaka *</label>
+            <input id="yeni-plaka" type="text" placeholder="34 ABC 123" maxlength="10" oninput="this.value=this.value.toUpperCase()">
+          </div>
+          <div class="form-field">
+            <label>Model Yılı</label>
+            <input id="yeni-yil" type="number" placeholder="2022" min="1990" max="2026">
+          </div>
+          <div class="form-field">
+            <label>Marka</label>
+            <select id="yeni-marka">
+              <option value="">Seçin...</option>
+              <option>BMW</option><option>Mercedes</option><option>Audi</option>
+              <option>Volkswagen</option><option>Toyota</option><option>Honda</option>
+              <option>Ford</option><option>Hyundai</option><option>Kia</option>
+              <option>Porsche</option><option>Tesla</option><option>Volvo</option>
+              <option>Renault</option><option>Fiat</option><option>Diğer</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Model</label>
+            <input id="yeni-model" type="text" placeholder="320i, Clio, Corolla...">
+          </div>
+        </div>
+        <button class="btn-primary" style="font-size:13px;padding:10px 20px;margin-top:4px" onclick="aracEkle()">Garaja Ekle</button>
+      </div>
+
+      <div id="arac-listesi">
+        <!-- JS ile dolar -->
+        <div class="empty-state">
+          <div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect x="9" y="11" width="14" height="10" rx="2"/></svg></div>
+          <div class="empty-title">Garajınız Boş</div>
+          <div class="empty-sub">Plaka ekleyerek araçlarınızı takip edin,<br>garanti durumunuzu görün.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ RANDEVULAR ══ -->
+    <div id="pg-randevular" style="display:none">
+      <div class="page-header">
+        <div class="page-eyebrow">Randevularım</div>
+        <div class="page-title">Randevular</div>
+        <div class="page-sub">Geçmiş ve yaklaşan randevularınız.</div>
+      </div>
+      <div class="kart">
+        <div class="kart-head">
+          <div class="kart-title">Yaklaşan</div>
+        </div>
+        <div class="kart-body">
+          <div class="rdv-kart">
+            <div class="rdv-tarih"><div class="rdv-gun">15</div><div class="rdv-ay">NİSAN</div></div>
+            <div class="rdv-body">
+              <div class="rdv-isim">NiDOJP N8 220 Mikron PPF — Full Araç</div>
+              <div class="rdv-plaka">34 ABC 123 — BMW 5 Serisi</div>
+            </div>
+            <div><div class="rdv-saat">10:00</div><div class="rdv-status onay" style="margin-top:4px">Onaylı</div></div>
+          </div>
+          <button class="btn-secondary" style="font-size:11px;padding:8px 16px;margin-top:4px">Randevuyu İptal Et</button>
+        </div>
+      </div>
+      <div class="kart" style="margin-top:16px">
+        <div class="kart-head"><div class="kart-title">Geçmiş Randevular</div></div>
+        <div class="kart-body">
+          <div class="rdv-kart" style="opacity:.6">
+            <div class="rdv-tarih" style="background:#888"><div class="rdv-gun">15</div><div class="rdv-ay">MART</div></div>
+            <div class="rdv-body">
+              <div class="rdv-isim">N8 PPF + Nano Seramik Kombo</div>
+              <div class="rdv-plaka">34 ABC 123 — BMW 5 Serisi</div>
+            </div>
+            <div><div class="rdv-saat">08:00</div><div class="rdv-status tamam" style="margin-top:4px">Tamamlandı</div></div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:16px;text-align:center">
+        <a href="#" onclick="event.preventDefault();geriDon()" class="btn-primary" style="display:inline-block;text-decoration:none">+ Yeni Randevu Al</a>
+      </div>
+    </div>
+
+    <!-- ══ HİZMET GEÇMİŞİ ══ -->
+    <div id="pg-hizmetler" style="display:none">
+      <div class="page-header">
+        <div class="page-eyebrow">Hizmet Geçmişi</div>
+        <div class="page-title">Tüm Hizmetler</div>
+        <div class="page-sub">Yaptırdığınız tüm kaplama ve bakım hizmetleri.</div>
+      </div>
+      <div class="kart">
+        <div class="kart-head">
+          <div class="kart-title">2025</div>
+          <span style="font-size:12px;color:var(--ink4);font-weight:600">Toplam ₺82.000</span>
+        </div>
+        <div class="kart-body">
+          <div class="hizmet-item">
+            <div class="hizmet-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
+            <div class="hizmet-body">
+              <div class="hizmet-name">NiDOJP N8 220 Mikron PPF — Full Araç</div>
+              <div class="hizmet-date">15 Mart 2025 · 34 ABC 123 · 10 Yıl Garanti · Technisyen: Ahmet U.</div>
+            </div>
+            <div class="hizmet-fiyat">₺70.000</div>
+            <div class="hizmet-tag aktif">Aktif</div>
+          </div>
+          <div class="hizmet-item">
+            <div class="hizmet-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10"/></svg></div>
+            <div class="hizmet-body">
+              <div class="hizmet-name">Nano Seramik Kaplama — Full Araç</div>
+              <div class="hizmet-date">15 Mart 2025 · 34 ABC 123 · 3 Yıl Garanti</div>
+            </div>
+            <div class="hizmet-fiyat">₺12.000</div>
+            <div class="hizmet-tag tamam">Tamamlandı</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ GARANTİ BELGELERİ ══ -->
+    <div id="pg-belgeler" style="display:none">
+      <div class="page-header">
+        <div class="page-eyebrow">Garanti Belgeleri</div>
+        <div class="page-title">Belgelerim</div>
+        <div class="page-sub">Dijital garanti belgelerinizi indirin veya görüntüleyin.</div>
+      </div>
+      <div class="kart">
+        <div class="kart-head"><div class="kart-title">Aktif Garantiler</div></div>
+        <div class="kart-body">
+          <div class="belge-item">
+            <div class="belge-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 12l2 2 4-4"/></svg></div>
+            <div class="belge-body">
+              <div class="belge-name">NiDOJP N8 220 Mikron PPF — 10 Yıl Garanti</div>
+              <div class="belge-meta">34 ABC 123 · Düzenleme: 15.03.2025 · Bitiş: 15.03.2035</div>
+            </div>
+            <button class="belge-dl"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF</button>
+          </div>
+          <div class="belge-item">
+            <div class="belge-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="12" cy="14" r="3"/></svg></div>
+            <div class="belge-body">
+              <div class="belge-name">Nano Seramik Kaplama — 3 Yıl Garanti</div>
+              <div class="belge-meta">34 ABC 123 · Düzenleme: 15.03.2025 · Bitiş: 15.03.2028</div>
+            </div>
+            <button class="belge-dl"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SADAKAT PUANI ══ -->
+    <div id="pg-sadakat" style="display:none">
+      <div class="page-header">
+        <div class="page-eyebrow">Sadakat Programı</div>
+        <div class="page-title">Puanlarım</div>
+        <div class="page-sub">Autonax Sadakat programında kazandığınız puanlar ve ayrıcalıklar.</div>
+      </div>
+      <div class="puan-box">
+        <div class="puan-icon">⭐</div>
+        <div class="puan-body">
+          <div class="puan-val">820</div>
+          <div class="puan-label">Toplam Sadakat Puanı</div>
+          <div class="puan-next">Altın üye olmak için 180 puan daha kazanın</div>
+          <div class="puan-track"><div class="puan-fill" style="width:82%"></div></div>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="stat-kart green">
+          <div class="stat-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <div class="stat-val">820</div>
+          <div class="stat-label">Toplam Puan</div>
+        </div>
+        <div class="stat-kart amber">
+          <div class="stat-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+          <div class="stat-val">Gümüş</div>
+          <div class="stat-label">Üyelik Seviyesi</div>
+        </div>
+        <div class="stat-kart blue">
+          <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+          <div class="stat-val">%5</div>
+          <div class="stat-label">Sonraki Hizmet İndirimi</div>
+        </div>
+      </div>
+      <div class="kart">
+        <div class="kart-head"><div class="kart-title">Puan Geçmişi</div></div>
+        <div class="kart-body">
+          <div class="hizmet-item">
+            <div class="hizmet-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <div class="hizmet-body"><div class="hizmet-name">N8 PPF Kaplama</div><div class="hizmet-date">15 Mart 2025</div></div>
+            <div style="color:#16A34A;font-family:'Bebas Neue',sans-serif;font-size:16px">+700</div>
+          </div>
+          <div class="hizmet-item">
+            <div class="hizmet-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg></div>
+            <div class="hizmet-body"><div class="hizmet-name">Nano Seramik Kaplama</div><div class="hizmet-date">15 Mart 2025</div></div>
+            <div style="color:#16A34A;font-family:'Bebas Neue',sans-serif;font-size:16px">+120</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PROFİL ══ -->
+    <div id="pg-profil" style="display:none">
+      <div class="page-header">
+        <div class="page-eyebrow">Hesabım</div>
+        <div class="page-title">Profilim</div>
+        <div class="page-sub">Kişisel bilgilerinizi güncelleyin.</div>
+      </div>
+      <div class="kart">
+        <div class="kart-head"><div class="kart-title">Kişisel Bilgiler</div></div>
+        <div class="kart-body">
+          <div class="profil-grid">
+            <div class="form-field"><label>Ad</label><input type="text" id="p-ad" placeholder="Adınız"></div>
+            <div class="form-field"><label>Soyad</label><input type="text" id="p-soyad" placeholder="Soyadınız"></div>
+            <div class="form-field"><label>E-posta</label><input type="email" id="p-email" placeholder="ornek@mail.com"></div>
+            <div class="form-field"><label>Telefon</label><input type="tel" id="p-tel" placeholder="05XX XXX XX XX"></div>
+            <div class="form-field"><label>Şehir</label>
+              <select id="p-sehir">
+                <option>Samsun</option><option>İstanbul</option><option>Ankara</option><option>İzmir</option>
+              </select>
+            </div>
+            <div class="form-field"><label>Doğum Tarihi</label><input type="date" id="p-dogum"></div>
+            <div class="form-actions">
+              <button class="btn-primary" onclick="profilKaydet()">Değişiklikleri Kaydet</button>
+              <button class="btn-secondary">İptal</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="kart" style="margin-top:16px">
+        <div class="kart-head"><div class="kart-title">Şifre Değiştir</div></div>
+        <div class="kart-body">
+          <div class="profil-grid">
+            <div class="form-field"><label>Mevcut Şifre</label><input type="password" placeholder="••••••••"></div>
+            <div class="form-field"><label>Yeni Şifre</label><input type="password" placeholder="••••••••"></div>
+            <div class="form-field full"><label>Şifre Tekrar</label><input type="password" placeholder="••••••••"></div>
+            <div class="form-actions">
+              <button class="btn-primary">Şifreyi Güncelle</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ AYARLAR ══ -->
+    <div id="pg-ayarlar" style="display:none">
+      <div class="page-header">
+        <div class="page-eyebrow">Ayarlar</div>
+        <div class="page-title">Tercihler</div>
+        <div class="page-sub">Bildirim ve gizlilik ayarlarınızı yönetin.</div>
+      </div>
+      <div class="kart">
+        <div class="kart-head"><div class="kart-title">Bildirimler</div></div>
+        <div class="kart-body">
+          ${['Randevu hatırlatıcıları','Garanti bitiş uyarıları','Kampanya ve indirimler','SMS bildirimleri','E-posta bülteni'].map(l=>`
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--bg)">
+            <span style="font-size:13px;color:var(--ink3);font-weight:500">${l}</span>
+            <button class="toggle-btn" onclick="this.classList.toggle('on')" style="width:42px;height:24px;background:var(--r);border-radius:12px;cursor:pointer;position:relative;border:none;transition:.2s">
+              <span style="position:absolute;top:3px;left:21px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></span>
+            </button>
+          </div>`).join('')}
+        </div>
+      </div>
+      <div class="kart" style="margin-top:16px">
+        <div class="kart-head"><div class="kart-title">Hesap İşlemleri</div></div>
+        <div class="kart-body" style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn-secondary" style="font-size:12px">Hesabı Dondur</button>
+          <button class="btn-secondary" style="font-size:12px;color:var(--r);border-color:rgba(176,28,46,.3)">Hesabı Sil</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- MOBİL BOTTOM NAV -->
+<div class="mbnav">
+  <div class="mbnav-in">
+    <div class="mbi on" onclick="goster('dashboard')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Panel</span></div>
+    <div class="mbi" onclick="goster('garajim')"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/></svg><span>Garajım</span></div>
+    <div class="mbi" onclick="goster('randevular')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Randevu</span></div>
+    <div class="mbi" onclick="goster('belgeler')"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>Belgeler</span></div>
+    <div class="mbi" onclick="goster('profil')"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profil</span></div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════
+   AUTONAX AUTH SİSTEMİ — Hesabım Panel
+════════════════════════════════════════════════════ */
+const SESSION_KEY = 'autonax_session';
+const CART_KEY    = 'autonax_cart';
+
+const DEMO_USERS = {
+  'demo@autonax.com':{sifre:'demo123',ad:'Ahmet',soyad:'Yılmaz',tel:'0532 123 45 67',sehir:'Samsun',avatar:'AY',puan:820,seviye:'Gümüş',uye_tarih:'01.01.2024',araclar:[{plaka:'34ABC123',marka:'BMW',model:'5 Serisi',yil:'2022',tarih:'15.03.2024',puan:5,hizmetler:[{isim:'NiDOJP N8 220 Mikron PPF',tur:'ppf',tarih:'15.03.2025',garantiYil:10,fiyat:70000},{isim:'Nano Seramik Kaplama',tur:'seramik',tarih:'15.03.2025',garantiYil:3,fiyat:12000}]},{plaka:'06YZ789',marka:'Mercedes',model:'E 200',yil:'2021',tarih:'10.06.2024',puan:4,hizmetler:[{isim:'NiDOJP S75 200 Mikron PPF',tur:'ppf',tarih:'10.06.2024',garantiYil:6,fiyat:55000}]}]},
+  'test@autonax.com':{sifre:'test123',ad:'Zeynep',soyad:'Kaya',tel:'0544 987 65 43',sehir:'İstanbul',avatar:'ZK',puan:350,seviye:'Bronz',uye_tarih:'15.06.2024',araclar:[{plaka:'34KY001',marka:'Toyota',model:'Corolla',yil:'2023',tarih:'01.09.2024',puan:0,hizmetler:[{isim:'NiDOJP CS190 200 Mikron PPF',tur:'ppf',tarih:'01.09.2024',garantiYil:4,fiyat:45000}]}]}
+};
+
+const AuthManager = {
+  getUser(){
+    try{
+      const s=localStorage.getItem(SESSION_KEY);
+      if(!s) return null;
+      const sess=JSON.parse(s);
+      if(Date.now()-sess.time>7*24*60*60*1000){this.logout();return null;}
+      return sess.user;
+    }catch(e){return null;}
+  },
+  login(email,sifre){
+    email=(email||'').toLowerCase().trim();
+    const u=DEMO_USERS[email];
+    if(!u||u.sifre!==sifre) return {ok:false,hata:'E-posta veya şifre hatalı.'};
+    const user={email,ad:u.ad,soyad:u.soyad,tel:u.tel,sehir:u.sehir,avatar:u.avatar,puan:u.puan,seviye:u.seviye,uye_tarih:u.uye_tarih};
+    localStorage.setItem(SESSION_KEY,JSON.stringify({user,time:Date.now()}));
+    localStorage.setItem('garaj_araclar',JSON.stringify(u.araclar));
+    return {ok:true,user};
+  },
+  logout(){
+    localStorage.removeItem(SESSION_KEY);
+    geriDon();
+  },
+  getCart(){try{return JSON.parse(localStorage.getItem(CART_KEY)||'[]');}catch(e){return[];}}
+};
+
+/* ══ VERİ ══ */
+
+
+let kullanici = AuthManager.getUser();
+let araclar   = JSON.parse(localStorage.getItem('garaj_araclar')||'[]');
+
+/* ══ BAŞLANGIÇ ══ */
+window.addEventListener('DOMContentLoaded', ()=>{
+  // Oturum kontrolü
+  kullanici = AuthManager.getUser();
+  araclar = JSON.parse(localStorage.getItem('garaj_araclar')||'[]');
+  if(!kullanici){
+    // Giriş yapılmamış — login overlay göster
+    _loginOverlayGoster();
+    return;
+  }
+  kullaniciGoster();
+  aracListesiGoster();
+  document.querySelector('.hbg-mob').style.display = window.innerWidth <= 767 ? 'block' : 'none';
+  window.addEventListener('resize', ()=>{
+    document.querySelector('.hbg-mob').style.display = window.innerWidth <= 767 ? 'block' : 'none';
+  });
+  sepetBadgeGoster();
+});
+
+function kullaniciGoster(){
+  const ad = kullanici?.ad || 'Misafir';
+  const email = kullanici?.email || 'Giriş yapılmadı';
+  document.getElementById('hdr-name').textContent = ad;
+  document.getElementById('hdr-email').textContent = email;
+  document.getElementById('hdr-avatar').textContent = ad[0]?.toUpperCase()||'?';
+  document.getElementById('pg-title').textContent = 'Hoşgeldiniz, '+ad+' 👋';
+  // Profil alanları
+  if(kullanici){
+    const [fn='',ln=''] = (kullanici.ad||'').split(' ');
+    document.getElementById('p-ad').value = fn;
+    document.getElementById('p-soyad').value = ln;
+    document.getElementById('p-email').value = kullanici.email||'';
+    document.getElementById('p-tel').value = kullanici.tel||'';
+  }
+}
+
+/* ══ SAYFA GEÇİŞİ ══ */
+function goster(id){
+  document.querySelectorAll('[id^="pg-"]').forEach(el=>el.style.display='none');
+  document.getElementById('pg-'+id).style.display='block';
+  document.querySelectorAll('.sn').forEach(el=>el.classList.remove('on'));
+  document.querySelectorAll('.mbi').forEach(el=>el.classList.remove('on'));
+  const sn = [...document.querySelectorAll('.sn')].find(el=>el.getAttribute('onclick')?.includes("'"+id+"'"));
+  if(sn) sn.classList.add('on');
+  const mbi = [...document.querySelectorAll('.mbi')].find(el=>el.getAttribute('onclick')?.includes("'"+id+"'"));
+  if(mbi) mbi.classList.add('on');
+  if(window.innerWidth<=767) document.getElementById('sidebar').classList.remove('open');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ══ GARAJ ══ */
+function aracEkle(){
+  const plaka = document.getElementById('yeni-plaka').value.toUpperCase().replace(/\s/g,'');
+  const marka = document.getElementById('yeni-marka').value;
+  const model = document.getElementById('yeni-model').value;
+  const yil   = document.getElementById('yeni-yil').value;
+  if(!plaka){ alert('Plaka zorunlu!'); return; }
+  if(araclar.find(a=>a.plaka===plaka)){ alert('Bu plaka zaten kayıtlı!'); return; }
+  araclar.push({
+    plaka, marka, model, yil,
+    tarih: new Date().toLocaleDateString('tr-TR'),
+    puan: 0,
+    hizmetler:[
+      {isim:'NiDOJP N8 220 Mikron PPF',tur:'ppf',tarih:'15.03.2025',garantiYil:10,fiyat:70000},
+      {isim:'Nano Seramik Kaplama',tur:'seramik',tarih:'15.03.2025',garantiYil:3,fiyat:12000},
+    ]
+  });
+  localStorage.setItem(GARAJ_KEY, JSON.stringify(araclar));
+  ['yeni-plaka','yeni-model','yeni-yil'].forEach(id=>{ document.getElementById(id).value=''; });
+  document.getElementById('yeni-marka').value='';
+  aracListesiGoster();
+}
+
+function aracSil(plaka){
+  if(!confirm(plaka+' plakalı aracı garajdan kaldırmak istiyor musunuz?')) return;
+  araclar = araclar.filter(a=>a.plaka!==plaka);
+  localStorage.setItem(GARAJ_KEY, JSON.stringify(araclar));
+  aracListesiGoster();
+}
+
+function aracListesiGoster(){
+  document.getElementById('stat-arac').textContent = araclar.length;
+  document.getElementById('garaj-badge').textContent = araclar.length;
+  const el = document.getElementById('arac-listesi');
+  if(!araclar.length){
+    el.innerHTML = `<div class="empty-state">
+      <div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect x="9" y="11" width="14" height="10" rx="2"/></svg></div>
+      <div class="empty-title">Garajınız Boş</div>
+      <div class="empty-sub">Yukarıdaki formu kullanarak araç ekleyin.</div>
+    </div>`;
+    return;
+  }
+  el.innerHTML = araclar.map(a=>{
+    const ppf = a.hizmetler?.find(h=>h.tur==='ppf');
+    const skor = (a.hizmetler||[]).reduce((s,h)=>s+(h.tur==='ppf'?55:h.tur==='seramik'?30:15),0);
+    const kalanYil = ppf ? Math.max(0,((new Date(ppf.tarih.split('.').reverse().join('-')+'').getTime()+(ppf.garantiYil*365*24*3600*1000)-Date.now())/(365*24*3600*1000)).toFixed(1)) : 0;
+    const garPct = ppf ? Math.round((kalanYil/ppf.garantiYil)*100) : 0;
+    return `<div class="arac-kart">
+      <div class="arac-kart-top">
+        <div class="arac-plaka-box">${a.plaka}</div>
+        <div class="arac-meta">
+          <div class="arac-model">${a.marka||''} ${a.model||'Araç'} ${a.yil?'· '+a.yil:''}</div>
+          <div class="arac-yil">Eklendi: ${a.tarih}</div>
+        </div>
+        <div class="arac-badge ${kalanYil<2&&kalanYil>0?'warn':''}">
+          ${kalanYil>0?'🛡️ Korumalı':'⚠️ Dikkat'}
+        </div>
+        <button onclick="aracSil('${a.plaka}')" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--ink5);transition:.15s" onmouseover="this.style.color='var(--r)'" onmouseout="this.style.color='var(--ink5)'">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        </button>
+      </div>
+      <div class="skor-bar">
+        <div class="skor-row">
+          <span class="skor-label">🛡️ Koruma Skoru</span>
+          <span class="skor-val">${Math.min(100,skor)}%</span>
+        </div>
+        <div class="skor-track"><div class="skor-fill" style="width:${Math.min(100,skor)}%"></div></div>
+      </div>
+      <div class="garanti-row">
+        <div class="gpill">
+          <div class="gpill-label">PPF Garanti</div>
+          <div class="gpill-val ${kalanYil>2?'ok':'warn'}">${kalanYil} yıl kaldı</div>
+          <div class="gpill-track"><div class="gpill-fill" style="width:${garPct}%"></div></div>
+        </div>
+        <div class="gpill">
+          <div class="gpill-label">Son Hizmet</div>
+          <div class="gpill-val">${ppf?.tarih||'—'}</div>
+        </div>
+        <div class="gpill">
+          <div class="gpill-label">Hizmet Sayısı</div>
+          <div class="gpill-val">${(a.hizmetler||[]).length} işlem</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ══ PROFİL ══ */
+function profilKaydet(){
+  if(!kullanici) kullanici={};
+  kullanici.ad  = (document.getElementById('p-ad').value+' '+document.getElementById('p-soyad').value).trim();
+  kullanici.email = document.getElementById('p-email').value;
+  kullanici.tel = document.getElementById('p-tel').value;
+  const sess=JSON.parse(localStorage.getItem(SESSION_KEY)||'{}');
+    if(sess.user){sess.user={...sess.user,...kullanici};localStorage.setItem(SESSION_KEY,JSON.stringify(sess));}
+  kullaniciGoster();
+  alert('Profil güncellendi!');
+}
+
+/* ══ SİDEBAR MOBİL ══ */
+function sidebarToggle(){
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+/* ══ ÇIKIŞ ══ */
+function cikisYap(){
+  if(confirm('Çıkış yapmak istediğinize emin misiniz?')){
+    localStorage.removeItem(AUTH_KEY);
+    geriDon();
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   PANELde GİRİŞ OVERLAY
+════════════════════════════════════════════════════ */
+function _loginOverlayGoster(){
+  const ovl = document.createElement('div');
+  ovl.id = 'login-ovl';
+  ovl.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#0a0a0a;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ovl.innerHTML = `
+    <div style="width:100%;max-width:400px;background:rgba(255,255,255,.06);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:32px;box-shadow:0 32px 80px rgba(0,0,0,.6);">
+      <div style="text-align:center;margin-bottom:24px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:6px;color:#B01C2E;margin-bottom:4px">AUTONAX</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.3);letter-spacing:2px">MÜŞTERİ PANELİ</div>
+      </div>
+      <div id="login-err" style="display:none;background:rgba(176,28,46,.15);border:1px solid rgba(176,28,46,.4);border-radius:8px;padding:8px 12px;font-size:12px;color:#ff6b6b;margin-bottom:16px;text-align:center;"></div>
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">E-posta</div>
+        <input id="lov-email" type="email" placeholder="demo@autonax.com" autocomplete="email"
+          style="width:100%;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 14px;font-size:14px;font-family:'Outfit',sans-serif;color:#fff;outline:none;box-sizing:border-box;"
+          onfocus="this.style.borderColor='#B01C2E'" onblur="this.style.borderColor='rgba(255,255,255,.1)'"
+          onkeydown="if(event.key==='Enter')_panelLogin()">
+      </div>
+      <div style="margin-bottom:20px">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Şifre</div>
+        <input id="lov-sifre" type="password" placeholder="••••••••" autocomplete="current-password"
+          style="width:100%;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 14px;font-size:14px;font-family:'Outfit',sans-serif;color:#fff;outline:none;box-sizing:border-box;"
+          onfocus="this.style.borderColor='#B01C2E'" onblur="this.style.borderColor='rgba(255,255,255,.1)'"
+          onkeydown="if(event.key==='Enter')_panelLogin()">
+      </div>
+      <button onclick="_panelLogin()"
+        style="width:100%;background:#B01C2E;color:#fff;border:none;border-radius:10px;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;box-shadow:0 4px 20px rgba(176,28,46,.4);transition:.15s"
+        onmouseover="this.style.background='#8A1522'" onmouseout="this.style.background='#B01C2E'">
+        Giriş Yap
+      </button>
+      <div style="margin-top:16px;padding:12px;background:rgba(255,255,255,.04);border-radius:8px;border:1px solid rgba(255,255,255,.07);font-size:11px;color:rgba(255,255,255,.3);text-align:center;line-height:1.8">
+        🔑 Demo hesabı:<br>
+        <b style="color:rgba(255,255,255,.5)">demo@autonax.com</b> / <b style="color:rgba(255,255,255,.5)">demo123</b><br>
+        <b style="color:rgba(255,255,255,.5)">test@autonax.com</b> / <b style="color:rgba(255,255,255,.5)">test123</b>
+      </div>
+      <div style="text-align:center;margin-top:14px">
+        <a href="#" onclick="event.preventDefault();geriDon()" style="font-size:12px;color:rgba(176,28,46,.7);text-decoration:none;font-weight:600">← Ana Siteye Dön</a>
+      </div>
+    </div>`;
+  document.body.appendChild(ovl);
+
+  // Animasyonlu arka plan
+  const bg = document.createElement('div');
+  bg.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden';
+  bg.innerHTML = `
+    <div style="position:absolute;width:500px;height:500px;background:radial-gradient(circle,rgba(176,28,46,.2),transparent 70%);top:-100px;left:-100px;animation:glw 6s ease-in-out infinite alternate"></div>
+    <div style="position:absolute;width:400px;height:400px;background:radial-gradient(circle,rgba(176,28,46,.1),transparent 70%);bottom:-80px;right:-80px;animation:glw 6s ease-in-out infinite alternate-reverse"></div>
+    <style>@keyframes glw{0%{transform:scale(1)}100%{transform:scale(1.3)}}</style>`;
+  ovl.insertBefore(bg, ovl.firstChild);
+}
+
+function _panelLogin(){
+  const email = document.getElementById('lov-email')?.value||'';
+  const sifre = document.getElementById('lov-sifre')?.value||'';
+  const r = AuthManager.login(email, sifre);
+  if(!r.ok){
+    const err = document.getElementById('login-err');
+    if(err){err.textContent=r.hata;err.style.display='block';setTimeout(()=>err.style.display='none',3000);}
+    return;
+  }
+  // Başarılı giriş — overlay kaldır, paneli başlat
+  const ovl = document.getElementById('login-ovl');
+  if(ovl) ovl.style.opacity='0';
+  setTimeout(()=>{
+    if(ovl) ovl.remove();
+    kullanici = AuthManager.getUser();
+    araclar   = JSON.parse(localStorage.getItem('garaj_araclar')||'[]');
+    kullaniciGoster();
+    aracListesiGoster();
+    document.querySelector('.hbg-mob').style.display = window.innerWidth<=767?'block':'none';
+  }, 300);
+}
+
+
+/* Sepet var mı kontrol et — alışverişe devam et butonu */
+function sepetBadgeGoster(){
+  const cart = AuthManager.getCart();
+  const btn = document.getElementById('alisverise-devam');
+  if(cart.length > 0 && btn){
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg> Alışverişe Devam Et <span style="background:var(--r);color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;font-family:\'Bebas Neue\',sans-serif;letter-spacing:.5px">'+cart.length+'</span>';
+    btn.style.borderColor = 'rgba(176,28,46,.4)';
+    btn.style.color = '#B01C2E';
+  }
+}
+
+
+function geriDon(){
+  // Referrer varsa oraya dön
+  if(document.referrer && document.referrer.indexOf('hesabim') === -1){
+    window.location.href = document.referrer;
+  } else if(window.history.length > 1){
+    // history.back() yerine — file:// protokolünde sorun çıkarıyor
+    // Aynı klasördeki ana dosyaya git
+    var base = window.location.href.split('/');
+    base.pop(); // hesabim.html'i kaldır
+    window.location.href = base.join('/') + '/autonax_desktop.html';
+  } else {
+    window.location.href = 'autonax_desktop.html';
+  }
+}
+
+</script>
+</body>
+</html>

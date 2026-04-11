@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" fill="none">
+  <rect width="320" height="180" rx="12" fill="#1A1A1A"/>
+  <path d="M160 60 L200 90 L160 120 L120 90 Z" fill="#B01C2E" opacity="0.4"/>
+  <circle cx="160" cy="90" r="25" stroke="#B01C2E" stroke-width="2" opacity="0.6" fill="none"/>
+  <text x="160" y="150" font-family="Arial Black" font-size="14" fill="white" text-anchor="middle" letter-spacing="4" opacity="0.4">PPF</text>
+</svg>
