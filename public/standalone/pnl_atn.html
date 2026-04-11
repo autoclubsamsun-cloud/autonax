@@ -499,7 +499,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 <body>
 
 <!-- ══ GİRİŞ OVERLAY ══ -->
-<div id="login-ovl" style="display:none">
+<div id="login-ovl" style="display:flex;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:20px;background:#0a0a0a">
   <div class="login-bg-glow"></div>
   <div class="login-bg-glow2"></div>
   <div class="login-card">
@@ -524,7 +524,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 </div>
 
 <!-- ══ HEADER ══ -->
-<div class="header" id="main-header">
+<div class="header" id="main-header" style="display:none">
   <button class="hd-menu-btn" onclick="sidebarToggle()" aria-label="Menü">
         <span></span><span></span><span></span>
       </button>
@@ -547,7 +547,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 </div>
 
 <!-- ══ LAYOUT ══ -->
-<div class="layout" id="main-layout">
+<div class="layout" id="main-layout" style="display:none">
 
   <!-- SIDEBAR -->
   <div class="sidebar" id="sidebar">
