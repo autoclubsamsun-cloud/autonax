@@ -1189,6 +1189,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
         <button class="siteayar-tab" data-stab="medya">🗂️ Medya</button>
         <button class="siteayar-tab" data-stab="odeme">💳 Ödeme</button>
         <button class="siteayar-tab" data-stab="fatura">🧾 Fatura</button>
+        <button class="siteayar-tab" data-stab="import">📥 Veri Aktar</button>
       </div>
 
       <!-- Admin Sekmesi (varsayılan) -->
@@ -1244,6 +1245,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
       <div id="stab-medya" style="display:none"></div>
       <div id="stab-odeme" style="display:none"></div>
       <div id="stab-fatura" style="display:none"></div>
+      <div id="stab-import" style="display:none"></div>
     </div>
 
 <script data-cfasync="false">
@@ -5356,7 +5358,7 @@ function siteAyarlarSayfasiYukle(){
     if(!btn._saL){
       btn._saL=true;
       btn.addEventListener('click',function(){
-        _saAktifTab=btn.getAttribute('data-tab');
+        _saAktifTab=btn.getAttribute('data-stab')||btn.getAttribute('data-tab');
         tabs.forEach(function(b){b.className='siteayar-tab';});
         btn.className='siteayar-tab siteayar-tab-ak';
         saSekmeRender(_saAktifTab);
@@ -5364,21 +5366,412 @@ function siteAyarlarSayfasiYukle(){
     }
   });
 }
-
 function saSekmeRender(tab){
+  // stab-import için özel işlem
+  var importEl=document.getElementById('stab-import');
+  if(importEl){
+    if(tab==='import'){
+      importEl.style.display='';
+      importEl.innerHTML=saImportHTML();
+      setTimeout(saImportListenerBagla,50);
+      ['admin','genel','gorsel','banner','kampanya','anasayfa','seo','sosyal','medya','odeme','fatura'].forEach(function(t){
+        var e=document.getElementById('stab-'+t);if(e)e.style.display='none';
+      });
+      return;
+    } else {
+      importEl.style.display='none';
+    }
+  }
   var el=document.getElementById('siteayar-ic');
-  if(!el) return;
-  if(tab==='genel') el.innerHTML=saGenelHTML();
-  else if(tab==='gorsel') el.innerHTML=saGorselHTML();
-  else if(tab==='banner') el.innerHTML=saBannerHTML();
-  else if(tab==='kampanya') el.innerHTML=saKampanyaHTML();
-  else if(tab==='anasayfa') el.innerHTML=saAnaSayfaHTML();
-  else if(tab==='seo') el.innerHTML=saSeoHTML();
-  else if(tab==='sosyal') el.innerHTML=saSosyalHTML();
-  else if(tab==='medya') el.innerHTML=saMedyaHTML();
-  else if(tab==='odeme'){el.innerHTML=saOdemeHTML();setTimeout(saOdemeListenerBagla,50);return;}
-  // Listener bağla
-  setTimeout(function(){saListenerBagla(tab);},50);
+  if(el){
+    if(tab==='genel') el.innerHTML=saGenelHTML();
+    else if(tab==='gorsel') el.innerHTML=saGorselHTML();
+    else if(tab==='banner') el.innerHTML=saBannerHTML();
+    else if(tab==='kampanya') el.innerHTML=saKampanyaHTML();
+    else if(tab==='anasayfa') el.innerHTML=saAnaSayfaHTML();
+    else if(tab==='seo') el.innerHTML=saSeoHTML();
+    else if(tab==='sosyal') el.innerHTML=saSosyalHTML();
+    else if(tab==='medya') el.innerHTML=saMedyaHTML();
+    else if(tab==='odeme'){el.innerHTML=saOdemeHTML();setTimeout(saOdemeListenerBagla,50);return;}
+    setTimeout(function(){saListenerBagla(tab);},50);
+    return;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   VERİ AKTAR (CSV IMPORT) SİSTEMİ
+═══════════════════════════════════════════════ */
+function saImportHTML(){
+  return '<div>'
+    /* ── RANDEVU IMPORT ── */
+    +'<div class="k" style="margin-bottom:14px">'
+      +'<div class="kh"><div class="kt">📅 Randevu / Sipariş İçe Aktar</div></div>'
+      +'<div class="kb">'
+        +'<div style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:14px;font-size:12px;color:var(--ink3);line-height:1.8">'
+          +'<b>CSV formatı (autonax.com sipariş formatı):</b><br>'
+          +'<code style="font-size:11px;background:#fff;padding:4px 8px;border-radius:6px;border:1px solid var(--bd);display:block;margin-top:6px;overflow-x:auto;white-space:nowrap">'
+            +'Sipariş No,Sipariş Sayısı,Durum,Sepet,İndirim,Toplam,Kalan,Ürünler,Randevu Tarihi,Randevu Saati,Müşteri,Telefon,Plaka'
+          +'</code>'
+          +'<div style="margin-top:8px;font-size:11px;color:var(--ink4)">'
+            +'<b>Durum:</b> Onaylı / Bekliyor / İptal &nbsp;|&nbsp; Sütun adları büyük/küçük harf duyarsız'
+          +'</div>'
+        +'</div>'
+        +'<label id="rdv-import-label" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:30px;border:2px dashed var(--bd);border-radius:12px;cursor:pointer;background:var(--bg);transition:.2s;text-align:center" onmouseover="this.style.borderColor=\'var(--r)\'" onmouseout="this.style.borderColor=\'var(--bd)\'">'
+          +'<div style="font-size:36px">📂</div>'
+          +'<div style="font-size:14px;font-weight:700;color:var(--ink)">CSV dosyasını seçin veya sürükleyin</div>'
+          +'<div style="font-size:11px;color:var(--ink4)">Randevular, siparişler, geçmiş ödemeler</div>'
+          +'<input type="file" id="rdv-csv-input" accept=".csv,.txt" style="display:none" onchange="csvRdvOku(this)">'
+        +'</label>'
+        +'<div id="rdv-import-onizleme" style="margin-top:12px;display:none">'
+          +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+            +'<div style="font-size:12px;font-weight:700" id="rdv-import-baslik"></div>'
+            +'<div style="display:flex;gap:6px">'
+              +'<button onclick="csvRdvIptal()" class="btn-s" style="padding:6px 12px;font-size:11px">İptal</button>'
+              +'<button onclick="csvRdvYukle()" class="btn-p" style="padding:6px 12px;font-size:11px">✅ İçe Aktar</button>'
+            +'</div>'
+          +'</div>'
+          +'<div class="tbl-wrap" style="max-height:260px;overflow-y:auto">'
+            +'<table class="tbl"><thead><tr><th>Sipariş No</th><th>Müşteri</th><th>Telefon</th><th>Plaka</th><th>Ürünler</th><th>Toplam</th><th>Kalan</th><th>Tarih</th><th>Durum</th></tr></thead>'
+            +'<tbody id="rdv-import-tbody"></tbody></table>'
+          +'</div>'
+        +'</div>'
+      +'</div>'
+    +'</div>'
+    /* ── ÖDEME IMPORT ── */
+    +'<div class="k" style="margin-bottom:14px">'
+      +'<div class="kh"><div class="kt">💳 Ödeme Geçmişi İçe Aktar</div></div>'
+      +'<div class="kb">'
+        +'<div style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:14px;font-size:12px;color:var(--ink3);line-height:1.8">'
+          +'<b>CSV formatı (autonax.com formatı destekleniyor):</b><br>'
+          +'<code style="font-size:11px;background:#fff;padding:4px 8px;border-radius:6px;border:1px solid var(--bd);display:block;margin-top:6px;overflow-x:auto;white-space:nowrap">'
+            +'No,DURUM,TARİH / SAAT,BANKA,YETKİLİ FİRMA,KART SAHİBİ,KART NO,TAKSİT,ÖDENEN TUTAR,NOT,KOMİSYON'
+          +'</code>'
+          +'<div style="margin-top:8px;font-size:11px;color:var(--ink4)">'
+            +'<b>DURUM:</b> Onaylı / Bekliyor / İptal &nbsp;|&nbsp; <b>TAKSİT:</b> Tek Çekim / 3 / 6 / 12'
+          +'</div>'
+        +'</div>'
+        +'<label style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:30px;border:2px dashed var(--bd);border-radius:12px;cursor:pointer;background:var(--bg);transition:.2s;text-align:center" onmouseover="this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.borderColor=\'var(--bd)\'">'
+          +'<div style="font-size:36px">💰</div>'
+          +'<div style="font-size:14px;font-weight:700;color:var(--ink)">Ödeme CSV dosyasını seçin</div>'
+          +'<div style="font-size:11px;color:var(--ink4)">autonax.com/odemeler — direkt export edilmiş CSV</div>'
+          +'<input type="file" id="odeme-csv-input" accept=".csv,.txt" style="display:none" onchange="csvOdemeOku(this)">'
+        +'</label>'
+        +'<div id="odeme-import-onizleme" style="margin-top:12px;display:none">'
+          +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+            +'<div style="font-size:12px;font-weight:700" id="odeme-import-baslik"></div>'
+            +'<div style="display:flex;gap:6px">'
+              +'<button onclick="csvOdemeIptal()" class="btn-s" style="padding:6px 12px;font-size:11px">İptal</button>'
+              +'<button onclick="csvOdemeYukle()" class="btn-p" style="padding:6px 12px;font-size:11px">✅ İçe Aktar</button>'
+            +'</div>'
+          +'</div>'
+          +'<div class="tbl-wrap" style="max-height:200px;overflow-y:auto">'
+            +'<table class="tbl"><thead><tr><th>No</th><th>Durum</th><th>Tarih/Saat</th><th>Banka</th><th>Kart Sahibi</th><th>Taksit</th><th>Ödenen Tutar</th><th>Komisyon</th></tr></thead>'
+            +'<tbody id="odeme-import-tbody"></tbody></table>'
+          +'</div>'
+        +'</div>'
+      +'</div>'
+    +'</div>'
+    /* ── EXPORT ── */
+    +'<div class="k">'
+      +'<div class="kh"><div class="kt">📤 Veri Dışa Aktar</div></div>'
+      +'<div class="kb">'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+          +'<button onclick="csvRdvExport()" style="padding:16px;border:1.5px solid var(--bd);border-radius:10px;background:#fff;cursor:pointer;text-align:center">'
+            +'<div style="font-size:28px;margin-bottom:6px">📅</div>'
+            +'<div style="font-size:13px;font-weight:700">Randevuları İndir</div>'
+            +'<div style="font-size:11px;color:var(--ink4);margin-top:2px">Tüm randevular CSV</div>'
+          +'</button>'
+          +'<button onclick="csvOdemeExport()" style="padding:16px;border:1.5px solid var(--bd);border-radius:10px;background:#fff;cursor:pointer;text-align:center">'
+            +'<div style="font-size:28px;margin-bottom:6px">💳</div>'
+            +'<div style="font-size:13px;font-weight:700">Ödemeleri İndir</div>'
+            +'<div style="font-size:11px;color:var(--ink4);margin-top:2px">Tüm ödeme geçmişi CSV</div>'
+          +'</button>'
+        +'</div>'
+        +'<div style="margin-top:10px;padding:10px 14px;background:rgba(37,99,235,.05);border-radius:8px;border:1px solid rgba(37,99,235,.15);font-size:11px;color:var(--blue)">'
+          +'💡 İpucu: Önce dışa aktarın, düzenleyin, tekrar içe aktarın. autonax.com verilerini buraya aktarmak için aynı CSV formatını kullanın.'
+        +'</div>'
+      +'</div>'
+    +'</div>'
+  +'</div>';
+}
+
+function saImportListenerBagla(){
+  /* drag-drop destek */
+  var lbl=document.getElementById('rdv-import-label');
+  if(lbl){
+    lbl.addEventListener('dragover',function(e){e.preventDefault();lbl.style.borderColor='var(--r)';lbl.style.background='rgba(176,28,46,.03)';});
+    lbl.addEventListener('dragleave',function(){lbl.style.borderColor='var(--bd)';lbl.style.background='var(--bg)';});
+    lbl.addEventListener('drop',function(e){
+      e.preventDefault();lbl.style.borderColor='var(--bd)';lbl.style.background='var(--bg)';
+      var f=e.dataTransfer.files[0];if(f)csvRdvOku({files:[f]});
+    });
+  }
+}
+
+var _csvRdvData=[];
+var _csvOdemeData=[];
+
+function csvParse(text){
+  var lines=text.split(/\r?\n/).filter(function(l){return l.trim();});
+  if(lines.length<2)return[];
+  var headers=lines[0].split(',').map(function(h){return h.trim().replace(/^"|"$/g,'');});
+  return lines.slice(1).map(function(line){
+    var vals=line.split(',').map(function(v){return v.trim().replace(/^"|"$/g,'');});
+    var obj={};
+    headers.forEach(function(h,i){obj[h]=vals[i]||'';});
+    return obj;
+  });
+}
+
+function csvRdvOku(inp){
+  var file=inp.files?inp.files[0]:inp;
+  if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var rows=csvParse(e.target.result);
+    if(!rows.length){toast('CSV boş veya hatalı!','red');return;}
+    _csvRdvData=rows;
+    var tbody=document.getElementById('rdv-import-tbody');
+    var baslik=document.getElementById('rdv-import-baslik');
+    var onizleme=document.getElementById('rdv-import-onizleme');
+    if(baslik)baslik.textContent=rows.length+' kayıt bulundu — Önizleme:';
+    if(tbody){
+      tbody.innerHTML=rows.slice(0,20).map(function(r){
+        // autonax.com formatı: Sipariş No, Sipariş Sayısı, Durum, Sepet, İndirim, Toplam, Kalan, Ürünler, Randevu Tarihi, Randevu Saati, Müşteri, Telefon, Plaka
+        var no      = r['Sipariş No']||r['SIPARIS_NO']||r['no']||'-';
+        var musteri = r['Müşteri']||r['MUSTERI']||r['musteri']||'-';
+        var tel     = r['Telefon']||r['TELEFON']||r['tel']||'-';
+        var plaka   = r['Plaka']||r['PLAKA']||r['plaka']||'-';
+        var urunler = r['Ürünler']||r['URUNLER']||r['hizmet']||'-';
+        var toplam  = parseInt((r['Toplam']||r['TOPLAM']||r['tutar']||'0').toString().replace(/[^\d]/g,''))||0;
+        var kalan   = parseInt((r['Kalan']||r['KALAN']||'0').toString().replace(/[^\d]/g,''))||0;
+        var tarih   = r['Randevu Tarihi']||r['RANDEVU_TARIHI']||r['tarih']||'-';
+        var durum   = r['Durum']||r['DURUM']||r['durum']||'-';
+        var dCls    = durum.toLowerCase().includes('onay')||durum.toLowerCase().includes('tamam')?'onay':durum.toLowerCase().includes('iptal')?'iptal':'bekl';
+        return '<tr>'
+          +'<td style="font-size:11px;color:var(--ink4)">'+no+'</td>'
+          +'<td><b>'+musteri+'</b><br><small style="color:var(--ink4)">'+tel+'</small></td>'
+          +'<td>'+tel+'</td>'
+          +'<td><span class="tbl-plaka">'+plaka+'</span></td>'
+          +'<td style="font-size:11px">'+(urunler+'').slice(0,30)+'</td>'
+          +'<td style="font-family:\'Bebas Neue\',sans-serif;font-size:14px;color:var(--r)">₺'+toplam.toLocaleString('tr-TR')+'</td>'
+          +'<td style="font-family:\'Bebas Neue\',sans-serif;font-size:13px;color:var(--amber)">₺'+kalan.toLocaleString('tr-TR')+'</td>'
+          +'<td>'+tarih+'</td>'
+          +'<td><span class="tag '+dCls+'">'+durum+'</span></td>'
+        +'</tr>';
+      }).join('')+(rows.length>20?'<tr><td colspan="9" style="text-align:center;color:var(--ink4);font-size:11px">...ve '+(rows.length-20)+' kayıt daha</td></tr>':'');
+    }
+    if(onizleme)onizleme.style.display='block';
+  };
+  reader.readAsText(file,'UTF-8');
+}
+
+function csvRdvIptal(){
+  _csvRdvData=[];
+  var o=document.getElementById('rdv-import-onizleme');
+  if(o)o.style.display='none';
+  var inp=document.getElementById('rdv-csv-input');
+  if(inp)inp.value='';
+}
+
+function csvRdvYukle(){
+  if(!_csvRdvData.length){toast('Önce CSV seçin!','red');return;}
+  var eklenen=0,atlanan=0;
+  _csvRdvData.forEach(function(r){
+    // autonax.com sütunlarını oku
+    var musteri = r['Müşteri']||r['MUSTERI']||r['musteri']||'';
+    var tel     = r['Telefon']||r['TELEFON']||r['tel']||'';
+    var plaka   = (r['Plaka']||r['PLAKA']||r['plaka']||'').toUpperCase();
+    var urunler = r['Ürünler']||r['URUNLER']||r['hizmet']||'';
+    var tarih   = r['Randevu Tarihi']||r['RANDEVU_TARIHI']||r['tarih']||'';
+    var saat    = r['Randevu Saati']||r['RANDEVU_SAATI']||r['saat']||'09:00';
+    var toplam  = parseInt((r['Toplam']||r['TOPLAM']||r['tutar']||'0').toString().replace(/[^\d]/g,''))||0;
+    var kalan   = parseInt((r['Kalan']||r['KALAN']||'0').toString().replace(/[^\d]/g,''))||0;
+    var sepet   = parseInt((r['Sepet']||r['SEPET']||'0').toString().replace(/[^\d]/g,''))||toplam;
+    var indirim = parseInt((r['İndirim']||r['Indirim']||'0').toString().replace(/[^\d]/g,''))||0;
+    var durumRaw= r['Durum']||r['DURUM']||r['durum']||'';
+    var no      = r['Sipariş No']||r['no']||'';
+
+    if(!musteri&&!plaka){atlanan++;return;}
+
+    // Durum çevir
+    var durum='bekl';
+    if(durumRaw.toLowerCase().includes('onay')||durumRaw.toLowerCase().includes('tamam')||durumRaw.toLowerCase().includes('tamamland')) durum='onay';
+    else if(durumRaw.toLowerCase().includes('iptal')) durum='iptal';
+
+    // Ödenen hesapla
+    var odenen = toplam - kalan;
+    var odendi = kalan === 0 && toplam > 0;
+
+    var yeni={
+      id:'rdv-'+no.replace(/[^a-z0-9]/gi,'').slice(-6)+'-'+Math.random().toString(36).slice(2,5),
+      tarih:tarih,
+      saat:saat.slice(0,5),
+      musteri:musteri,
+      tel:tel,
+      plaka:plaka,
+      arac:'',
+      hizmet:urunler,
+      tutar:toplam,
+      odenenToplam:odened,
+      durum:durum,
+      odendi:odendi,
+      islem:durum==='onay',
+      onlineOdeme:false,
+      odemeGecmisi:odened>0?[{tarih:tarih,yontem:'Geçmiş',miktar:odened,not:'Eski sistemden aktarıldı'}]:[]
+    };
+    RANDEVULAR.push(yeni);
+    eklenen++;
+  });
+  storageKaydet();
+  csvRdvIptal();
+  toast('✅ '+eklenen+' randevu eklendi'+(atlanan?' ('+atlanan+' atlandı)':''),'green');
+  setTimeout(function(){doPg('randevular');},500);
+}
+
+function csvOdemeOku(inp){
+  var file=inp.files?inp.files[0]:inp;
+  if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var rows=csvParse(e.target.result);
+    if(!rows.length){toast('CSV boş veya hatalı!','red');return;}
+    _csvOdemeData=rows;
+    var tbody=document.getElementById('odeme-import-tbody');
+    var baslik=document.getElementById('odeme-import-baslik');
+    var onizleme=document.getElementById('odeme-import-onizleme');
+    if(baslik)baslik.textContent=rows.length+' ödeme kaydı bulundu:';
+    if(tbody){
+      tbody.innerHTML=rows.slice(0,15).map(function(r){
+        // autonax.com formatı: No, DURUM, TARİH / SAAT, BANKA, YETKİLİ FİRMA, KART SAHİBİ, KART NO, TAKSİT, ÖDENEN TUTAR, NOT, KOMİSYON
+        var no     = r['No']||r['no']||'-';
+        var durum  = r['DURUM']||r['durum']||'-';
+        var tarih  = r['TARİH / SAAT']||r['TARIH / SAAT']||r['tarih']||'-';
+        var banka  = r['BANKA']||r['banka']||'-';
+        var sahip  = r['KART SAHİBİ']||r['KART SAHIBI']||r['kart_sahibi']||'-';
+        var taksit = r['TAKSİT']||r['TAKSIT']||r['taksit']||'-';
+        var tutar  = parseInt((r['ÖDENEN TUTAR']||r['ODENEN TUTAR']||r['tutar']||r['miktar']||'0').toString().replace(/[^\d]/g,''))||0;
+        var kom    = r['KOMİSYON']||r['KOMISYON']||r['komisyon']||'0';
+        return '<tr>'
+          +'<td style="font-size:10px;color:var(--ink4)">'+no+'</td>'
+          +'<td><span class="tag '+(durum.toLowerCase().includes('onay')?'onay':'bekl')+'">'+durum+'</span></td>'
+          +'<td>'+tarih+'</td>'
+          +'<td style="font-size:11px">'+banka+'</td>'
+          +'<td style="font-size:11px">'+sahip+'</td>'
+          +'<td style="font-size:11px">'+taksit+'</td>'
+          +'<td style="font-family:\'Bebas Neue\',sans-serif;font-size:14px;color:var(--green)">₺'+tutar.toLocaleString('tr-TR')+'</td>'
+          +'<td style="font-size:11px;color:var(--ink4)">'+kom+'</td>'
+        +'</tr>';
+      }).join('');
+    }
+    if(onizleme)onizleme.style.display='block';
+  };
+  reader.readAsText(file,'UTF-8');
+}
+
+function csvOdemeIptal(){
+  _csvOdemeData=[];
+  var o=document.getElementById('odeme-import-onizleme');
+  if(o)o.style.display='none';
+  var inp=document.getElementById('odeme-csv-input');
+  if(inp)inp.value='';
+}
+
+function csvOdemeYukle(){
+  if(!_csvOdemeData.length){toast('Önce CSV seçin!','red');return;}
+  var eklenen=0;
+  _csvOdemeData.forEach(function(r){
+    // autonax.com sütunlarını oku
+    var tarih  = r['TARİH / SAAT']||r['TARIH / SAAT']||r['tarih']||'';
+    var banka  = r['BANKA']||r['banka']||'';
+    var sahip  = r['KART SAHİBİ']||r['KART SAHIBI']||r['kart_sahibi']||'';
+    var kartNo = r['KART NO']||r['KART_NO']||'';
+    var taksit = r['TAKSİT']||r['TAKSIT']||r['taksit']||'Tek Çekim';
+    var tutar  = parseInt((r['ÖDENEN TUTAR']||r['ODENEN TUTAR']||r['tutar']||r['miktar']||'0').toString().replace(/[^\d]/g,''))||0;
+    var not_   = r['NOT']||r['not']||'';
+    var kom    = r['KOMİSYON']||r['KOMISYON']||'';
+    var durum  = r['DURUM']||r['durum']||'';
+
+    if(!tutar){return;}
+
+    // Yöntem belirle
+    var yontem = 'Kredi Kart';
+    if(banka.toLowerCase().includes('nakit')) yontem='Nakit';
+    else if(banka.toLowerCase().includes('havale')||banka.toLowerCase().includes('eft')) yontem='Havale';
+    else if(taksit&&taksit!=='Tek Çekim'&&taksit!=='1') yontem='Taksit';
+
+    // Not birleştir
+    var notBirlesik = [
+      banka?'Banka: '+banka:'',
+      kartNo?'Kart: ****'+kartNo.slice(-4):'',
+      sahip?'Sahip: '+sahip:'',
+      taksit&&taksit!=='Tek Çekim'?'Taksit: '+taksit:'',
+      kom?'Komisyon: '+kom:'',
+      not_
+    ].filter(Boolean).join(' | ');
+
+    // Müşteri adına göre randevu bul (ID yoksa)
+    var rdvId = r['randevu_id']||r['RANDEVU_ID']||'';
+    var rdv = rdvId ? RANDEVULAR.find(function(x){return x.id===rdvId;}) : null;
+
+    // ID yoksa kart sahibi adıyla eşleştir
+    if(!rdv && sahip){
+      rdv = RANDEVULAR.find(function(x){
+        return x.musteri && x.musteri.toLowerCase().includes(sahip.toLowerCase().split(' ')[0]);
+      });
+    }
+
+    var odemeKaydi={
+      tarih: tarih,
+      yontem: yontem,
+      miktar: tutar,
+      not: notBirlesik
+    };
+
+    if(rdv){
+      if(!rdv.odemeGecmisi)rdv.odemeGecmisi=[];
+      rdv.odemeGecmisi.push(odemeKaydi);
+      rdv.odenenToplam=(rdv.odenenToplam||0)+tutar;
+      rdv.odendi=rdv.odenenToplam>=rdv.tutar;
+    }
+    // Randevu bulunamasa bile kayıt sayılsın
+    eklenen++;
+  });
+  storageKaydet();
+  csvOdemeIptal();
+  toast('✅ '+eklenen+' ödeme kaydı işlendi','green');
+}
+
+/* ── EXPORT FONKSİYONLARI ── */
+function csvIndir(icerik,dosyaAdi){
+  var bom='\uFEFF';
+  var blob=new Blob([bom+icerik],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download=dosyaAdi;a.click();
+  URL.revokeObjectURL(url);
+}
+
+function csvRdvExport(){
+  if(!RANDEVULAR.length){toast('Randevu yok!','red');return;}
+  var satirlar=['tarih,saat,musteri,tel,plaka,arac,hizmet,tutar,odenen,durum,odendi,islem'];
+  RANDEVULAR.forEach(function(r){
+    satirlar.push([r.tarih,r.saat,r.musteri,r.tel,r.plaka,r.arac,'"'+r.hizmet+'"',r.tutar,r.odenenToplam||0,r.durum,r.odendi?1:0,r.islem?1:0].join(','));
+  });
+  csvIndir(satirlar.join('\n'),'autonax_randevular_'+new Date().toISOString().slice(0,10)+'.csv');
+  toast('✅ Randevular indirildi','green');
+}
+
+function csvOdemeExport(){
+  var satirlar=['randevu_id,musteri,tarih,yontem,miktar,not'];
+  RANDEVULAR.forEach(function(r){
+    (r.odemeGecmisi||[]).forEach(function(o){
+      satirlar.push([r.id,r.musteri,o.tarih,o.yontem,o.miktar,'"'+(o.not||'')+'"'].join(','));
+    });
+  });
+  if(satirlar.length<2){toast('Ödeme kaydı yok!','red');return;}
+  csvIndir(satirlar.join('\n'),'autonax_odemeler_'+new Date().toISOString().slice(0,10)+'.csv');
+  toast('✅ Ödemeler indirildi','green');
 }
 
 /* ── INPUT HELPER ── */
@@ -6368,6 +6761,7 @@ function ayarlarTabRender(tab){
   else if(tab==='medya') el.innerHTML=saMedyaHTML();
   else if(tab==='odeme'){el.innerHTML=saOdemeHTML();setTimeout(saOdemeListenerBagla,50);return;}
   else if(tab==='fatura'){el.innerHTML=saFaturaHTML();setTimeout(saFaturaListenerBagla,50);return;}
+  else if(tab==='import'){el.innerHTML=saImportHTML();setTimeout(saImportListenerBagla,50);return;}
   // Listener'ları bağla
   setTimeout(function(){saListenerBagla(tab);},50);
 }
