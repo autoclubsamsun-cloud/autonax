@@ -874,8 +874,6 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
       </div>
     </div>
 
-
-
     <!-- ══ MÜŞTERİLER ══ -->
     <div id="pg-musteriler" class="pg">
       <div class="ph">
@@ -1096,6 +1094,25 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
           </div>
         </div>
       </div>
+
+      <!-- MALİYET HESABI -->
+      <div class="k" style="margin-top:14px">
+        <div class="kh" style="justify-content:space-between">
+          <div>
+            <div class="kt">💰 ÜRÜN MALİYET HESABI</div>
+            <div style="font-size:11px;color:var(--ink4);margin-top:2px">Randevu satışları ile eşleştirilmiş gerçek kâr/zarar analizi</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button onclick="maliyetUrunEkle()" style="padding:7px 12px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif">+ Ürün Ekle</button>
+            <button onclick="maliyetKaydet();toast('Kaydedildi!','green')" style="padding:7px 12px;background:var(--green);color:#fff;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer">💾 Kaydet</button>
+          </div>
+        </div>
+        <div class="kb">
+          <div id="maliyet-sekme-bar" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px" data-aktif="N7"></div>
+          <div id="maliyet-tablo-wrap"></div>
+        </div>
+      </div>
+
     </div>
 
 <!-- ══ BAYİLER ══ -->
@@ -1336,7 +1353,7 @@ function doPg(id){
   if(id==='fiyatlar'){setTimeout(fiyatSayfasiYukle,50);}
   if(id==='bayiler'){setTimeout(bayiSayfasiYukle,50);}
   if(id==='ayarlar'){setTimeout(function(){ayarlarSayfasiYukle();adminSekmesiYukle();},50);}
-  if(id==='raporlar'){setTimeout(function(){raporYukle();karsilastirmaSelDoldur();karsilastirmaYukle();},50);}
+  if(id==='raporlar'){setTimeout(function(){raporYukle();karsilastirmaSelDoldur();karsilastirmaYukle();setTimeout(maliyetSayfasiYukle,100);},50);}
   document.querySelectorAll('.sn').forEach(function(el){el.classList.remove('on');});
   var found=[].filter.call(document.querySelectorAll('.sn'),function(s){return(s.getAttribute('onclick')||'').indexOf("'"+id+"'")>-1;});
   if(found[0])found[0].classList.add('on');
@@ -4141,7 +4158,7 @@ function fiyatUrunEkleModal(sekme){
     ovl.onclick=function(e){if(e.target===ovl)ovl.remove();};
     document.body.appendChild(ovl);
   }
-  var bId=id||''; var IS='width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box';
+  var bId=(typeof id!=='undefined'?id:''); var IS='width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box';
 
   // Kategori options
   var katOpts=Object.keys(KATEGORILER).map(function(k){
@@ -4341,6 +4358,169 @@ function fiyatYeniUrunKaydet(){
   toast('✅ '+isim+' eklendi — Ana sitede de aktif!','green');
 }
 
+
+/* ═══════════════════════════════════════════════
+   MALİYET HESABI SİSTEMİ
+═══════════════════════════════════════════════ */
+var MALIYET_KALEMLERI=(function(){
+  try{var r=localStorage.getItem('autonax_maliyet_v1');if(r)return JSON.parse(r);}catch(e){}
+  /* Varsayılan kalemler — tüm tutarlar sıfır, siz kendiniz gireceksiniz */
+  var stdKalemler=function(){return[
+    {isim:'Ürün Maliyeti (KDV Hariç)',tutar:0},
+    {isim:'Prim',tutar:0},
+    {isim:'POS Kesintisi',tutar:0},
+    {isim:'Maaş Payı',tutar:0},
+    {isim:'Kira Payı',tutar:0},
+    {isim:'Elektrik + Su',tutar:0},
+    {isim:'Yemek',tutar:0},
+    {isim:'Sosyal Medya',tutar:0}
+  ];};
+  return{
+    'N7':  {isim:'N7 Ürün (USA 200 MİKRON)', kalemler:stdKalemler()},
+    'N8':  {isim:'N8 Ürün (USA 220 MİKRON)', kalemler:stdKalemler()},
+    'CS190':{isim:'CS190 EKO PPF',            kalemler:stdKalemler()}
+  };
+})();
+function maliyetKaydet(){try{localStorage.setItem('autonax_maliyet_v1',JSON.stringify(MALIYET_KALEMLERI));}catch(e){}}
+function maliyetHesapla(kod,satis){
+  var d=MALIYET_KALEMLERI[kod];if(!d)return null;
+  var tm=d.kalemler.reduce(function(t,k){return t+k.tutar;},0);
+  var nk=satis-tm;
+  return{toplamMaliyet:tm,netKar:nk,karOrani:satis>0?((nk/satis)*100).toFixed(1):0,satisFiyati:satis};
+}
+function maliyetSayfasiYukle(){maliyetUrunSecTabYukle();}
+function maliyetUrunSecTabYukle(){
+  var el=document.getElementById('maliyet-sekme-bar');if(!el)return;
+  var ur=Object.keys(MALIYET_KALEMLERI);
+  var ak=el.dataset.aktif||ur[0];
+  el.innerHTML=ur.map(function(k){
+    var d=MALIYET_KALEMLERI[k];
+    return '<button onclick="maliyetSecTab(\''+k+'\')" class="fiyat-tab'+(ak===k?' fiyat-tab-aktif':'')+'" style="font-size:11px;padding:6px 12px">'+d.isim+'</button>';
+  }).join('');
+  maliyetTabloYukle(ak);
+}
+function maliyetSecTab(kod){
+  var el=document.getElementById('maliyet-sekme-bar');if(el)el.dataset.aktif=kod;
+  maliyetUrunSecTabYukle();
+}
+function maliyetTabloYukle(kod){
+  var el=document.getElementById('maliyet-tablo-wrap');if(!el)return;
+  var data=MALIYET_KALEMLERI[kod];if(!data){el.innerHTML='';return;}
+  var satislar=RANDEVULAR.filter(function(r){return r.hizmet&&r.hizmet.toUpperCase().indexOf(kod)>-1&&r.islem;});
+  var ortalamaSatis=satislar.length>0?Math.round(satislar.reduce(function(t,r){return t+r.tutar;},0)/satislar.length):(URUNLER[kod]?(URUNLER[kod].full||50000):50000);
+  var tm=data.kalemler.reduce(function(t,k){return t+k.tutar;},0);
+  var nk=ortalamaSatis-tm;
+  var ko=ortalamaSatis>0?((nk/ortalamaSatis)*100).toFixed(1):0;
+  var kr=nk>=0?'var(--green)':'var(--r)';
+  var html='<div style="margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">'
+    +'<div style="flex:1;min-width:200px"><div style="font-size:11px;color:var(--ink4);font-weight:700;text-transform:uppercase;margin-bottom:3px">Satış Geliri (KDV Hariç)</div>'
+    +'<div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:var(--ink4)">₺</span>'
+    +'<input type="number" id="maliyet-satis-'+kod+'" value="'+ortalamaSatis+'" oninput="maliyetAnlikGuncelle(\''+kod+'\')" style="border:1.5px solid var(--bd);border-radius:8px;padding:8px 12px;font-size:18px;font-family:\'Bebas Neue\',sans-serif;color:var(--r);width:160px;outline:none">'
+    +'<span style="font-size:11px;color:var(--ink4)">'+(satislar.length>0?satislar.length+' satış ort.':'Manuel')+'</span></div></div>'
+    +'<div style="display:flex;gap:10px;flex-wrap:wrap">'
+    +'<div style="text-align:center;padding:12px 16px;background:rgba(176,28,46,.06);border-radius:10px;border:1px solid rgba(176,28,46,.15)">'
+    +'<div id="maliyet-tm-'+kod+'" style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:var(--r)">₺'+tm.toLocaleString("tr-TR")+'</div>'
+    +'<div style="font-size:10px;color:var(--ink4);font-weight:700">TOPLAM MALİYET</div></div>'
+    +'<div style="text-align:center;padding:12px 16px;background:'+(nk>=0?'rgba(22,163,74,.06)':'rgba(176,28,46,.06)')+';border-radius:10px;border:1px solid '+(nk>=0?'rgba(22,163,74,.15)':'rgba(176,28,46,.15)')+';">'
+    +'<div id="maliyet-nk-'+kod+'" style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:'+kr+'">₺'+Math.abs(nk).toLocaleString("tr-TR")+'</div>'
+    +'<div id="maliyet-ko-'+kod+'" style="font-size:10px;color:var(--ink4);font-weight:700">NET '+(nk>=0?'KÂR':'ZARAR')+' (%'+ko+')</div></div>'
+    +'</div></div>';
+  html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Kalem</th><th style="text-align:right">Tutar (₺)</th><th></th></tr></thead><tbody>';
+  data.kalemler.forEach(function(k,i){
+    html+='<tr><td style="font-weight:600">'+k.isim+'</td>'
+    +'<td style="text-align:right"><input type="number" value="'+k.tutar+'" oninput="maliyetKalemGuncelle(\''+kod+'\','+i+',this.value)" style="border:1.5px solid var(--bd);border-radius:6px;padding:5px 8px;font-size:13px;font-weight:700;font-family:Outfit,sans-serif;text-align:right;width:130px;outline:none"></td>'
+    +'<td><span style="font-size:10px;color:var(--ink4)">✏️</span></td></tr>';
+  });
+  html+='</tbody></table></div>';
+  html+='<div style="margin-top:12px;padding:12px;background:var(--bg);border-radius:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
+    +'<input id="yk-isim-'+kod+'" type="text" placeholder="Kalem adı..." style="flex:2;min-width:150px;border:1.5px solid var(--bd);border-radius:7px;padding:7px 10px;font-size:12px;font-family:Outfit,sans-serif;outline:none">'
+    +'<input id="yk-tutar-'+kod+'" type="number" placeholder="Tutar..." style="width:130px;border:1.5px solid var(--bd);border-radius:7px;padding:7px 10px;font-size:12px;font-family:Outfit,sans-serif;outline:none">'
+    +'<button onclick="maliyetKalemEkle(\''+kod+'\')" class="btn-p" style="padding:8px 14px;font-size:11px">+ Kalem</button>'
+    +'<button onclick="maliyetKaydet();toast(\'Kaydedildi!\',\'green\')" style="padding:8px 14px;background:var(--green);color:#fff;border:none;border-radius:8px;font-family:\'Bebas Neue\',sans-serif;font-size:11px;cursor:pointer">💾 Kaydet</button>'
+    +'</div>';
+  if(satislar.length>0){
+    html+='<div style="margin-top:16px"><div class="kh" style="padding:10px 0"><div class="kt">🔗 Randevu Eşleştirme</div></div>';
+    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Tarih</th><th>Müşteri</th><th>Satış</th><th>Maliyet</th><th>Net Kâr</th><th>%</th></tr></thead><tbody>';
+    satislar.forEach(function(r){
+      var h=maliyetHesapla(kod,r.tutar);if(!h)return;
+      var rkr=h.netKar>=0?'var(--green)':'var(--r)';
+      html+='<tr><td>'+r.tarih+'</td><td><b>'+r.musteri+'</b></td>'
+        +'<td style="font-family:\'Bebas Neue\',sans-serif;font-size:14px;color:var(--r)">₺'+r.tutar.toLocaleString('tr-TR')+'</td>'
+        +'<td style="font-family:\'Bebas Neue\',sans-serif;font-size:14px">₺'+h.toplamMaliyet.toLocaleString('tr-TR')+'</td>'
+        +'<td style="font-family:\'Bebas Neue\',sans-serif;font-size:14px;color:'+rkr+'">₺'+Math.abs(h.netKar).toLocaleString('tr-TR')+'</td>'
+        +'<td><span style="background:'+(h.netKar>=0?'rgba(22,163,74,.1)':'rgba(176,28,46,.1)')+';color:'+rkr+';padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">%'+h.karOrani+'</span></td></tr>';
+    });
+    html+='</tbody></table></div></div>';
+  }
+  el.innerHTML=html;
+}
+function maliyetAnlikGuncelle(kod){
+  var se=document.getElementById('maliyet-satis-'+kod);
+  var satis=se?parseInt(se.value)||0:0;
+  var tm=MALIYET_KALEMLERI[kod]?MALIYET_KALEMLERI[kod].kalemler.reduce(function(t,k){return t+k.tutar;},0):0;
+  var nk=satis-tm;
+  var ko=satis>0?((nk/satis)*100).toFixed(1):0;
+  var kr=nk>=0?'var(--green)':'var(--r)';
+  var nkEl=document.getElementById('maliyet-nk-'+kod);
+  var koEl=document.getElementById('maliyet-ko-'+kod);
+  if(nkEl)nkEl.style.color=kr,nkEl.textContent='₺'+Math.abs(nk).toLocaleString('tr-TR');
+  if(koEl)koEl.textContent='NET '+(nk>=0?'KÂR':'ZARAR')+' (%'+ko+')';
+}
+function maliyetKalemGuncelle(kod,idx,deger){
+  if(!MALIYET_KALEMLERI[kod])return;
+  MALIYET_KALEMLERI[kod].kalemler[idx].tutar=parseInt(deger)||0;
+  var tm=MALIYET_KALEMLERI[kod].kalemler.reduce(function(t,k){return t+k.tutar;},0);
+  var tmEl=document.getElementById('maliyet-tm-'+kod);
+  if(tmEl)tmEl.textContent='₺'+tm.toLocaleString('tr-TR');
+  maliyetAnlikGuncelle(kod);
+}
+function maliyetKalemEkle(kod){
+  var ie=document.getElementById('yk-isim-'+kod);
+  var te=document.getElementById('yk-tutar-'+kod);
+  var isim=ie?ie.value.trim():'';var tutar=te?parseInt(te.value)||0:0;
+  if(!isim){toast('Kalem adı girin!','red');return;}
+  if(!MALIYET_KALEMLERI[kod])return;
+  MALIYET_KALEMLERI[kod].kalemler.push({isim:isim,tutar:tutar});
+  maliyetKaydet();maliyetTabloYukle(kod);toast('✅ Kalem eklendi!','green');
+}
+function maliyetUrunEkle(){
+  var ovl=document.createElement('div');
+  ovl.style.cssText='position:fixed;inset:0;z-index:990;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px';
+  ovl.onclick=function(e){if(e.target===ovl)ovl.remove();};
+  ovl.innerHTML='<div style="background:#fff;border-radius:16px;padding:0;width:100%;max-width:400px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.25)">'
+    +'<div style="background:var(--ink);padding:14px 18px;display:flex;align-items:center;justify-content:space-between">'
+    +'<div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;letter-spacing:2px;color:#fff">YENİ MALİYET KARTI</div>'
+    +'<button onclick="this.closest(\'[style*=fixed]\').remove()" style="cursor:pointer;color:#888;font-size:24px;background:none;border:none;line-height:1">&times;</button></div>'
+    +'<div style="padding:18px">'
+    +'<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:5px">Ürün Kodu (örn: S75)</div>'
+    +'<input id="yuk" type="text" placeholder="S75" style="width:100%;border:1.5px solid var(--bd);border-radius:8px;padding:9px 12px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box"></div>'
+    +'<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:5px">Ürün Tam Adı</div>'
+    +'<input id="yui" type="text" placeholder="S75 Alman Serisi 200 Mikron" style="width:100%;border:1.5px solid var(--bd);border-radius:8px;padding:9px 12px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box"></div>'
+    +'<div style="display:flex;gap:8px;margin-top:16px">'
+    +'<button onclick="this.closest(\'[style*=fixed]\').remove()" style="flex:1;padding:10px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-family:\'Bebas Neue\',sans-serif;font-size:13px;cursor:pointer">İPTAL</button>'
+    +'<button onclick="maliyetUrunKaydet()" style="flex:2;padding:10px;background:var(--r);color:#fff;border:none;border-radius:8px;font-family:\'Bebas Neue\',sans-serif;font-size:13px;cursor:pointer">EKLE</button>'
+    +'</div></div></div>';
+  document.body.appendChild(ovl);
+  setTimeout(function(){var el=document.getElementById('yuk');if(el)el.focus();},100);
+}
+function maliyetUrunKaydet(){
+  var ke=document.getElementById('yuk');var ie=document.getElementById('yui');
+  var kod=(ke?ke.value.trim():'').toUpperCase();
+  var isim=ie?ie.value.trim():'';
+  if(!kod){toast('Kod girin!','red');return;}
+  if(!isim){toast('Ad girin!','red');return;}
+  if(MALIYET_KALEMLERI[kod]){toast('Bu kod zaten var!','red');return;}
+  MALIYET_KALEMLERI[kod]={isim:isim,kalemler:[
+    {isim:'Ürün Maliyeti (KDV Hariç)',tutar:0},{isim:'Prim',tutar:0},
+    {isim:'POS Kesintisi',tutar:0},{isim:'Maaş Payı',tutar:6473},
+    {isim:'Kira Payı',tutar:3154},{isim:'Elektrik + Su',tutar:577},
+    {isim:'Yemek',tutar:1346},{isim:'Sosyal Medya',tutar:1500}
+  ]};
+  maliyetKaydet();
+  var ovl=document.querySelector('[style*="fixed"][style*="990"]');if(ovl)ovl.remove();
+  var el=document.getElementById('maliyet-sekme-bar');if(el)el.dataset.aktif=kod;
+  maliyetUrunSecTabYukle();toast('✅ '+kod+' eklendi!','green');
+}
 
 /* ═══════════════════════════════════════════════
    RAPORLAR & ANALİTİK SİSTEMİ
@@ -5082,7 +5262,7 @@ function bayiEkleModal(id){
     ovl.style.cssText='position:fixed;inset:0;z-index:960;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto';
     ovl.onclick=function(e){if(e.target===ovl)ovl.remove();};document.body.appendChild(ovl);}
 
-  var bId=id||''; var IS='width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box';
+  var bId=(typeof id!=='undefined'?id:''); var IS='width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box';
   var v=function(f){return b&&b[f]!==undefined?b[f]:'';};
 
   ovl.innerHTML='<div style="background:#fff;border-radius:16px;width:100%;max-width:520px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.3)">'
