@@ -571,11 +571,11 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
     <div class="login-err" id="login-err">Kullanıcı adı veya şifre hatalı!</div>
     <div class="lf">
       <label>Kullanıcı Adı</label>
-      <input id="l-user" type="text" placeholder="admin" onkeydown="if(event.key==='Enter')document.querySelector('.login-btn').click()" onkeydown="if(event.key==='Enter')adminLogin()">
+      <input id="l-user" type="text" name="username" autocomplete="username" placeholder="Kullanıcı adı" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
     <div class="lf">
       <label>Şifre</label>
-      <input id="l-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')document.querySelector('.login-btn').click()" onkeydown="if(event.key==='Enter')adminLogin()">
+      <input id="l-pass" type="password" name="password" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
     <button class="login-btn" type="button" onclick="doLogin()">Giriş Yap</button>
     
@@ -1409,6 +1409,7 @@ function doLogin(){
   .then(function(d){
     if(d.success){
       ADM_U=u;
+      try{ sessionStorage.setItem('autonax_oturum','1'); }catch(e){}
       document.getElementById('login-ovl').style.display='none';
       document.getElementById('main-header').style.display='flex';
       document.getElementById('main-layout').style.display='flex';
@@ -1444,6 +1445,7 @@ function doLogin(){
 }
 function doCikis(){
   if(!confirm('Çıkış yapılsın mı?'))return;
+  try{ sessionStorage.removeItem('autonax_oturum'); }catch(e){}
   document.getElementById('login-ovl').style.display='flex';
   document.getElementById('main-header').style.display='none';
   document.getElementById('main-layout').style.display='none';
@@ -3492,18 +3494,27 @@ function adminBilgiKaydet(){
 }
 
 window.onload=function(){
-  // Önce login ekranını göster
   var loginOvl=document.getElementById('login-ovl');
   var mainHeader=document.getElementById('main-header');
   var mainLayout=document.getElementById('main-layout');
 
-  // Login overlay'i göster
-  if(loginOvl){
-    loginOvl.style.cssText='display:flex;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:20px;background:#0a0a0a';
+  // Oturum kontrolü — sessionStorage'da aktif oturum var mı?
+  var aktifOturum=false;
+  try{ aktifOturum=sessionStorage.getItem('autonax_oturum')==='1'; }catch(e){}
+
+  if(aktifOturum){
+    // Oturum aktif — direkt paneli aç
+    if(loginOvl) loginOvl.style.display='none';
+    if(mainHeader) mainHeader.style.display='flex';
+    if(mainLayout) mainLayout.style.display='flex';
+    doInit();
+    dbSyncYukle();
+  } else {
+    // Oturum yok — login göster
+    if(loginOvl) loginOvl.style.cssText='display:flex;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:20px;background:#0a0a0a';
+    if(mainHeader) mainHeader.style.display='none';
+    if(mainLayout) mainLayout.style.display='none';
   }
-  // Panel içeriğini gizle
-  if(mainHeader) mainHeader.style.display='none';
-  if(mainLayout) mainLayout.style.display='none';
 
   // Keyboard listener
   var up=document.getElementById('l-user');
@@ -4026,10 +4037,17 @@ function dbSyncYukle(){
   // Randevuları DB'den çek
   fetch('/api/randevular').then(function(r){return r.json();}).then(function(d){
     if(d.success&&d.data){
-      RANDEVULAR=d.data;
-      localStorage.setItem('autonax_randevular_v1',JSON.stringify(RANDEVULAR));
+      // DB verisi varsa kullan, yoksa localStorage'ı koru
+      if(d.data.length > 0){
+        RANDEVULAR=d.data;
+        localStorage.setItem('autonax_randevular_v1',JSON.stringify(RANDEVULAR));
+      } else {
+        // DB boş — localStorage'dan yükle (import edilmiş veriler olabilir)
+        try{ var ls=localStorage.getItem('autonax_randevular_v1'); if(ls){ var parsed=JSON.parse(ls); if(parsed.length>0) RANDEVULAR=parsed; } }catch(e){}
+        // localStorage'daki verileri DB'ye sync et
+        if(RANDEVULAR.length>0 && typeof dbSyncToDB==='function') dbSyncToDB();
+      }
       if(typeof doRdvListele==='function') doRdvListele();
-      if(typeof dashboardYukle==='function') dashboardYukle();
     }
   }).catch(function(){
     // Offline - localStorage'dan yükle
