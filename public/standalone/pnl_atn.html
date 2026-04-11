@@ -1330,15 +1330,46 @@ function doLogin(){
   var u=document.getElementById('l-user').value.trim();
   var p=document.getElementById('l-pass').value;
   var err=document.getElementById('login-err');
-  if(u===ADM_U&&p===ADM_P){
-    document.getElementById('login-ovl').style.display='none';
-    document.getElementById('main-header').style.display='flex';
-    document.getElementById('main-layout').style.display='flex';
-    doInit();
-  } else {
-    err.style.display='block';
-    setTimeout(function(){err.style.display='none';},2500);
-  }
+  var btn=document.querySelector('.login-btn');
+  if(btn) btn.disabled=true;
+  // Önce API ile dene, başarısız olursa local kontrol
+  fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',username:u,password:p})})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.success){
+      ADM_U=u;
+      document.getElementById('login-ovl').style.display='none';
+      document.getElementById('main-header').style.display='flex';
+      document.getElementById('main-layout').style.display='flex';
+      doInit();
+      dbSyncYukle();
+    } else {
+      // API başarısız — local kontrol
+      if(u===ADM_U&&p===ADM_P){
+        document.getElementById('login-ovl').style.display='none';
+        document.getElementById('main-header').style.display='flex';
+        document.getElementById('main-layout').style.display='flex';
+        doInit();
+        dbSyncYukle();
+      } else {
+        err.style.display='block';
+        setTimeout(function(){err.style.display='none';},2500);
+      }
+    }
+  })
+  .catch(function(){
+    // Offline — local kontrol
+    if(u===ADM_U&&p===ADM_P){
+      document.getElementById('login-ovl').style.display='none';
+      document.getElementById('main-header').style.display='flex';
+      document.getElementById('main-layout').style.display='flex';
+      doInit();
+    } else {
+      err.style.display='block';
+      setTimeout(function(){err.style.display='none';},2500);
+    }
+  })
+  .finally(function(){ if(btn) btn.disabled=false; });
 }
 function doCikis(){
   if(!confirm('Çıkış yapılsın mı?'))return;
@@ -2109,7 +2140,8 @@ function rdvEkle(){
   var netTutar=parseFloat(netEl?netEl.value:'0')||Math.max(0,_rdvFormTutar-ind);
 
 
-  RANDEVULAR.unshift({
+  var yeniRdv={
+    id:'rdv-'+Date.now()+'-'+Math.random().toString(36).slice(2,4),
     tarih:tarihStr, saat:saat,
     musteri:musteri, tel:tel||'—',
     plaka:plaka.replace(/ /g,'').toUpperCase(),
@@ -2117,8 +2149,11 @@ function rdvEkle(){
     hizmet:hizmetIsim,
     tutar:netTutar,
     durum:'bekl', islem:false, odendi:false, onlineOdeme:false,
+    odenenToplam:0, odemeGecmisi:[],
     indirim:ind
-  });
+  };
+  RANDEVULAR.unshift(yeniRdv);
+  if(typeof dbRandevuKaydet==='function') dbRandevuKaydet(yeniRdv);
 
   doRdvListele();
   rdvFormTemizle();
@@ -3380,6 +3415,8 @@ function adminBilgiKaydet(){
     if(email) localStorage.setItem('autonax_adm_email', email);
   }catch(e){}
 
+  // DB'ye de kaydet
+  if(typeof dbAdminGuncelle==='function') dbAdminGuncelle(ADM_U, ADM_P);
   toast('✅ Admin bilgileri kaydedildi!','green');
 }
 
@@ -3901,7 +3938,6 @@ function storageKaydet(){
       guncelleme: new Date().toISOString()
     };
     localStorage.setItem(AUTONAX_STORAGE_KEY, JSON.stringify(veri));
-    // RANDEVULAR'ı ayrı kaydet
     localStorage.setItem('autonax_randevular_v1', JSON.stringify(RANDEVULAR));
     return true;
   } catch(e) {
@@ -3909,6 +3945,52 @@ function storageKaydet(){
     return false;
   }
 }
+
+/* ─── DB SYNC — API'ye yaz ─── */
+function dbSync(url, method, body){
+  return fetch(url,{method:method,headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined}).catch(function(e){console.warn('DB sync hata:',e);});
+}
+
+function dbSyncYukle(){
+  // Randevuları DB'den çek
+  fetch('/api/randevular').then(function(r){return r.json();}).then(function(d){
+    if(d.success&&d.data){
+      RANDEVULAR=d.data;
+      localStorage.setItem('autonax_randevular_v1',JSON.stringify(RANDEVULAR));
+      if(typeof doRdvListele==='function') doRdvListele();
+      if(typeof dashboardYukle==='function') dashboardYukle();
+    }
+  }).catch(function(){
+    // Offline - localStorage'dan yükle
+    try{ var r=localStorage.getItem('autonax_randevular_v1'); if(r) RANDEVULAR=JSON.parse(r); }catch(e){}
+  });
+  // Bayileri DB'den çek
+  fetch('/api/bayiler').then(function(r){return r.json();}).then(function(d){
+    if(d.success&&d.data) BAYILER=d.data;
+  }).catch(function(){});
+  // Personeli DB'den çek
+  fetch('/api/personel').then(function(r){return r.json();}).then(function(d){
+    if(d.success&&d.data) PERSONEL=d.data;
+  }).catch(function(){});
+}
+
+function dbRandevuKaydet(r){
+  var existing=RANDEVULAR.find(function(x){return x.id===r.id;});
+  if(existing){
+    dbSync('/api/randevular','PUT',r);
+  } else {
+    dbSync('/api/randevular','POST',r);
+  }
+}
+
+function dbRandevuSil(id){
+  dbSync('/api/randevular?id='+id,'DELETE');
+}
+
+function dbAdminGuncelle(user, pass){
+  dbSync('/api/auth','POST',{action:'update',username:user,password:pass});
+}
+
 
 function storageYukle(){
   try {
