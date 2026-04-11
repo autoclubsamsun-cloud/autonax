@@ -298,6 +298,8 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 .tgl.on::after{left:21px}
 
 /* ══ RESPONSIVE ══ */
+.hd-menu-btn{display:none;align-items:center;justify-content:center;width:36px;height:36px;background:none;border:none;cursor:pointer;flex-direction:column;gap:5px;padding:4px}
+.hd-menu-btn span{display:block;width:22px;height:2px;background:var(--ink);border-radius:2px;transition:.3s}
 @media(max-width:1200px){.g4{grid-template-columns:repeat(2,1fr)}.fiyat-row{grid-template-columns:100px 1fr 1fr 1fr}}
 @media(max-width:900px){
   :root{--sidebar:0px}
@@ -336,6 +338,63 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
   .sk-lbl{font-size:10px}
   .cal-day{font-size:11px;padding:6px 4px}
   #rdv-modal-ovl > div,#rdv-duzenle-ovl > div{max-height:95vh}
+
+  /* MOBİL EK DÜZELTMELER */
+  /* Header */
+  .hd-right{gap:6px}
+  .hd-logout{padding:5px 10px;font-size:10px}
+
+  /* Randevu sayfası */
+  .ab-bar{flex-wrap:wrap;gap:4px}
+  .ab{padding:5px 8px;font-size:10px}
+  .rdv-filtre-bar{flex-wrap:wrap;gap:6px}
+  .rdv-durum-bar{flex-wrap:wrap;gap:4px}
+
+  /* Tablo — yatay scroll */
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tbl{min-width:500px}
+
+  /* Modal — tam ekran mobilde */
+  #rdv-modal-ovl > div{width:100% !important;max-width:100% !important;border-radius:16px 16px 0 0;margin:0;position:fixed;bottom:0;left:0;right:0}
+  #rdv-modal-ovl{align-items:flex-end !important;padding:0 !important}
+
+  /* Kart başlıkları */
+  .kh{flex-wrap:wrap;gap:8px}
+  .kt{font-size:13px}
+
+  /* Fiyat sekmeleri */
+  .fiyat-sekme-satir{flex-direction:column;align-items:flex-start}
+  .fiyat-tab{font-size:10px;padding:5px 10px}
+  .fiyat-sekme-bar{flex-wrap:wrap}
+
+  /* Rapor grafik */
+  #rapor-grafik-grid{grid-template-columns:1fr !important}
+
+  /* Ayarlar sekmeleri — yatay scroll */
+  #pg-ayarlar > div:nth-child(2){overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;flex-wrap:nowrap !important}
+  .siteayar-tab{white-space:nowrap;font-size:10px;padding:6px 10px}
+
+  /* Dashboard kart grid */
+  .g4{grid-template-columns:1fr 1fr}
+
+  /* Bayi/personel listesi */
+  .bayi-kart,.musteri-kart{padding:12px}
+
+  /* Maliyet tablosu */
+  #maliyet-tablo-wrap .tbl{min-width:400px}
+
+  /* Hızlı işlem butonu */
+  .hizli-btn{padding:6px 10px;font-size:10px}
+
+  /* Ödeme modal */
+  #odeme-modal-ovl > div{width:100% !important;max-width:100% !important}
+}
+
+@media(max-width:400px){
+  .g4{grid-template-columns:1fr}
+  .ph-title{font-size:18px}
+  .sk-val{font-size:18px}
+  .hd-logo{font-size:14px}
 }
 
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -1326,6 +1385,18 @@ var FIYAT_DATA=[
 /* ══ AUTH ══ */
 var ADM_U=(function(){try{return localStorage.getItem('autonax_adm_u')||'admin';}catch(e){return 'admin';}}());
 var ADM_P=(function(){try{return localStorage.getItem('autonax_adm_p')||'admin123';}catch(e){return 'admin123';}}());
+/* DB'den güncel şifreyi çek — mobilden ilk girişte doğru şifre gelsin */
+(function(){
+  fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'get_credentials'})})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.success&&d.username){
+      ADM_U=d.username;
+      ADM_P=d.password;
+      try{localStorage.setItem('autonax_adm_u',d.username);localStorage.setItem('autonax_adm_p',d.password);}catch(e){}
+    }
+  }).catch(function(){});
+})();
 function doLogin(){
   var u=document.getElementById('l-user').value.trim();
   var p=document.getElementById('l-pass').value;
