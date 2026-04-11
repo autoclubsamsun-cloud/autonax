@@ -1197,15 +1197,16 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
       <div id="stab-admin">
         <div class="g2">
           <div class="k">
-            <div class="kh"><div class="kt">Admin Bilgileri</div></div>
+            <div class="kh"><div class="kt">Admin Giriş Bilgileri</div></div>
             <div class="kb">
               <div class="form-grid">
-                <div class="ff"><label>Ad Soyad</label><input type="text" value="Admin Kullanıcı"></div>
-                <div class="ff"><label>E-posta</label><input type="email" value="admin_autonax"></div>
-                <div class="ff"><label>Mevcut Şifre</label><input type="password" placeholder="••••••••"></div>
-                <div class="ff"><label>Yeni Şifre</label><input type="password" placeholder="••••••••"></div>
+                <div class="ff"><label>Kullanıcı Adı</label><input id="adm-user" type="text" placeholder="Kullanıcı adı"></div>
+                <div class="ff"><label>E-posta</label><input id="adm-email" type="email" placeholder="E-posta"></div>
+                <div class="ff"><label>Mevcut Şifre</label><input id="adm-pass-eski" type="password" placeholder="••••••••"></div>
+                <div class="ff"><label>Yeni Şifre</label><input id="adm-pass-yeni" type="password" placeholder="••••••••"></div>
+                <div class="ff"><label>Yeni Şifre (Tekrar)</label><input id="adm-pass-tekrar" type="password" placeholder="••••••••"></div>
               </div>
-              <button class="btn-p" style="margin-top:4px">Kaydet</button>
+              <button class="btn-p" style="margin-top:8px" onclick="adminBilgiKaydet()">💾 Kaydet</button>
             </div>
           </div>
           <div class="k">
@@ -1323,7 +1324,8 @@ var FIYAT_DATA=[
 ];
 
 /* ══ AUTH ══ */
-var ADM_U='admin',ADM_P='admin123';
+var ADM_U=(function(){try{return localStorage.getItem('autonax_adm_u')||'admin';}catch(e){return 'admin';}}());
+var ADM_P=(function(){try{return localStorage.getItem('autonax_adm_p')||'admin123';}catch(e){return 'admin123';}}());
 function doLogin(){
   var u=document.getElementById('l-user').value.trim();
   var p=document.getElementById('l-pass').value;
@@ -3338,7 +3340,47 @@ function personelModalAc(i){
 }
 
 function adminSekmesiYukle(){
+  // Mevcut kullanıcı adını forma doldur
+  var uEl=document.getElementById('adm-user');
+  var eEl=document.getElementById('adm-email');
+  if(uEl) uEl.value=ADM_U;
+  // Kayıtlı email varsa doldur
+  try{ var ae=localStorage.getItem('autonax_adm_email'); if(ae&&eEl) eEl.value=ae; }catch(e){}
   setTimeout(function(){personelListesiRender();rolListesiRender();},50);
+}
+
+function adminBilgiKaydet(){
+  var yeniU=(document.getElementById('adm-user')||{}).value||'';
+  var email=(document.getElementById('adm-email')||{}).value||'';
+  var eskiP=(document.getElementById('adm-pass-eski')||{}).value||'';
+  var yeniP=(document.getElementById('adm-pass-yeni')||{}).value||'';
+  var tekrarP=(document.getElementById('adm-pass-tekrar')||{}).value||'';
+
+  if(!yeniU){ toast('Kullanıcı adı boş olamaz!','red'); return; }
+
+  // Şifre değişikliği isteniyor mu?
+  if(yeniP || eskiP) {
+    if(eskiP !== ADM_P){ toast('Mevcut şifre yanlış!','red'); return; }
+    if(!yeniP){ toast('Yeni şifre boş olamaz!','red'); return; }
+    if(yeniP !== tekrarP){ toast('Şifreler eşleşmiyor!','red'); return; }
+    if(yeniP.length < 6){ toast('Şifre en az 6 karakter olmalı!','red'); return; }
+    ADM_P = yeniP;
+    // Şifreyi temizle
+    document.getElementById('adm-pass-eski').value='';
+    document.getElementById('adm-pass-yeni').value='';
+    document.getElementById('adm-pass-tekrar').value='';
+  }
+
+  ADM_U = yeniU;
+
+  // localStorage'a kaydet
+  try{
+    localStorage.setItem('autonax_adm_u', ADM_U);
+    localStorage.setItem('autonax_adm_p', ADM_P);
+    if(email) localStorage.setItem('autonax_adm_email', email);
+  }catch(e){}
+
+  toast('✅ Admin bilgileri kaydedildi!','green');
 }
 
 window.onload=function(){
