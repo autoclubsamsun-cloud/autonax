@@ -3342,8 +3342,20 @@ function adminSekmesiYukle(){
 }
 
 window.onload=function(){
-  doInit();
-  kapBugun();
+  // Önce login ekranını göster
+  var loginOvl=document.getElementById('login-ovl');
+  var mainHeader=document.getElementById('main-header');
+  var mainLayout=document.getElementById('main-layout');
+
+  // Login overlay'i göster
+  if(loginOvl){
+    loginOvl.style.cssText='display:flex;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:20px;background:#0a0a0a';
+  }
+  // Panel içeriğini gizle
+  if(mainHeader) mainHeader.style.display='none';
+  if(mainLayout) mainLayout.style.display='none';
+
+  // Keyboard listener
   var up=document.getElementById('l-user');
   var pp=document.getElementById('l-pass');
   if(up)up.addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});

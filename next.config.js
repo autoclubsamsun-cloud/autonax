@@ -8,8 +8,8 @@ const nextConfig = {
         destination: '/standalone/desktop.html',
       },
       {
-        source: '/panel',
-        destination: '/standalone/panel.html',
+        source: '/pnl_atn',
+        destination: '/standalone/pnl_atn.html',
       },
       {
         source: '/hesabim',
