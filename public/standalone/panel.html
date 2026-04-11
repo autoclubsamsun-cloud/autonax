@@ -493,6 +493,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 </style>
 
 
+  <script src="/standalone/db-sync.js" defer></script>
 </head>
 <body>
 <body>
@@ -3846,6 +3847,8 @@ function storageKaydet(){
       guncelleme: new Date().toISOString()
     };
     localStorage.setItem(AUTONAX_STORAGE_KEY, JSON.stringify(veri));
+    // RANDEVULAR'ı ayrı kaydet
+    localStorage.setItem('autonax_randevular_v1', JSON.stringify(RANDEVULAR));
     return true;
   } catch(e) {
     console.warn('Storage kayıt hatası:', e);
