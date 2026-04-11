@@ -1,10 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  images: {
-    domains: ['localhost'],
-    formats: ['image/webp', 'image/avif'],
-  },
+  // public/ klasöründeki statik dosyalar otomatik servis edilir
+  // Hiçbir ek ayar gerekmez — Next.js public/ klasörünü kök URL'de sunar
   async redirects() {
     return [
       {
@@ -14,16 +12,8 @@ const nextConfig = {
       },
       {
         source: '/panel',
-        destination: '/admin/dashboard',
+        destination: '/standalone/panel.html',
         permanent: false,
-      },
-    ];
-  },
-  async headers() {
-    return [
-      {
-        source: '/standalone/:path*',
-        headers: [{ key: 'Cache-Control', value: 'no-store' }],
       },
     ];
   },
