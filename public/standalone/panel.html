@@ -593,11 +593,11 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
     <div class="sb-sep"></div>
     <div class="sb-sec" style="padding-bottom:16px">
       <div class="sb-label">Siteler</div>
-      <div class="sn" onclick="window.open('autonax_desktop.html')">
+      <div class="sn" onclick="window.open('/standalone/desktop.html')">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         Ana Site
       </div>
-      <div class="sn" onclick="window.open('hesabim.html')">
+      <div class="sn" onclick="window.open('/standalone/hesabim.html')">
         <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         Müşteri Paneli
       </div>
@@ -626,19 +626,19 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
           <div class="sk-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
           <div class="sk-val">₺0</div>
           <div class="sk-lbl">Bu Hafta Gelir</div>
-          <div class="sk-trend up"><svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>Geçen haftadan +%18</div>
+          <div class="sk-trend up"><svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>Veri yok</div>
         </div>
         <div class="sk b">
           <div class="sk-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
-          <div class="sk-val">48</div>
+          <div class="sk-val">0</div>
           <div class="sk-lbl">Toplam Müşteri</div>
-          <div class="sk-trend up"><svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>Veri yok yeni</div>
+          <div class="sk-trend up"><svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>Veri yok</div>
         </div>
         <div class="sk a">
           <div class="sk-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
           <div class="sk-val">0</div>
           <div class="sk-lbl">Bekleyen Onay</div>
-          <div class="sk-trend dn"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>Acil onay gerekiyor</div>
+          <div class="sk-trend dn"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>Bekleyen yok</div>
         </div>
       </div>
 
@@ -650,8 +650,10 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
             <span class="km" onclick="doPg('randevular')">Tümü →</span>
           </div>
           <div class="kb">
-            <div id="dash-bugun-list" style="text-align:center;padding:24px;color:var(--ink4);font-size:13px;">Bugün için randevu yok</div>
-            </div>
+            <div style="text-align:center;padding:24px;color:var(--ink4);font-size:13px;">Bugün için randevu yok</div>
+          </div>
+          </div>
+        </div>
 
         <!-- En Çok Tercih -->
         <div class="k">
@@ -1229,10 +1231,6 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
     </div>
 
 <script data-cfasync="false">
-/* ══ VERİ ══ */
-
-/* ════════════════════════════════════════════════════
-   
 /* ══ VERİ ══ */
 
 /* ════════════════════════════════════════════════════
@@ -6195,3 +6193,6 @@ function ayarlarTabRender(tab){
   setTimeout(function(){saListenerBagla(tab);},50);
 }
 
+</script>
+</body>
+</html>
