@@ -4033,6 +4033,24 @@ function storageKaydet(){
   }
 }
 
+/* ─── ÜRÜN FİYATLARI API SENKRON ─── */
+function urunleriApiSenkronEt(){
+  var urunDizisi=[];
+  // PPF ürünleri
+  Object.keys(URUNLER).forEach(function(k){
+    var u=URUNLER[k];
+    urunDizisi.push({id:k,isim:u.isim,kat:u.kat||'ppf',altKat:u.altKat||'',garanti:u.garanti||5,full:u.full||0,on3:u.on3||0,kaput:u.kaput||0,tutar:u.tutar||0,bayiIndirim:u.bayiIndirim||0,rozet:u.rozet||'',aciklama:u.aciklama||''});
+  });
+  // Seramik
+  SERAMIK.forEach(function(u,i){
+    urunDizisi.push({id:'seramik_'+i,isim:u.isim,kat:'seramik',altKat:u.altKat||'',tutar:u.tutar||0,bayiIndirim:u.bayiIndirim||0,aciklama:u.aciklama||''});
+  });
+  fetch('/api/urunler',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(urunDizisi)})
+  .then(function(r){return r.json();})
+  .then(function(d){if(d.success)console.log('Ürünler API\'ye kaydedildi');})
+  .catch(function(e){console.warn('Ürün API hatası:',e);});
+}
+
 /* ─── DB SYNC — API'ye yaz ─── */
 function dbSync(url, method, body){
   return fetch(url,{method:method,headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined}).catch(function(e){console.warn('DB sync hata:',e);});
@@ -4314,6 +4332,8 @@ function fUrunKaydet(btn){
   var cb=document.getElementById('fp-'+id+'-aktif');if(cb) u.aktif=cb.checked;
   hizmetListesiniOlustur();
   storageKaydet();
+  // API'ye de kaydet — ana site senkronize olsun
+  urunleriApiSenkronEt();
   toast('✅ Kaydedildi — Ana sitede de güncellendi!','green');
 }
 
@@ -4590,6 +4610,7 @@ function fiyatYeniUrunKaydet(){
   storageKaydet();
   document.getElementById('fiyat-ekle-ovl').remove();
   fKatSec(kat);
+  urunleriApiSenkronEt();
   toast('✅ '+isim+' eklendi — Ana sitede de aktif!','green');
 }
 
