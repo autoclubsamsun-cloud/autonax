@@ -2425,6 +2425,8 @@ function siteAyarKaydet(bolum){
   try{
     SITE_AYARLAR.sistem.sonGuncelleme=new Date().toISOString();
     localStorage.setItem(SITE_AYAR_KEY,JSON.stringify(SITE_AYARLAR));
+    // DB'ye de kaydet
+    fetch('/api/ayarlar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site_ayarlar:SITE_AYARLAR})}).catch(function(){});
     toast('✅ '+(bolum||'Ayarlar')+' kaydedildi!','green');
   }catch(e){toast('Kayıt hatası!','red');}
 }
@@ -3327,7 +3329,13 @@ var YETKI_TANIMLAR=[
   {key:'ayarlar',lbl:'Sistem Ayarlari',  ikon:'⚙️'},
   {key:'personel',lbl:'Personel Yonetimi',ikon:'👥'}
 ];
-function personelKaydet(){try{localStorage.setItem('autonax_personel_v1',JSON.stringify(PERSONEL));}catch(e){}}
+function personelKaydet(){
+  try{localStorage.setItem('autonax_personel_v1',JSON.stringify(PERSONEL));}catch(e){}
+  // DB'ye sync et
+  PERSONEL.forEach(function(p){
+    fetch('/api/personel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)}).catch(function(){});
+  });
+}
 
 function personelListesiRender(){
   var el=document.getElementById('personel-liste');if(!el)return;
@@ -3356,7 +3364,9 @@ function personelListesiRender(){
     btn.addEventListener('click',function(){
       var i=parseInt(btn.getAttribute('data-per-sil'));
       if(!confirm(PERSONEL[i].ad+' silinsin mi?')) return;
+      var silId=PERSONEL[i].id;
       PERSONEL.splice(i,1);personelKaydet();personelListesiRender();
+      if(silId) fetch('/api/personel?id='+silId,{method:'DELETE'}).catch(function(){});
       toast('Personel silindi','green');
     });
   });
@@ -3447,7 +3457,10 @@ function personelModalAc(i){
     if(!p.yetkiler)p.yetkiler={};
     ovl.querySelectorAll('.per-yk').forEach(function(inp){p.yetkiler[inp.getAttribute('data-key')]=inp.checked;});
     if(yeni)PERSONEL.push(p);else PERSONEL[i]=p;
-    personelKaydet();ovl.remove();personelListesiRender();
+    personelKaydet();
+    // DB'ye kaydet
+    fetch('/api/personel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)}).catch(function(){});
+    ovl.remove();personelListesiRender();
     toast(yeni?'Personel eklendi':'Personel guncellendi','green');
   });
 }
@@ -5574,10 +5587,11 @@ function bayiKaydet(id){
     b.genelIndirim=parseInt(g('be-indirim'))||b.genelIndirim;
     b.durum=g('be-durum');b.sozlesmeTarih=g('be-soz-bas');
     b.sozlesmeBitis=g('be-soz-bit');b.adres=g('be-adres');b.notlar=g('be-notlar');
+    fetch('/api/bayiler',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).catch(function(){});
     toast('✅ Bayi güncellendi!','green');
   } else {
     var yeniId='B'+String(Date.now()).slice(-4);
-    BAYILER.push({
+    var yeniB={
       id:yeniId,isim:isim,yetkili:g('be-yetkili'),
       tel:g('be-tel'),email:g('be-email'),sehir:g('be-sehir'),
       bolge:g('be-bolge'),adres:g('be-adres'),
@@ -5585,7 +5599,9 @@ function bayiKaydet(id){
       genelIndirim:parseInt(g('be-indirim'))||10,
       urunIndirimleri:{},durum:g('be-durum')||'aktif',
       notlar:g('be-notlar'),odemeler:[],satislar:[]
-    });
+    };
+    BAYILER.push(yeniB);
+    fetch('/api/bayiler',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(yeniB)}).catch(function(){});
     toast('✅ '+isim+' eklendi!','green');
   }
   document.getElementById('bayi-ekle-ovl').remove();
