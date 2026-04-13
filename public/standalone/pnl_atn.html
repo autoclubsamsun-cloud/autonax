@@ -4977,14 +4977,15 @@ function katSil(kat,altKat){
 }
 
 function fiyatSekmelerGuncelle(){
-  // Sekme barını yeniden oluştur
   var barEl=document.querySelector('.fiyat-sekme-bar');
   if(!barEl) return;
-  barEl.innerHTML=Object.keys(KATEGORILER).map(function(k){
+  var html=Object.keys(KATEGORILER).map(function(k){
     var kat=KATEGORILER[k];
     var aktif=_fKatAktif===k;
     return '<button data-kat="'+k+'" class="fiyat-tab'+(aktif?' fiyat-tab-aktif':'')+'" style="white-space:nowrap">'+kat.ikon+' '+kat.isim+'</button>';
   }).join('');
+  html+='<button id="fkat-bolumler" data-kat="bolumler" class="fiyat-tab'+(_fKatAktif==='bolumler'?' fiyat-tab-aktif':'')+'" style="white-space:nowrap;background:#1d4ed8;color:#fff;border-color:#1d4ed8">🗂️ Hizmet Bölümleri</button>';
+  barEl.innerHTML=html;
   barEl.querySelectorAll('.fiyat-tab').forEach(function(btn){
     btn.addEventListener('click',function(){fKatSec(btn.getAttribute('data-kat'));});
   });
