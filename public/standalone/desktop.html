@@ -2401,6 +2401,125 @@ function slTouch(id){
 
 // Sayfa yüklenince başlat
 
+
+/* ══ API'DEN GELEN ÜRÜNLER — Fiyat güncelle + Yeni kart ekle ══ */
+function apiUrunleriIsle(urunler){
+  // 1. Mevcut URUNLER objesini güncelle
+  urunler.forEach(function(u){
+    if(!u.id) return;
+    if(URUNLER[u.id]){
+      // Mevcut ürün — fiyat güncelle
+      if(u.full_fiyat!=null) URUNLER[u.id].full=u.full_fiyat;
+      if(u.on3_fiyat!=null)  URUNLER[u.id].on3=u.on3_fiyat;
+      if(u.kaput_fiyat!=null) URUNLER[u.id].kaput=u.kaput_fiyat;
+      if(u.tutar) URUNLER[u.id].tutar=u.tutar;
+      if(u.garanti) URUNLER[u.id].garanti=u.garanti;
+      if(u.aciklama) URUNLER[u.id].aciklama=u.aciklama;
+      if(u.rozet) URUNLER[u.id].rozet=u.rozet;
+    } else {
+      // Yeni ürün — URUNLER objesine ekle
+      URUNLER[u.id]={
+        isim:u.isim||'',
+        kat:u.kat||'ppf',
+        altKat:u.alt_kat||'',
+        garanti:u.garanti||5,
+        full:u.full_fiyat||null,
+        on3:u.on3_fiyat||null,
+        kaput:u.kaput_fiyat||null,
+        tutar:u.tutar||0,
+        rozet:u.rozet||'',
+        aciklama:u.aciklama||''
+      };
+    }
+  });
+
+  // 2. Mevcut kartları fiyat güncelle
+  fiyatKartlariniYenile();
+
+  // 3. Yeni ürünleri dinamik ekle
+  urunler.forEach(function(u){
+    if(!u.id || document.querySelector('[data-urun-id="'+u.id+'"]')) return;
+    // Bu ürün için kart yok — dinamik oluştur
+    dinamikKartEkle(u);
+  });
+}
+
+function dinamikKartEkle(u){
+  // Kategori ve fiyat tipi belirle
+  var kat = u.kat||'ppf';
+  var fiyat = u.full_fiyat||u.tutar||0;
+  var fiyatStr = fiyat ? '₺'+fiyat.toLocaleString('tr-TR') : 'Fiyat için arayın';
+  var rozet = u.rozet||'🆕 YENİ';
+  var garanti = u.garanti||0;
+  var garatiStr = garanti ? garanti+' Yıl Garanti' : 'Garanti Bilgisi';
+  var isim = u.isim||'';
+  var aciklama = u.aciklama||'';
+
+  // SVG ikonları kategoriye göre
+  var svgIkon = {
+    ppf: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>',
+    seramik: '<circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/>',
+    bakim: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'
+  }[kat] || '<circle cx="12" cy="12" r="10"/>';
+
+  // Kart HTML'i
+  var kartHtml = '<div class="svc" data-dinamik-id="'+u.id+'">'+
+    '<div class="svc-img"><svg viewBox="0 0 24 24">'+svgIkon+'</svg>'+
+    '<div class="svc-bdg">'+rozet+'</div></div>'+
+    '<div class="svc-body">'+
+      '<div class="svc-tag-row">'+
+        '<span class="svc-brand">'+isim+'</span>'+
+        '<span class="svc-garanti">'+garatiStr+'</span>'+
+      '</div>'+
+      '<div class="svc-name">'+aciklama.slice(0,40)+'</div>'+
+      '<div class="svc-sub">'+aciklama+'</div>'+
+      '<div class="svc-price"><span data-urun-id="'+u.id+'" data-fiyat-tip="full">'+fiyatStr+'</span></div>'+
+      '<button class="svc-btn">Randevu Al</button>'+
+    '</div>'+
+  '</div>';
+
+  // Doğru grid'i bul — kategoriye göre
+  var gridSec = null;
+  var grids = document.querySelectorAll('.svc-grid');
+  
+  if(kat==='ppf'){
+    // PPF için en yakın grid — alt kategoriye göre
+    var altKat = u.alt_kat||'';
+    if(altKat==='alman') gridSec = grids[2]; // Germany grid
+    else if(altKat==='amerikan') gridSec = grids[1]; // USA grid
+    else gridSec = grids[0]; // Öne çıkan
+  } else if(kat==='seramik') {
+    gridSec = grids[3]; // Son grid
+  } else {
+    gridSec = grids[grids.length-1];
+  }
+
+  // Grid yoksa yeni section oluştur
+  if(!gridSec){
+    var katBaslik = {ppf:'PPF Kaplama',seramik:'Seramik Kaplama',bakim:'Temizlik & Bakım'}[kat]||'Hizmetler';
+    var yeniSection = document.createElement('div');
+    yeniSection.className='svc-section';
+    yeniSection.innerHTML='<div class="sh"><div class="sh-left"><h2>'+katBaslik+'</h2></div></div>'+
+      '<div class="svc-grid" id="grid-'+kat+'"></div>';
+    var mainEl = document.querySelector('.main,.content,main') || document.body;
+    mainEl.appendChild(yeniSection);
+    gridSec = document.getElementById('grid-'+kat);
+  }
+
+  if(gridSec){
+    var tmp = document.createElement('div');
+    tmp.innerHTML = kartHtml;
+    var kart = tmp.firstElementChild;
+    gridSec.appendChild(kart);
+    // Randevu Al butonuna event ekle
+    var btn = kart.querySelector('.svc-btn');
+    if(btn) btn.addEventListener('click',function(){
+      SEPET.add({id:u.id+'_'+Date.now(),isim:u.isim,aciklama:aciklama,fiyat:fiyat,fiyatStr:fiyatStr});
+    });
+    console.log('Autonax: Yeni ürün kartı eklendi —', u.id, u.isim);
+  }
+}
+
 /* ══ FİYAT KARTLARINI YENİLE — API'den gelen fiyatları DOM'a yansıt ══ */
 function fiyatKartlariniYenile(){
   // Tüm [data-urun-id] elementlerini güncelle (span, div, her ne olursa)
@@ -3417,27 +3536,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Scroll'u en üstten başlat
   if('scrollRestoration' in history) history.scrollRestoration='manual';
   window.scrollTo(0,0);
-  // API'den güncel fiyatları çek
+  // API'den güncel ürün + fiyat listesini çek
   fetch('/api/urunler').then(function(r){return r.json();}).then(function(d){
-    if(d.success&&d.data&&d.data.length>0){
-      var guncellendi=false;
-      d.data.forEach(function(u){
-        // PPF ürünleri — id ile eşleştir
-        if(u.id&&URUNLER[u.id]){
-          var t=URUNLER[u.id];
-          if(u.full_fiyat!=null) t.full=u.full_fiyat;
-          if(u.on3_fiyat!=null) t.on3=u.on3_fiyat;
-          if(u.kaput_fiyat!=null) t.kaput=u.kaput_fiyat;
-          if(u.garanti) t.garanti=u.garanti;
-          if(u.aciklama) t.aciklama=u.aciklama;
-          guncellendi=true;
-        }
-      });
-      if(guncellendi){
-        // Fiyat kartlarını DOM'da güncelle
-        fiyatKartlariniYenile();
-        console.log('Autonax: API fiyatları yüklendi');
-      }
+    if(d.success&&d.data){
+      apiUrunleriIsle(d.data);
     }
   }).catch(function(){
     // Offline — localStorage'dan yükle
@@ -3446,10 +3548,11 @@ document.addEventListener('DOMContentLoaded',()=>{
       if(raw){
         var veri=JSON.parse(raw);
         if(veri.URUNLER){
-          Object.keys(veri.URUNLER).forEach(function(k){
-            if(URUNLER[k]) Object.assign(URUNLER[k],veri.URUNLER[k]);
+          var liste=Object.keys(veri.URUNLER).map(function(k){
+            var u=veri.URUNLER[k];
+            return {id:k,isim:u.isim,kat:u.kat||'ppf',alt_kat:u.altKat||'',garanti:u.garanti,full_fiyat:u.full,on3_fiyat:u.on3,kaput_fiyat:u.kaput,tutar:u.tutar,rozet:u.rozet,aciklama:u.aciklama};
           });
-          fiyatKartlariniYenile();
+          apiUrunleriIsle(liste);
         }
       }
     }catch(e){}
