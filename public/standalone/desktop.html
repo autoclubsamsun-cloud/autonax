@@ -2522,7 +2522,6 @@ function dinamikKartEkle(u){
 
 /* ══ FİYAT KARTLARINI YENİLE — API'den gelen fiyatları DOM'a yansıt ══ */
 function fiyatKartlariniYenile(){
-  // Tüm [data-urun-id] elementlerini güncelle (span, div, her ne olursa)
   document.querySelectorAll('[data-urun-id]').forEach(function(el){
     var id=el.getAttribute('data-urun-id');
     var tip=el.getAttribute('data-fiyat-tip')||'full';
@@ -2530,6 +2529,24 @@ function fiyatKartlariniYenile(){
     if(!u) return;
     var fiyat=tip==='on3'?u.on3:tip==='kaput'?u.kaput:u.full;
     el.textContent=fiyat?'₺'+fiyat.toLocaleString('tr-TR'):'Fiyat için arayın';
+    // Resim varsa kartı güncelle
+    if(u.resim){
+      var svc=el.closest('.svc');
+      if(svc){
+        var svcImg=svc.querySelector('.svc-img');
+        if(svcImg){
+          var existing=svcImg.querySelector('img.urun-resim');
+          if(!existing){
+            var imgEl=document.createElement('img');
+            imgEl.className='urun-resim';
+            imgEl.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5;border-radius:inherit';
+            imgEl.src=u.resim;
+            svcImg.style.position='relative';
+            svcImg.insertBefore(imgEl,svcImg.firstChild);
+          } else { existing.src=u.resim; }
+        }
+      }
+    }
   });
 }
 
@@ -2915,7 +2932,7 @@ const URUNLER = {
         }
       });
     }
-    if(veri.SERAMIK && veri.SERAMIK.length){
+    if(veri.SERAMIK && veri.SERAMIK.length && typeof SERAMIK !== 'undefined'){
       SERAMIK.length = 0;
       veri.SERAMIK.forEach(function(s){ SERAMIK.push(s); });
     }
@@ -3536,6 +3553,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Scroll'u en üstten başlat
   if('scrollRestoration' in history) history.scrollRestoration='manual';
   window.scrollTo(0,0);
+  // URL /standalone/ içeriyorsa temiz URL'e yönlendir
+  if(window.location.pathname.includes('/standalone/')) {
+    window.history.replaceState(null,'','/');
+  }
   // API'den güncel ürün + fiyat listesini çek
   fetch('/api/urunler').then(function(r){return r.json();}).then(function(d){
     if(d.success&&d.data){
@@ -3556,6 +3577,14 @@ document.addEventListener('DOMContentLoaded',()=>{
         }
       }
     }catch(e){}
+  });
+  // Fiyat güncelleme event'ini dinle (panel değiştirince)
+  window.addEventListener('storage', function(e){
+    if(e.key === 'autonax_fiyat_guncelleme'){
+      fetch('/api/urunler').then(function(r){return r.json();}).then(function(d){
+        if(d.success && d.data) apiUrunleriIsle(d.data);
+      }).catch(function(){});
+    }
   });
   // Başlangıç — URL'de ?logout varsa oturumu temizle
   if(window.location.search.includes('logout')){

@@ -653,11 +653,11 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
     <div class="sb-sep"></div>
     <div class="sb-sec" style="padding-bottom:16px">
       <div class="sb-label">Siteler</div>
-      <div class="sn" onclick="window.open('/standalone/desktop.html')">
+      <div class="sn" onclick="window.open('/')">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         Ana Site
       </div>
-      <div class="sn" onclick="window.open('/standalone/hesabim.html')">
+      <div class="sn" onclick="window.open('/hesabim')">
         <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         Müşteri Paneli
       </div>
@@ -3506,9 +3506,19 @@ function adminBilgiKaydet(){
     if(email) localStorage.setItem('autonax_adm_email', email);
   }catch(e){}
 
-  // DB'ye de kaydet
-  if(typeof dbAdminGuncelle==='function') dbAdminGuncelle(ADM_U, ADM_P);
-  toast('✅ Admin bilgileri kaydedildi!','green');
+  // DB'ye kaydet — önce API, sonra localStorage
+  fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'update',username:ADM_U,password:ADM_P})})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.success) toast('✅ Admin bilgileri kaydedildi!','green');
+    else toast('⚠️ Kaydedildi (DB hatası)','orange');
+  })
+  .catch(function(){ toast('✅ Admin bilgileri kaydedildi (offline)!','green'); });
+  try{
+    localStorage.setItem('autonax_adm_u', ADM_U);
+    localStorage.setItem('autonax_adm_p', ADM_P);
+  }catch(e){}
 }
 
 window.onload=function(){
@@ -4367,6 +4377,8 @@ function urunAktifToggle(id,tip){
 
 function urunResimYukle(e,id,tip,idx){
   var file=e.target.files[0];if(!file)return;
+  // Boyut kontrolü (max 500KB)
+  if(file.size > 500*1024){ toast('⚠️ Resim 500KB\'den küçük olmalı!','red'); return; }
   var reader=new FileReader();
   reader.onload=function(ev){
     var url=ev.target.result;
@@ -4378,7 +4390,10 @@ function urunResimYukle(e,id,tip,idx){
       var img=header.querySelector('img');
       if(img){img.src=url;}else{var i2=document.createElement('img');i2.src=url;i2.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.3';header.insertBefore(i2,header.firstChild);}
     }
-    toast('📷 Resim yüklendi!','green');
+    // DB'ye kaydet (resim dahil)
+    storageKaydet();
+    urunleriApiSenkronEt();
+    toast('📷 Resim yüklendi ve kaydedildi!','green');
   };
   reader.readAsDataURL(file);
 }
