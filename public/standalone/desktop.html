@@ -3556,6 +3556,114 @@ function socialLogin(provider){ alert(provider+' girişi yakında aktif edilecek
 /* ════════════════════════════════════════════════════
    BUTON BAĞLANTILARI — mevcut HTML butonlarını bağla
 ════════════════════════════════════════════════════ */
+
+/* ══ ÜRÜN DETAY MODAL FONKSİYONLARI ══ */
+function urunDetayAc(urunId, tip) {
+  var u = URUNLER[urunId];
+  if (!u) return;
+  
+  // Header
+  var bg = document.getElementById('udm-bg');
+  var img = document.getElementById('udm-img');
+  if (u.resim && u.resim.startsWith('/')) {
+    img.src = u.resim; img.style.display = 'block';
+  } else {
+    img.style.display = 'none';
+  }
+  // Renk
+  var renk = u.altKat === 'alman' ? '#1a5276' : u.altKat === 'renkli' ? '#6d28d9' : '#B01C2E';
+  bg.style.background = 'linear-gradient(135deg,' + renk + ' 0%,#0a0a0a 100%)';
+  
+  // İçerik
+  document.getElementById('udm-rozet').textContent = u.rozet || '';
+  document.getElementById('udm-isim').textContent = u.isim || '';
+  document.getElementById('udm-garanti').textContent = u.garanti ? u.garanti + ' Yıl Üretici Garantisi' : '';
+  
+  // Menşei
+  var mensei = document.getElementById('udm-mensei');
+  if (u.mensei) {
+    mensei.innerHTML = '<span style="font-size:18px">' + (u.mensei.includes('🇩🇪') ? '🇩🇪' : '🇺🇸') + '</span> ' + u.mensei;
+    mensei.style.display = 'flex';
+  } else {
+    mensei.style.display = 'none';
+  }
+  
+  // Fiyat grid
+  var grid = document.getElementById('udm-fiyat-grid');
+  var fiyatlar = [];
+  if (u.full) fiyatlar.push({label: 'Tam Araç', val: u.full, ana: true});
+  if (u.on3) fiyatlar.push({label: 'Ön 3 Parça', val: u.on3, ana: false});
+  if (u.kaput) fiyatlar.push({label: 'Kaput', val: u.kaput, ana: false});
+  if (u.fiyat_34) fiyatlar.push({label: '34 Plaka', val: u.fiyat_34, ana: false});
+  if (!fiyatlar.length && u.tutar) fiyatlar.push({label: 'Fiyat', val: u.tutar, ana: true});
+  
+  if (fiyatlar.length === 0) {
+    grid.innerHTML = '<div class="udm-fiyat-kart ana" style="grid-column:1/-1"><div class="udm-fiyat-label">Fiyat</div><div class="udm-fiyat-val">Bilgi için arayın</div></div>';
+  } else {
+    grid.innerHTML = fiyatlar.map(function(f) {
+      return '<div class="udm-fiyat-kart' + (f.ana ? ' ana' : '') + '">' +
+        '<div class="udm-fiyat-label">' + f.label + '</div>' +
+        '<div class="udm-fiyat-val">₺' + f.val.toLocaleString('tr-TR') + '</div>' +
+        '</div>';
+    }).join('');
+  }
+  
+  // Özellikler
+  var ozList = [];
+  if (u.mikron) ozList.push('📏 ' + u.mikron);
+  if (u.garanti) ozList.push('🛡️ ' + u.garanti + ' Yıl Garanti');
+  ozList.push('✨ Self-Healing');
+  ozList.push('💧 Hidrofobik');
+  ozList.push('☀️ UV Koruma');
+  if (u.altKat === 'alman') ozList.push('🇩🇪 Alman Kalitesi');
+  if (u.altKat === 'amerikan') ozList.push('🇺🇸 Amerikan Kalitesi');
+  if (u.altKat === 'renkli') ozList.push('🌈 30+ Renk Seçeneği');
+  
+  document.getElementById('udm-ozellikler').innerHTML = ozList.map(function(o) {
+    return '<span class="udm-ozellik">' + o + '</span>';
+  }).join('');
+  
+  // Açıklama
+  document.getElementById('udm-aciklama').textContent = u.aciklama || '';
+  
+  // Butonlar
+  var fiyat = u.full || u.tutar || 0;
+  var fiyatStr = fiyat ? '₺' + fiyat.toLocaleString('tr-TR') : 'Fiyat için arayın';
+  
+  document.getElementById('udm-randevu-btn').onclick = function() {
+    urunDetayKapat();
+    if (typeof openSepet === 'function') {
+      SEPET.add({id: urunId + '_' + Date.now(), isim: u.isim, aciklama: u.aciklama || '', fiyat: fiyat, fiyatStr: fiyatStr});
+      openSepet();
+    }
+  };
+  document.getElementById('udm-sepet-btn').onclick = function() {
+    SEPET.add({id: urunId + '_' + Date.now(), isim: u.isim, aciklama: u.aciklama || '', fiyat: fiyat, fiyatStr: fiyatStr});
+    var btn = document.getElementById('udm-sepet-btn');
+    btn.textContent = '✓ Sepete Eklendi';
+    btn.style.background = '#16A34A'; btn.style.color = '#fff'; btn.style.borderColor = '#16A34A';
+    setTimeout(function() {
+      btn.textContent = '🛒 Sepete Ekle';
+      btn.style.background = ''; btn.style.color = ''; btn.style.borderColor = '';
+    }, 2000);
+  };
+  
+  // Modalı aç
+  var ovl = document.getElementById('urun-detay-ovl');
+  ovl.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function urunDetayKapat() {
+  document.getElementById('urun-detay-ovl').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+// Klavye ESC
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') urunDetayKapat();
+});
+
 document.addEventListener('DOMContentLoaded',()=>{
   // Scroll'u en üstten başlat
   if('scrollRestoration' in history) history.scrollRestoration='manual';
@@ -3585,6 +3693,25 @@ document.addEventListener('DOMContentLoaded',()=>{
       }
     }catch(e){}
   });
+  // Ürün kartlarına detay tıklaması ekle
+  document.querySelectorAll('.svc').forEach(function(kart){
+    var fiyatEl = kart.querySelector('[data-urun-id]');
+    if (!fiyatEl) return;
+    var urunId = fiyatEl.getAttribute('data-urun-id');
+    if (!urunId || urunId.startsWith('seramik')) return;
+    // Kart başlığına tıklayınca detay aç
+    var body = kart.querySelector('.svc-body');
+    var img = kart.querySelector('.svc-img');
+    [body, img].forEach(function(el) {
+      if (!el) return;
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', function(e) {
+        if (e.target.classList.contains('svc-btn')) return; // Randevu Al butonu hariç
+        urunDetayAc(urunId, 'ppf');
+      });
+    });
+  });
+
   // Fiyat güncelleme event'ini dinle (panel değiştirince)
   window.addEventListener('storage', function(e){
     if(e.key === 'autonax_fiyat_guncelleme'){
@@ -3681,7 +3808,39 @@ function sbarAra(q){
 
   panel.innerHTML = `
     <div style="background:#fff;border-radius:16px;width:100%;max-width:540px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.3);animation:sbarIn .2s cubic-bezier(.34,1.56,.64,1)">
-      <style>@keyframes sbarIn{from{transform:translateY(-16px) scale(.97);opacity:0}to{transform:none;opacity:1}}</style>
+      <style>@keyframes sbarIn{from{transform:translateY(-16px) scale(.97);opacity:0}to{transform:none;opacity:1}}
+/* ══ ÜRÜN DETAY MODAL ══ */
+#urun-detay-ovl{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
+#urun-detay-ovl.show{display:flex}
+#urun-detay-modal{background:#fff;border-radius:20px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.25)}
+.udm-header{position:relative;height:200px;border-radius:20px 20px 0 0;overflow:hidden;display:flex;align-items:flex-end;padding:24px}
+.udm-header-bg{position:absolute;inset:0;background:linear-gradient(135deg,#B01C2E 0%,#1a1a1a 100%)}
+.udm-header-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4}
+.udm-header-content{position:relative;z-index:1;color:#fff}
+.udm-rozet{font-size:11px;background:rgba(255,255,255,.2);padding:3px 10px;border-radius:20px;margin-bottom:8px;display:inline-block;font-weight:600}
+.udm-isim{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px;line-height:1.1}
+.udm-garanti{font-size:12px;opacity:.8;margin-top:4px}
+.udm-body{padding:24px}
+.udm-close{position:absolute;top:16px;right:16px;z-index:2;width:32px;height:32px;background:rgba(255,255,255,.15);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px}
+.udm-close:hover{background:rgba(255,255,255,.3)}
+.udm-fiyat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.udm-fiyat-kart{background:#f8f8f8;border-radius:12px;padding:14px;text-align:center}
+.udm-fiyat-kart.ana{background:#B01C2E;color:#fff}
+.udm-fiyat-label{font-size:10px;font-weight:700;letter-spacing:.5px;opacity:.7;text-transform:uppercase;margin-bottom:4px}
+.udm-fiyat-val{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px}
+.udm-ozellik-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.udm-ozellik{background:#f3f4f6;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;color:#374151}
+.udm-aciklama{font-size:14px;color:#6b7280;line-height:1.6;margin-bottom:20px}
+.udm-mensei{display:flex;align-items:center;gap:8px;font-size:13px;color:#374151;font-weight:600;padding:12px;background:#f9fafb;border-radius:10px;margin-bottom:20px}
+.udm-btn-row{display:flex;gap:10px}
+.udm-btn-randevu{flex:1;padding:14px;background:#B01C2E;color:#fff;border:none;border-radius:12px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer}
+.udm-btn-sepet{padding:14px 20px;border:2px solid #B01C2E;background:#fff;color:#B01C2E;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer}
+@media(max-width:600px){
+  .udm-fiyat-grid{grid-template-columns:1fr 1fr}
+  .udm-isim{font-size:20px}
+  .udm-header{height:160px;padding:16px}
+}
+</style>
       <div style="padding:16px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #f0f0f0">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <span style="flex:1;font-size:15px;color:#333">"<b>${q}</b>" için sonuçlar</span>
@@ -3857,5 +4016,31 @@ function authCikis(){
   }
 }
 </script>
+
+<!-- ══ ÜRÜN DETAY MODAL ══ -->
+<div id="urun-detay-ovl" onclick="if(event.target===this)urunDetayKapat()">
+  <div id="urun-detay-modal">
+    <div class="udm-header" id="udm-header">
+      <div class="udm-header-bg" id="udm-bg"></div>
+      <img id="udm-img" class="udm-header-img" src="" alt="" style="display:none">
+      <button class="udm-close" onclick="urunDetayKapat()">✕</button>
+      <div class="udm-header-content">
+        <div class="udm-rozet" id="udm-rozet"></div>
+        <div class="udm-isim" id="udm-isim"></div>
+        <div class="udm-garanti" id="udm-garanti"></div>
+      </div>
+    </div>
+    <div class="udm-body">
+      <div id="udm-mensei" class="udm-mensei" style="display:none"></div>
+      <div class="udm-fiyat-grid" id="udm-fiyat-grid"></div>
+      <div id="udm-ozellikler" class="udm-ozellik-list"></div>
+      <div id="udm-aciklama" class="udm-aciklama"></div>
+      <div class="udm-btn-row">
+        <button class="udm-btn-randevu" id="udm-randevu-btn">📅 Randevu Al</button>
+        <button class="udm-btn-sepet" id="udm-sepet-btn">🛒 Sepete Ekle</button>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
