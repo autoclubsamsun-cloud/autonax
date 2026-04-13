@@ -1245,6 +1245,39 @@ svg{display:block;flex-shrink:0}
 .hd-dd-item svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;flex-shrink:0}
 .hd-dd-cikis{color:var(--r)!important}.hd-dd-cikis:hover{background:rgba(176,28,46,.05)!important}.hd-dd-cikis svg{stroke:var(--r)}
 @media(max-width:767px){.hd-user-dd{right:-8px;min-width:190px}#hd-user-label{display:none}.hd-user-caret{display:none}}
+
+@keyframes sbarIn{from{transform:translateY(-16px) scale(.97);opacity:0}to{transform:none;opacity:1}}
+/* ══ ÜRÜN DETAY MODAL ══ */
+#urun-detay-ovl{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
+#urun-detay-ovl.show{display:flex}
+#urun-detay-modal{background:#fff;border-radius:20px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.25)}
+.udm-header{position:relative;height:200px;border-radius:20px 20px 0 0;overflow:hidden;display:flex;align-items:flex-end;padding:24px}
+.udm-header-bg{position:absolute;inset:0;background:linear-gradient(135deg,#B01C2E 0%,#1a1a1a 100%)}
+.udm-header-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4}
+.udm-header-content{position:relative;z-index:1;color:#fff}
+.udm-rozet{font-size:11px;background:rgba(255,255,255,.2);padding:3px 10px;border-radius:20px;margin-bottom:8px;display:inline-block;font-weight:600}
+.udm-isim{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px;line-height:1.1}
+.udm-garanti{font-size:12px;opacity:.8;margin-top:4px}
+.udm-body{padding:24px}
+.udm-close{position:absolute;top:16px;right:16px;z-index:2;width:32px;height:32px;background:rgba(255,255,255,.15);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px}
+.udm-close:hover{background:rgba(255,255,255,.3)}
+.udm-fiyat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.udm-fiyat-kart{background:#f8f8f8;border-radius:12px;padding:14px;text-align:center}
+.udm-fiyat-kart.ana{background:#B01C2E;color:#fff}
+.udm-fiyat-label{font-size:10px;font-weight:700;letter-spacing:.5px;opacity:.7;text-transform:uppercase;margin-bottom:4px}
+.udm-fiyat-val{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px}
+.udm-ozellik-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.udm-ozellik{background:#f3f4f6;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;color:#374151}
+.udm-aciklama{font-size:14px;color:#6b7280;line-height:1.6;margin-bottom:20px}
+.udm-mensei{display:flex;align-items:center;gap:8px;font-size:13px;color:#374151;font-weight:600;padding:12px;background:#f9fafb;border-radius:10px;margin-bottom:20px}
+.udm-btn-row{display:flex;gap:10px}
+.udm-btn-randevu{flex:1;padding:14px;background:#B01C2E;color:#fff;border:none;border-radius:12px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer}
+.udm-btn-sepet{padding:14px 20px;border:2px solid #B01C2E;background:#fff;color:#B01C2E;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer}
+@media(max-width:600px){
+  .udm-fiyat-grid{grid-template-columns:1fr 1fr}
+  .udm-isim{font-size:20px}
+  .udm-header{height:160px;padding:16px}
+}
 </style>
 </head>
 <body>
@@ -3582,7 +3615,7 @@ function urunDetayAc(urunId, tip) {
   // Menşei
   var mensei = document.getElementById('udm-mensei');
   if (u.mensei) {
-    mensei.innerHTML = '<span style="font-size:18px">' + (u.mensei.includes('🇩🇪') ? '🇩🇪' : '🇺🇸') + '</span> ' + u.mensei;
+    mensei.innerHTML = '<span style="font-size:16px">' + u.mensei + '</span>';
     mensei.style.display = 'flex';
   } else {
     mensei.style.display = 'none';
@@ -3811,39 +3844,7 @@ function sbarAra(q){
 
   panel.innerHTML = `
     <div style="background:#fff;border-radius:16px;width:100%;max-width:540px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.3);animation:sbarIn .2s cubic-bezier(.34,1.56,.64,1)">
-      <style>@keyframes sbarIn{from{transform:translateY(-16px) scale(.97);opacity:0}to{transform:none;opacity:1}}
-/* ══ ÜRÜN DETAY MODAL ══ */
-#urun-detay-ovl{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
-#urun-detay-ovl.show{display:flex!important}
-#urun-detay-modal{background:#fff;border-radius:20px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.25)}
-.udm-header{position:relative;height:200px;border-radius:20px 20px 0 0;overflow:hidden;display:flex;align-items:flex-end;padding:24px}
-.udm-header-bg{position:absolute;inset:0;background:linear-gradient(135deg,#B01C2E 0%,#1a1a1a 100%)}
-.udm-header-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4}
-.udm-header-content{position:relative;z-index:1;color:#fff}
-.udm-rozet{font-size:11px;background:rgba(255,255,255,.2);padding:3px 10px;border-radius:20px;margin-bottom:8px;display:inline-block;font-weight:600}
-.udm-isim{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px;line-height:1.1}
-.udm-garanti{font-size:12px;opacity:.8;margin-top:4px}
-.udm-body{padding:24px}
-.udm-close{position:absolute;top:16px;right:16px;z-index:2;width:32px;height:32px;background:rgba(255,255,255,.15);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px}
-.udm-close:hover{background:rgba(255,255,255,.3)}
-.udm-fiyat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
-.udm-fiyat-kart{background:#f8f8f8;border-radius:12px;padding:14px;text-align:center}
-.udm-fiyat-kart.ana{background:#B01C2E;color:#fff}
-.udm-fiyat-label{font-size:10px;font-weight:700;letter-spacing:.5px;opacity:.7;text-transform:uppercase;margin-bottom:4px}
-.udm-fiyat-val{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px}
-.udm-ozellik-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
-.udm-ozellik{background:#f3f4f6;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;color:#374151}
-.udm-aciklama{font-size:14px;color:#6b7280;line-height:1.6;margin-bottom:20px}
-.udm-mensei{display:flex;align-items:center;gap:8px;font-size:13px;color:#374151;font-weight:600;padding:12px;background:#f9fafb;border-radius:10px;margin-bottom:20px}
-.udm-btn-row{display:flex;gap:10px}
-.udm-btn-randevu{flex:1;padding:14px;background:#B01C2E;color:#fff;border:none;border-radius:12px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer}
-.udm-btn-sepet{padding:14px 20px;border:2px solid #B01C2E;background:#fff;color:#B01C2E;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer}
-@media(max-width:600px){
-  .udm-fiyat-grid{grid-template-columns:1fr 1fr}
-  .udm-isim{font-size:20px}
-  .udm-header{height:160px;padding:16px}
-}
-</style>
+      
       <div style="padding:16px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #f0f0f0">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <span style="flex:1;font-size:15px;color:#333">"<b>${q}</b>" için sonuçlar</span>
@@ -4021,7 +4022,7 @@ function authCikis(){
 </script>
 
 <!-- ══ ÜRÜN DETAY MODAL ══ -->
-<div id="urun-detay-ovl" onclick="if(event.target===this)urunDetayKapat()">
+<div id="urun-detay-ovl" style="display:none" onclick="if(event.target===this)urunDetayKapat()">
   <div id="urun-detay-modal">
     <div class="udm-header" id="udm-header">
       <div class="udm-header-bg" id="udm-bg"></div>
