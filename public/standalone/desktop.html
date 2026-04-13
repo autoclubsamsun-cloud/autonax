@@ -2763,10 +2763,10 @@ const URUNLER = {
   N8:    { isim:'NiDOJP N8 220 Mikron TPU PPF',        mikron:'220 Mikron', garanti:10, rozet:'⭐ POPÜLER',          mensei:'🇺🇸 Amerikan Ürünü · Ashland Yapışkan', full:70000,  fiyat_34:55000,  on3:20000, kaput:7000 },
   N9:    { isim:'NiDOJP N9 250 Mikron TPU PPF',        mikron:'250 Mikron', garanti:12, rozet:'👑 MAKSİMUM',         mensei:'🇺🇸 Amerikan Ürünü · Ashland Yapışkan', full:90000,  fiyat_34:72000,  on3:null,  kaput:null },
   RENKLI:{ isim:'NiDOJP Renkli 200 Mikron TPU PPF',   mikron:'200 Mikron Renkli', garanti:5, rozet:'🌈 RENKLİ',    mensei:'🇺🇸 Amerikan Ürünü · Ashland Yapışkan', full:180000, fiyat_34:140000, on3:null,  kaput:null },
-}
+};
 
 /* ══ ADMİN SENKRON — localStorage'dan fiyatları yükle ══ */
-(function(){
+;(function(){
   try {
     var raw = localStorage.getItem('autonax_urunler_v1');
     if(!raw) return;
@@ -2956,7 +2956,7 @@ document.querySelectorAll('.tool-btn,.mbctr,.mbctr-btn').forEach(el=>{if(el.text
 /* ════════════════════════════════════════════════════
    SEPET SİSTEMİ
 ════════════════════════════════════════════════════ */
-const SEPET = {
+var SEPET = {
   items: [],
   add(item){
     const mevcut = this.items.find(i=>i.id===item.id);
@@ -3324,6 +3324,9 @@ function socialLogin(provider){ alert(provider+' girişi yakında aktif edilecek
    BUTON BAĞLANTILARI — mevcut HTML butonlarını bağla
 ════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded',()=>{
+  // Scroll'u en üstten başlat
+  if('scrollRestoration' in history) history.scrollRestoration='manual';
+  window.scrollTo(0,0);
   // Başlangıç — URL'de ?logout varsa oturumu temizle
   if(window.location.search.includes('logout')){
     AuthManager.logout();
