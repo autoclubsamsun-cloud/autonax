@@ -2527,21 +2527,28 @@ function fiyatKartlariniYenile(){
     var tip=el.getAttribute('data-fiyat-tip')||'full';
     var u=URUNLER[id];
     if(!u) return;
+    // Fiyat güncelle
     var fiyat=tip==='on3'?u.on3:tip==='kaput'?u.kaput:u.full;
     el.textContent=fiyat?'₺'+fiyat.toLocaleString('tr-TR'):'Fiyat için arayın';
-    // Resim varsa kartı güncelle
-    if(u.resim){
-      var svc=el.closest('.svc');
-      if(svc){
+    // Kart başlığını da güncelle (garanti)
+    var svc=el.closest('.svc');
+    if(svc){
+      var garEl=svc.querySelector('.svc-garanti');
+      if(garEl && u.garanti) garEl.textContent=u.garanti+' Yıl Garanti';
+      // Rozet
+      var bdgEl=svc.querySelector('.svc-bdg');
+      if(bdgEl && u.rozet) bdgEl.textContent=u.rozet;
+      // Resim
+      if(u.resim && u.resim.startsWith('/')){
         var svcImg=svc.querySelector('.svc-img');
         if(svcImg){
+          svcImg.style.cssText+='position:relative;overflow:hidden';
           var existing=svcImg.querySelector('img.urun-resim');
           if(!existing){
             var imgEl=document.createElement('img');
             imgEl.className='urun-resim';
-            imgEl.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5;border-radius:inherit';
-            imgEl.src=u.resim;
-            svcImg.style.position='relative';
+            imgEl.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45;border-radius:inherit;pointer-events:none';
+            imgEl.alt=id; imgEl.src=u.resim;
             svcImg.insertBefore(imgEl,svcImg.firstChild);
           } else { existing.src=u.resim; }
         }
