@@ -1709,6 +1709,8 @@ function rdvKaydet(idx){
   r.tutar=fiyat;
   r.durum=(g('dz-durum')||{value:r.durum}).value||r.durum;
   if((r.odenenToplam||0)>=fiyat){r.odendi=true;}else{r.odendi=false;}
+  storageKaydet();
+  if(typeof dbRandevuKaydet==='function') dbRandevuKaydet(r);
   document.getElementById('rdv-duzenle-ovl').remove();
   doRdvListele();
   var toast=document.createElement('div');
@@ -1928,6 +1930,9 @@ function odemeEkle(idx,yontem){
   r.odemeGecmisi.push({tarih:tarihStr,yontem:yontem,miktar:miktar,not:not});
   r.odenenToplam=(r.odenenToplam||0)+miktar;
   if(r.odenenToplam>=r.tutar){r.odendi=true;r.islem=true;}
+  storageKaydet();
+  // DB'ye kaydet
+  if(typeof dbRandevuKaydet==='function') dbRandevuKaydet(r);
   // Tabloyu güncelle
   doRdvListele();
   // Modal içini yenile
@@ -1968,7 +1973,7 @@ function detOdemeYap(idx,yontem){
   document.body.appendChild(toast);
   setTimeout(function(){toast.remove();},3000);
 }
-function rdvIslemTamamla(idx){RANDEVULAR[idx].islem=true;document.getElementById('rdv-modal-ovl').remove();doRdvListele();}
+function rdvIslemTamamla(idx){RANDEVULAR[idx].islem=true;if(typeof dbRandevuKaydet==='function')dbRandevuKaydet(RANDEVULAR[idx]);storageKaydet();document.getElementById('rdv-modal-ovl').remove();doRdvListele();}
 function rdvOdemeAl(idx){
   var r=RANDEVULAR[idx];
   if(r&&r.onlineOdeme){alert('Bu randevu için online ödeme alınmış.');}
@@ -5854,6 +5859,8 @@ function csvRdvYukle(){
   storageKaydet();
   csvRdvIptal();
   toast('✅ '+eklenen+' randevu eklendi'+(atlanan?' ('+atlanan+' atlandı)':''),'green');
+  // DB'ye sync et
+  if(typeof dbSyncToDB==='function') dbSyncToDB();
   setTimeout(function(){doPg('randevular');},500);
 }
 
