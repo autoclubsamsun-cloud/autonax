@@ -1040,6 +1040,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
         <div class="fiyat-sekme-bar" style="display:flex;gap:6px;flex-wrap:wrap">
           <button id="fkat-ppf" class="fiyat-tab fiyat-tab-aktif" onclick="fKatSec('ppf')">🛡️ PPF TPU Kaplama</button>
           <button id="fkat-seramik" class="fiyat-tab" onclick="fKatSec('seramik')">✨ Seramik & Kimyasal</button>
+          <button id="fkat-bolumler" class="fiyat-tab" onclick="fKatSec('bolumler')" style="background:#1d4ed8;color:#fff;border-color:#1d4ed8">🗂️ Hizmet Bölümleri</button>
           <button id="fkat-bakim" class="fiyat-tab" onclick="fKatSec('bakim')">🚿 Temizlik & Bakım</button>
         </div>
         <button onclick="fiyatUrunEkleModal()" style="padding:9px 16px;background:var(--r);color:#fff;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer">+ YENİ ÜRÜN EKLE</button>
@@ -1875,7 +1876,7 @@ function rdvDetay(idx){
     var borcBg=kln>0?'rgba(176,28,46,.06)':'rgba(22,163,74,.06)';
     var borcBorder=kln>0?'rgba(176,28,46,.2)':'rgba(22,163,74,.2)';
 
-    ovl.innerHTML='<div style="background:#fff;border-radius:16px;width:100%;max-width:520px;box-shadow:0 24px 64px rgba(0,0,0,.2);overflow:hidden;max-height:90vh;overflow-y:auto">'
+    ovl.setAttribute('data-modal','kart');ovl.innerHTML='<div style="background:#fff;border-radius:16px;width:100%;max-width:520px;box-shadow:0 24px 64px rgba(0,0,0,.2);overflow:hidden;max-height:90vh;overflow-y:auto">'
       // Header
       +'<div style="background:var(--ink);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1">'
         +'<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#fff">RANDEVU DETAYI</div>'
@@ -4040,6 +4041,249 @@ var AUTONAX_STORAGE_KEY = 'autonax_urunler_v1';
 
 
 /* ═══ ÜRÜN SİL ═══ */
+
+
+/* ══════════════════════════════════════════════════════════
+   HİZMET BÖLÜMLERİ YÖNETİMİ
+══════════════════════════════════════════════════════════ */
+var _bolumlerData = [];
+
+function bolumlerSayfasiYukle(){
+  var el = document.getElementById('fkat-icerik');
+  if(!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--ink4)">Yükleniyor...</div>';
+  fetch('/api/hizmet-bolumleri')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.success){ _bolumlerData = d.data; bolumlerRender(); }
+      else el.innerHTML = '<div style="color:red;padding:20px">Yükleme hatası: ' + d.error + '</div>';
+    })
+    .catch(function(){ _bolumlerData = []; bolumlerRender(); });
+}
+
+function bolumlerRender(){
+  var el = document.getElementById('fkat-icerik');
+  if(!el) return;
+  var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'
+    + '<div style="font-family:Bebas Neue,sans-serif;font-size:20px;letter-spacing:1px">HİZMET BÖLÜMLERİ (' + _bolumlerData.length + ')</div>'
+    + '<button onclick="bolumEkleModal(null)" style="padding:8px 16px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;font-family:Bebas Neue,sans-serif;font-size:13px;cursor:pointer">+ YENİ BÖLÜM</button>'
+    + '</div>';
+
+  if(!_bolumlerData.length){
+    h += '<div style="text-align:center;padding:40px;background:#f8f8f8;border-radius:12px;color:var(--ink4)">'
+      + '<div style="font-size:40px;margin-bottom:12px">🗂️</div>'
+      + '<div style="font-weight:700;margin-bottom:6px">Henüz bölüm yok</div>'
+      + '<div style="font-size:13px">Seramik Kaplama, Cam Filmi gibi bölümler ekleyin</div>'
+      + '</div>';
+  } else {
+    _bolumlerData.forEach(function(b){
+      var kartlar = b.kartlar || [];
+      var aktifRenk = b.aktif ? '#f0f9ff' : '#f8f8f8';
+      var durum = b.aktif
+        ? '<span style="font-size:10px;padding:3px 8px;border-radius:20px;background:#dcfce7;color:#16a34a;font-weight:700">Aktif</span>'
+        : '<span style="font-size:10px;padding:3px 8px;border-radius:20px;background:#fee2e2;color:#dc2626;font-weight:700">Pasif</span>';
+
+      var kartlarHtml = '';
+      if(kartlar.length){
+        kartlarHtml = '<div style="padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px">';
+        kartlar.forEach(function(k){
+          kartlarHtml += '<div style="background:#f9fafb;border:1px solid var(--bd);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;min-width:180px">'
+            + '<span style="font-size:18px">' + (k.rozet || '🔧') + '</span>'
+            + '<div style="flex:1;min-width:0">'
+              + '<div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + k.isim + '</div>'
+              + '<div style="font-size:11px;color:var(--r);font-weight:700">' + (k.fiyat ? '₺' + k.fiyat.toLocaleString('tr-TR') : (k.fiyat_str || '—')) + '</div>'
+            + '</div>'
+            + '<button data-kid="' + k.id + '" onclick="kartSilBtn(this)" style="padding:3px 7px;border:1px solid #fee2e2;border-radius:5px;background:#fff;color:#dc2626;font-size:10px;cursor:pointer">×</button>'
+            + '</div>';
+        });
+        kartlarHtml += '</div>';
+      } else {
+        kartlarHtml = '<div style="padding:10px 16px;font-size:12px;color:var(--ink4)">Henüz kart yok</div>';
+      }
+
+      h += '<div style="background:#fff;border:1.5px solid var(--bd);border-radius:14px;margin-bottom:12px;overflow:hidden">'
+        + '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;background:' + aktifRenk + '">'
+          + '<span style="font-size:24px">' + (b.ikon || '🔧') + '</span>'
+          + '<div style="flex:1">'
+            + '<div style="font-weight:700;font-size:14px">' + b.isim + '</div>'
+            + '<div style="font-size:11px;color:var(--ink4)">' + kartlar.length + ' kart · nav: ' + (b.nav_kat || '—') + '</div>'
+          + '</div>'
+          + '<div style="display:flex;gap:6px;align-items:center">'
+            + durum
+            + '<button data-bid="' + b.id + '" onclick="bolumDuzenleBtn(this)" style="padding:5px 10px;border:1.5px solid var(--bd);border-radius:7px;background:#fff;font-size:11px;cursor:pointer">✏️</button>'
+            + '<button data-bid="' + b.id + '" data-bisim="' + b.isim + '" onclick="kartEkleBtnClick(this)" style="padding:5px 10px;border:1.5px solid #1d4ed8;border-radius:7px;background:#fff;color:#1d4ed8;font-size:11px;cursor:pointer">+ Kart</button>'
+            + '<button data-bid="' + b.id + '" onclick="bolumSilBtn(this)" style="padding:5px 10px;border:1.5px solid #fee2e2;border-radius:7px;background:#fff;color:#dc2626;font-size:11px;cursor:pointer">🗑️</button>'
+          + '</div>'
+        + '</div>'
+        + kartlarHtml
+        + '</div>';
+    });
+  }
+  el.innerHTML = h;
+}
+
+function bolumDuzenleBtn(btn){ bolumEkleModal(btn.getAttribute('data-bid')); }
+function bolumSilBtn(btn){ bolumSil(btn.getAttribute('data-bid')); }
+function kartEkleBtnClick(btn){ kartEkleModal(btn.getAttribute('data-bid'), btn.getAttribute('data-bisim')); }
+function kartSilBtn(btn){ kartSil(btn.getAttribute('data-kid')); }
+
+function bolumEkleModal(id){
+  var b = id ? _bolumlerData.find(function(x){ return x.id === id; }) : null;
+  var ovl = document.createElement('div');
+  ovl.setAttribute('data-modal', 'bolum');
+  ovl.style.cssText = 'position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px';
+  ovl.onclick = function(e){ if(e.target === ovl) ovl.remove(); };
+
+  var inner = document.createElement('div');
+  inner.style.cssText = 'background:#fff;border-radius:16px;width:100%;max-width:480px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.2)';
+  inner.innerHTML = '<div style="font-family:Bebas Neue,sans-serif;font-size:20px;letter-spacing:1px;margin-bottom:20px">' + (b ? '✏️ BÖLÜM DÜZENLE' : '+ YENİ BÖLÜM') + '</div>'
+    + '<input type="hidden" id="bol-id" value="' + (b ? b.id : '') + '">'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'
+      + '<div style="grid-column:1/-1"><label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">Bölüm Adı *</label><input id="bol-isim" type="text" placeholder="Örn: Seramik Kaplama" value="' + (b ? b.isim : '') + '" style="width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:8px;font-family:Outfit,sans-serif;box-sizing:border-box"></div>'
+      + '<div><label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">İkon</label><input id="bol-ikon" type="text" placeholder="✨" value="' + (b ? b.ikon : '🔧') + '" style="width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:8px;font-size:20px;text-align:center;box-sizing:border-box"></div>'
+      + '<div><label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">Nav Kodu</label><input id="bol-navkat" type="text" placeholder="seramik" value="' + (b ? (b.nav_kat || '') : '') + '" style="width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:8px;font-family:Outfit,sans-serif;box-sizing:border-box"><small style="color:var(--ink4);font-size:10px">ppf, seramik, cam, detailing...</small></div>'
+      + '<div style="grid-column:1/-1"><label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">Alt Başlık</label><input id="bol-altbaslik" type="text" placeholder="Örn: Nano seramik · 5 yıl garanti" value="' + (b ? (b.alt_baslik || '') : '') + '" style="width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:8px;font-family:Outfit,sans-serif;box-sizing:border-box"></div>'
+      + '<div><label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">Sıra</label><input id="bol-sira" type="number" value="' + (b ? b.sira : 0) + '" style="width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:8px;box-sizing:border-box"></div>'
+      + '<div style="display:flex;align-items:flex-end;padding-bottom:10px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="bol-aktif" ' + (!b || b.aktif ? 'checked' : '') + ' style="width:16px;height:16px"> Aktif</label></div>'
+    + '</div>'
+    + '<div style="display:flex;gap:8px">'
+      + '<button onclick="document.querySelector(\'[data-modal=bolum]\').remove()" style="flex:1;padding:10px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;cursor:pointer">İptal</button>'
+      + '<button onclick="bolumKaydet()" style="flex:2;padding:10px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">💾 Kaydet</button>'
+    + '</div>';
+  ovl.appendChild(inner);
+  document.body.appendChild(ovl);
+}
+
+function bolumKaydet(){
+  var isim = document.getElementById('bol-isim').value.trim();
+  if(!isim){ toast('Bölüm adı zorunlu!', 'red'); return; }
+  var idVal = document.getElementById('bol-id').value;
+  var data = {
+    id: idVal || ('bol-' + Date.now()),
+    isim: isim,
+    ikon: document.getElementById('bol-ikon').value || '🔧',
+    navKat: document.getElementById('bol-navkat').value.trim(),
+    altBaslik: document.getElementById('bol-altbaslik').value.trim(),
+    sira: parseInt(document.getElementById('bol-sira').value) || 0,
+    aktif: document.getElementById('bol-aktif').checked
+  };
+  fetch('/api/hizmet-bolumleri', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.success){
+        toast(idVal ? '✅ Bölüm güncellendi' : '✅ Bölüm eklendi', 'green');
+        var modal = document.querySelector('[data-modal=bolum]');
+        if(modal) modal.remove();
+        bolumlerSayfasiYukle();
+      } else { toast('Hata: ' + d.error, 'red'); }
+    })
+    .catch(function(){ toast('Bağlantı hatası', 'red'); });
+}
+
+function bolumSil(id){
+  var b = _bolumlerData.find(function(x){ return x.id === id; });
+  if(!confirm((b ? b.isim : id) + ' bölümü silinsin mi? İçindeki kartlar da silinecek!')) return;
+  fetch('/api/hizmet-bolumleri?id=' + id, {method:'DELETE'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.success){ toast('✅ Bölüm silindi', 'green'); bolumlerSayfasiYukle(); }
+      else { toast('Hata: ' + d.error, 'red'); }
+    });
+}
+
+function kartEkleModal(bolumId, bolumIsim){
+  var ovl = document.createElement('div');
+  ovl.setAttribute('data-modal', 'kart');
+  ovl.style.cssText = 'position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.5);display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto';
+  ovl.onclick = function(e){ if(e.target === ovl) ovl.remove(); };
+
+  var inner = document.createElement('div');
+  inner.style.cssText = 'background:#fff;border-radius:16px;width:100%;max-width:520px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.2);margin:auto';
+  inner.innerHTML = '<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:1px;margin-bottom:20px">+ KART EKLE — ' + bolumIsim + '</div>'
+    + '<input type="hidden" id="krt-bolum-id" value="' + bolumId + '">'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'
+      + '<div style="grid-column:1/-1"><label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">Kart Adı *</label><input id="krt-isim" type="text" placeholder="Örn: Nano Seramik Kaplama" style="width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:8px;font-family:Outfit,sans-serif;box-sizing:border-box"></div>'
+      + '<div style="grid-column:1/-1"><label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">Alt Başlık</label><input id="krt-altisim" type="text" placeholder="Örn: 220 Mikron TPU" style="width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:8px;font-family:Outfit,sans-serif;box-sizing:border-box"></div>'
+      + '<div><label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">Fiyat (₺)</label><input id="krt-fiyat" type="number" placeholder="12000" style="width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:8px;box-sizing:border-box"></div>'
+      + '<div><label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">Fiyat Metni</label><input id="krt-fiyatstr" type="text" placeholder="Fiyat için arayın" style="width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:8px;font-family:Outfit,sans-serif;box-sizing:border-box"></div>'
+      + '<div><label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">Rozet</label><input id="krt-rozet" type="text" placeholder="💎 Premium" style="width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:8px;font-family:Outfit,sans-serif;box-sizing:border-box"></div>'
+      + '<div><label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">Garanti</label><input id="krt-garanti" type="text" placeholder="5 Yıl Garanti" style="width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:8px;font-family:Outfit,sans-serif;box-sizing:border-box"></div>'
+      + '<div style="grid-column:1/-1"><label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">Açıklama</label><textarea id="krt-aciklama" rows="2" placeholder="Hizmet detayları..." style="width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:8px;font-family:Outfit,sans-serif;box-sizing:border-box;resize:vertical"></textarea></div>'
+      + '<div style="grid-column:1/-1"><label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">Özellikler (virgülle ayır)</label><input id="krt-ozellikler" type="text" placeholder="UV Koruma, Su İtici, Parlaklık" style="width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:8px;font-family:Outfit,sans-serif;box-sizing:border-box"></div>'
+      + '<div><label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">Sıra</label><input id="krt-sira" type="number" value="0" style="width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:8px;box-sizing:border-box"></div>'
+      + '<div><label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">Resim</label>'
+        + '<input type="file" id="krt-resim-file" accept="image/*" onchange="kartResimYukle(this)" style="display:none">'
+        + '<input type="hidden" id="krt-resim-url">'
+        + '<button onclick="document.getElementById(\'krt-resim-file\').click()" style="width:100%;padding:8px;border:1.5px dashed var(--bd);border-radius:8px;background:#f9fafb;cursor:pointer;font-size:12px" id="krt-resim-btn">📷 Resim Seç</button>'
+      + '</div>'
+    + '</div>'
+    + '<div style="display:flex;gap:8px">'
+      + '<button onclick="document.querySelector(\'[data-modal=kart]\').remove()" style="flex:1;padding:10px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;cursor:pointer">İptal</button>'
+      + '<button onclick="kartKaydet()" style="flex:2;padding:10px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">💾 Kartı Kaydet</button>'
+    + '</div>';
+  ovl.appendChild(inner);
+  document.body.appendChild(ovl);
+}
+
+function kartResimYukle(input){
+  var file = input.files[0]; if(!file) return;
+  if(file.size > 2*1024*1024){ toast('2MB\'den küçük resim seçin', 'red'); return; }
+  var fd = new FormData(); fd.append('file', file); fd.append('klasor', 'hizmetler');
+  var btn = document.getElementById('krt-resim-btn');
+  btn.textContent = '⏳ Yükleniyor...'; btn.disabled = true;
+  fetch('/api/resim', {method:'POST', body:fd})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      btn.disabled = false;
+      if(d.success){
+        document.getElementById('krt-resim-url').value = d.url;
+        btn.textContent = '✅ ' + d.fileName;
+      } else { toast('Resim yüklenemedi', 'red'); btn.textContent = '📷 Resim Seç'; }
+    })
+    .catch(function(){ btn.textContent = '❌ Hata'; btn.disabled = false; });
+}
+
+function kartKaydet(){
+  var isim = document.getElementById('krt-isim').value.trim();
+  if(!isim){ toast('Kart adı zorunlu!', 'red'); return; }
+  var data = {
+    bolumId: document.getElementById('krt-bolum-id').value,
+    isim: isim,
+    altIsim: document.getElementById('krt-altisim').value.trim(),
+    fiyat: parseInt(document.getElementById('krt-fiyat').value) || 0,
+    fiyatStr: document.getElementById('krt-fiyatstr').value.trim(),
+    rozet: document.getElementById('krt-rozet').value.trim(),
+    garanti: document.getElementById('krt-garanti').value.trim(),
+    aciklama: document.getElementById('krt-aciklama').value.trim(),
+    ozellikler: document.getElementById('krt-ozellikler').value.trim(),
+    resim: document.getElementById('krt-resim-url').value,
+    sira: parseInt(document.getElementById('krt-sira').value) || 0,
+    aktif: true
+  };
+  fetch('/api/hizmet-kartlari', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.success){
+        toast('✅ Kart eklendi', 'green');
+        var modal = document.querySelector('[data-modal=kart]');
+        if(modal) modal.remove();
+        bolumlerSayfasiYukle();
+      } else { toast('Hata: ' + d.error, 'red'); }
+    })
+    .catch(function(){ toast('Bağlantı hatası', 'red'); });
+}
+
+function kartSil(id){
+  if(!confirm('Bu kart silinsin mi?')) return;
+  fetch('/api/hizmet-kartlari?id=' + id, {method:'DELETE'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.success){ toast('✅ Kart silindi', 'green'); bolumlerSayfasiYukle(); }
+      else { toast('Hata: ' + d.error, 'red'); }
+    });
+}
+
+
 function urunSilBtn(btn){
   var id = btn.getAttribute('data-id');
   var tip = btn.getAttribute('data-tip');
@@ -4250,9 +4494,11 @@ function fKatSec(kat){
   document.querySelectorAll('.fiyat-sekme-bar .fiyat-tab').forEach(function(btn){
     var btnKat=btn.getAttribute('data-kat')||btn.id.replace('fkat-','');
     btn.className='fiyat-tab'+(btnKat===kat?' fiyat-tab-aktif':'');
+    if(btnKat==='bolumler'&&kat==='bolumler') btn.style.cssText='background:#1d4ed8;color:#fff;border-color:#1d4ed8';
+    else if(btnKat==='bolumler') btn.style.cssText='background:#fff;color:#1d4ed8;border-color:#1d4ed8';
   });
   // Eski sabit id'li butonlar için de
-  ['ppf','seramik','bakim'].forEach(function(k){
+  ['ppf','seramik','bakim','bolumler'].forEach(function(k){
     var btn=document.getElementById('fkat-'+k);
     if(btn) btn.className='fiyat-tab'+(k===kat?' fiyat-tab-aktif':'');
   });
@@ -4262,6 +4508,13 @@ function fKatSec(kat){
 function fKatRender(kat){
   var el=document.getElementById('fkat-icerik');
   if(!el) return;
+
+  // Hizmet Bölümleri özel render
+  if(kat==='bolumler'){
+    bolumlerSayfasiYukle();
+    return;
+  }
+
   var katObj=KATEGORILER[kat];
   if(!katObj){el.innerHTML='';return;}
 
@@ -4535,7 +4788,7 @@ function urunDetayGor(btn){
   var renkler={CS190:'#3b82f6',S75:'#8b5cf6',S85:'#10b981',N7:'#f59e0b',N8:'#ef4444',N9:'#1e40af',RENKLI:'#ec4899'};
   var renk=renkler[kod]||(u.kat?KATEGORILER[u.kat].renk:'#888');
   var bayiFiyat=function(f){return f?Math.round(f*(1-(u.bayiIndirim||0)/100)):null;};
-  ovl.innerHTML='<div style="background:#fff;border-radius:16px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.3)">'
+  ovl.setAttribute('data-modal','bolum');ovl.innerHTML='<div style="background:#fff;border-radius:16px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.3)">'
     +(u.resim?'<div style="height:180px;overflow:hidden"><img src="'+u.resim+'" style="width:100%;height:100%;object-fit:cover"></div>'
              :'<div style="height:100px;background:linear-gradient(135deg,'+renk+' 0%,'+renk+'88 100%);display:flex;align-items:center;justify-content:center;font-size:40px">🛡️</div>')
     +'<div style="padding:18px">'
@@ -5674,7 +5927,7 @@ function bayiEkleModal(id){
   var bId=(typeof id!=='undefined'?id:''); var IS='width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box';
   var v=function(f){return b&&b[f]!==undefined?b[f]:'';};
 
-  ovl.innerHTML='<div style="background:#fff;border-radius:16px;width:100%;max-width:520px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.3)">'
+  ovl.setAttribute('data-modal','kart');ovl.innerHTML='<div style="background:#fff;border-radius:16px;width:100%;max-width:520px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.3)">'
     +'<div style="background:var(--ink);padding:14px 18px;display:flex;align-items:center;justify-content:space-between">'
       +'<div style="font-family:Bebas Neue,sans-serif;font-size:17px;letter-spacing:2px;color:#fff">'+baslik+'</div>'
       +'<div onclick="document.getElementById(&quot;bayi-ekle-ovl&quot;).remove()" style="cursor:pointer;color:#888;font-size:22px">&times;</div>'

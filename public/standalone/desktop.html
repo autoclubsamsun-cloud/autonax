@@ -1407,17 +1407,17 @@ svg{display:block;flex-shrink:0}
 <!-- NAVBAR -->
 <div class="navbar">
   <div class="wrap">
-    <div class="nav-all">
+    <div class="nav-all" onclick="navKatSec(null,'tum')" style="cursor:pointer">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       TÜM HİZMETLER
     </div>
     <div class="nav-links">
-      <div class="nl on"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>PPF Kaplama</div>
-      <div class="nl"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Seramik Kaplama</div>
-      <div class="nl"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="8" y1="4" x2="8" y2="10"/></svg>Cam Filmi</div>
-      <div class="nl"><svg viewBox="0 0 24 24"><path d="M18 2l4 4-14 14H4v-4L18 2z"/><path d="M2 22h4"/></svg>Detailing</div>
-      <div class="nl"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>Boya Koruma</div>
-      <div class="nl"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>Bakım Ürünleri</div>
+      <div class="nl on" onclick="navKatSec(this,'ppf')" style="cursor:pointer"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>PPF Kaplama</div>
+      <div class="nl" onclick="navKatSec(this,'seramik')" style="cursor:pointer"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Seramik Kaplama</div>
+      <div class="nl" onclick="navKatSec(this,'cam')" style="cursor:pointer"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="8" y1="4" x2="8" y2="10"/></svg>Cam Filmi</div>
+      <div class="nl" onclick="navKatSec(this,'detailing')" style="cursor:pointer"><svg viewBox="0 0 24 24"><path d="M18 2l4 4-14 14H4v-4L18 2z"/><path d="M2 22h4"/></svg>Detailing</div>
+      <div class="nl" onclick="navKatSec(this,'boya')" style="cursor:pointer"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>Boya Koruma</div>
+      <div class="nl" onclick="navKatSec(this,'bakim')" style="cursor:pointer"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>Bakım Ürünleri</div>
     </div>
   </div>
 </div>
@@ -1471,7 +1471,7 @@ svg{display:block;flex-shrink:0}
   <!-- HİZMETLER -->
   <div>
 
-        <div class="sh"><div class="sh-left"><div class="sh-eyebrow">Hizmetler</div><h2>Öne Çıkan Hizmetler</h2></div><div class="sh-right"><div class="sh-more">Tümünü Gör <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div></div>
+        <div id="bolum-tum" class="sh"><div class="sh-left"><div class="sh-eyebrow">Hizmetler</div><h2>Öne Çıkan Hizmetler</h2></div><div class="sh-right"><div class="sh-more">Tümünü Gör <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div></div>
     <div class="slider-wrap" id="sl-one">
       <button class="slider-btn prev" onclick="slPrev('sl-one')" id="sl-one-p" disabled><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <button class="slider-btn next" onclick="slNext('sl-one')" id="sl-one-n"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
@@ -1534,7 +1534,7 @@ svg{display:block;flex-shrink:0}
       <div class="slider-dots" id="sl-one-d"></div>
     </div><!-- /slider-wrap -->
 
-        <div class="sh"><div class="sh-left"><div class="sh-eyebrow">🇺🇸 Amerikan Ürünü · Nidojp</div><h2>PPF Kaplama TPU (USA)</h2></div><div class="sh-right"><div class="sh-more">Tümünü Gör <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div></div>
+        <div id="bolum-ppf" class="sh"><div class="sh-left"><div class="sh-eyebrow">🇺🇸 Amerikan Ürünü · Nidojp</div><h2>PPF Kaplama TPU (USA)</h2></div><div class="sh-right"><div class="sh-more">Tümünü Gör <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div></div>
     <div class="svc-grid">
       <div class="svc">
         <div class="svc-img"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><div class="svc-bdg">✅ Başlangıç</div></div>
@@ -1753,7 +1753,7 @@ svg{display:block;flex-shrink:0}
 
   <!-- MARKA PAKETLER -->
   <div class="brand-sec">
-    <div class="sh"><div class="sh-left"><div class="sh-eyebrow">Marka & Model</div><h2>Popüler Araç Hizmet Paketleri</h2></div><div class="sh-right"><div class="sh-more">Daha Fazla <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div></div>
+    <div id="bolum-paket" class="sh"><div class="sh-left"><div class="sh-eyebrow">Marka & Model</div><h2>Popüler Araç Hizmet Paketleri</h2></div><div class="sh-right"><div class="sh-more">Daha Fazla <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div></div>
     <div class="bpkg-grid">
       <div class="bcard"><div class="bcard-logo"><div class="bcard-logo-t">BMW</div></div><div class="bcard-name">BMW PPF & Koruma</div><div class="bcard-links"><div class="bcard-lnk">3. Seri PPF Kaplama</div><div class="bcard-lnk">5. Seri PPF Kaplama</div><div class="bcard-lnk">X5 Seramik Kaplama</div><div class="bcard-lnk">M Serisi Tam Koruma</div></div><div class="bcard-more">BMW Paketleri <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
       <div class="bcard"><div class="bcard-logo"><div class="bcard-logo-t">MERCEDES</div></div><div class="bcard-name">Mercedes PPF & Koruma</div><div class="bcard-links"><div class="bcard-lnk">C Serisi PPF Kaplama</div><div class="bcard-lnk">E Serisi PPF Kaplama</div><div class="bcard-lnk">GLE Seramik Kaplama</div><div class="bcard-lnk">AMG Tam Koruma</div></div><div class="bcard-more">Mercedes Paketleri <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
@@ -2551,6 +2551,147 @@ function dinamikKartEkle(u){
     });
     console.log('Autonax: Yeni ürün kartı eklendi —', u.id, u.isim);
   }
+}
+
+
+/* ══ HİZMET BÖLÜMLERİ — ANA SİTE DİNAMİK RENDER ══ */
+function hizmetBolumleriniRender(bolumler) {
+  // Dinamik bölümler için container bul veya oluştur
+  var container = document.getElementById('dinamik-bolumler');
+  if(!container){
+    // Popüler Araç Hizmetleri'nden sonra ekle
+    var paket = document.getElementById('bolum-paket');
+    if(paket){
+      container = document.createElement('div');
+      container.id = 'dinamik-bolumler';
+      paket.parentElement.insertBefore(container, paket.nextElementSibling);
+    } else {
+      // Sayfa sonuna ekle
+      var mainEl = document.querySelector('.wrap') || document.body;
+      container = document.createElement('div');
+      container.id = 'dinamik-bolumler';
+      mainEl.appendChild(container);
+    }
+  }
+  container.innerHTML = '';
+
+  bolumler.forEach(function(b){
+    if(!b.aktif) return;
+    var kartlar = (b.kartlar || []).filter(function(k){ return k.aktif !== false; });
+
+    var section = document.createElement('div');
+    section.setAttribute('data-bolum-id', b.id);
+    section.setAttribute('data-bolum-nav', b.nav_kat || '');
+
+    // Section header
+    var sh = document.createElement('div');
+    sh.className = 'sh';
+    sh.innerHTML = '<div class="sh-left">'
+      + '<div class="sh-eyebrow">' + (b.ikon || '🔧') + ' ' + (b.alt_baslik || b.isim) + '</div>'
+      + '<h2>' + b.isim + '</h2>'
+      + '</div>'
+      + '<div class="sh-right"><div class="sh-more">Tümünü Gör <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>';
+    section.appendChild(sh);
+
+    // Kart grid
+    var grid = document.createElement('div');
+    grid.className = 'svc-grid';
+
+    if(kartlar.length === 0){
+      grid.innerHTML = '<div style="padding:20px;color:var(--ink4);font-size:13px">Bu bölümde henüz hizmet yok.</div>';
+    } else {
+      kartlar.forEach(function(k){
+        var svc = document.createElement('div');
+        svc.className = 'svc';
+        svc.style.cursor = 'pointer';
+
+        var fiyatStr = k.fiyat ? '₺' + k.fiyat.toLocaleString('tr-TR') : (k.fiyat_str || 'Fiyat için arayın');
+        var ozellikler = k.ozellikler ? k.ozellikler.split(',').map(function(o){ return o.trim(); }).filter(Boolean) : [];
+
+        svc.innerHTML = '<div class="svc-img" style="position:relative">'
+          + (k.resim ? '<img src="' + k.resim + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4;border-radius:inherit">' : '')
+          + '<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>'
+          + (k.rozet ? '<div class="svc-bdg">' + k.rozet + '</div>' : '')
+          + '</div>'
+          + '<div class="svc-body">'
+            + '<div class="svc-tag-row">'
+              + '<span class="svc-brand">' + k.isim + '</span>'
+              + (k.garanti ? '<span class="svc-garanti">' + k.garanti + '</span>' : '')
+            + '</div>'
+            + '<div class="svc-name">' + (k.alt_isim || k.isim) + '</div>'
+            + (ozellikler.length ? '<div class="svc-sub">' + ozellikler.join(' · ') + '</div>' : '')
+            + '<div class="svc-price">' + fiyatStr + '</div>'
+            + '<button class="svc-btn">Randevu Al</button>'
+          + '</div>';
+
+        // Sepet butonu
+        svc.querySelector('.svc-btn').addEventListener('click', function(e){
+          e.stopPropagation();
+          SEPET.add({id: k.id + '_' + Date.now(), isim: k.isim, aciklama: k.aciklama || '', fiyat: k.fiyat || 0, fiyatStr: fiyatStr});
+        });
+
+        // Detay modalı — karta tıklayınca
+        svc.addEventListener('click', function(e){
+          if(e.target.classList.contains('svc-btn')) return;
+          hizmetKartDetayAc(k);
+        });
+
+        grid.appendChild(svc);
+      });
+    }
+
+    section.appendChild(grid);
+    container.appendChild(section);
+  });
+
+  // Nav butonlarını güncelle — dinamik bölümlere de scroll
+  bolumler.forEach(function(b){
+    if(!b.nav_kat || !b.aktif) return;
+    var navBtn = Array.from(document.querySelectorAll('.nav-links .nl')).find(function(el){
+      return el.textContent.trim().toLowerCase().includes(b.isim.toLowerCase().split(' ')[0]);
+    });
+    if(navBtn){
+      navBtn.setAttribute('data-bolum-id', b.id);
+    }
+  });
+}
+
+function hizmetKartDetayAc(k){
+  var ovl = document.getElementById('urun-detay-ovl');
+  if(!ovl) return;
+  // Başlık
+  document.getElementById('udm-rozet').textContent = k.rozet || '';
+  document.getElementById('udm-isim').textContent = k.isim;
+  document.getElementById('udm-garanti').textContent = k.garanti || '';
+  document.getElementById('udm-bg').style.background = 'linear-gradient(135deg,#0ea5e9 0%,#0a0a0a 100%)';
+  var imgEl = document.getElementById('udm-img');
+  if(k.resim){ imgEl.src = k.resim; imgEl.style.display = 'block'; }
+  else imgEl.style.display = 'none';
+  // Menşei
+  var mensei = document.getElementById('udm-mensei');
+  mensei.style.display = 'none';
+  // Fiyatlar
+  var fiyatStr = k.fiyat ? '₺' + k.fiyat.toLocaleString('tr-TR') : (k.fiyat_str || 'Fiyat için arayın');
+  document.getElementById('udm-fiyat-grid').innerHTML = '<div class="udm-fiyat-kart ana"><div class="udm-fiyat-label">Fiyat</div><div class="udm-fiyat-val">' + fiyatStr + '</div></div>';
+  // Özellikler
+  var ozList = k.ozellikler ? k.ozellikler.split(',').map(function(o){ return '<span class="udm-ozellik">' + o.trim() + '</span>'; }).join('') : '';
+  document.getElementById('udm-ozellikler').innerHTML = ozList;
+  // Açıklama
+  document.getElementById('udm-aciklama').textContent = k.aciklama || '';
+  // Butonlar
+  document.getElementById('udm-randevu-btn').onclick = function(){
+    urunDetayKapat();
+    SEPET.add({id: k.id + '_' + Date.now(), isim: k.isim, aciklama: k.aciklama || '', fiyat: k.fiyat || 0, fiyatStr: fiyatStr});
+    openSepet();
+  };
+  document.getElementById('udm-sepet-btn').onclick = function(){
+    SEPET.add({id: k.id + '_' + Date.now(), isim: k.isim, aciklama: k.aciklama || '', fiyat: k.fiyat || 0, fiyatStr: fiyatStr});
+    var btn = document.getElementById('udm-sepet-btn');
+    btn.textContent = '✓ Eklendi'; btn.style.background = '#16A34A'; btn.style.color = '#fff';
+    setTimeout(function(){ btn.textContent = '🛒 Sepete Ekle'; btn.style.background = ''; btn.style.color = ''; }, 2000);
+  };
+  ovl.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
 }
 
 /* ══ FİYAT KARTLARINI YENİLE — API'den gelen fiyatları DOM'a yansıt ══ */
@@ -3590,6 +3731,56 @@ function socialLogin(provider){ alert(provider+' girişi yakında aktif edilecek
    BUTON BAĞLANTILARI — mevcut HTML butonlarını bağla
 ════════════════════════════════════════════════════ */
 
+
+/* ══ NAV KATEGORİ SEÇ ══ */
+function navKatSec(btn, kat) {
+  // Aktif class güncelle
+  document.querySelectorAll('.nav-links .nl').forEach(function(el){ el.classList.remove('on'); });
+  if(btn) btn.classList.add('on');
+  
+  // Hedef bölümü bul ve scroll et
+  var hedef = null;
+  var offset = 130; // header yüksekliği
+  
+  if(kat === 'tum') {
+    // Tüm hizmetler — en üste git
+    document.querySelectorAll('.nav-links .nl').forEach(function(el){ el.classList.remove('on'); });
+    window.scrollTo({top: 0, behavior: 'smooth'});
+    return;
+  } else if(kat === 'ppf') {
+    hedef = document.getElementById('bolum-ppf');
+  } else if(kat === 'seramik') {
+    // Seramik bölümü yoksa — Öne Çıkan içindeki seramik karta git
+    hedef = document.querySelector('.svc-name');
+    var seramikSec = Array.from(document.querySelectorAll('.svc')).find(function(s){
+      return s.textContent.includes('Seramik') || s.textContent.includes('seramik');
+    });
+    hedef = seramikSec || document.getElementById('bolum-tum');
+  } else if(kat === 'cam') {
+    // Cam Filmi — svc kartı veya bölüm bul
+    var camSec = Array.from(document.querySelectorAll('.svc')).find(function(s){
+      return s.textContent.includes('Cam Filmi') || s.textContent.includes('cam filmi');
+    });
+    hedef = camSec || document.getElementById('bolum-tum');
+  } else if(kat === 'detailing') {
+    var detSec = Array.from(document.querySelectorAll('.svc')).find(function(s){
+      return s.textContent.includes('Detailing') || s.textContent.includes('detailing');
+    });
+    hedef = detSec || document.getElementById('bolum-tum');
+  } else if(kat === 'boya') {
+    var boyaSec = Array.from(document.querySelectorAll('.svc')).find(function(s){
+      return s.textContent.includes('Boya') || s.textContent.includes('boya');
+    });
+    hedef = boyaSec || document.getElementById('bolum-tum');
+  } else if(kat === 'bakim') {
+    hedef = document.getElementById('bolum-paket') || document.getElementById('bolum-tum');
+  }
+  
+  if(hedef) {
+    var top = hedef.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({top: top, behavior: 'smooth'});
+  }
+}
 /* ══ ÜRÜN DETAY MODAL FONKSİYONLARI ══ */
 function urunDetayAc(urunId, tip) {
   var u = URUNLER[urunId];
@@ -3747,6 +3938,16 @@ document.addEventListener('DOMContentLoaded',()=>{
       });
     });
   });
+
+  // Hizmet bölümlerini API'den çek ve dinamik render et
+  fetch('/api/hizmet-bolumleri')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.success && d.data && d.data.length > 0){
+        hizmetBolumleriniRender(d.data);
+      }
+    })
+    .catch(function(){});
 
   // Fiyat güncelleme event'ini dinle (panel değiştirince)
   window.addEventListener('storage', function(e){
