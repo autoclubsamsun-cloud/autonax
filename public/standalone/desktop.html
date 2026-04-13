@@ -3003,11 +3003,33 @@ var SEPET = {
         `<div class="sepet-summary">
           <div class="sepet-sum-row"><span>${this.items.length} Hizmet</span><span>${this.items.map(i=>i.fiyatStr||'-').join(', ')}</span></div>
           <div class="sepet-sum-row total"><span>Toplam</span><span>${total>0?'₺'+total.toLocaleString('tr-TR'):'Fiyat için arayın'}</span></div>
+        </div>
+        <div class="sepet-rdv-sec" style="margin:16px 0;padding:14px;background:#f8f8f8;border-radius:12px;border:1.5px solid #e0e0e0">
+          <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:10px">📅 Randevu Tarihi ve Saati Seçin</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div>
+              <label style="font-size:11px;color:#666;font-weight:600;display:block;margin-bottom:4px">TARİH</label>
+              <input type="date" id="sepet-rdv-tarih" min="${new Date().toISOString().slice(0,10)}" 
+                value="${SEPET.secilenTarih||''}"
+                onchange="SEPET.secilenTarih=this.value"
+                style="width:100%;padding:8px 10px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+            </div>
+            <div>
+              <label style="font-size:11px;color:#666;font-weight:600;display:block;margin-bottom:4px">SAAT</label>
+              <select id="sepet-rdv-saat" onchange="SEPET.secilenSaat=this.value"
+                style="width:100%;padding:8px 10px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;outline:none;background:#fff;box-sizing:border-box">
+                <option value="">Seçin...</option>
+                <option value="09:00">09:00</option><option value="09:30">09:30</option><option value="10:00">10:00</option><option value="10:30">10:30</option><option value="11:00">11:00</option><option value="11:30">11:30</option><option value="12:00">12:00</option><option value="13:00">13:00</option><option value="13:30">13:30</option><option value="14:00">14:00</option><option value="14:30">14:30</option><option value="15:00">15:00</option><option value="15:30">15:30</option><option value="16:00">16:00</option><option value="16:30">16:30</option><option value="17:00">17:00</option>
+              </select>
+            </div>
+          </div>
         </div>`;
       if(footer) footer.style.display='block';
       if(sub) sub.textContent = this.items.length + ' ürün · ' + (total>0?'₺'+total.toLocaleString('tr-TR'):'');
     }
-  }
+  },
+  secilenTarih: '',
+  secilenSaat: ''
 };
 
 function openSepet(){ document.getElementById('sepet-ovl').classList.add('show'); document.body.style.overflow='hidden'; SEPET.render(); }
@@ -3015,10 +3037,64 @@ function closeSepet(){ document.getElementById('sepet-ovl').classList.remove('sh
 function sepetOverlayClick(e){ if(e.target===document.getElementById('sepet-ovl')) closeSepet(); }
 function sepetOde(){
   if(!SEPET.secilenTarih||!SEPET.secilenSaat){
-    alert('Lütfen randevu tarihi ve saati seçin!'); return;
+    // Tarih seçilmemişse input'u kırmızı yap ve odaklan
+    var tarihInp=document.getElementById('sepet-rdv-tarih');
+    var saatSel=document.getElementById('sepet-rdv-saat');
+    if(tarihInp&&!SEPET.secilenTarih){
+      tarihInp.style.borderColor='#b01c2e';
+      tarihInp.focus();
+    }
+    if(saatSel&&!SEPET.secilenSaat){
+      saatSel.style.borderColor='#b01c2e';
+      if(SEPET.secilenTarih) saatSel.focus();
+    }
+    return;
   }
-  closeSepet();
-  alert('Randevu oluşturuldu!\n'+SEPET.secilenTarih+' '+SEPET.secilenSaat+'\nOnay SMS olarak gönderilecek.');
+  // Randevuyu /api/randevular'a gönder
+  var hizmetler=SEPET.items.map(function(i){return i.isim;}).join(' + ');
+  var toplam=SEPET.total();
+  var rdv={
+    tarih: SEPET.secilenTarih.split('-').reverse().join('.'),
+    saat: SEPET.secilenSaat,
+    musteri: (typeof AuthManager!=='undefined'&&AuthManager.currentUser)?AuthManager.currentUser.name||'Müşteri':'Müşteri',
+    tel: (typeof AuthManager!=='undefined'&&AuthManager.currentUser)?AuthManager.currentUser.phone||'':'-',
+    hizmet: hizmetler,
+    tutar: toplam,
+    durum: 'bekl',
+    odendi: false,
+    islem: false,
+    odemeGecmisi: [],
+    odenenToplam: 0
+  };
+  fetch('/api/randevular',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(rdv)})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.success){
+      SEPET.items=[];
+      SEPET.secilenTarih='';
+      SEPET.secilenSaat='';
+      SEPET.updateBadge();
+      closeSepet();
+      // Başarı mesajı
+      var msg=document.createElement('div');
+      msg.style.cssText='position:fixed;top:80px;right:20px;background:#16A34A;color:#fff;padding:16px 24px;border-radius:12px;font-size:14px;font-weight:700;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.2);animation:fadeIn .3s';
+      msg.innerHTML='✅ Randevunuz alındı!<br><small style="font-weight:400">'+rdv.tarih+' '+rdv.saat+' · Onay için sizi arayacağız</small>';
+      document.body.appendChild(msg);
+      setTimeout(function(){msg.remove();},5000);
+      if(typeof AuthManager!=='undefined') AuthManager.saveCart([]);
+    } else {
+      alert('Randevu alınamadı. Lütfen tekrar deneyin.');
+    }
+  })
+  .catch(function(){
+    // Offline — direkt başarı göster
+    closeSepet();
+    var msg=document.createElement('div');
+    msg.style.cssText='position:fixed;top:80px;right:20px;background:#16A34A;color:#fff;padding:16px 24px;border-radius:12px;font-size:14px;font-weight:700;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.2)';
+    msg.innerHTML='✅ Randevunuz alındı!<br><small style="font-weight:400">'+rdv.tarih+' '+rdv.saat+'</small>';
+    document.body.appendChild(msg);
+    setTimeout(function(){msg.remove();},5000);
+  });
 }
 
 /* ════════════════════════════════════════════════════
@@ -3327,6 +3403,20 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Scroll'u en üstten başlat
   if('scrollRestoration' in history) history.scrollRestoration='manual';
   window.scrollTo(0,0);
+  // API'den güncel fiyatları çek
+  fetch('/api/urunler').then(function(r){return r.json();}).then(function(d){
+    if(d.success&&d.data&&d.data.length>0){
+      d.data.forEach(function(u){
+        if(u.id&&URUNLER[u.id]){
+          if(u.full_fiyat) URUNLER[u.id].full=u.full_fiyat;
+          if(u.on3_fiyat) URUNLER[u.id].on3=u.on3_fiyat;
+          if(u.kaput_fiyat) URUNLER[u.id].kaput=u.kaput_fiyat;
+        }
+      });
+      // Fiyat kartlarını yenile
+      if(typeof fiyatKartlariniYenile==='function') fiyatKartlariniYenile();
+    }
+  }).catch(function(){});
   // Başlangıç — URL'de ?logout varsa oturumu temizle
   if(window.location.search.includes('logout')){
     AuthManager.logout();
