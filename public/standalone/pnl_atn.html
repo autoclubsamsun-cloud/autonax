@@ -4158,11 +4158,13 @@ function bolumKaydet(){
   var isim = document.getElementById('bol-isim').value.trim();
   if(!isim){ toast('Bölüm adı zorunlu!', 'red'); return; }
   var idVal = document.getElementById('bol-id').value;
+  var bolumId = idVal || ('bol-' + Date.now());
+  var navKat = document.getElementById('bol-navkat').value.trim();
   var data = {
-    id: idVal || ('bol-' + Date.now()),
+    id: bolumId,
     isim: isim,
     ikon: document.getElementById('bol-ikon').value || '🔧',
-    navKat: document.getElementById('bol-navkat').value.trim(),
+    navKat: navKat,
     altBaslik: document.getElementById('bol-altbaslik').value.trim(),
     sira: parseInt(document.getElementById('bol-sira').value) || 0,
     aktif: document.getElementById('bol-aktif').checked
@@ -4174,10 +4176,35 @@ function bolumKaydet(){
         toast(idVal ? '✅ Bölüm güncellendi' : '✅ Bölüm eklendi', 'green');
         var modal = document.querySelector('[data-modal=bolum]');
         if(modal) modal.remove();
-        bolumlerSayfasiYukle();
+        // Yeni bölümse mevcut kartları import et
+        if(!idVal) bolumMevcutKartlariImport(bolumId, navKat);
+        else bolumlerSayfasiYukle();
       } else { toast('Hata: ' + d.error, 'red'); }
     })
     .catch(function(){ toast('Bağlantı hatası', 'red'); });
+}
+
+function bolumMevcutKartlariImport(bolumId, navKat){
+  // navKat'a göre mevcut kartları bul ve import et
+  var kartlar = [];
+  if(navKat === 'seramik'){
+    SERAMIK.forEach(function(s, i){
+      kartlar.push({bolumId:bolumId, isim:s.isim, altIsim:s.isim, aciklama:s.aciklama||'', fiyat:s.tutar||s.full||0, fiyatStr:'', rozet:s.rozet||'✨', garanti:s.garanti?s.garanti+' Yıl Garanti':'', ozellikler:'', sira:i, aktif:true});
+    });
+  } else if(navKat === 'bakim'){
+    DIGER_HIZMETLER.forEach(function(h, i){
+      kartlar.push({bolumId:bolumId, isim:h.isim, altIsim:h.isim, aciklama:h.aciklama||'', fiyat:h.tutar||h.full||0, fiyatStr:'', rozet:h.rozet||'🔧', garanti:'', ozellikler:'', sira:i, aktif:true});
+    });
+  }
+  if(!kartlar.length){ bolumlerSayfasiYukle(); return; }
+  // Sırayla kaydet
+  var importEdilen = 0;
+  kartlar.forEach(function(k){
+    fetch('/api/hizmet-kartlari', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(k)})
+      .then(function(r){ return r.json(); })
+      .then(function(){ importEdilen++; if(importEdilen===kartlar.length){ toast('✅ '+importEdilen+' kart otomatik eklendi', 'green'); bolumlerSayfasiYukle(); }});
+  });
+  if(!kartlar.length) bolumlerSayfasiYukle();
 }
 
 function bolumSil(id){
