@@ -1,26 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server';
-import type { SiteAyarlar, ApiResponse } from '@/lib/types';
-
-// Default site ayarları
-const DEFAULT: SiteAyarlar = {
-  genel: { firmaAdi: 'Autonax Araç Koruma', slogan: 'Premium PPF & Seramik Kaplama', telefon: '0362 000 00 00', email: 'info@autonax.com', adres: 'Samsun, Türkiye', harita: '', calisma: 'Hft İçi 09:00–18:00' },
-  seo: { title: 'Autonax | Premium PPF & Seramik Kaplama', description: 'Autonax ile aracınızı koruyun.', keywords: 'ppf, seramik, araç koruma' },
-  sosyal: { instagram: '', facebook: '', whatsapp: '', youtube: '' },
-  gorunurluk: { ppf: true, seramik: true, bakim: true, bayiler: true, blog: false },
-};
-
-let STORE: SiteAyarlar = { ...DEFAULT };
-
+﻿import { NextRequest, NextResponse } from 'next/server';
+import { sql, initDB } from '@/lib/db';
+let dbReady = false;
+async function ensureDB() { if (!dbReady) { await initDB(); dbReady = true; } }
 export async function GET() {
-  return NextResponse.json<ApiResponse<SiteAyarlar>>({ success: true, data: STORE });
-}
-
-export async function PUT(req: NextRequest) {
   try {
-    const body = await req.json() as Partial<SiteAyarlar>;
-    STORE = { ...STORE, ...body };
-    return NextResponse.json<ApiResponse<SiteAyarlar>>({ success: true, data: STORE });
-  } catch {
-    return NextResponse.json<ApiResponse>({ success: false, error: 'Geçersiz istek' }, { status: 400 });
-  }
+    await ensureDB();
+    const rows = await sql`SELECT anahtar, deger FROM site_ayarlar`;
+    const ayarlar: any = {};
+    rows.forEach((r: any) => { ayarlar[r.anahtar] = r.deger; });
+    const site_ayarlar = ayarlar.site_ayarlar || null;
+    return NextResponse.json({ success: true, data: ayarlar, site_ayarlar });
+  } catch (e: any) { return NextResponse.json({ success: false, error: e.message }, { status: 500 }); }
+}
+export async function POST(req: NextRequest) {
+  try {
+    await ensureDB();
+    const b = await req.json();
+    for (const [key, val] of Object.entries(b)) {
+      await sql`INSERT INTO site_ayarlar (anahtar, deger) VALUES (${key}, ${JSON.stringify(val)}::jsonb) ON CONFLICT (anahtar) DO UPDATE SET deger=${JSON.stringify(val)}::jsonb, guncelleme=NOW()`;
+    }
+    return NextResponse.json({ success: true });
+  } catch (e: any) { return NextResponse.json({ success: false, error: e.message }, { status: 500 }); }
 }
