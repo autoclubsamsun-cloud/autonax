@@ -1385,7 +1385,7 @@ var FIYAT_DATA=[
 
 /* ══ AUTH ══ */
 var ADM_U=(function(){try{return localStorage.getItem('autonax_adm_u')||'admin';}catch(e){return 'admin';}}());
-var ADM_P=(function(){try{return localStorage.getItem('autonax_adm_p')||'admin123';}catch(e){return 'admin123';}}());
+var ADM_P=''; // Şifre localStorage'da saklanmaz — API'den doğrulanır
 /* DB'den güncel şifreyi çek — mobilden ilk girişte doğru şifre gelsin */
 (function(){
   fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'get_credentials'})})
@@ -1419,6 +1419,7 @@ function doLogin(){
     } else {
       // API başarısız — local kontrol
       if(u===ADM_U&&p===ADM_P){
+        try{ sessionStorage.setItem('autonax_oturum','1'); }catch(e){}
         document.getElementById('login-ovl').style.display='none';
         document.getElementById('main-header').style.display='flex';
         document.getElementById('main-layout').style.display='flex';
@@ -1433,6 +1434,7 @@ function doLogin(){
   .catch(function(){
     // Offline — local kontrol
     if(u===ADM_U&&p===ADM_P){
+      try{ sessionStorage.setItem('autonax_oturum','1'); }catch(e){}
       document.getElementById('login-ovl').style.display='none';
       document.getElementById('main-header').style.display='flex';
       document.getElementById('main-layout').style.display='flex';
@@ -1446,11 +1448,19 @@ function doLogin(){
 }
 function doCikis(){
   if(!confirm('Çıkış yapılsın mı?'))return;
-  try{ sessionStorage.removeItem('autonax_oturum'); }catch(e){}
+  // Tüm oturum verilerini temizle
+  try{
+    sessionStorage.removeItem('autonax_oturum');
+    sessionStorage.clear();
+    localStorage.removeItem('autonax_session');
+    // Kullanıcı adını koru ama şifreyi sil
+    localStorage.removeItem('autonax_adm_p');
+  }catch(e){}
   document.getElementById('login-ovl').style.display='flex';
   document.getElementById('main-header').style.display='none';
   document.getElementById('main-layout').style.display='none';
   document.getElementById('l-pass').value='';
+  document.getElementById('l-user').value='';
 }
 
 /* ══ SAYFA ══ */
