@@ -1385,9 +1385,13 @@ var FIYAT_DATA=[
 
 /* ══ AUTH ══ */
 var ADM_U=(function(){try{return localStorage.getItem('autonax_adm_u')||'admin';}catch(e){return 'admin';}}());
-var ADM_P=''; // Şifre localStorage'da saklanmaz
-// Eski localStorage şifre kalıntısını temizle
-try{localStorage.removeItem('autonax_adm_p');localStorage.removeItem('autonax_session');}catch(e){}
+var ADM_P=''; // Şifre kesinlikle localStorage'da saklanmaz
+// Her açılışta localStorage şifre kalıntısını temizle
+(function(){try{
+  localStorage.removeItem('autonax_adm_p');
+  localStorage.removeItem('autonax_session');
+  localStorage.removeItem('autonax_oturum');
+}catch(e){}})();
 /* DB'den güncel şifreyi çek — mobilden ilk girişte doğru şifre gelsin */
 (function(){
   fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'get_credentials'})})
@@ -1411,7 +1415,7 @@ function doLogin(){
   .then(function(r){return r.json();})
   .then(function(d){
     if(d.success){
-      ADM_U=u;
+      ADM_U=u; ADM_P=p; // Sadece runtime — localStorage'a yazma
       try{ sessionStorage.setItem('autonax_oturum','1'); }catch(e){}
       document.getElementById('login-ovl').style.display='none';
       document.getElementById('main-header').style.display='flex';
@@ -1466,6 +1470,7 @@ function doCikis(){
   if(mainHeader) mainHeader.style.display='none';
   if(mainLayout) mainLayout.style.display='none';
   // Input'ları temizle
+  ADM_P=''; // Runtime şifreyi de sıfırla
   var pu=document.getElementById('l-user');
   var pp=document.getElementById('l-pass');
   if(pu) pu.value='';
@@ -3742,10 +3747,9 @@ function adminBilgiKaydet(){
 
   ADM_U = yeniU;
 
-  // localStorage'a kaydet
+  // localStorage'a SADECE kullanıcı adı kaydet — şifre asla!
   try{
     localStorage.setItem('autonax_adm_u', ADM_U);
-    localStorage.setItem('autonax_adm_p', ADM_P);
     if(email) localStorage.setItem('autonax_adm_email', email);
   }catch(e){}
 
@@ -3760,7 +3764,6 @@ function adminBilgiKaydet(){
   .catch(function(){ toast('✅ Admin bilgileri kaydedildi (offline)!','green'); });
   try{
     localStorage.setItem('autonax_adm_u', ADM_U);
-    localStorage.setItem('autonax_adm_p', ADM_P);
   }catch(e){}
 }
 
