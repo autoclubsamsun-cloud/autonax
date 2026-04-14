@@ -7317,16 +7317,26 @@ function saListenerBagla(tab){
         inp._l=true;
         inp.addEventListener('change',function(e){
           var file=e.target.files[0]; if(!file) return;
-          var rdr=new FileReader();
-          rdr.onload=function(ev){
-            var keyMap={headerLogo:'headerLogoUrl',footerLogo:'footerLogoUrl',favicon:'faviconUrl',ogImage:'ogImageUrl'};
-            SITE_AYARLAR.gorunurluk[keyMap[id]]=ev.target.result;
-            // Medyaya da ekle
-            SITE_AYARLAR.medya.push({url:ev.target.result,isim:file.name,boyut:file.size});
-            saSekmeRender('gorsel');
-            toast('📷 Görsel yüklendi!','green');
-          };
-          rdr.readAsDataURL(file);
+          if(!file.type.startsWith('image/')){toast('Sadece resim dosyası!','red');return;}
+          if(file.size>2*1024*1024){toast('Max 2MB olmalı!','red');return;}
+          var keyMap={headerLogo:'headerLogoUrl',footerLogo:'footerLogoUrl',favicon:'faviconUrl',ogImage:'ogImageUrl'};
+          toast('⏳ Yükleniyor...','blue');
+          var fd=new FormData();
+          fd.append('file',file);
+          fd.append('klasor','logo');
+          fetch('/api/resim',{method:'POST',body:fd})
+          .then(function(r){return r.json();})
+          .then(function(d){
+            if(d.success){
+              SITE_AYARLAR.gorunurluk[keyMap[id]]=d.url;
+              // Medyaya da ekle
+              SITE_AYARLAR.medya.push({url:d.url,isim:file.name,boyut:file.size,tarih:new Date().toISOString()});
+              saSekmeRender('gorsel');
+              siteAyarKaydet('Logo');
+              toast('✅ Logo yüklendi: '+d.fileName,'green');
+            } else {toast('❌ Yükleme hatası','red');}
+          })
+          .catch(function(){toast('❌ Bağlantı hatası','red');});
         });
       }
     });
@@ -7356,15 +7366,20 @@ function saListenerBagla(tab){
           inp._l=true;
           inp.addEventListener('change',function(e){
             var file=e.target.files[0]; if(!file) return;
-            var rdr=new FileReader();
-            rdr.onload=function(ev){
-              if(tip==='d') b.gorselUrl=ev.target.result;
-              else b.gorselMobilUrl=ev.target.result;
-              SITE_AYARLAR.medya.push({url:ev.target.result,isim:file.name,boyut:file.size});
-              saSekmeRender('banner');
-              toast('📷 Banner görseli yüklendi!','green');
-            };
-            rdr.readAsDataURL(file);
+            if(file.size>2*1024*1024){toast('Max 2MB!','red');return;}
+            toast('⏳ Yükleniyor...','blue');
+            var fd=new FormData(); fd.append('file',file); fd.append('klasor','banner');
+            fetch('/api/resim',{method:'POST',body:fd})
+            .then(function(r){return r.json();})
+            .then(function(d){
+              if(d.success){
+                if(tip==='d') b.gorselUrl=d.url;
+                else b.gorselMobilUrl=d.url;
+                SITE_AYARLAR.medya.push({url:d.url,isim:file.name,boyut:file.size,tarih:new Date().toISOString()});
+                saSekmeRender('banner');
+                toast('✅ Banner görseli yüklendi!','green');
+              } else {toast('❌ '+d.error,'red');}
+            }).catch(function(){toast('❌ Hata','red');});
           });
         }
       });
@@ -7394,14 +7409,19 @@ function saListenerBagla(tab){
         inp._l=true;
         inp.addEventListener('change',function(e){
           var file=e.target.files[0]; if(!file) return;
-          var rdr=new FileReader();
-          rdr.onload=function(ev){
-            km.gorselUrl=ev.target.result;
-            SITE_AYARLAR.medya.push({url:ev.target.result,isim:file.name,boyut:file.size});
-            saSekmeRender('kampanya');
-            toast('📷 Kampanya görseli yüklendi!','green');
-          };
-          rdr.readAsDataURL(file);
+          if(file.size>2*1024*1024){toast('Max 2MB!','red');return;}
+          toast('⏳ Yükleniyor...','blue');
+          var fd2=new FormData(); fd2.append('file',file); fd2.append('klasor','kampanya');
+          fetch('/api/resim',{method:'POST',body:fd2})
+          .then(function(r){return r.json();})
+          .then(function(d){
+            if(d.success){
+              km.gorselUrl=d.url;
+              SITE_AYARLAR.medya.push({url:d.url,isim:file.name,boyut:file.size,tarih:new Date().toISOString()});
+              saSekmeRender('kampanya');
+              toast('✅ Kampanya görseli yüklendi!','green');
+            } else {toast('❌ '+d.error,'red');}
+          }).catch(function(){toast('❌ Hata','red');});
         });
       }
     });

@@ -3773,10 +3773,48 @@ function siteAyarlariniUygula(sa) {
   var metaDesc = document.querySelector('meta[name="description"]');
   if(metaDesc && seo.metaDesc) metaDesc.setAttribute('content', seo.metaDesc);
 
-  // 5. LOGO
+  // 5. LOGO — URL varsa görseli yükle, yoksa text kalsın
   var dlogo = document.querySelector('.dlogo');
   if(dlogo && sa.gorunurluk && sa.gorunurluk.headerLogoUrl) {
-    dlogo.innerHTML = '<img src="' + sa.gorunurluk.headerLogoUrl + '" style="height:32px;object-fit:contain">';
+    dlogo.innerHTML = '<img src="' + sa.gorunurluk.headerLogoUrl + '" alt="Logo" style="height:36px;object-fit:contain;max-width:160px">';
+  }
+
+  // 6. SOSYAL — footer linkleri güncelle
+  if(sa.sosyal) {
+    var sosyalMap = {instagram:'Instagram',facebook:'Facebook',youtube:'YouTube',tiktok:'TikTok'};
+    Object.keys(sosyalMap).forEach(function(k){
+      if(sa.sosyal[k]) {
+        var link = document.querySelector('a[href*="'+k+'"]');
+        if(link) link.href = sa.sosyal[k];
+      }
+    });
+    // WhatsApp
+    if(sa.sosyal.whatsapp || (sa.genel && sa.genel.whatsapp)) {
+      var wa = sa.sosyal.whatsapp || sa.genel.whatsapp;
+      var waNum = wa.replace(/[^0-9]/g,'');
+      document.querySelectorAll('a[href*="wa.me"]').forEach(function(a){
+        a.href = 'https://wa.me/90' + waNum.replace(/^0/,'');
+      });
+    }
+    // Telefon
+    if(sa.genel && sa.genel.tel1) {
+      document.querySelectorAll('a[href*="tel:"]').forEach(function(a){
+        a.href = 'tel:' + sa.genel.tel1.replace(/[^0-9]/g,'');
+      });
+    }
+  }
+
+  // 7. TOPBAR metinleri güncelle
+  if(sa.genel) {
+    var tbItems = document.querySelectorAll('.tb-i');
+    if(tbItems[0] && sa.genel.tel1) {
+      var svgTel = tbItems[0].querySelector('svg');
+      tbItems[0].innerHTML = (svgTel ? svgTel.outerHTML : '') + sa.genel.tel1;
+    }
+    if(tbItems[1] && sa.genel.whatsapp) {
+      var svgWa = tbItems[1].querySelector('svg');
+      tbItems[1].innerHTML = (svgWa ? svgWa.outerHTML : '') + 'WhatsApp: ' + sa.genel.whatsapp;
+    }
   }
 }
 
