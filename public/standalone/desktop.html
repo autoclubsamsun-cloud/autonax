@@ -1762,10 +1762,10 @@ svg{display:block;flex-shrink:0}
   <div class="brand-sec">
     <div id="bolum-paket" class="sh"><div class="sh-left"><div class="sh-eyebrow">Marka & Model</div><h2>Popüler Araç Hizmet Paketleri</h2></div><div class="sh-right"><div class="sh-more">Daha Fazla <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div></div>
     <div class="bpkg-grid">
-      <div class="bcard" onclick="mkModalAc(0)"><div class="bcard-logo"><div class="bcard-logo-t">BMW</div></div><div class="bcard-name">BMW PPF & Koruma</div><div class="bcard-links"><div class="bcard-lnk">3. Seri PPF Kaplama</div><div class="bcard-lnk">5. Seri PPF Kaplama</div><div class="bcard-lnk">X5 Seramik Kaplama</div><div class="bcard-lnk">M Serisi Tam Koruma</div></div><div class="bcard-more">BMW Paketleri <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
-      <div class="bcard" onclick="mkModalAc(1)"><div class="bcard-logo"><div class="bcard-logo-t">MERCEDES</div></div><div class="bcard-name">Mercedes PPF & Koruma</div><div class="bcard-links"><div class="bcard-lnk">C Serisi PPF Kaplama</div><div class="bcard-lnk">E Serisi PPF Kaplama</div><div class="bcard-lnk">GLE Seramik Kaplama</div><div class="bcard-lnk">AMG Tam Koruma</div></div><div class="bcard-more">Mercedes Paketleri <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
-      <div class="bcard" onclick="mkModalAc(2)"><div class="bcard-logo"><div class="bcard-logo-t">AUDI</div></div><div class="bcard-name">Audi PPF & Koruma</div><div class="bcard-links"><div class="bcard-lnk">A3 PPF Kaplama</div><div class="bcard-lnk">A4 PPF Kaplama</div><div class="bcard-lnk">Q5 Seramik Kaplama</div><div class="bcard-lnk">Q8 Tam Koruma</div></div><div class="bcard-more">Audi Paketleri <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
-      <div class="bcard" onclick="mkModalAc(3)"><div class="bcard-logo"><div class="bcard-logo-t">PORSCHE</div></div><div class="bcard-name">Porsche PPF & Koruma</div><div class="bcard-links"><div class="bcard-lnk">911 Tam Araç PPF</div><div class="bcard-lnk">Cayenne PPF Kaplama</div><div class="bcard-lnk">Macan Seramik</div><div class="bcard-lnk">Taycan Tam Koruma</div></div><div class="bcard-more">Porsche Paketleri <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+      <div class="bcard" onclick="mkModalAc('BMW')"><div class="bcard-logo"><div class="bcard-logo-t">BMW</div></div><div class="bcard-name">BMW PPF & Koruma</div><div class="bcard-links"><div class="bcard-lnk">3. Seri PPF Kaplama</div><div class="bcard-lnk">5. Seri PPF Kaplama</div><div class="bcard-lnk">X5 Seramik Kaplama</div><div class="bcard-lnk">M Serisi Tam Koruma</div></div><div class="bcard-more">BMW Paketleri <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+      <div class="bcard" onclick="mkModalAc('MERCEDES')"><div class="bcard-logo"><div class="bcard-logo-t">MERCEDES</div></div><div class="bcard-name">Mercedes PPF & Koruma</div><div class="bcard-links"><div class="bcard-lnk">C Serisi PPF Kaplama</div><div class="bcard-lnk">E Serisi PPF Kaplama</div><div class="bcard-lnk">GLE Seramik Kaplama</div><div class="bcard-lnk">AMG Tam Koruma</div></div><div class="bcard-more">Mercedes Paketleri <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+      <div class="bcard" onclick="mkModalAc('AUDI')"><div class="bcard-logo"><div class="bcard-logo-t">AUDI</div></div><div class="bcard-name">Audi PPF & Koruma</div><div class="bcard-links"><div class="bcard-lnk">A3 PPF Kaplama</div><div class="bcard-lnk">A4 PPF Kaplama</div><div class="bcard-lnk">Q5 Seramik Kaplama</div><div class="bcard-lnk">Q8 Tam Koruma</div></div><div class="bcard-more">Audi Paketleri <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+      <div class="bcard" onclick="mkModalAc('PORSCHE')"><div class="bcard-logo"><div class="bcard-logo-t">PORSCHE</div></div><div class="bcard-name">Porsche PPF & Koruma</div><div class="bcard-links"><div class="bcard-lnk">911 Tam Araç PPF</div><div class="bcard-lnk">Cayenne PPF Kaplama</div><div class="bcard-lnk">Macan Seramik</div><div class="bcard-lnk">Taycan Tam Koruma</div></div><div class="bcard-more">Porsche Paketleri <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
     </div>
   </div>
 
@@ -4055,7 +4055,13 @@ var _mkKampanyalar = {};
 function mkModalAc(markaAdi) {
   var sa = window._SITE_AYARLAR_CACHE || {};
   var markaKartlari = (sa.anaSayfa && sa.anaSayfa.markaKartlari) || [];
-  var marka = markaKartlari.find(function(m){ return m.marka === markaAdi; });
+  // İndeks ile de çalışsın
+  var marka;
+  if(typeof markaAdi === 'number') {
+    marka = markaKartlari[markaAdi];
+  } else {
+    marka = markaKartlari.find(function(m){ return m.marka === markaAdi; });
+  }
   
   if(!marka) {
     // Fallback: statik veri
