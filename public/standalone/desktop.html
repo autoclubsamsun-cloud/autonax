@@ -4110,35 +4110,46 @@ function mkModalKapat() {
 }
 
 function mkRandevuAl(id, baslik, fiyat) {
+  // Önce kampanyayı sepete ekle (randevu ile birlikte)
+  mkSepeteEkle(id, baslik, fiyat, true);
+  // Modalı kapat
   mkModalKapat();
-  // Randevu modalını aç (mevcut sistem)
-  if(typeof openRdv === 'function') openRdv(baslik);
-  else if(typeof cRdv === 'function') cRdv();
-  else {
-    var rdvBtn = document.querySelector('.hero-btn, .btn-rdv, [onclick*="rdv"]');
+  // Randevu modalını aç — mevcut sisteme bağlan
+  setTimeout(function(){
+    var rdvBtn = document.querySelector('.hero-btn, [onclick*="rdv"], [onclick*="Randevu"]');
     if(rdvBtn) rdvBtn.click();
-  }
-  // Sepete de ekle
-  setTimeout(function(){ mkSepeteEkle(id, baslik, 0, true); }, 300);
+    // Sepeti de aç — randevu + sepet birlikte
+    if(typeof openSepet === 'function') openSepet();
+  }, 200);
+  if(typeof toast==='function') toast('📅 Randevu için sepete eklendi!','green');
 }
 
 function mkSepeteEkle(id, baslik, fiyat, sessiz) {
-  // Mevcut sepet sistemine ekle
-  if(typeof ekleS === 'function') {
-    ekleS({id:'mk-'+id, ad:baslik, fiyat:fiyat||0, tip:'kampanya', adet:1});
+  // SEPET objesi varsa kullan (ana sistem)
+  if(typeof SEPET !== 'undefined' && typeof SEPET.add === 'function') {
+    SEPET.add({
+      id: 'mk-'+id,
+      ad: baslik,
+      fiyat: parseFloat(fiyat)||0,
+      tip: 'kampanya',
+      adet: 1
+    });
+    SEPET.updateBadge && SEPET.updateBadge();
+    SEPET.render && SEPET.render();
   } else {
+    // Fallback: localStorage
     var sepet = JSON.parse(localStorage.getItem('atn_sepet')||'[]');
     var mevcut = sepet.find(function(s){ return s.id==='mk-'+id; });
     if(mevcut) { mevcut.adet = (mevcut.adet||1)+1; }
-    else { sepet.push({id:'mk-'+id, ad:baslik, fiyat:fiyat||0, tip:'kampanya', adet:1}); }
+    else { sepet.push({id:'mk-'+id, ad:baslik, fiyat:parseFloat(fiyat)||0, tip:'kampanya', adet:1}); }
     localStorage.setItem('atn_sepet', JSON.stringify(sepet));
-    // Sepet sayacını güncelle
-    var cnt = document.querySelector('.sepet-cnt, .cart-count, [id*="sepet-cnt"]');
+    var cnt = document.querySelector('[id*="sepet-badge"], [class*="sepet-cnt"]');
     if(cnt) cnt.textContent = sepet.reduce(function(a,s){return a+(s.adet||1);},0);
   }
   if(!sessiz) {
-    if(!mkModalKapat._open) mkModalKapat();
-    // Toast
+    mkModalKapat();
+    // Sepeti aç
+    if(typeof openSepet === 'function') openSepet();
     if(typeof toast==='function') toast('🛒 '+baslik+' sepete eklendi!','green');
   }
 }
