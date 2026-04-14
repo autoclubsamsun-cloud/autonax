@@ -3,7 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>Autonax — Premium Araç Koruma</title>
+  <link rel="icon" type="image/png" href="/uploads/logo/favicon.png">
+  <link rel="shortcut icon" type="image/png" href="/uploads/logo/favicon.png">
+  <link rel="apple-touch-icon" href="/uploads/logo/favicon.png">
+  <meta name="description" content="Premium PPF kaplama ve seramik araç koruma hizmetleri.">
+  <meta property="og:image" content="/uploads/logo/og-image.jpg">
+  <meta property="og:title" content="Autonax — Premium Araç Koruma">
+  <meta property="og:url" content="https://www.autonax.com.tr">
+  <title>Autonax — Premium Araç Koruma</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -3778,6 +3785,24 @@ function siteAyarlariniUygula(sa) {
   if(dlogo && sa.gorunurluk && sa.gorunurluk.headerLogoUrl) {
     dlogo.innerHTML = '<img src="' + sa.gorunurluk.headerLogoUrl + '" alt="Logo" style="height:36px;object-fit:contain;max-width:160px">';
   }
+
+  // FAVİCON — dinamik güncelle
+  if(sa.gorunurluk && sa.gorunurluk.faviconUrl) {
+    var favUrl = sa.gorunurluk.faviconUrl;
+    ['icon','shortcut icon','apple-touch-icon'].forEach(function(rel){
+      var el = document.querySelector('link[rel="'+rel+'"]');
+      if(!el){ el = document.createElement('link'); el.rel = rel; document.head.appendChild(el); }
+      el.href = favUrl + '?v=' + Date.now();
+      el.type = 'image/png';
+    });
+  }
+
+  // SEO title güncelle
+  if(sa.genel && sa.genel.metaTitle) document.title = sa.genel.metaTitle;
+  var metaDesc = document.querySelector('meta[name="description"]');
+  if(metaDesc && sa.genel && sa.genel.metaDesc) metaDesc.content = sa.genel.metaDesc;
+  var ogImg = document.querySelector('meta[property="og:image"]');
+  if(ogImg && sa.gorunurluk && sa.gorunurluk.ogImageUrl) ogImg.content = sa.gorunurluk.ogImageUrl;
 
   // 6. SOSYAL — footer linkleri güncelle
   if(sa.sosyal) {
