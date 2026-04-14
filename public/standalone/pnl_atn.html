@@ -1385,7 +1385,9 @@ var FIYAT_DATA=[
 
 /* ══ AUTH ══ */
 var ADM_U=(function(){try{return localStorage.getItem('autonax_adm_u')||'admin';}catch(e){return 'admin';}}());
-var ADM_P=''; // Şifre localStorage'da saklanmaz — API'den doğrulanır
+var ADM_P=''; // Şifre localStorage'da saklanmaz
+// Eski localStorage şifre kalıntısını temizle
+try{localStorage.removeItem('autonax_adm_p');localStorage.removeItem('autonax_session');}catch(e){}
 /* DB'den güncel şifreyi çek — mobilden ilk girişte doğru şifre gelsin */
 (function(){
   fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'get_credentials'})})
@@ -1448,25 +1450,35 @@ function doLogin(){
 }
 function doCikis(){
   if(!confirm('Çıkış yapılsın mı?'))return;
-  // Tüm oturum verilerini temizle
+  // Tüm oturum verilerini sil
   try{
-    sessionStorage.removeItem('autonax_oturum');
-    sessionStorage.clear();
-    localStorage.removeItem('autonax_session');
-    // Kullanıcı adını koru ama şifreyi sil
-    localStorage.removeItem('autonax_adm_p');
+    sessionStorage.clear(); // sessionStorage tamamen temizle
+    // localStorage'dan oturum ile ilgili her şeyi sil
+    ['autonax_session','autonax_adm_p','autonax_oturum'].forEach(function(k){
+      try{localStorage.removeItem(k);}catch(e){}
+    });
   }catch(e){}
-  document.getElementById('login-ovl').style.display='flex';
-  document.getElementById('main-header').style.display='none';
-  document.getElementById('main-layout').style.display='none';
-  document.getElementById('l-pass').value='';
-  document.getElementById('l-user').value='';
+  // UI'yi sıfırla
+  var loginOvl=document.getElementById('login-ovl');
+  var mainHeader=document.getElementById('main-header');
+  var mainLayout=document.getElementById('main-layout');
+  if(loginOvl) loginOvl.style.display='flex';
+  if(mainHeader) mainHeader.style.display='none';
+  if(mainLayout) mainLayout.style.display='none';
+  // Input'ları temizle
+  var pu=document.getElementById('l-user');
+  var pp=document.getElementById('l-pass');
+  if(pu) pu.value='';
+  if(pp) pp.value='';
 }
 
 /* ══ SAYFA ══ */
 
 /* ══ DASHBOARD YUKLE ══ */
 async function dashboardYukle() {
+  // Yükleniyor göster
+  var skVals0=document.querySelectorAll('#pg-dashboard .sk-val');
+  skVals0.forEach(function(el){if(el.textContent==='0'||el.textContent==='₺0')el.style.opacity='0.3';});
   try {
     var rdvRes = await fetch('/api/randevular').then(function(r){return r.json();});
     var mstRes = await fetch('/api/musteriler').then(function(r){return r.json();});
@@ -1491,6 +1503,7 @@ async function dashboardYukle() {
     var bekleyenOnay = randevular.filter(function(r){ return r.durum==='bekl'||r.durum==='bekliyor'||!r.durum; }).length;
 
     var skVals = document.querySelectorAll('#pg-dashboard .sk-val');
+    skVals.forEach(function(el){el.style.opacity='1';});
     if(skVals[0]) skVals[0].textContent = bugunRdv.length;
     if(skVals[1]) skVals[1].textContent = '₺' + haftaGelir.toLocaleString('tr-TR');
     if(skVals[2]) skVals[2].textContent = musteriler.length;
@@ -1648,7 +1661,7 @@ function doRdvListele(){
 
 
 /* ════════════ DASHBOARD DB ENTEGRASYONU ════════════ */
-function dashboardGuncelle(){
+function dashboardGuncelle(){ dashboardYukle(); return; /* Artık dashboardYukle kullanılıyor */
   Promise.all([
     fetch('/api/randevular').then(function(r){return r.json();}),
     fetch('/api/musteriler').then(function(r){return r.json();}),
@@ -3756,9 +3769,11 @@ window.onload=function(){
   var mainHeader=document.getElementById('main-header');
   var mainLayout=document.getElementById('main-layout');
 
-  // Oturum kontrolü — sessionStorage'da aktif oturum var mı?
+  // Oturum kontrolü — SADECE sessionStorage'dan (kapanınca sıfırlanır)
   var aktifOturum=false;
   try{ aktifOturum=sessionStorage.getItem('autonax_oturum')==='1'; }catch(e){}
+  // localStorage'daki eski oturumları temizle — güvenlik
+  try{ localStorage.removeItem('autonax_session'); }catch(e){}
 
   if(aktifOturum){
     // Oturum aktif — direkt paneli aç
@@ -3767,6 +3782,7 @@ window.onload=function(){
     if(mainLayout) mainLayout.style.display='flex';
     doInit();
     dbSyncYukle();
+    setTimeout(dashboardYukle, 100);
   } else {
     // Oturum yok — login göster
     if(loginOvl) loginOvl.style.cssText='display:flex;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:20px;background:#0a0a0a';
