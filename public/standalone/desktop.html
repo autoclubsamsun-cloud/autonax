@@ -1762,10 +1762,10 @@ svg{display:block;flex-shrink:0}
   <div class="brand-sec">
     <div id="bolum-paket" class="sh"><div class="sh-left"><div class="sh-eyebrow">Marka & Model</div><h2>Popüler Araç Hizmet Paketleri</h2></div><div class="sh-right"><div class="sh-more">Daha Fazla <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div></div>
     <div class="bpkg-grid">
-      <div class="bcard"><div class="bcard-logo"><div class="bcard-logo-t">BMW</div></div><div class="bcard-name">BMW PPF & Koruma</div><div class="bcard-links"><div class="bcard-lnk">3. Seri PPF Kaplama</div><div class="bcard-lnk">5. Seri PPF Kaplama</div><div class="bcard-lnk">X5 Seramik Kaplama</div><div class="bcard-lnk">M Serisi Tam Koruma</div></div><div class="bcard-more">BMW Paketleri <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
-      <div class="bcard"><div class="bcard-logo"><div class="bcard-logo-t">MERCEDES</div></div><div class="bcard-name">Mercedes PPF & Koruma</div><div class="bcard-links"><div class="bcard-lnk">C Serisi PPF Kaplama</div><div class="bcard-lnk">E Serisi PPF Kaplama</div><div class="bcard-lnk">GLE Seramik Kaplama</div><div class="bcard-lnk">AMG Tam Koruma</div></div><div class="bcard-more">Mercedes Paketleri <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
-      <div class="bcard"><div class="bcard-logo"><div class="bcard-logo-t">AUDI</div></div><div class="bcard-name">Audi PPF & Koruma</div><div class="bcard-links"><div class="bcard-lnk">A3 PPF Kaplama</div><div class="bcard-lnk">A4 PPF Kaplama</div><div class="bcard-lnk">Q5 Seramik Kaplama</div><div class="bcard-lnk">Q8 Tam Koruma</div></div><div class="bcard-more">Audi Paketleri <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
-      <div class="bcard"><div class="bcard-logo"><div class="bcard-logo-t">PORSCHE</div></div><div class="bcard-name">Porsche PPF & Koruma</div><div class="bcard-links"><div class="bcard-lnk">911 Tam Araç PPF</div><div class="bcard-lnk">Cayenne PPF Kaplama</div><div class="bcard-lnk">Macan Seramik</div><div class="bcard-lnk">Taycan Tam Koruma</div></div><div class="bcard-more">Porsche Paketleri <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+      <div class="bcard" onclick="mkModalAc(0)"><div class="bcard-logo"><div class="bcard-logo-t">BMW</div></div><div class="bcard-name">BMW PPF & Koruma</div><div class="bcard-links"><div class="bcard-lnk">3. Seri PPF Kaplama</div><div class="bcard-lnk">5. Seri PPF Kaplama</div><div class="bcard-lnk">X5 Seramik Kaplama</div><div class="bcard-lnk">M Serisi Tam Koruma</div></div><div class="bcard-more">BMW Paketleri <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+      <div class="bcard" onclick="mkModalAc(1)"><div class="bcard-logo"><div class="bcard-logo-t">MERCEDES</div></div><div class="bcard-name">Mercedes PPF & Koruma</div><div class="bcard-links"><div class="bcard-lnk">C Serisi PPF Kaplama</div><div class="bcard-lnk">E Serisi PPF Kaplama</div><div class="bcard-lnk">GLE Seramik Kaplama</div><div class="bcard-lnk">AMG Tam Koruma</div></div><div class="bcard-more">Mercedes Paketleri <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+      <div class="bcard" onclick="mkModalAc(2)"><div class="bcard-logo"><div class="bcard-logo-t">AUDI</div></div><div class="bcard-name">Audi PPF & Koruma</div><div class="bcard-links"><div class="bcard-lnk">A3 PPF Kaplama</div><div class="bcard-lnk">A4 PPF Kaplama</div><div class="bcard-lnk">Q5 Seramik Kaplama</div><div class="bcard-lnk">Q8 Tam Koruma</div></div><div class="bcard-more">Audi Paketleri <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+      <div class="bcard" onclick="mkModalAc(3)"><div class="bcard-logo"><div class="bcard-logo-t">PORSCHE</div></div><div class="bcard-name">Porsche PPF & Koruma</div><div class="bcard-links"><div class="bcard-lnk">911 Tam Araç PPF</div><div class="bcard-lnk">Cayenne PPF Kaplama</div><div class="bcard-lnk">Macan Seramik</div><div class="bcard-lnk">Taycan Tam Koruma</div></div><div class="bcard-more">Porsche Paketleri <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
     </div>
   </div>
 
@@ -2261,6 +2261,62 @@ svg{display:block;flex-shrink:0}
   .msg-bubble{font-size:13px}
   .rc-price{font-size:22px}
 }
+
+/* ── MARKA KAMPANYA MODALİ ── */
+.mk-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
+.mk-modal{background:#111;border:1px solid rgba(176,28,46,.3);border-radius:16px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;position:relative}
+.mk-modal-hdr{padding:20px 24px 16px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#111;z-index:1}
+.mk-modal-marka{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--r)}
+.mk-modal-kapat{width:32px;height:32px;border-radius:50%;border:1.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
+.mk-modal-kapat:hover{background:rgba(176,28,46,.2);border-color:var(--r)}
+.mk-modal-body{padding:20px 24px}
+.mk-km-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px}
+@media(max-width:520px){.mk-km-grid{grid-template-columns:1fr}}
+.mk-km-kart{background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:12px;padding:16px;cursor:pointer;transition:.2s;position:relative}
+.mk-km-kart:hover{border-color:rgba(176,28,46,.5);background:rgba(176,28,46,.06)}
+.mk-km-kart.secili{border-color:var(--r);background:rgba(176,28,46,.1)}
+.mk-km-rozet{display:inline-block;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;background:rgba(176,28,46,.15);color:#f87171;margin-bottom:8px}
+.mk-km-baslik{font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;line-height:1.3}
+.mk-km-aciklama{font-size:11px;color:#999;line-height:1.5;margin-bottom:10px}
+.mk-km-fiyat{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--r);letter-spacing:1px}
+.mk-km-fiyat span{font-size:13px;font-weight:400;color:#666;font-family:Outfit,sans-serif}
+.mk-km-ozellikler{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.mk-km-oz-tag{font-size:9px;padding:2px 7px;border-radius:4px;background:rgba(255,255,255,.06);color:#aaa;border:1px solid rgba(255,255,255,.08)}
+.mk-modal-footer{padding:16px 24px;border-top:1px solid rgba(255,255,255,.08);display:flex;gap:10px;position:sticky;bottom:0;background:#111}
+.mk-btn-rdv{flex:1;padding:12px;background:var(--r);color:#fff;border:none;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer;transition:.2s}
+.mk-btn-rdv:hover{background:#9b1724}
+.mk-btn-sepet{flex:1;padding:12px;background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.2);border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer;transition:.2s}
+.mk-btn-sepet:hover{border-color:var(--r);color:var(--r)}
+.mk-no-km{text-align:center;padding:40px;color:#666;font-size:13px}
+
+/* ── MARKA KAMPANYA MODALI ── */
+.mk-modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
+.mk-modal{background:#111;border:1px solid rgba(176,28,46,.3);border-radius:16px;width:100%;max-width:900px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column}
+.mk-modal-hdr{padding:20px 24px 16px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.mk-modal-logo{font-family:'Bebas Neue',sans-serif;font-size:28px;color:#B01C2E;letter-spacing:2px}
+.mk-modal-title{font-size:14px;color:#aaa;margin-top:2px}
+.mk-modal-close{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.08);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.mk-modal-close:hover{background:rgba(176,28,46,.4)}
+.mk-modal-body{padding:20px 24px;overflow-y:auto;flex:1}
+.mk-kamp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.mk-kamp-kart{background:#1a1a1a;border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden;transition:border-color .2s,transform .2s}
+.mk-kamp-kart:hover{border-color:rgba(176,28,46,.5);transform:translateY(-2px)}
+.mk-kamp-img{width:100%;height:120px;background:linear-gradient(135deg,#1a0a0a,#2a0a0a);display:flex;align-items:center;justify-content:center;font-size:32px;position:relative}
+.mk-kamp-img img{width:100%;height:100%;object-fit:cover}
+.mk-kamp-rozet{position:absolute;top:8px;left:8px;background:#B01C2E;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px}
+.mk-kamp-body{padding:14px}
+.mk-kamp-baslik{font-size:13px;font-weight:700;color:#fff;margin-bottom:6px}
+.mk-kamp-aciklama{font-size:11px;color:#888;margin-bottom:10px;line-height:1.5}
+.mk-kamp-ozellikler{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px}
+.mk-kamp-oz{font-size:10px;background:rgba(176,28,46,.1);color:#B01C2E;border:1px solid rgba(176,28,46,.2);padding:2px 7px;border-radius:20px}
+.mk-kamp-fiyat{font-family:'Bebas Neue',sans-serif;font-size:22px;color:#B01C2E;margin-bottom:12px}
+.mk-kamp-fiyat span{font-size:12px;font-family:Outfit,sans-serif;color:#666}
+.mk-kamp-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mk-kamp-rdv{padding:9px;background:#B01C2E;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif}
+.mk-kamp-rdv:hover{background:#9a1525}
+.mk-kamp-sepet{padding:9px;background:transparent;color:#B01C2E;border:1.5px solid #B01C2E;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif}
+.mk-kamp-sepet:hover{background:rgba(176,28,46,.1)}
+
 </style>
 
 <!-- MODAL HTML -->
@@ -3742,7 +3798,9 @@ function socialLogin(provider){ alert(provider+' girişi yakında aktif edilecek
 
 /* ══ SITE AYARLARINI YÜKLEYİP UYGULA ══ */
 function siteAyarlariniUygula(sa) {
+  window._SITE_AYARLAR_CACHE = sa; // Modal için cache
   if(!sa) return;
+  window._SITE_AYARLAR_CACHE = sa; // Cache kaydet
   var g = sa.genel || {};
   var an = sa.anaSayfa || {};
   var seo = sa.seo || {};
@@ -3808,17 +3866,19 @@ function siteAyarlariniUygula(sa) {
   if(sa.anaSayfa && sa.anaSayfa.markaKartlari && sa.anaSayfa.markaKartlari.length) {
     var bpkgGrid = document.querySelector('.bpkg-grid');
     if(bpkgGrid) {
-      bpkgGrid.innerHTML = sa.anaSayfa.markaKartlari.map(function(m){
-        var linklerHTML = (m.linkler||[]).map(function(l){
-          return '<div class="bcard-lnk">' + l + '</div>';
+      bpkgGrid.innerHTML = sa.anaSayfa.markaKartlari.map(function(m, mi){
+        var linklerHTML = (m.linkler||[]).map(function(l, li){
+          return '<div class="bcard-lnk" onclick="mkModalAc('+mi+')">' + l + '</div>';
         }).join('');
-        return '<div class="bcard">'
+        return '<div class="bcard" onclick="mkModalAc('+mi+')">'
           + '<div class="bcard-logo"><div class="bcard-logo-t">' + m.marka + '</div></div>'
           + '<div class="bcard-name">' + m.ad + '</div>'
           + '<div class="bcard-links">' + linklerHTML + '</div>'
           + '<div class="bcard-more">' + m.daha + ' <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>'
           + '</div>';
       }).join('');
+      // Cache'e kaydet
+      window._SITE_AYARLAR_CACHE = sa;
     }
   }
 
@@ -3899,6 +3959,186 @@ function siteAyarlariniCek() {
     })
     .catch(function(){});
 }
+
+
+/* ── MARKA KAMPANYA MODALİ ── */
+var _mkSeciliKm = null;
+var _mkSeciliMarka = null;
+
+function mkModalAc(markaIdx) {
+  var sa = window._SITE_AYARLAR_CACHE || {};
+  var mkler = sa.anaSayfa && sa.anaSayfa.markaKartlari;
+  if(!mkler) {
+    // localStorage'dan dene
+    try { var raw=localStorage.getItem('autonax_site_v1'); if(raw){var v=JSON.parse(raw); mkler=v.anaSayfa&&v.anaSayfa.markaKartlari;} } catch(e){}
+  }
+  if(!mkler || !mkler[markaIdx]) return;
+  var m = mkler[markaIdx];
+  _mkSeciliMarka = m;
+  _mkSeciliKm = null;
+
+  document.getElementById('mk-modal-marka').textContent = m.marka;
+  document.getElementById('mk-modal-ad').textContent = m.ad;
+
+  var kmps = m.kampanyalar || [];
+  var grid = document.getElementById('mk-modal-kampanyalar');
+  if(!kmps.length) {
+    grid.innerHTML = '<div class="mk-no-km">Bu marka için henüz kampanya tanımlanmamış.</div>';
+  } else {
+    grid.innerHTML = kmps.map(function(km, ki) {
+      var ozList = (km.ozellikler||'').split('|').filter(Boolean)
+        .map(function(o){ return '<span class="mk-km-oz-tag">✓ '+o+'</span>'; }).join('');
+      var fiyatStr = km.fiyat ? km.fiyat.toLocaleString('tr-TR') + ' ₺' : 'Fiyat alın';
+      return '<div class="mk-km-kart" id="mkk-'+ki+'" onclick="mkKampanyaSec('+ki+')">'
+        +(km.rozet?'<div class="mk-km-rozet">'+km.rozet+'</div>':'')
+        +'<div class="mk-km-baslik">'+km.baslik+'</div>'
+        +'<div class="mk-km-aciklama">'+km.aciklama+'</div>'
+        +'<div class="mk-km-fiyat">'+fiyatStr+'<span> den başlayan</span></div>'
+        +'<div class="mk-km-ozellikler">'+ozList+'</div>'
+        +'</div>';
+    }).join('');
+    // İlk kampanyayı otomatik seç
+    mkKampanyaSec(0);
+  }
+
+  document.getElementById('mk-modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function mkKampanyaSec(ki) {
+  _mkSeciliKm = ki;
+  document.querySelectorAll('.mk-km-kart').forEach(function(k){ k.classList.remove('secili'); });
+  var kart = document.getElementById('mkk-'+ki);
+  if(kart) kart.classList.add('secili');
+}
+
+function mkModalKapat(e) {
+  if(e && e.target !== document.getElementById('mk-modal')) return;
+  document.getElementById('mk-modal').style.display = 'none';
+  document.body.style.overflow = '';
+  _mkSeciliKm = null;
+}
+
+function mkModalRandevu() {
+  mkModalKapat();
+  var km = _mkSeciliMarka && _mkSeciliKm !== null ? (_mkSeciliMarka.kampanyalar||[])[_mkSeciliKm] : null;
+  var not = km ? (_mkSeciliMarka.marka + ' — ' + km.baslik) : (_mkSeciliMarka ? _mkSeciliMarka.marka : '');
+  // Randevu modalını aç
+  if(typeof openRdv === 'function') { openRdv(not); }
+  else if(typeof cRdv === 'function') { cRdv(); }
+  else { document.getElementById('rdv-modal') && (document.getElementById('rdv-modal').style.display='flex'); }
+  // Notu set et
+  setTimeout(function(){
+    var notEl = document.getElementById('rdv-not') || document.querySelector('[name="not"], [id*="not"]');
+    if(notEl && not) notEl.value = not;
+  }, 200);
+}
+
+function mkModalSepet() {
+  var km = _mkSeciliMarka && _mkSeciliKm !== null ? (_mkSeciliMarka.kampanyalar||[])[_mkSeciliKm] : null;
+  if(!km) { toast && toast('Lütfen bir kampanya seçin','red'); return; }
+  var isim = _mkSeciliMarka.marka + ' — ' + km.baslik;
+  if(typeof SEPET !== 'undefined' && SEPET.add) {
+    SEPET.add({id:'mk-'+km.id+'-'+Date.now(), isim:isim, aciklama:km.aciklama, fiyat:km.fiyat||0, fiyatStr:(km.fiyat||0).toLocaleString('tr-TR')+'₺'});
+    mkModalKapat();
+    if(typeof cSepet === 'function') setTimeout(cSepet, 300);
+  } else {
+    toast && toast(isim+' sepete eklendi!','green');
+    mkModalKapat();
+  }
+}
+
+
+/* ── MARKA KAMPANYA MODALI ── */
+var _mkKampanyalar = {};
+
+function mkModalAc(markaAdi) {
+  var sa = window._SITE_AYARLAR_CACHE || {};
+  var markaKartlari = (sa.anaSayfa && sa.anaSayfa.markaKartlari) || [];
+  var marka = markaKartlari.find(function(m){ return m.marka === markaAdi; });
+  
+  if(!marka) {
+    // Fallback: statik veri
+    marka = _mkKampanyalar[markaAdi] || null;
+  }
+  if(!marka) return;
+
+  document.getElementById('mk-modal-marka').textContent = marka.marka;
+  document.getElementById('mk-modal-ad').textContent = marka.ad || marka.marka + ' Paketleri';
+
+  var grid = document.getElementById('mk-kamp-grid');
+  var kampanyalar = marka.kampanyalar || [];
+  
+  if(!kampanyalar.length) {
+    grid.innerHTML = '<div style="text-align:center;padding:40px;color:#666">Bu marka için henüz kampanya eklenmemiş.</div>';
+  } else {
+    grid.innerHTML = kampanyalar.map(function(km) {
+      var ozList = (km.ozellikler||'').split('|').filter(Boolean);
+      return '<div class="mk-kamp-kart">'
+        + '<div class="mk-kamp-img">'
+          + (km.gorselUrl ? '<img src="'+km.gorselUrl+'" alt="'+km.baslik+'">' : '🚗')
+          + (km.rozet ? '<div class="mk-kamp-rozet">'+km.rozet+'</div>' : '')
+        + '</div>'
+        + '<div class="mk-kamp-body">'
+          + '<div class="mk-kamp-baslik">'+km.baslik+'</div>'
+          + '<div class="mk-kamp-aciklama">'+(km.aciklama||'')+'</div>'
+          + (ozList.length ? '<div class="mk-kamp-ozellikler">'+ozList.map(function(o){return '<span class="mk-kamp-oz">'+o+'</span>';}).join('')+'</div>' : '')
+          + (km.fiyat ? '<div class="mk-kamp-fiyat">'+Number(km.fiyat).toLocaleString('tr-TR')+' ₺<span> başlayan fiyatlarla</span></div>' : '')
+          + '<div class="mk-kamp-btns">'
+            + '<button class="mk-kamp-rdv" data-kid="'+km.id+'" data-kadi="'+km.baslik+'" data-kfiyat="'+(km.fiyat||0)+'" onclick="mkRandevuAl(this.dataset.kid,this.dataset.kadi,this.dataset.kfiyat)">📅 Randevu Al</button>'
+            + '<button class="mk-kamp-sepet" data-kid="'+km.id+'" data-kadi="'+km.baslik+'" data-kfiyat="'+(km.fiyat||0)+'" onclick="mkSepeteEkle(this.dataset.kid,this.dataset.kadi,this.dataset.kfiyat)">🛒 Sepete Ekle</button>'
+          + '</div>'
+        + '</div>'
+      + '</div>';
+    }).join('');
+  }
+
+  var ov = document.getElementById('mk-modal-ov');
+  ov.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function mkModalKapat() {
+  document.getElementById('mk-modal-ov').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function mkRandevuAl(id, baslik, fiyat) {
+  mkModalKapat();
+  // Randevu modalını aç (mevcut sistem)
+  if(typeof openRdv === 'function') openRdv(baslik);
+  else if(typeof cRdv === 'function') cRdv();
+  else {
+    var rdvBtn = document.querySelector('.hero-btn, .btn-rdv, [onclick*="rdv"]');
+    if(rdvBtn) rdvBtn.click();
+  }
+  // Sepete de ekle
+  setTimeout(function(){ mkSepeteEkle(id, baslik, 0, true); }, 300);
+}
+
+function mkSepeteEkle(id, baslik, fiyat, sessiz) {
+  // Mevcut sepet sistemine ekle
+  if(typeof ekleS === 'function') {
+    ekleS({id:'mk-'+id, ad:baslik, fiyat:fiyat||0, tip:'kampanya', adet:1});
+  } else {
+    var sepet = JSON.parse(localStorage.getItem('atn_sepet')||'[]');
+    var mevcut = sepet.find(function(s){ return s.id==='mk-'+id; });
+    if(mevcut) { mevcut.adet = (mevcut.adet||1)+1; }
+    else { sepet.push({id:'mk-'+id, ad:baslik, fiyat:fiyat||0, tip:'kampanya', adet:1}); }
+    localStorage.setItem('atn_sepet', JSON.stringify(sepet));
+    // Sepet sayacını güncelle
+    var cnt = document.querySelector('.sepet-cnt, .cart-count, [id*="sepet-cnt"]');
+    if(cnt) cnt.textContent = sepet.reduce(function(a,s){return a+(s.adet||1);},0);
+  }
+  if(!sessiz) {
+    if(!mkModalKapat._open) mkModalKapat();
+    // Toast
+    if(typeof toast==='function') toast('🛒 '+baslik+' sepete eklendi!','green');
+  }
+}
+
+// ESC tuşu ile kapat
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') mkModalKapat(); });
 
 /* ══ NAV KATEGORİ SEÇ ══ */
 function navKatSec(btn, kat) {
@@ -4418,5 +4658,43 @@ function authCikis(){
     </div>
   </div>
 </div>
+
+<!-- MARKA KAMPANYA MODALİ -->
+<div class="mk-modal-bg" id="mk-modal" style="display:none" onclick="mkModalKapat(event)">
+  <div class="mk-modal">
+    <div class="mk-modal-hdr">
+      <div>
+        <div class="mk-modal-marka" id="mk-modal-marka">BMW</div>
+        <div style="font-size:12px;color:#666;margin-top:2px" id="mk-modal-ad">BMW PPF & Koruma</div>
+      </div>
+      <button class="mk-modal-kapat" onclick="mkModalKapat()">✕</button>
+    </div>
+    <div class="mk-modal-body">
+      <div style="font-size:11px;color:#666;margin-bottom:14px">Bir kampanya seçin, ardından randevu alın veya sepete ekleyin</div>
+      <div class="mk-km-grid" id="mk-modal-kampanyalar"></div>
+    </div>
+    <div class="mk-modal-footer">
+      <button class="mk-btn-rdv" onclick="mkModalRandevu()">📅 RANDEVU AL</button>
+      <button class="mk-btn-sepet" onclick="mkModalSepet()">🛒 SEPETE EKLE</button>
+    </div>
+  </div>
+</div>
+
+<!-- MARKA KAMPANYA MODALI -->
+<div id="mk-modal-ov" class="mk-modal-ov" style="display:none" onclick="if(event.target===this)mkModalKapat()">
+  <div class="mk-modal">
+    <div class="mk-modal-hdr">
+      <div>
+        <div class="mk-modal-logo" id="mk-modal-marka">BMW</div>
+        <div class="mk-modal-title" id="mk-modal-ad">BMW PPF & Koruma Paketleri</div>
+      </div>
+      <button class="mk-modal-close" onclick="mkModalKapat()">×</button>
+    </div>
+    <div class="mk-modal-body">
+      <div class="mk-kamp-grid" id="mk-kamp-grid"></div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

@@ -2390,10 +2390,26 @@ var SITE_AYARLAR={
       {soru:'Kaplama süresi ne kadar?',cevap:'Tam araç kaplama 1-2 gün sürer.'}
     ],
     markaKartlari:[
-      {marka:'BMW',ad:'BMW PPF & Koruma',linkler:['3. Seri PPF Kaplama','5. Seri PPF Kaplama','X5 Seramik Kaplama','M Serisi Tam Koruma'],daha:'BMW Paketleri'},
-      {marka:'MERCEDES',ad:'Mercedes PPF & Koruma',linkler:['C Serisi PPF Kaplama','E Serisi PPF Kaplama','GLE Seramik Kaplama','AMG Tam Koruma'],daha:'Mercedes Paketleri'},
-      {marka:'AUDI',ad:'Audi PPF & Koruma',linkler:['A3 PPF Kaplama','A4 PPF Kaplama','Q5 Seramik Kaplama','Q8 Tam Koruma'],daha:'Audi Paketleri'},
-      {marka:'PORSCHE',ad:'Porsche PPF & Koruma',linkler:['911 Tam Araç PPF','Cayenne PPF Kaplama','Macan Seramik','Taycan Tam Koruma'],daha:'Porsche Paketleri'}
+      {marka:'BMW',ad:'BMW PPF & Koruma',linkler:['3. Seri PPF Kaplama','5. Seri PPF Kaplama','X5 Seramik Kaplama','M Serisi Tam Koruma'],daha:'BMW Paketleri',
+       kampanyalar:[
+         {id:'km-bmw-1',baslik:'BMW 3. Seri PPF Kaplama',aciklama:'Ön 3 parça PPF kaplama. Alman kalitesi Henkel yapışkan sistemi.',fiyat:15000,rozet:'⭐ POPÜLER',ozellikler:'6 Yıl Garanti|Self-Healing|UV Koruma|Hidrofobik',gorselUrl:''},
+         {id:'km-bmw-2',baslik:'BMW M Serisi Tam Araç PPF',aciklama:'Tam araç premium PPF kaplama. M serisine özel uygulama.',fiyat:65000,rozet:'👑 PREMİUM',ozellikler:'8 Yıl Garanti|Self-Healing|UV Koruma|Hidrofobik',gorselUrl:''}
+       ]},
+      {marka:'MERCEDES',ad:'Mercedes PPF & Koruma',linkler:['C Serisi PPF Kaplama','E Serisi PPF Kaplama','GLE Seramik Kaplama','AMG Tam Koruma'],daha:'Mercedes Paketleri',
+       kampanyalar:[
+         {id:'km-mb-1',baslik:'Mercedes C Serisi PPF',aciklama:'C serisi için özel ön 3 parça PPF paketi.',fiyat:16000,rozet:'✅ BAŞLANGIÇ',ozellikler:'6 Yıl Garanti|Self-Healing|UV Koruma',gorselUrl:''},
+         {id:'km-mb-2',baslik:'Mercedes AMG Tam Koruma',aciklama:'AMG serisi tam araç PPF + seramik kombo paketi.',fiyat:85000,rozet:'👑 KOMBO',ozellikler:'10 Yıl Garanti|Self-Healing|Seramik+PPF',gorselUrl:''}
+       ]},
+      {marka:'AUDI',ad:'Audi PPF & Koruma',linkler:['A3 PPF Kaplama','A4 PPF Kaplama','Q5 Seramik Kaplama','Q8 Tam Koruma'],daha:'Audi Paketleri',
+       kampanyalar:[
+         {id:'km-au-1',baslik:'Audi A4 PPF Kaplama',aciklama:'A4 için ön 3 parça PPF kaplama paketi.',fiyat:15000,rozet:'🇩🇪 ALMAN',ozellikler:'6 Yıl Garanti|Self-Healing|UV Koruma',gorselUrl:''},
+         {id:'km-au-2',baslik:'Audi Q8 Tam Araç PPF',aciklama:'Q8 için tam araç premium PPF kaplama.',fiyat:70000,rozet:'👑 PREMİUM',ozellikler:'8 Yıl Garanti|Self-Healing|UV Koruma',gorselUrl:''}
+       ]},
+      {marka:'PORSCHE',ad:'Porsche PPF & Koruma',linkler:['911 Tam Araç PPF','Cayenne PPF Kaplama','Macan Seramik','Taycan Tam Koruma'],daha:'Porsche Paketleri',
+       kampanyalar:[
+         {id:'km-po-1',baslik:'Porsche Cayenne PPF',aciklama:'Cayenne için ön 3 parça + kaput PPF paketi.',fiyat:20000,rozet:'⭐ POPÜLER',ozellikler:'8 Yıl Garanti|Self-Healing|UV Koruma',gorselUrl:''},
+         {id:'km-po-2',baslik:'Porsche 911 Tam Araç PPF',aciklama:'911 için tam araç premium PPF. Spor araç uzmanı uygulama.',fiyat:90000,rozet:'👑 ULTRA',ozellikler:'12 Yıl Garanti|Self-Healing|UV Koruma',gorselUrl:''}
+       ]}
     ]
   },
   seo:{
@@ -6833,21 +6849,51 @@ function saAnaSayfaHTML(){
   +(function(){
     var html='';
     (SITE_AYARLAR.anaSayfa.markaKartlari||[]).forEach(function(m,i){
+      var kmps = m.kampanyalar||[];
       html+='<div style="background:#f9fafb;border:1.5px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:10px">'
-        +'<div style="display:flex;gap:8px;margin-bottom:8px">'
-          +'<div style="flex:1"><div style="font-size:10px;font-weight:700;color:var(--ink4);margin-bottom:3px">MARKA ADI</div>'
+        // Marka başlık satırı
+        +'<div style="display:flex;gap:8px;margin-bottom:10px;align-items:flex-end">'
+          +'<div style="flex:1"><div style="font-size:10px;font-weight:700;color:var(--ink4);margin-bottom:3px">MARKA</div>'
             +'<input id="mk-'+i+'-marka" type="text" value="'+m.marka+'" style="width:100%;padding:6px 8px;border:1.5px solid var(--bd);border-radius:7px;font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:1px;box-sizing:border-box"></div>'
           +'<div style="flex:2"><div style="font-size:10px;font-weight:700;color:var(--ink4);margin-bottom:3px">BAŞLIK</div>'
-            +'<input id="mk-'+i+'-ad" type="text" value="'+m.ad+'" style="width:100%;padding:6px 8px;border:1.5px solid var(--bd);border-radius:7px;font-family:Outfit,sans-serif;font-size:12px;box-sizing:border-box"></div>'
+            +'<input id="mk-'+i+'-ad" type="text" value="'+m.ad+'" style="width:100%;padding:6px 8px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;box-sizing:border-box"></div>'
           +'<div style="flex:1"><div style="font-size:10px;font-weight:700;color:var(--ink4);margin-bottom:3px">DAHA FAZLA</div>'
-            +'<input id="mk-'+i+'-daha" type="text" value="'+m.daha+'" style="width:100%;padding:6px 8px;border:1.5px solid var(--bd);border-radius:7px;font-family:Outfit,sans-serif;font-size:12px;box-sizing:border-box"></div>'
+            +'<input id="mk-'+i+'-daha" type="text" value="'+m.daha+'" style="width:100%;padding:6px 8px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;box-sizing:border-box"></div>'
+          +'<button onclick="markaKartSil('+i+')" style="padding:6px 10px;border:1.5px solid #fee2e2;background:#fff;color:#dc2626;border-radius:7px;font-size:11px;cursor:pointer;white-space:nowrap">🗑️ Sil</button>'
         +'</div>'
-        +'<div><div style="font-size:10px;font-weight:700;color:var(--ink4);margin-bottom:4px">ALT LİNKLER (her satıra bir tane)</div>'
-          +'<textarea id="mk-'+i+'-linkler" rows="4" style="width:100%;padding:6px 8px;border:1.5px solid var(--bd);border-radius:7px;font-family:Outfit,sans-serif;font-size:12px;box-sizing:border-box;resize:vertical">'+m.linkler.join('\n')+'</textarea>'
+        // Kampanyalar bölümü
+        +'<div style="border-top:1px solid var(--bd);padding-top:10px;margin-top:2px">'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+            +'<div style="font-size:11px;font-weight:700;color:var(--ink)">🏷️ Kampanyalar ('+kmps.length+')</div>'
+            +'<button onclick="markaKampanyaEkle('+i+')" style="padding:4px 10px;background:rgba(176,28,46,.1);color:var(--r);border:1.5px solid rgba(176,28,46,.3);border-radius:6px;font-size:10px;font-weight:700;cursor:pointer">+ Kampanya Ekle</button>'
+          +'</div>'
+          +(kmps.length ? kmps.map(function(km,ki){
+            return '<div style="background:#fff;border:1.5px solid var(--bd);border-radius:8px;padding:10px;margin-bottom:8px">'
+              +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">'
+                +'<div><div style="font-size:9px;font-weight:700;color:var(--ink4);margin-bottom:2px">BAŞLIK</div>'
+                  +'<input id="mk-'+i+'-km-'+ki+'-baslik" value="'+km.baslik+'" style="width:100%;padding:5px 7px;border:1.5px solid var(--bd);border-radius:6px;font-size:11px;box-sizing:border-box"></div>'
+                +'<div><div style="font-size:9px;font-weight:700;color:var(--ink4);margin-bottom:2px">FİYAT (₺)</div>'
+                  +'<input id="mk-'+i+'-km-'+ki+'-fiyat" type="number" value="'+km.fiyat+'" style="width:100%;padding:5px 7px;border:1.5px solid var(--bd);border-radius:6px;font-size:11px;box-sizing:border-box"></div>'
+              +'</div>'
+              +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">'
+                +'<div><div style="font-size:9px;font-weight:700;color:var(--ink4);margin-bottom:2px">ROZET (ör: ⭐ POPÜLER)</div>'
+                  +'<input id="mk-'+i+'-km-'+ki+'-rozet" value="'+(km.rozet||'')+'" style="width:100%;padding:5px 7px;border:1.5px solid var(--bd);border-radius:6px;font-size:11px;box-sizing:border-box"></div>'
+                +'<div><div style="font-size:9px;font-weight:700;color:var(--ink4);margin-bottom:2px">ÖZELLİKLER (| ile ayır)</div>'
+                  +'<input id="mk-'+i+'-km-'+ki+'-ozellikler" value="'+(km.ozellikler||'')+'" style="width:100%;padding:5px 7px;border:1.5px solid var(--bd);border-radius:6px;font-size:11px;box-sizing:border-box"></div>'
+              +'</div>'
+              +'<div style="margin-bottom:6px"><div style="font-size:9px;font-weight:700;color:var(--ink4);margin-bottom:2px">AÇIKLAMA</div>'
+                +'<textarea id="mk-'+i+'-km-'+ki+'-aciklama" rows="2" style="width:100%;padding:5px 7px;border:1.5px solid var(--bd);border-radius:6px;font-size:11px;box-sizing:border-box;resize:none">'+km.aciklama+'</textarea>'
+              +'</div>'
+              +'<div style="display:flex;justify-content:flex-end;gap:6px">'
+                +'<button onclick="markaKampanyaKaydet('+i+','+ki+')" style="padding:4px 10px;background:var(--r);color:#fff;border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer">💾 Kaydet</button>'
+                +'<button onclick="markaKampanyaSil('+i+','+ki+')" style="padding:4px 10px;border:1.5px solid #fee2e2;background:#fff;color:#dc2626;border-radius:6px;font-size:10px;cursor:pointer">🗑️</button>'
+              +'</div>'
+            +'</div>';
+          }).join('') : '<div style="font-size:11px;color:var(--ink4);text-align:center;padding:12px">Kampanya yok — + Kampanya Ekle butonuna tıklayın</div>')
         +'</div>'
-        +'<div style="display:flex;justify-content:space-between;margin-top:8px">'
-          +'<button onclick="markaKartKaydet('+i+')" style="padding:6px 12px;background:var(--r);color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">💾 Kaydet</button>'
-          +'<button onclick="markaKartSil('+i+')" style="padding:6px 12px;border:1.5px solid #fee2e2;background:#fff;color:#dc2626;border-radius:7px;font-size:11px;cursor:pointer">🗑️ Sil</button>'
+        // Kaydet butonu
+        +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--bd)">'
+          +'<button onclick="markaKartKaydet('+i+')" style="width:100%;padding:7px;background:var(--r);color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">💾 Tüm Kartı Kaydet</button>'
         +'</div>'
       +'</div>';
     });
@@ -6861,26 +6907,58 @@ function saAnaSayfaHTML(){
 
 function markaKartEkle(){
   if(!SITE_AYARLAR.anaSayfa.markaKartlari) SITE_AYARLAR.anaSayfa.markaKartlari=[];
-  SITE_AYARLAR.anaSayfa.markaKartlari.push({marka:'YENİ',ad:'Yeni Marka PPF',linkler:['Model 1','Model 2'],daha:'Tüm Paketler'});
+  SITE_AYARLAR.anaSayfa.markaKartlari.push({marka:'YENİ MARKA',ad:'Yeni Marka PPF',linkler:['Model 1','Model 2'],daha:'Tüm Paketler',kampanyalar:[]});
   saSekmeRender('anasayfa');
-  toast('Marka eklendi — düzenleyip kaydedin','green');
+  toast('Marka eklendi','green');
 }
 
 function markaKartKaydet(i){
   var as=SITE_AYARLAR.anaSayfa;
   if(!as.markaKartlari||!as.markaKartlari[i]) return;
   var m=as.markaKartlari[i];
-  m.marka=(document.getElementById('mk-'+i+'-marka')||{}).value||m.marka;
-  m.ad=(document.getElementById('mk-'+i+'-ad')||{}).value||m.ad;
-  m.daha=(document.getElementById('mk-'+i+'-daha')||{}).value||m.daha;
-  var lEl=document.getElementById('mk-'+i+'-linkler');
-  if(lEl) m.linkler=lEl.value.split('\n').map(function(l){return l.trim();}).filter(Boolean);
-  siteAyarKaydet('Marka Paketleri');
+  m.marka=(document.getElementById('mk-'+i+'-marka')||{value:m.marka}).value;
+  m.ad=(document.getElementById('mk-'+i+'-ad')||{value:m.ad}).value;
+  m.daha=(document.getElementById('mk-'+i+'-daha')||{value:m.daha}).value;
+  // Kampanyaları kaydet
+  (m.kampanyalar||[]).forEach(function(km,ki){
+    km.baslik=(document.getElementById('mk-'+i+'-km-'+ki+'-baslik')||{value:km.baslik}).value;
+    km.fiyat=parseInt((document.getElementById('mk-'+i+'-km-'+ki+'-fiyat')||{value:km.fiyat}).value)||0;
+    km.rozet=(document.getElementById('mk-'+i+'-km-'+ki+'-rozet')||{value:km.rozet||''}).value;
+    km.ozellikler=(document.getElementById('mk-'+i+'-km-'+ki+'-ozellikler')||{value:km.ozellikler||''}).value;
+    km.aciklama=(document.getElementById('mk-'+i+'-km-'+ki+'-aciklama')||{value:km.aciklama}).value;
+  });
+  siteAyarKaydet('Marka & Kampanya');
 }
 
 function markaKartSil(i){
   if(!confirm('Bu marka kartı silinsin mi?')) return;
   SITE_AYARLAR.anaSayfa.markaKartlari.splice(i,1);
+  saSekmeRender('anasayfa');
+  siteAyarKaydet('Marka Paketleri');
+}
+
+function markaKampanyaEkle(i){
+  var m=SITE_AYARLAR.anaSayfa.markaKartlari[i]; if(!m) return;
+  if(!m.kampanyalar) m.kampanyalar=[];
+  m.kampanyalar.push({id:'km-'+Date.now(),baslik:'Yeni Kampanya',aciklama:'Açıklama buraya...',fiyat:0,rozet:'⭐ YENİ',ozellikler:'Özellik 1|Özellik 2',gorselUrl:''});
+  saSekmeRender('anasayfa');
+  toast('Kampanya eklendi','green');
+}
+
+function markaKampanyaKaydet(i,ki){
+  var m=SITE_AYARLAR.anaSayfa.markaKartlari[i]; if(!m) return;
+  var km=m.kampanyalar[ki]; if(!km) return;
+  km.baslik=(document.getElementById('mk-'+i+'-km-'+ki+'-baslik')||{value:km.baslik}).value;
+  km.fiyat=parseInt((document.getElementById('mk-'+i+'-km-'+ki+'-fiyat')||{value:km.fiyat}).value)||0;
+  km.rozet=(document.getElementById('mk-'+i+'-km-'+ki+'-rozet')||{value:km.rozet||''}).value;
+  km.ozellikler=(document.getElementById('mk-'+i+'-km-'+ki+'-ozellikler')||{value:km.ozellikler||''}).value;
+  km.aciklama=(document.getElementById('mk-'+i+'-km-'+ki+'-aciklama')||{value:km.aciklama}).value;
+  siteAyarKaydet('Kampanya');
+}
+
+function markaKampanyaSil(i,ki){
+  var m=SITE_AYARLAR.anaSayfa.markaKartlari[i]; if(!m) return;
+  m.kampanyalar.splice(ki,1);
   saSekmeRender('anasayfa');
   siteAyarKaydet('Marka Paketleri');
 }
