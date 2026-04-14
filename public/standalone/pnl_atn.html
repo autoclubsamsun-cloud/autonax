@@ -1385,13 +1385,7 @@ var FIYAT_DATA=[
 
 /* ══ AUTH ══ */
 var ADM_U=(function(){try{return localStorage.getItem('autonax_adm_u')||'admin';}catch(e){return 'admin';}}());
-var ADM_P=''; // Şifre kesinlikle localStorage'da saklanmaz
-// Her açılışta localStorage şifre kalıntısını temizle
-(function(){try{
-  localStorage.removeItem('autonax_adm_p');
-  localStorage.removeItem('autonax_session');
-  localStorage.removeItem('autonax_oturum');
-}catch(e){}})();
+var ADM_P=''; // Şifre localStorage'da saklanmaz
 /* DB'den güncel şifreyi çek — mobilden ilk girişte doğru şifre gelsin */
 (function(){
   fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'get_credentials'})})
@@ -1454,23 +1448,20 @@ function doLogin(){
 }
 function doCikis(){
   if(!confirm('Çıkış yapılsın mı?'))return;
-  // Tüm oturum verilerini sil
   try{
-    sessionStorage.clear(); // sessionStorage tamamen temizle
-    // localStorage'dan oturum ile ilgili her şeyi sil
-    ['autonax_session','autonax_adm_p','autonax_oturum'].forEach(function(k){
-      try{localStorage.removeItem(k);}catch(e){}
-    });
+    sessionStorage.clear();
+    // localStorage'a çıkış flag'i koy — yenileme sonrası da login göster
+    localStorage.setItem('autonax_cikis','1');
+    localStorage.removeItem('autonax_session');
+    localStorage.removeItem('autonax_adm_p');
   }catch(e){}
-  // UI'yi sıfırla
+  ADM_P='';
   var loginOvl=document.getElementById('login-ovl');
   var mainHeader=document.getElementById('main-header');
   var mainLayout=document.getElementById('main-layout');
-  if(loginOvl) loginOvl.style.display='flex';
+  if(loginOvl) loginOvl.style.cssText='display:flex;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:20px;background:#0a0a0a';
   if(mainHeader) mainHeader.style.display='none';
   if(mainLayout) mainLayout.style.display='none';
-  // Input'ları temizle
-  ADM_P=''; // Runtime şifreyi de sıfırla
   var pu=document.getElementById('l-user');
   var pp=document.getElementById('l-pass');
   if(pu) pu.value='';
@@ -3772,11 +3763,22 @@ window.onload=function(){
   var mainHeader=document.getElementById('main-header');
   var mainLayout=document.getElementById('main-layout');
 
-  // Oturum kontrolü — SADECE sessionStorage'dan (kapanınca sıfırlanır)
+  // Çıkış flag kontrolü — çıkış yapıldıysa sessionStorage'ı temizle
+  try{
+    if(localStorage.getItem('autonax_cikis')==='1'){
+      sessionStorage.clear();
+      localStorage.removeItem('autonax_cikis');
+    }
+  }catch(e){}
+
+  // Oturum kontrolü
   var aktifOturum=false;
   try{ aktifOturum=sessionStorage.getItem('autonax_oturum')==='1'; }catch(e){}
-  // localStorage'daki eski oturumları temizle — güvenlik
-  try{ localStorage.removeItem('autonax_session'); }catch(e){}
+  // Güvenlik: localStorage şifre kalıntısı temizle
+  try{
+    localStorage.removeItem('autonax_session');
+    localStorage.removeItem('autonax_adm_p');
+  }catch(e){}
 
   if(aktifOturum){
     // Oturum aktif — direkt paneli aç
