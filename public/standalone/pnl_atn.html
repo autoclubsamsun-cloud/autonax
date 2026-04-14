@@ -678,27 +678,27 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
       <div class="g4">
         <div class="sk">
           <div class="sk-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-          <div class="sk-val">0</div>
+          <div class="sk-val" id="dash-bugun-rdv">0</div>
           <div class="sk-lbl">Bugünkü Randevu</div>
-          <div class="sk-trend up"><svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>Değişim yok</div>
+          <div class="sk-trend up" id="dash-bugun-trend"><svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>Yükleniyor...</div>
         </div>
         <div class="sk g">
           <div class="sk-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-          <div class="sk-val">₺0</div>
+          <div class="sk-val" id="dash-hafta-gelir">₺0</div>
           <div class="sk-lbl">Bu Hafta Gelir</div>
-          <div class="sk-trend up"><svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>Veri yok</div>
+          <div class="sk-trend up" id="dash-gelir-trend"><svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>Yükleniyor...</div>
         </div>
         <div class="sk b">
           <div class="sk-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
-          <div class="sk-val">0</div>
+          <div class="sk-val" id="dash-toplam-mst">0</div>
           <div class="sk-lbl">Toplam Müşteri</div>
-          <div class="sk-trend up"><svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>Veri yok</div>
+          <div class="sk-trend up" id="dash-mst-trend"><svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>Yükleniyor...</div>
         </div>
         <div class="sk a">
           <div class="sk-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-          <div class="sk-val">0</div>
+          <div class="sk-val" id="dash-bekleyen">0</div>
           <div class="sk-lbl">Bekleyen Onay</div>
-          <div class="sk-trend dn"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>Bekleyen yok</div>
+          <div class="sk-trend dn" id="dash-bekleyen-trend"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>Yükleniyor...</div>
         </div>
       </div>
 
@@ -709,8 +709,8 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
             <div class="kt">Bugünkü Randevular</div>
             <span class="km" onclick="doPg('randevular')">Tümü →</span>
           </div>
-          <div class="kb">
-            <div style="text-align:center;padding:24px;color:var(--ink4);font-size:13px;">Bugün için randevu yok</div>
+          <div class="kb" id="dash-bugun-rdv-liste">
+            <div style="text-align:center;padding:24px;color:var(--ink4);font-size:13px;">Yükleniyor...</div>
           </div>
         </div>
 
@@ -718,7 +718,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
         <div class="k">
           <div class="kh"><div class="kt">En Çok Tercih</div></div>
           <div class="kb">
-            <div class="chart-bar-wrap">
+            <div class="chart-bar-wrap" id="dash-tercih-wrap">
               <div class="chart-bar-row">
                 <div class="chart-bar-label">N8</div>
                 <div class="chart-bar-track"><div class="chart-bar-fill" style="width:85%"></div></div>
@@ -1454,10 +1454,98 @@ function doCikis(){
 }
 
 /* ══ SAYFA ══ */
+
+/* ══ DASHBOARD YUKLE ══ */
+async function dashboardYukle() {
+  try {
+    var rdvRes = await fetch('/api/randevular').then(function(r){return r.json();});
+    var mstRes = await fetch('/api/musteriler').then(function(r){return r.json();});
+    var randevular = rdvRes.data || [];
+    var musteriler = mstRes.data || [];
+
+    var bugun = new Date();
+    var bugunStr = bugun.getDate().toString().padStart(2,'0') + '.' + (bugun.getMonth()+1).toString().padStart(2,'0') + '.' + bugun.getFullYear();
+    var days = ['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+    var months = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+
+    var tarihEl = document.getElementById('ph-tarih');
+    if(tarihEl) tarihEl.textContent = bugun.getDate() + ' ' + months[bugun.getMonth()] + ' ' + bugun.getFullYear() + ' ' + days[bugun.getDay()];
+
+    // KPIs
+    var bugunRdv = randevular.filter(function(r){ return r.tarih === bugunStr; });
+    var haftaBaslangic = new Date(bugun); haftaBaslangic.setDate(bugun.getDate() - bugun.getDay());
+    var haftaGelir = randevular.reduce(function(t,r){
+      var p=r.tarih.split('.'); var rdvDate=new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]));
+      return rdvDate >= haftaBaslangic ? t+(r.odenenToplam||r.tutar||0) : t;
+    }, 0);
+    var bekleyenOnay = randevular.filter(function(r){ return r.durum==='bekl'||r.durum==='bekliyor'||!r.durum; }).length;
+
+    var skVals = document.querySelectorAll('#pg-dashboard .sk-val');
+    if(skVals[0]) skVals[0].textContent = bugunRdv.length;
+    if(skVals[1]) skVals[1].textContent = '₺' + haftaGelir.toLocaleString('tr-TR');
+    if(skVals[2]) skVals[2].textContent = musteriler.length;
+    if(skVals[3]) skVals[3].textContent = bekleyenOnay;
+
+    var trends = document.querySelectorAll('#pg-dashboard .sk-trend');
+    if(trends[0]) trends[0].innerHTML = '<svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>' + (bugunRdv.length>0 ? bugunRdv.length+' randevu' : 'Randevu yok');
+    if(trends[1]) trends[1].innerHTML = '<svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>' + (haftaGelir>0 ? 'Bu hafta' : 'Veri yok');
+    if(trends[2]) trends[2].innerHTML = '<svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>' + musteriler.length + ' kayıtlı';
+    if(trends[3]) { trends[3].className='sk-trend '+(bekleyenOnay>0?'dn':'up'); trends[3].innerHTML='<svg viewBox="0 0 24 24"><polyline points="'+(bekleyenOnay>0?'6 9 12 15 18 9':'18 15 12 9 6 15')+'"/></svg>'+(bekleyenOnay>0?bekleyenOnay+' bekliyor':'Bekleyen yok'); }
+
+    // Bugünkü randevular
+    var rdvKb = document.querySelector('#pg-dashboard .g21 .k:first-child .kb');
+    if(rdvKb) {
+      if(!bugunRdv.length) {
+        rdvKb.innerHTML = '<div style="text-align:center;padding:24px;color:var(--ink4);font-size:13px">Bugün için randevu yok</div>';
+      } else {
+        rdvKb.innerHTML = bugunRdv.slice(0,5).map(function(r){
+          var s=typeof rdvRenkStyle==='function'?rdvRenkStyle(r):{txt:'Bekliyor'};
+          var renk=r.durum==='onay'||r.islem?'#16a34a':r.durum==='iptal'?'#dc2626':'#d97706';
+          return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--bd);gap:10px">'
+            +'<div style="display:flex;align-items:center;gap:10px">'
+              +'<div style="width:36px;height:36px;border-radius:50%;background:rgba(176,28,46,.1);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--r)">'+(r.musteri||'?').charAt(0)+'</div>'
+              +'<div><div style="font-size:12px;font-weight:700">'+(r.musteri||'—')+'</div><div style="font-size:10px;color:var(--ink4)">'+(r.plaka||'')+'·'+(r.hizmet||'')+'</div></div>'
+            +'</div>'
+            +'<div style="text-align:right"><div style="font-size:11px;font-weight:700">'+r.saat+'</div><div style="font-size:10px;background:'+renk+'22;color:'+renk+';padding:2px 7px;border-radius:10px;margin-top:2px">'+(s.txt||r.durum)+'</div></div>'
+          +'</div>';
+        }).join('');
+      }
+    }
+
+    // En çok tercih
+    var hizmetSay={};
+    randevular.forEach(function(r){ var h=(r.hizmet||'Diğer').split(' ')[0]; hizmetSay[h]=(hizmetSay[h]||0)+1; });
+    var topH=Object.entries(hizmetSay).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+    var maxS=topH[0]?topH[0][1]:1;
+    var chartWrap=document.querySelector('#pg-dashboard .chart-bar-wrap');
+    if(chartWrap&&topH.length) chartWrap.innerHTML=topH.map(function(h){
+      return '<div class="chart-bar-row"><div class="chart-bar-label">'+h[0]+'</div><div class="chart-bar-track"><div class="chart-bar-fill" style="width:'+Math.round(h[1]/maxS*100)+'%"></div></div><div class="chart-bar-val">× '+h[1]+'</div></div>';
+    }).join('');
+
+    // Son hizmetler
+    var tbody=document.querySelector('#pg-dashboard .tbl tbody');
+    if(tbody&&randevular.length) tbody.innerHTML=randevular.slice(0,5).map(function(r){
+      var s=typeof rdvRenkStyle==='function'?rdvRenkStyle(r):{txt:'Bekliyor'};
+      var renk=r.durum==='onay'||r.islem?'#16a34a':'#d97706';
+      return '<tr class="dash-rdv-row" style="cursor:pointer">'
+        +'<td><div style="font-weight:600;font-size:12px">'+(r.musteri||'—')+'</div><div style="font-size:10px;color:var(--ink4)">'+(r.tel||'')+'</div></td>'
+        +'<td style="font-size:11px">'+(r.arac||r.plaka||'—')+'</td>'
+        +'<td style="font-size:11px">'+(r.hizmet||'—').slice(0,25)+'</td>'
+        +'<td style="font-size:11px">'+(r.tarih||'')+' '+(r.saat||'')+'</td>'
+        +'<td style="font-size:11px;font-weight:700">₺'+(r.tutar||0).toLocaleString('tr-TR')+'</td>'
+        +'<td><span style="font-size:10px;background:'+renk+'22;color:'+renk+';padding:2px 8px;border-radius:10px">'+(s.txt||'Bekliyor')+'</span></td>'
+        +'<td><button class="dash-detay-btn" style="font-size:10px;padding:3px 8px;border:1.5px solid var(--bd);border-radius:6px;background:#fff;cursor:pointer">Detay</button></td>'
+      +'</tr>';
+    }).join('');
+
+  } catch(e){ console.error('Dashboard hata:',e.message); }
+}
+
 function doPg(id){
   sidebarKapat();
   document.querySelectorAll('.pg').forEach(function(el){el.classList.remove('on');});
   var el=document.getElementById('pg-'+id);if(el)el.classList.add('on');
+  if(id==='dashboard')setTimeout(dashboardYukle,50);
   if(id==='musteriler')setTimeout(mstListele,50);
   if(id==='hizmetler')setTimeout(hgListele,50);
   if(id==='fiyatlar'){setTimeout(fiyatSayfasiYukle,50);}
@@ -1473,6 +1561,7 @@ function doPg(id){
 /* ══ SAAT ══ */
 function takvimGunTikla(gun){
   doPg('randevular');
+  setTimeout(dashboardYukle,100);
   var now=new Date();
   var ay=(now.getMonth()+1).toString().padStart(2,'0');
   var g=gun.toString().padStart(2,'0');
@@ -1545,6 +1634,95 @@ function doRdvListele(){
         +'<button style="padding:5px 8px;border:1.5px solid #d97706;border-radius:6px;background:transparent;color:#d97706;font-size:11px;font-weight:600;cursor:pointer" onclick="rdvHariciOdeme('+i+')">💵 Ödeme Al</button>'
       +'</td></tr>';
   }).join('');
+}
+
+
+/* ════════════ DASHBOARD DB ENTEGRASYONU ════════════ */
+function dashboardGuncelle(){
+  Promise.all([
+    fetch('/api/randevular').then(function(r){return r.json();}),
+    fetch('/api/musteriler').then(function(r){return r.json();}),
+    fetch('/api/urunler').then(function(r){return r.json();})
+  ]).then(function(results){
+    var rdvlar = results[0].data || results[0].randevular || [];
+    var musteriler = results[1].data || results[1].musteriler || [];
+    var urunler = results[2].data || results[2].urunler || [];
+
+    // Bugünkü tarih
+    var bugun = new Date().toLocaleDateString('tr-TR');
+    var bugunRdv = rdvlar.filter(function(r){ return r.tarih===bugun; });
+
+    // Bu hafta gelir
+    var buHaftaGelir = rdvlar.reduce(function(s,r){ return s+(parseFloat(r.tutar)||0); },0);
+
+    // Bekleyen onay
+    var bekleyen = rdvlar.filter(function(r){ return !r.durum||r.durum==='bekliyor'||r.durum==='beklemede'; }).length;
+
+    // ── KPI Kartları ──
+    var el=document.getElementById('dash-bugun-rdv'); if(el) el.textContent=bugunRdv.length;
+    el=document.getElementById('dash-hafta-gelir'); if(el) el.textContent='₺'+buHaftaGelir.toLocaleString('tr-TR');
+    el=document.getElementById('dash-toplam-mst'); if(el) el.textContent=musteriler.length;
+    el=document.getElementById('dash-bekleyen'); if(el) el.textContent=bekleyen;
+
+    // ── Trend ──
+    el=document.getElementById('dash-bugun-trend'); if(el) el.innerHTML='<svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg> Toplam: '+rdvlar.length;
+    el=document.getElementById('dash-gelir-trend'); if(el) el.innerHTML='<svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg> '+rdvlar.length+' randevu';
+    el=document.getElementById('dash-mst-trend'); if(el) el.innerHTML='<svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg> '+musteriler.length+' kayıtlı';
+    el=document.getElementById('dash-bekleyen-trend');
+    if(el) el.innerHTML=bekleyen>0?'<svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg> '+bekleyen+' bekliyor':'<svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg> Bekleyen yok';
+
+    // ── Bugünkü Randevular Listesi ──
+    var liste=document.getElementById('dash-bugun-rdv-liste');
+    if(liste){
+      if(bugunRdv.length===0){
+        liste.innerHTML='<div style="text-align:center;padding:24px;color:var(--ink4);font-size:13px;">Bugün için randevu yok</div>';
+      } else {
+        liste.innerHTML='<table class="tbl"><thead><tr><th>Müşteri</th><th>Araç</th><th>Hizmet</th><th>Saat</th><th>Tutar</th><th>Durum</th></tr></thead><tbody>'
+          +bugunRdv.map(function(r){
+            var dur=r.durum||'bekliyor';
+            var c=dur==='onaylandi'?'#1a6b3c':dur==='iptal'?'#dc2626':'#d97706';
+            var bg=dur==='onaylandi'?'rgba(26,107,60,.1)':dur==='iptal'?'rgba(220,38,38,.1)':'rgba(217,119,6,.1)';
+            return '<tr><td>'+(r.musteri||r.isim||'-')+'</td><td>'+(r.arac||'-')+'</td><td>'+(r.hizmet||'-')+'</td><td>'+(r.saat||'-')+'</td><td>₺'+(r.tutar?Number(r.tutar).toLocaleString('tr-TR'):'0')+'</td><td><span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:'+bg+';color:'+c+'">'+dur+'</span></td></tr>';
+          }).join('')+'</tbody></table>';
+      }
+    }
+
+    // ── Son Hizmetler ──
+    var tbody=document.getElementById('dash-son-hiz-tbody');
+    if(tbody){
+      if(rdvlar.length===0){
+        tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--ink4);font-size:13px;">Henüz kayıt yok</td></tr>';
+      } else {
+        tbody.innerHTML=rdvlar.slice(0,5).map(function(r){
+          var dur=r.durum||'bekliyor';
+          var c=dur==='onaylandi'?'#1a6b3c':dur==='iptal'?'#dc2626':'#d97706';
+          var bg=dur==='onaylandi'?'rgba(26,107,60,.1)':dur==='iptal'?'rgba(220,38,38,.1)':'rgba(217,119,6,.1)';
+          var tutar=r.tutar?Number(r.tutar).toLocaleString('tr-TR'):'0';
+          return '<tr><td>'+(r.musteri||r.isim||'-')+'</td><td>'+(r.arac||'-')+'</td><td>'+(r.hizmet||'-')+'</td><td>'+(r.tarih||'-')+'</td><td>₺'+tutar+'</td><td><span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:'+bg+';color:'+c+'">'+dur+'</span></td><td></td></tr>';
+
+        }).join('');
+      }
+    }
+
+    // ── En Çok Tercih — DB'den ──
+    var wrap=document.getElementById('dash-tercih-wrap');
+    if(wrap && rdvlar.length>0){
+      var say={};
+      rdvlar.forEach(function(r){ var h=r.hizmet||'Diğer'; say[h]=(say[h]||0)+1; });
+      var top5=Object.entries(say).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+      var maxN=top5[0]?top5[0][1]:1;
+      wrap.innerHTML=top5.map(function(item){
+        var pct=Math.round((item[1]/maxN)*100);
+        return '<div class="chart-bar-row"><div class="chart-bar-label" style="font-size:11px;width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+item[0].slice(0,12)+'</div><div class="chart-bar-track"><div class="chart-bar-fill" style="width:'+pct+'%"></div></div><div class="chart-bar-val">'+item[1]+' rdv</div></div>';
+      }).join('');
+    }
+
+    // Detay butonlarına event ekle
+    document.querySelectorAll('.dash-detay-btn').forEach(function(btn){
+      btn.addEventListener('click',function(){ doPg(this.getAttribute('data-pg')); });
+    });
+    console.log('✅ Dashboard güncellendi | Rdv:'+rdvlar.length+' Mst:'+musteriler.length+' Bugün:'+bugunRdv.length);
+  }).catch(function(e){ console.error('Dashboard hata:',e.message); });
 }
 
 function doSaat(){
