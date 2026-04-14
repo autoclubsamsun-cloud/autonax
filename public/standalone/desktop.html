@@ -3804,7 +3804,25 @@ function siteAyarlariniUygula(sa) {
   var ogImg = document.querySelector('meta[property="og:image"]');
   if(ogImg && sa.gorunurluk && sa.gorunurluk.ogImageUrl) ogImg.content = sa.gorunurluk.ogImageUrl;
 
-  // 6. SOSYAL — footer linkleri güncelle
+  // 6. MARKA KARTLARİ — dinamik güncelle
+  if(sa.anaSayfa && sa.anaSayfa.markaKartlari && sa.anaSayfa.markaKartlari.length) {
+    var bpkgGrid = document.querySelector('.bpkg-grid');
+    if(bpkgGrid) {
+      bpkgGrid.innerHTML = sa.anaSayfa.markaKartlari.map(function(m){
+        var linklerHTML = (m.linkler||[]).map(function(l){
+          return '<div class="bcard-lnk">' + l + '</div>';
+        }).join('');
+        return '<div class="bcard">'
+          + '<div class="bcard-logo"><div class="bcard-logo-t">' + m.marka + '</div></div>'
+          + '<div class="bcard-name">' + m.ad + '</div>'
+          + '<div class="bcard-links">' + linklerHTML + '</div>'
+          + '<div class="bcard-more">' + m.daha + ' <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>'
+          + '</div>';
+      }).join('');
+    }
+  }
+
+  // 7. SOSYAL — footer linkleri güncelle
   if(sa.sosyal) {
     var sosyalMap = {instagram:'Instagram',facebook:'Facebook',youtube:'YouTube',tiktok:'TikTok'};
     Object.keys(sosyalMap).forEach(function(k){

@@ -2388,6 +2388,12 @@ var SITE_AYARLAR={
     sss:[
       {soru:'PPF kaplama ne kadar dayanır?',cevap:'Kaliteli PPF filmi 8-12 yıl dayanır.'},
       {soru:'Kaplama süresi ne kadar?',cevap:'Tam araç kaplama 1-2 gün sürer.'}
+    ],
+    markaKartlari:[
+      {marka:'BMW',ad:'BMW PPF & Koruma',linkler:['3. Seri PPF Kaplama','5. Seri PPF Kaplama','X5 Seramik Kaplama','M Serisi Tam Koruma'],daha:'BMW Paketleri'},
+      {marka:'MERCEDES',ad:'Mercedes PPF & Koruma',linkler:['C Serisi PPF Kaplama','E Serisi PPF Kaplama','GLE Seramik Kaplama','AMG Tam Koruma'],daha:'Mercedes Paketleri'},
+      {marka:'AUDI',ad:'Audi PPF & Koruma',linkler:['A3 PPF Kaplama','A4 PPF Kaplama','Q5 Seramik Kaplama','Q8 Tam Koruma'],daha:'Audi Paketleri'},
+      {marka:'PORSCHE',ad:'Porsche PPF & Koruma',linkler:['911 Tam Araç PPF','Cayenne PPF Kaplama','Macan Seramik','Taycan Tam Koruma'],daha:'Porsche Paketleri'}
     ]
   },
   seo:{
@@ -6822,9 +6828,66 @@ function saAnaSayfaHTML(){
       +'</div></div>'
     +'</div>'
   +saYayinlaBar('Ana Sayfa Kaydet','saAnaSayfaKaydet()');
-  +saYayinlaBar('Ana Sayfa İçeriği Kaydet','saAnaSayfaKaydet()');
+  +saYayinlaBar('Ana Sayfa İçeriği Kaydet','saAnaSayfaKaydet()')
+  // ── MARKA PAKETLERİ ──
+  +'<div class="k" style="margin-top:16px"><div class="kh"><div class="kt">🚗 Marka & Model Paketleri</div><div class="kd">Popüler Araç Hizmet Paketleri bölümü</div></div><div class="kb">'
+  +'<div style="display:flex;justify-content:flex-end;margin-bottom:10px">'
+    +'<button onclick="markaKartEkle()" style="padding:6px 12px;background:var(--r);color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">+ Marka Ekle</button>'
+  +'</div>'
+  +'<div id="marka-kart-listesi">'
+  +(function(){
+    var html='';
+    (SITE_AYARLAR.anaSayfa.markaKartlari||[]).forEach(function(m,i){
+      html+='<div style="background:#f9fafb;border:1.5px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:10px">'
+        +'<div style="display:flex;gap:8px;margin-bottom:8px">'
+          +'<div style="flex:1"><div style="font-size:10px;font-weight:700;color:var(--ink4);margin-bottom:3px">MARKA ADI</div>'
+            +'<input id="mk-'+i+'-marka" type="text" value="'+m.marka+'" style="width:100%;padding:6px 8px;border:1.5px solid var(--bd);border-radius:7px;font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:1px;box-sizing:border-box"></div>'
+          +'<div style="flex:2"><div style="font-size:10px;font-weight:700;color:var(--ink4);margin-bottom:3px">BAŞLIK</div>'
+            +'<input id="mk-'+i+'-ad" type="text" value="'+m.ad+'" style="width:100%;padding:6px 8px;border:1.5px solid var(--bd);border-radius:7px;font-family:Outfit,sans-serif;font-size:12px;box-sizing:border-box"></div>'
+          +'<div style="flex:1"><div style="font-size:10px;font-weight:700;color:var(--ink4);margin-bottom:3px">DAHA FAZLA</div>'
+            +'<input id="mk-'+i+'-daha" type="text" value="'+m.daha+'" style="width:100%;padding:6px 8px;border:1.5px solid var(--bd);border-radius:7px;font-family:Outfit,sans-serif;font-size:12px;box-sizing:border-box"></div>'
+        +'</div>'
+        +'<div><div style="font-size:10px;font-weight:700;color:var(--ink4);margin-bottom:4px">ALT LİNKLER (her satıra bir tane)</div>'
+          +'<textarea id="mk-'+i+'-linkler" rows="4" style="width:100%;padding:6px 8px;border:1.5px solid var(--bd);border-radius:7px;font-family:Outfit,sans-serif;font-size:12px;box-sizing:border-box;resize:vertical">'+m.linkler.join('\n')+'</textarea>'
+        +'</div>'
+        +'<div style="display:flex;justify-content:space-between;margin-top:8px">'
+          +'<button onclick="markaKartKaydet('+i+')" style="padding:6px 12px;background:var(--r);color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">💾 Kaydet</button>'
+          +'<button onclick="markaKartSil('+i+')" style="padding:6px 12px;border:1.5px solid #fee2e2;background:#fff;color:#dc2626;border-radius:7px;font-size:11px;cursor:pointer">🗑️ Sil</button>'
+        +'</div>'
+      +'</div>';
+    });
+    return html;
+  }())
+  +'</div>'
+  +'</div></div>';
 }
 
+
+function markaKartEkle(){
+  if(!SITE_AYARLAR.anaSayfa.markaKartlari) SITE_AYARLAR.anaSayfa.markaKartlari=[];
+  SITE_AYARLAR.anaSayfa.markaKartlari.push({marka:'YENİ',ad:'Yeni Marka PPF',linkler:['Model 1','Model 2'],daha:'Tüm Paketler'});
+  saSekmeRender('anasayfa');
+  toast('Marka eklendi — düzenleyip kaydedin','green');
+}
+
+function markaKartKaydet(i){
+  var as=SITE_AYARLAR.anaSayfa;
+  if(!as.markaKartlari||!as.markaKartlari[i]) return;
+  var m=as.markaKartlari[i];
+  m.marka=(document.getElementById('mk-'+i+'-marka')||{}).value||m.marka;
+  m.ad=(document.getElementById('mk-'+i+'-ad')||{}).value||m.ad;
+  m.daha=(document.getElementById('mk-'+i+'-daha')||{}).value||m.daha;
+  var lEl=document.getElementById('mk-'+i+'-linkler');
+  if(lEl) m.linkler=lEl.value.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+  siteAyarKaydet('Marka Paketleri');
+}
+
+function markaKartSil(i){
+  if(!confirm('Bu marka kartı silinsin mi?')) return;
+  SITE_AYARLAR.anaSayfa.markaKartlari.splice(i,1);
+  saSekmeRender('anasayfa');
+  siteAyarKaydet('Marka Paketleri');
+}
 function saIstEkle(){
   SITE_AYARLAR.anaSayfa.istatistikler.push({deger:'',etiket:''});
   saSekmeRender('anasayfa');
@@ -6845,6 +6908,19 @@ function saAnaSayfaKaydet(){
   as.heroBaslik=saG('as-herobaslik');as.heroAlt=saG('as-heroalt');
   as.heroCtaMetin=saG('as-ctametin');as.heroCtaLink=saG('as-ctalink');
   as.hakkimizdaMetin=saG('as-hakkimizda');
+  // Marka kartlarını kaydet
+  if(as.markaKartlari){
+    as.markaKartlari.forEach(function(m,i){
+      var mkEl=document.getElementById('mk-'+i+'-marka');
+      var adEl=document.getElementById('mk-'+i+'-ad');
+      var dahaEl=document.getElementById('mk-'+i+'-daha');
+      var linklerEl=document.getElementById('mk-'+i+'-linkler');
+      if(mkEl) m.marka=mkEl.value.trim();
+      if(adEl) m.ad=adEl.value.trim();
+      if(linklerEl) m.linkler=linklerEl.value.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+      if(linklerEl) m.linkler=linklerEl.value.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+    });
+  }
   as.istatistikler.forEach(function(s,i){
     s.deger=saG('ist-'+i+'-d')||s.deger;
     s.etiket=saG('ist-'+i+'-e')||s.etiket;
