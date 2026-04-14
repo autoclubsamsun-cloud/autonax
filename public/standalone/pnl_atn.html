@@ -1462,7 +1462,7 @@ function doPg(id){
   if(id==='hizmetler')setTimeout(hgListele,50);
   if(id==='fiyatlar'){setTimeout(fiyatSayfasiYukle,50);}
   if(id==='bayiler'){setTimeout(bayiSayfasiYukle,50);}
-  if(id==='ayarlar'){setTimeout(function(){ayarlarSayfasiYukle();adminSekmesiYukle();},50);}
+  if(id==='ayarlar'){setTimeout(function(){siteAyarYukle();ayarlarSayfasiYukle();adminSekmesiYukle();},50);}
   if(id==='raporlar'){setTimeout(function(){raporYukle();karsilastirmaSelDoldur();karsilastirmaYukle();setTimeout(maliyetSayfasiYukle,100);},50);}
   document.querySelectorAll('.sn').forEach(function(el){el.classList.remove('on');});
   var found=[].filter.call(document.querySelectorAll('.sn'),function(s){return(s.getAttribute('onclick')||'').indexOf("'"+id+"'")>-1;});
@@ -2410,25 +2410,44 @@ var SITE_AYARLAR={
 var SITE_AYAR_KEY='autonax_site_v1';
 
 function siteAyarYukle(){
+  // Önce localStorage'dan yükle
   try{
     var raw=localStorage.getItem(SITE_AYAR_KEY);
-    if(!raw) return;
-    var v=JSON.parse(raw);
-    Object.keys(v).forEach(function(k){
-      if(SITE_AYARLAR[k]&&typeof SITE_AYARLAR[k]==='object'&&!Array.isArray(SITE_AYARLAR[k])){
-        Object.assign(SITE_AYARLAR[k],v[k]);
-      } else {SITE_AYARLAR[k]=v[k];}
-    });
-  }catch(e){console.warn('Site ayar yükleme:',e);}
+    if(raw){
+      var v=JSON.parse(raw);
+      Object.keys(v).forEach(function(k){
+        if(SITE_AYARLAR[k]&&typeof SITE_AYARLAR[k]==='object'&&!Array.isArray(SITE_AYARLAR[k])){
+          Object.assign(SITE_AYARLAR[k],v[k]);
+        } else {SITE_AYARLAR[k]=v[k];}
+      });
+      return; // localStorage varsa DB'ye gerek yok
+    }
+  }catch(e){}
+  // localStorage yoksa DB'den çek
+  fetch('/api/ayarlar').then(function(r){return r.json();}).then(function(d){
+    if(d.success && d.site_ayarlar){
+      var v=d.site_ayarlar;
+      Object.keys(v).forEach(function(k){
+        if(SITE_AYARLAR[k]&&typeof SITE_AYARLAR[k]==='object'&&!Array.isArray(SITE_AYARLAR[k])){
+          Object.assign(SITE_AYARLAR[k],v[k]);
+        } else {SITE_AYARLAR[k]=v[k];}
+      });
+      // Sayfayı yenile
+      if(typeof ayarlarTabRender==='function') setTimeout(ayarlarTabRender,100);
+    }
+  }).catch(function(){});
 }
 
 function siteAyarKaydet(bolum){
   try{
     SITE_AYARLAR.sistem.sonGuncelleme=new Date().toISOString();
     localStorage.setItem(SITE_AYAR_KEY,JSON.stringify(SITE_AYARLAR));
-    // DB'ye de kaydet
-    fetch('/api/ayarlar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site_ayarlar:SITE_AYARLAR})}).catch(function(){});
-    toast('✅ '+(bolum||'Ayarlar')+' kaydedildi!','green');
+    // DB'ye kaydet — site_ayarlar key altında
+    fetch('/api/ayarlar',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({site_ayarlar:SITE_AYARLAR})})
+    .then(function(r){return r.json();})
+    .then(function(d){ if(d.success) toast('✅ '+(bolum||'Ayarlar')+' kaydedildi!','green'); else toast('⚠️ Kaydedildi (DB hatası)','orange'); })
+    .catch(function(){ toast('✅ '+(bolum||'Ayarlar')+' kaydedildi (offline)!','green'); });
   }catch(e){toast('Kayıt hatası!','red');}
 }
 

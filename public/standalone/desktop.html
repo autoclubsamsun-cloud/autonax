@@ -3781,25 +3781,42 @@ function siteAyarlariniUygula(sa) {
 }
 
 function siteAyarlariniCek() {
+  // Önce localStorage'dan hızlı uygula
+  try {
+    var raw = localStorage.getItem('autonax_site_v1');
+    if(raw) siteAyarlariniUygula(JSON.parse(raw));
+  } catch(e) {}
+  
+  // Sonra API'den güncel verileri çek
   fetch('/api/ayarlar')
     .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(d.success && d.site_ayarlar) {
-        siteAyarlariniUygula(d.site_ayarlar);
-      } else {
-        // Fallback: localStorage'dan dene
-        try {
-          var raw = localStorage.getItem('autonax_site_v1');
-          if(raw) siteAyarlariniUygula(JSON.parse(raw));
-        } catch(e) {}
+    .then(function(res){
+      var sa = null;
+      if(res.success && res.site_ayarlar) {
+        sa = res.site_ayarlar; // Panel'den kaydedilmiş tam yapı
+      } else if(res.success && res.data) {
+        // Eski basit yapıyı SITE_AYARLAR formatına dönüştür
+        var data = res.data;
+        var g = data.genel || {};
+        sa = {
+          genel: {
+            tel1: g.telefon || '0850 305 20 55',
+            tel2: '',
+            whatsapp: g.whatsapp || (data.sosyal && data.sosyal.whatsapp) || '0552 310 40 55',
+            email: g.email || 'info@autonax.com.tr',
+            adres: g.adres || 'Samsun, Türkiye',
+            calismaHaftaici: g.calisma || '08:00 – 20:00',
+          },
+          seo: {
+            metaTitle: (data.seo && data.seo.title) || 'Autonax — Premium Araç Koruma',
+            metaDesc: (data.seo && data.seo.description) || '',
+          },
+          sosyal: data.sosyal || {},
+        };
       }
+      if(sa) siteAyarlariniUygula(sa);
     })
-    .catch(function(){
-      try {
-        var raw = localStorage.getItem('autonax_site_v1');
-        if(raw) siteAyarlariniUygula(JSON.parse(raw));
-      } catch(e) {}
-    });
+    .catch(function(){});
 }
 
 /* ══ NAV KATEGORİ SEÇ ══ */
