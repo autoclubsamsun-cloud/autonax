@@ -4765,6 +4765,129 @@ function toast(msg,renk){
 var _fKatAktif = 'ppf';
 var _fAltKatAktif = {};
 
+
+/* ════ BAKIM KATEGORİSİ RENDER ════ */
+function fKatBakimRender(el){
+  if(!el) el=document.getElementById('fkat-icerik');
+  if(!el) return;
+
+  var urunler = SITE_AYARLAR.bakimUrunleri || [];
+
+  var html = '<div style="display:flex;gap:8px;margin-bottom:16px;border-bottom:2px solid var(--bd);padding-bottom:12px">'
+    +'<button id="bakim-tab-hizmet" class="falt-tab falt-tab-aktif" onclick="bakimTabSec(this.dataset.tab)" data-tab="hizmet">🚿 Hizmetler</button>'
+    +'<button id="bakim-tab-urun" class="falt-tab" onclick="bakimTabSec(this.dataset.tab)" data-tab="urun">📦 Öne Çıkan Ürünler</button>'
+  +'</div>'
+  +'<div id="bakim-hizmet-icerik"></div>'
+  +'<div id="bakim-urun-icerik" style="display:none"></div>';
+
+  el.innerHTML = html;
+
+  // Hizmetleri yükle (mevcut DIGER_HIZMETLER + bakim)
+  bakimHizmetRender();
+  bakimUrunRender();
+}
+
+function bakimTabSec(tab){
+  document.getElementById('bakim-tab-hizmet').className = 'falt-tab'+(tab==='hizmet'?' falt-tab-aktif':'');
+  document.getElementById('bakim-tab-urun').className = 'falt-tab'+(tab==='urun'?' falt-tab-aktif':'');
+  document.getElementById('bakim-hizmet-icerik').style.display = tab==='hizmet'?'':'none';
+  document.getElementById('bakim-urun-icerik').style.display = tab==='urun'?'':'none';
+}
+
+function bakimHizmetRender(){
+  var el = document.getElementById('bakim-hizmet-icerik');
+  if(!el) return;
+  var hizmetler = DIGER_HIZMETLER.concat(DIGER_HIZMETLER).filter ? 
+    [].concat(
+      DIGER_HIZMETLER.filter(function(h){return h.kat==='bakim'||!h.kat;}),
+      (KATEGORILER.bakim && KATEGORILER.bakim.altKategoriler ? [] : [])
+    ) : [];
+  // Bakim hizmetlerini göster
+  var bakimH = [];
+  if(typeof DIGER_HIZMETLER !== 'undefined'){
+    bakimH = DIGER_HIZMETLER.filter(function(h){return h.kat==='bakim';});
+  }
+  if(!bakimH.length){
+    el.innerHTML='<div style="padding:16px;color:var(--ink4);font-size:12px">Hizmet listesi için Fiyat Yönetimi bölümünü kullanın.</div>';
+    return;
+  }
+  el.innerHTML='<div class="g3" style="gap:10px">'+bakimH.map(function(h,i){
+    return '<div style="background:var(--w);border:1.5px solid var(--bd);border-radius:10px;padding:12px">'
+      +'<div style="font-size:12px;font-weight:700;margin-bottom:4px">'+h.isim+'</div>'
+      +'<div style="font-size:10px;color:var(--ink4);margin-bottom:8px">'+h.aciklama+'</div>'
+      +'<div style="font-size:14px;font-weight:700;color:var(--r)">₺'+h.tutar.toLocaleString('tr-TR')+'</div>'
+    +'</div>';
+  }).join('')+'</div>';
+}
+
+function bakimUrunRender(){
+  var el = document.getElementById('bakim-urun-icerik');
+  if(!el) return;
+  var urunler = SITE_AYARLAR.bakimUrunleri || [];
+
+  el.innerHTML='<div style="display:flex;justify-content:flex-end;margin-bottom:10px">'
+    +'<button onclick="bakimUrunEkle()" style="padding:6px 12px;background:var(--r);color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">+ Ürün Ekle</button>'
+  +'</div>'
+  +(urunler.length ? urunler.map(function(u,i){
+    return '<div style="background:var(--w);border:1.5px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:10px">'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">'
+        +'<div><div style="font-size:9px;font-weight:700;color:var(--ink4);margin-bottom:2px">MARKA</div>'
+          +'<input id="bu-'+i+'-marka" value="'+u.marka+'" style="width:100%;padding:5px 7px;border:1.5px solid var(--bd);border-radius:6px;font-size:11px;box-sizing:border-box"></div>'
+        +'<div><div style="font-size:9px;font-weight:700;color:var(--ink4);margin-bottom:2px">ROZET</div>'
+          +'<input id="bu-'+i+'-rozet" value="'+(u.rozet||'')+'" style="width:100%;padding:5px 7px;border:1.5px solid var(--bd);border-radius:6px;font-size:11px;box-sizing:border-box"></div>'
+        +'<div><div style="font-size:9px;font-weight:700;color:var(--ink4);margin-bottom:2px">FİYAT (₺)</div>'
+          +'<input id="bu-'+i+'-fiyat" type="number" value="'+(u.fiyat||0)+'" style="width:100%;padding:5px 7px;border:1.5px solid var(--bd);border-radius:6px;font-size:11px;box-sizing:border-box"></div>'
+      +'</div>'
+      +'<div style="margin-bottom:8px"><div style="font-size:9px;font-weight:700;color:var(--ink4);margin-bottom:2px">ÜRÜN ADI</div>'
+        +'<input id="bu-'+i+'-isim" value="'+u.isim+'" style="width:100%;padding:5px 7px;border:1.5px solid var(--bd);border-radius:6px;font-size:11px;box-sizing:border-box"></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
+        +'<div><div style="font-size:9px;font-weight:700;color:var(--ink4);margin-bottom:2px">AÇIKLAMA</div>'
+          +'<input id="bu-'+i+'-aciklama" value="'+(u.aciklama||'')+'" style="width:100%;padding:5px 7px;border:1.5px solid var(--bd);border-radius:6px;font-size:11px;box-sizing:border-box"></div>'
+        +'<div><div style="font-size:9px;font-weight:700;color:var(--ink4);margin-bottom:2px">KARGO</div>'
+          +'<input id="bu-'+i+'-kargo" value="'+(u.kargo||'')+'" style="width:100%;padding:5px 7px;border:1.5px solid var(--bd);border-radius:6px;font-size:11px;box-sizing:border-box"></div>'
+      +'</div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center">'
+        +'<label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer">'
+          +'<input type="checkbox" id="bu-'+i+'-aktif" '+(u.aktif?'checked':'')+' style="width:14px;height:14px"> Aktif (Ana sayfada göster)</label>'
+        +'<div style="display:flex;gap:6px">'
+          +'<button onclick="bakimUrunKaydet('+i+')" style="padding:5px 12px;background:var(--r);color:#fff;border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer">💾 Kaydet</button>'
+          +'<button onclick="bakimUrunSil('+i+')" style="padding:5px 10px;border:1.5px solid #fee2e2;background:#fff;color:#dc2626;border-radius:6px;font-size:10px;cursor:pointer">🗑️</button>'
+        +'</div>'
+      +'</div>'
+    +'</div>';
+  }).join('') : '<div style="text-align:center;padding:24px;color:var(--ink4);font-size:12px">Henüz ürün eklenmemiş. + Ürün Ekle butonuna tıklayın.</div>');
+}
+
+function bakimUrunEkle(){
+  if(!SITE_AYARLAR.bakimUrunleri) SITE_AYARLAR.bakimUrunleri=[];
+  SITE_AYARLAR.bakimUrunleri.push({
+    id:'bakim_'+Date.now(),marka:'Yeni Marka',isim:'Ürün Adı',
+    rozet:'',fiyat:0,gorselUrl:'',kargo:'',aktif:true,aciklama:''
+  });
+  bakimUrunRender();
+  toast('Ürün eklendi','green');
+}
+
+function bakimUrunKaydet(i){
+  var u=SITE_AYARLAR.bakimUrunleri[i]; if(!u) return;
+  var g=function(s){return (document.getElementById('bu-'+i+'-'+s)||{}).value;};
+  u.marka=g('marka')||u.marka;
+  u.isim=g('isim')||u.isim;
+  u.rozet=g('rozet')||'';
+  u.fiyat=parseInt(g('fiyat'))||0;
+  u.aciklama=g('aciklama')||'';
+  u.kargo=g('kargo')||'';
+  u.aktif=(document.getElementById('bu-'+i+'-aktif')||{}).checked!==false;
+  siteAyarKaydet('Bakım Ürünleri');
+}
+
+function bakimUrunSil(i){
+  if(!confirm('Silinsin mi?')) return;
+  SITE_AYARLAR.bakimUrunleri.splice(i,1);
+  bakimUrunRender();
+  siteAyarKaydet('Bakım Ürünleri');
+}
+
 function fKatSec(kat){
   _fKatAktif = kat;
   // Hem sabit butonları hem dinamik olanları güncelle
@@ -4789,6 +4912,12 @@ function fKatRender(kat){
   // Hizmet Bölümleri özel render
   if(kat==='bolumler'){
     bolumlerSayfasiYukle();
+    return;
+  }
+
+  // Bakım — hem hizmet hem ürün yönetimi
+  if(kat==='bakim'){
+    fKatBakimRender(el);
     return;
   }
 
