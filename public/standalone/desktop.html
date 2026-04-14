@@ -3732,6 +3732,76 @@ function socialLogin(provider){ alert(provider+' girişi yakında aktif edilecek
 ════════════════════════════════════════════════════ */
 
 
+
+/* ══ SITE AYARLARINI YÜKLEYİP UYGULA ══ */
+function siteAyarlariniUygula(sa) {
+  if(!sa) return;
+  var g = sa.genel || {};
+  var an = sa.anaSayfa || {};
+  var seo = sa.seo || {};
+  
+  // 1. TOPBAR — Tel ve WhatsApp
+  var topbarTel = document.querySelector('.tb-l .tb-i:first-child');
+  var topbarWa = document.querySelector('.tb-l .tb-i:nth-child(2)');
+  if(topbarTel && g.tel1) {
+    topbarTel.innerHTML = topbarTel.innerHTML.replace(/0850[\d\s]+/, g.tel1);
+  }
+  if(topbarWa && g.whatsapp) {
+    topbarWa.innerHTML = topbarWa.innerHTML.replace(/0[\d\s]+$/, g.whatsapp);
+  }
+
+  // 2. HERO — Başlık, Alt başlık
+  var heroTitle = document.querySelector('.hero-title');
+  var heroSub = document.querySelector('.hero-sub');
+  var heroTag = document.querySelector('.hero-tag');
+  if(heroTitle && an.heroBaslik) {
+    heroTitle.innerHTML = an.heroBaslik + (an.heroAlt ? '<br><em>' + an.heroAlt + '</em>' : '');
+  }
+  if(heroSub && an.heroSub) heroSub.textContent = an.heroSub;
+  if(heroTag && an.heroTag) heroTag.textContent = an.heroTag;
+
+  // 3. İSTATİSTİKLER
+  var hsNums = document.querySelectorAll('.hs-n');
+  var hsLbls = document.querySelectorAll('.hs-l');
+  if(an.istat1Sayi && hsNums[0]) { hsNums[0].innerHTML = an.istat1Sayi.replace('+','') + '<em>+</em>'; }
+  if(an.istat1Etiket && hsLbls[0]) { hsLbls[0].innerHTML = an.istat1Etiket; }
+  if(an.istat3Sayi && hsNums[2]) { hsNums[2].innerHTML = an.istat3Sayi.replace('+','') + '<em>+</em>'; }
+  if(an.istat3Etiket && hsLbls[2]) { hsLbls[2].innerHTML = an.istat3Etiket; }
+
+  // 4. SEO — Title ve Meta
+  if(seo && seo.metaTitle) document.title = seo.metaTitle;
+  var metaDesc = document.querySelector('meta[name="description"]');
+  if(metaDesc && seo.metaDesc) metaDesc.setAttribute('content', seo.metaDesc);
+
+  // 5. LOGO
+  var dlogo = document.querySelector('.dlogo');
+  if(dlogo && sa.gorunurluk && sa.gorunurluk.headerLogoUrl) {
+    dlogo.innerHTML = '<img src="' + sa.gorunurluk.headerLogoUrl + '" style="height:32px;object-fit:contain">';
+  }
+}
+
+function siteAyarlariniCek() {
+  fetch('/api/ayarlar')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.success && d.site_ayarlar) {
+        siteAyarlariniUygula(d.site_ayarlar);
+      } else {
+        // Fallback: localStorage'dan dene
+        try {
+          var raw = localStorage.getItem('autonax_site_v1');
+          if(raw) siteAyarlariniUygula(JSON.parse(raw));
+        } catch(e) {}
+      }
+    })
+    .catch(function(){
+      try {
+        var raw = localStorage.getItem('autonax_site_v1');
+        if(raw) siteAyarlariniUygula(JSON.parse(raw));
+      } catch(e) {}
+    });
+}
+
 /* ══ NAV KATEGORİ SEÇ ══ */
 function navKatSec(btn, kat) {
   // Aktif class güncelle
@@ -3938,6 +4008,9 @@ document.addEventListener('DOMContentLoaded',()=>{
       });
     });
   });
+
+  // Site ayarlarını yükle ve uygula
+  siteAyarlariniCek();
 
   // Hizmet bölümlerini API'den çek ve dinamik render et
   fetch('/api/hizmet-bolumleri')
