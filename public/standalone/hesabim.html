@@ -852,7 +852,7 @@ const SESSION_KEY = 'autonax_session';
 const CART_KEY    = 'autonax_cart';
 
 const DEMO_USERS = {
-  'demo@autonax.com':{sifre:'demo123',ad:'Ahmet',soyad:'Yılmaz',tel:'0532 123 45 67',sehir:'Samsun',avatar:'AY',puan:820,seviye:'Gümüş',uye_tarih:'01.01.2024',araclar:[{plaka:'34ABC123',marka:'BMW',model:'5 Serisi',yil:'2022',tarih:'15.03.2024',puan:5,hizmetler:[{isim:'NiDOJP N8 220 Mikron PPF',tur:'ppf',tarih:'15.03.2025',garantiYil:10,fiyat:70000},{isim:'Nano Seramik Kaplama',tur:'seramik',tarih:'15.03.2025',garantiYil:3,fiyat:12000}]},{plaka:'06YZ789',marka:'Mercedes',model:'E 200',yil:'2021',tarih:'10.06.2024',puan:4,hizmetler:[{isim:'NiDOJP S75 200 Mikron PPF',tur:'ppf',tarih:'10.06.2024',garantiYil:6,fiyat:55000}]}]},
+  'demo@autonax.com':{sifre:'',ad:'Demo',soyad:'Kullanici',tel:'',sehir:'',avatar:'DK',puan:0,seviye:'Bronze',uye_tarih:'',araclar:[]},{isim:'Nano Seramik Kaplama',tur:'seramik',tarih:'15.03.2025',garantiYil:3,fiyat:12000}]},{plaka:'06YZ789',marka:'Mercedes',model:'E 200',yil:'2021',tarih:'10.06.2024',puan:4,hizmetler:[{isim:'NiDOJP S75 200 Mikron PPF',tur:'ppf',tarih:'10.06.2024',garantiYil:6,fiyat:55000}]}]},
   'test@autonax.com':{sifre:'test123',ad:'Zeynep',soyad:'Kaya',tel:'0544 987 65 43',sehir:'İstanbul',avatar:'ZK',puan:350,seviye:'Bronz',uye_tarih:'15.06.2024',araclar:[{plaka:'34KY001',marka:'Toyota',model:'Corolla',yil:'2023',tarih:'01.09.2024',puan:0,hizmetler:[{isim:'NiDOJP CS190 200 Mikron PPF',tur:'ppf',tarih:'01.09.2024',garantiYil:4,fiyat:45000}]}]}
 };
 
@@ -1066,7 +1066,7 @@ function _loginOverlayGoster(){
       <div id="login-err" style="display:none;background:rgba(176,28,46,.15);border:1px solid rgba(176,28,46,.4);border-radius:8px;padding:8px 12px;font-size:12px;color:#ff6b6b;margin-bottom:16px;text-align:center;"></div>
       <div style="margin-bottom:14px">
         <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">E-posta</div>
-        <input id="lov-email" type="email" placeholder="demo@autonax.com" autocomplete="email"
+        <input id="lov-email" type="email" placeholder="E-posta adresiniz" autocomplete="email"
           style="width:100%;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 14px;font-size:14px;font-family:'Outfit',sans-serif;color:#fff;outline:none;box-sizing:border-box;"
           onfocus="this.style.borderColor='#B01C2E'" onblur="this.style.borderColor='rgba(255,255,255,.1)'"
           onkeydown="if(event.key==='Enter')_panelLogin()">
@@ -1085,7 +1085,7 @@ function _loginOverlayGoster(){
       </button>
       <div style="margin-top:16px;padding:12px;background:rgba(255,255,255,.04);border-radius:8px;border:1px solid rgba(255,255,255,.07);font-size:11px;color:rgba(255,255,255,.3);text-align:center;line-height:1.8">
         🔑 Demo hesabı:<br>
-        <b style="color:rgba(255,255,255,.5)">demo@autonax.com</b> / <b style="color:rgba(255,255,255,.5)">demo123</b><br>
+        
         <b style="color:rgba(255,255,255,.5)">test@autonax.com</b> / <b style="color:rgba(255,255,255,.5)">test123</b>
       </div>
       <div style="text-align:center;margin-top:14px">

@@ -7,12 +7,30 @@
     {
       "source": "/standalone/(.*)",
       "headers": [
-        { "key": "Content-Type", "value": "text/html; charset=utf-8" },
-        { "key": "Cache-Control", "value": "no-cache" }
+        {
+          "key": "Content-Type",
+          "value": "text/html; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
       ]
     }
   ],
   "rewrites": [
+    {
+      "source": "/hesabim",
+      "destination": "/standalone/hesabim.html"
+    },
+    {
+      "source": "/hesabim.html",
+      "destination": "/standalone/hesabim.html"
+    },
+    {
+      "source": "/pnl_atn",
+      "destination": "/standalone/pnl_atn.html"
+    },
     {
       "source": "/standalone/:file",
       "destination": "/standalone/:file"
