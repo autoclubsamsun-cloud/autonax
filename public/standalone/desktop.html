@@ -3774,7 +3774,6 @@ function doLogin(){
 }
 function doRegister(){
   const ad=document.getElementById('kayit-ad')?.value;
-  const soyad=document.getElementById('kayit-soyad')?.value||'';
   const tel=document.getElementById('kayit-tel')?.value;
   const email=document.getElementById('kayit-email')?.value;
   const pass=document.getElementById('kayit-sifre')?.value;
@@ -3788,13 +3787,7 @@ function doRegister(){
   authSuccess(r.user.ad);
   setTimeout(authUIGuncelle, 2200);
 }
-function socialLogin(provider){
-  // Google/Sosyal giriş — şimdilik bilgilendirme
-  const el = document.getElementById('auth-error');
-  const msg = provider + ' ile giriş şu an aktif değil. Lütfen e-posta ile üye olun.';
-  if(el){ el.textContent=msg; el.style.display='block'; el.style.color='#d97706'; }
-  else { alert(msg); }
-}
+function socialLogin(provider){ alert(provider+' girişi yakında aktif edilecek!'); }
 
 /* ════════════════════════════════════════════════════
    BUTON BAĞLANTILARI — mevcut HTML butonlarını bağla
@@ -3803,6 +3796,26 @@ function socialLogin(provider){
 
 
 /* ══ SITE AYARLARINI YÜKLEYİP UYGULA ══ */
+
+function bakimUrunSepet(btn, urunId){
+  // Bakım ürününü sepete ekle
+  var sa = window._SITE_AYARLAR_CACHE;
+  var urun = sa && sa.bakimUrunleri ? sa.bakimUrunleri.find(function(u){return u.id===urunId;}) : null;
+  if(urun && typeof SEPET !== 'undefined') {
+    SEPET.add({
+      id: urun.id,
+      isim: urun.isim,
+      marka: urun.marka,
+      fiyat: urun.fiyat,
+      tip: 'bakim',
+      adet: 1
+    });
+    if(typeof openSepet === 'function') openSepet();
+  }
+  btn.textContent = '✅ Eklendi';
+  setTimeout(function(){ btn.textContent = 'Sepete Ekle'; }, 1500);
+}
+
 function siteAyarlariniUygula(sa) {
   window._SITE_AYARLAR_CACHE = sa; // Modal için cache
   if(!sa) return;
@@ -3914,8 +3927,9 @@ function siteAyarlariniUygula(sa) {
   }
 
   // 6b. BAKIM ÜRÜNLERİ — prod-grid dinamik render
-  if(sa.bakimUrunleri && sa.bakimUrunleri.length) {
-    var prodGrid = document.getElementById('bakim-prod-grid');
+  var prodGrid = document.getElementById('bakim-prod-grid');
+  var bakimBolum = prodGrid ? prodGrid.closest('.bolum-bakim, section, [data-bolum]') || prodGrid.parentElement?.parentElement?.parentElement : null;
+  if(sa.bakimUrunleri) {
     if(prodGrid) {
       var svgPaket = '<svg viewBox="0 0 24 24"><path d="M5 3h8v4H5z"/><path d="M9 7v14"/><path d="M5 21h8"/></svg>';
       var svgFav = '<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
@@ -3923,6 +3937,16 @@ function siteAyarlariniUygula(sa) {
       var svgEv = '<svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/><path d="M7 9.5h2v2H7z"/><path d="M15 9.5h2v2h-2z"/></svg>';
       
       var aktifUrunler = sa.bakimUrunleri.filter(function(u){ return u.aktif !== false; });
+      if(!aktifUrunler.length) {
+        // Aktif ürün yok — statik kartları temizle, bölümü gizle
+        prodGrid.innerHTML = '';
+        var bakim_wrap = prodGrid.closest('.sh')?.parentElement || prodGrid.parentElement;
+        if(bakim_wrap) bakim_wrap.style.display = 'none';
+      } else {
+        prodGrid.style.display = '';
+        var bakim_wrap2 = prodGrid.closest('.sh')?.parentElement || prodGrid.parentElement;
+        if(bakim_wrap2) bakim_wrap2.style.display = '';
+      }
       if(aktifUrunler.length) {
         prodGrid.innerHTML = aktifUrunler.slice(0,4).map(function(u){
           return '<div class="pc">'
@@ -3938,7 +3962,7 @@ function siteAyarlariniUygula(sa) {
               +'<div class="pc-meta">'+svgKargo+(u.kargo||'Hızlı Teslimat')+'</div>'
               +'<div class="pc-uyumlu">'+svgEv+'Aracıma Uyumlu Mu?</div>'
               +(u.fiyat ? '<div class="pc-price">₺'+Number(u.fiyat).toLocaleString("tr-TR")+'</div>' : '')
-              +'<button classclass="pc-btn">Sepete Ekle</button>'
+              +'<button class="pc-btn" onclick="bakimUrunSepet(this,''+u.id+'')">Sepete Ekle</button>'
             +'</div>'
           +'</div>';
         }).join('');
