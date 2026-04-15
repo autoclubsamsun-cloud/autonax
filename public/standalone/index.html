@@ -3774,6 +3774,7 @@ function doLogin(){
 }
 function doRegister(){
   const ad=document.getElementById('kayit-ad')?.value;
+  const soyad=document.getElementById('kayit-soyad')?.value||'';
   const tel=document.getElementById('kayit-tel')?.value;
   const email=document.getElementById('kayit-email')?.value;
   const pass=document.getElementById('kayit-sifre')?.value;
@@ -3787,7 +3788,13 @@ function doRegister(){
   authSuccess(r.user.ad);
   setTimeout(authUIGuncelle, 2200);
 }
-function socialLogin(provider){ alert(provider+' girişi yakında aktif edilecek!'); }
+function socialLogin(provider){
+  // Google/Sosyal giriş — şimdilik bilgilendirme
+  const el = document.getElementById('auth-error');
+  const msg = provider + ' ile giriş şu an aktif değil. Lütfen e-posta ile üye olun.';
+  if(el){ el.textContent=msg; el.style.display='block'; el.style.color='#d97706'; }
+  else { alert(msg); }
+}
 
 /* ════════════════════════════════════════════════════
    BUTON BAĞLANTILARI — mevcut HTML butonlarını bağla
