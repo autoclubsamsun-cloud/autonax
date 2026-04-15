@@ -817,12 +817,11 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--bg)"><span style="font-size:13px;color:var(--ink3);font-weight:500">Kampanya ve indirimler</span><button class="toggle-btn" onclick="this.classList.toggle('on')" style="width:42px;height:24px;background:var(--r);border-radius:12px;cursor:pointer;position:relative;border:none;transition:.2s"><span style="position:absolute;top:3px;left:21px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></span></button></div>
 <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--bg)"><span style="font-size:13px;color:var(--ink3);font-weight:500">SMS bildirimleri</span><button class="toggle-btn" onclick="this.classList.toggle('on')" style="width:42px;height:24px;background:var(--r);border-radius:12px;cursor:pointer;position:relative;border:none;transition:.2s"><span style="position:absolute;top:3px;left:21px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></span></button></div>
 <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--bg)"><span style="font-size:13px;color:var(--ink3);font-weight:500">E-posta bülteni</span><button class="toggle-btn" onclick="this.classList.toggle('on')" style="width:42px;height:24px;background:var(--r);border-radius:12px;cursor:pointer;position:relative;border:none;transition:.2s"><span style="position:absolute;top:3px;left:21px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></span></button></div>
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--bg)">
-            <span style="font-size:13px;color:var(--ink3);font-weight:500">${l}</span>
-            <button class="toggle-btn" onclick="this.classList.toggle('on')" style="width:42px;height:24px;background:var(--r);border-radius:12px;cursor:pointer;position:relative;border:none;transition:.2s">
+
+         <button class="toggle-btn" onclick="this.classList.toggle('on')" style="width:42px;height:24px;background:var(--r);border-radius:12px;cursor:pointer;position:relative;border:none;transition:.2s">
               <span style="position:absolute;top:3px;left:21px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></span>
             </button>
-          </div>`)
+          </div>
         </div>
       </div>
       <div class="kart" style="margin-top:16px">
@@ -1152,9 +1151,9 @@ function geriDon(){
     // Aynı klasördeki ana dosyaya git
     var base = window.location.href.split('/');
     base.pop(); // hesabim.html'i kaldır
-    window.location.href = base.join('/') + '/autonax_desktop.html';
+    window.location.href = base.join('/') + '/autonax.com.tr';
   } else {
-    window.location.href = 'autonax_desktop.html';
+    window.location.href = 'autonax.com.tr';
   }
 }
 
