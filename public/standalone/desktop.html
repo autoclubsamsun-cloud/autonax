@@ -1377,7 +1377,7 @@ svg{display:block;flex-shrink:0}
     </div>
     <div class="hd-r">
       <div class="hd-b" onclick="event.stopPropagation();openGaraj()"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/><path d="M7 9.5h2v2H7z"/><path d="M15 9.5h2v2h-2z"/></svg>Garajım</div>
-      <div class="hd-b cart" onclick="openSepet()"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Sepet<div class="cart-cnt">2</div></div>
+      <div class="hd-b cart" onclick="openSepet()"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Sepet<div class="cart-cnt" id="cart-badge-hd">0</div></div>
       <div class="hd-b hd-user" id="hd-user-btn" onclick="userMenuToggle()">
         <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         <span id="hd-user-label">Giriş Yap</span>
@@ -3425,7 +3425,28 @@ var SEPET = {
   secilenSaat: ''
 };
 
-function openSepet(){ document.getElementById('sepet-ovl').classList.add('show'); document.body.style.overflow='hidden'; SEPET.render(); }
+function openSepet(){
+  document.getElementById('sepet-ovl').classList.add('show');
+  document.body.style.overflow='hidden';
+  SEPET.render();
+  // Giriş yapmamışsa misafir formu göster
+  var isLoggedIn = typeof AuthManager!=='undefined' && AuthManager.getUser && AuthManager.getUser();
+  var mf = document.getElementById('rdv-misafir-form');
+  if(!mf){
+    mf = document.createElement('div');
+    mf.id = 'rdv-misafir-form';
+    mf.style.cssText = 'background:rgba(176,28,46,.05);border:1.5px solid rgba(176,28,46,.2);border-radius:10px;padding:14px;margin:12px 16px 0';
+    mf.innerHTML = '<div style="font-size:11px;font-weight:700;color:#b01c2e;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">📋 İletişim Bilgileriniz</div>'
+      +'<input id="rdv-misafir-ad" placeholder="Ad Soyad *" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:7px;font-size:13px;margin-bottom:8px;box-sizing:border-box">'
+      +'<input id="rdv-misafir-tel" type="tel" placeholder="Telefon *" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:7px;font-size:13px;margin-bottom:8px;box-sizing:border-box">'
+      +'<input id="rdv-misafir-email" type="email" placeholder="E-posta (isteğe bağlı)" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:7px;font-size:13px;margin-bottom:0;box-sizing:border-box">'
+      +'<div style="font-size:10px;color:#888;margin-top:6px">veya <a href="javascript:void(0)" id="rdv-giris-link" style="color:#b01c2e;font-weight:700">giriş yapın</a> → bilgileriniz otomatik gelsin</div>';
+    setTimeout(function(){ var lnk=document.getElementById('rdv-giris-link'); if(lnk) lnk.onclick=function(){closeSepet();openAuth('giris');}; },100);
+    var sepetBody = document.getElementById('sepet-body');
+    if(sepetBody) sepetBody.parentNode.insertBefore(mf, sepetBody);
+  }
+  mf.style.display = isLoggedIn ? 'none' : 'block';
+}
 function closeSepet(){ document.getElementById('sepet-ovl').classList.remove('show'); document.body.style.overflow=''; }
 function sepetOverlayClick(e){ if(e.target===document.getElementById('sepet-ovl')) closeSepet(); }
 function sepetOde(){
@@ -3446,11 +3467,39 @@ function sepetOde(){
   // Randevuyu /api/randevular'a gönder
   var hizmetler=SEPET.items.map(function(i){return i.isim;}).join(' + ');
   var toplam=SEPET.total();
+  // Giriş yapmamışsa misafir bilgilerini al
+  var loggedUser = (typeof AuthManager!=='undefined'&&AuthManager.currentUser) ? AuthManager.currentUser : null;
+  var musteriAd, musteriTel, musteriEmail;
+  if(loggedUser){
+    musteriAd = loggedUser.name||loggedUser.ad||'Müşteri';
+    musteriTel = loggedUser.phone||loggedUser.tel||'-';
+    musteriEmail = loggedUser.email||'';
+  } else {
+    // Misafir — bilgi formu göster
+    musteriAd = document.getElementById('rdv-misafir-ad')?.value?.trim();
+    musteriTel = document.getElementById('rdv-misafir-tel')?.value?.trim();
+    musteriEmail = document.getElementById('rdv-misafir-email')?.value?.trim();
+    if(!musteriAd||!musteriTel){
+      // Misafir formu göster
+      var misafirForm = document.getElementById('rdv-misafir-form');
+      if(misafirForm){ misafirForm.style.display='block'; misafirForm.scrollIntoView({behavior:'smooth'}); }
+      var errEl=document.createElement('div');
+      errEl.style.cssText='color:#b01c2e;font-size:12px;font-weight:700;margin-top:8px;padding:8px;background:rgba(176,28,46,.08);border-radius:6px';
+      errEl.textContent='Lütfen iletişim bilgilerinizi girin';
+      var existErr=document.getElementById('rdv-misafir-err');
+      if(existErr) existErr.remove();
+      errEl.id='rdv-misafir-err';
+      misafirForm?.appendChild(errEl);
+      return;
+    }
+    if(!musteriEmail) musteriEmail='-';
+  }
   var rdv={
     tarih: SEPET.secilenTarih.split('-').reverse().join('.'),
     saat: SEPET.secilenSaat,
-    musteri: (typeof AuthManager!=='undefined'&&AuthManager.currentUser)?AuthManager.currentUser.name||'Müşteri':'Müşteri',
-    tel: (typeof AuthManager!=='undefined'&&AuthManager.currentUser)?AuthManager.currentUser.phone||'':'-',
+    musteri: musteriAd||'Misafir',
+    tel: musteriTel||'-',
+    email: musteriEmail||'',
     hizmet: hizmetler,
     tutar: toplam,
     durum: 'bekl',
@@ -3773,10 +3822,26 @@ function doLogin(){
   setTimeout(authUIGuncelle, 2200);
 }
 function doRegister(){
-  const ad=document.getElementById('kayit-ad')?.value;
-  const tel=document.getElementById('kayit-tel')?.value;
-  const email=document.getElementById('kayit-email')?.value;
+  const ad=document.getElementById('kayit-ad')?.value?.trim();
+  const soyad='';
+  const tel=document.getElementById('kayit-tel')?.value?.trim()||'';
+  const email=document.getElementById('kayit-email')?.value?.trim();
   const pass=document.getElementById('kayit-sifre')?.value;
+  if(!ad){
+    var err=document.getElementById('auth-error');
+    if(err){err.textContent='Ad Soyad zorunludur';err.style.display='block';}
+    return;
+  }
+  if(!email){
+    var err=document.getElementById('auth-error');
+    if(err){err.textContent='E-posta zorunludur';err.style.display='block';}
+    return;
+  }
+  if(!pass||pass.length<6){
+    var err=document.getElementById('auth-error');
+    if(err){err.textContent='Şifre en az 6 karakter olmalı';err.style.display='block';}
+    return;
+  }
   const r=AuthManager.register(ad,soyad,tel,email,pass);
   if(!r.ok){
     const errEl=document.getElementById('auth-error');
