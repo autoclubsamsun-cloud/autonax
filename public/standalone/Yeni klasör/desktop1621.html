@@ -2840,16 +2840,11 @@ const R = {
 
 /* ── MODAL ── */
 function openRobot(){
-  var ovl=document.getElementById('robot-ovl');
-  if(ovl){ ovl.style.display='flex'; ovl.style.opacity='1'; ovl.style.pointerEvents='all'; ovl.classList.add('show'); }
+  document.getElementById('robot-ovl').classList.add('show');
   document.body.style.overflow='hidden';
   if(R.step===0) adim_tur();
 }
-function closeRobot(){
-  var ovl=document.getElementById('robot-ovl');
-  if(ovl){ ovl.classList.remove('show'); ovl.style.display='none'; ovl.style.opacity='0'; ovl.style.pointerEvents='none'; }
-  document.body.style.overflow='';
-}
+function closeRobot(){ document.getElementById('robot-ovl').classList.remove('show'); document.body.style.overflow=''; }
 
 /* ── YARDIMCILAR ── */
 const avatarBot=`<svg viewBox="0 0 24 24" fill="none" stroke="#B01C2E" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><circle cx="8.5" cy="15.5" r="1" fill="#B01C2E" stroke="none"/><circle cx="15.5" cy="15.5" r="1" fill="#B01C2E" stroke="none"/></svg>`;
@@ -4525,9 +4520,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   SEPET.updateBadge();
   authUIGuncelle();
-  // Robot overlay başlangıçta kapalı olsun
-  var robotOvl=document.getElementById('robot-ovl');
-  if(robotOvl){ robotOvl.style.display='none'; robotOvl.classList.remove('show'); }
   // Bottom nav Garajım
   // Svc-btn "Randevu Al" → sepete ekle
   document.querySelectorAll('.svc-btn').forEach(btn=>{
