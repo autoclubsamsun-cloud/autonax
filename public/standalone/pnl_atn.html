@@ -559,7 +559,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 <body>
 
 <!-- ══ GİRİŞ OVERLAY ══ -->
-<div id="login-ovl" style="display:flex;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:20px;background:#0a0a0a">
+<div id="login-ovl" role="dialog" aria-label="Giriş" style="display:flex;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:20px;background:#0a0a0a">
   <div class="login-bg-glow"></div>
   <div class="login-bg-glow2"></div>
   <div class="login-card">
@@ -572,11 +572,11 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
     <div class="login-err" id="login-err">Kullanıcı adı veya şifre hatalı!</div>
     <div class="lf">
       <label>Kullanıcı Adı</label>
-      <input id="l-user" type="text" name="username" autocomplete="username" placeholder="Kullanıcı adı" onkeydown="if(event.key==='Enter')doLogin()">
+      <input id="l-user" type="text" name="username" autocomplete="username" placeholder="Kullanıcı adı" required onkeydown="if(event.key==='Enter')doLogin()">
     </div>
     <div class="lf">
       <label>Şifre</label>
-      <input id="l-pass" type="password" name="password" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+      <input id="l-pass" type="password" name="password" autocomplete="current-password" placeholder="••••••••" required minlength="4" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
     <button class="login-btn" type="button" onclick="doLogin()">Giriş Yap</button>
     
@@ -1741,6 +1741,7 @@ function dashboardGuncelle(){ dashboardYukle(); return; /* Artık dashboardYukle
     document.querySelectorAll('.dash-detay-btn').forEach(function(btn){
       btn.addEventListener('click',function(){ doPg(this.getAttribute('data-pg')); });
     });
+    
   }).catch(function(e){ console.error('Dashboard hata:',e.message); });
 }
 
@@ -3485,8 +3486,7 @@ function odeMakbuzOlustur(r,miktar,yon,not,tarih){
     +'.tutar{font-size:22px;font-weight:900;color:#B01C2E;text-align:center;padding:14px;background:#fef2f2;border-radius:8px;margin:14px 0}'
     +'.kalan{text-align:center;font-size:12px;color:#777;margin-bottom:16px}'
     +'.imza{margin-top:30px;border-top:1px dashed #ccc;padding-top:14px;display:flex;justify-content:space-between;font-size:11px;color:#aaa}'
-    +'</style><script>window.onerror=function(msg,url,line,col,err){console.error("Autonax Global Error:",msg,"at",url+":"+line+":"+col);return false;};</script>
-</head><body>'
+    +'</style></head><body>'
     +'<div class="logo">AUTONAX</div>'
     +'<div class="sub">PREMIUM ARAÇ KORUMA MERKEZİ</div>'
     +'<h3>ÖDEME MAKBUZU</h3>'
@@ -7987,13 +7987,12 @@ function ayarlarTabRender(tab){
 /* ══ GLOBAL ESC HANDLER — Açık modalları ESC ile kapat (#9) ══ */
 document.addEventListener('keydown', function(e) {
   if (e.key !== 'Escape') return;
-  // Tüm overlay'leri bul ve kapat (z-index sırasına göre en üsttekini önce)
   var overlays = document.querySelectorAll('[id$="-ovl"],[id$="-modal-ovl"]');
   for (var i = overlays.length - 1; i >= 0; i--) {
     var ovl = overlays[i];
     if (ovl && ovl.style.display !== 'none' && ovl.parentNode) {
       ovl.remove();
-      return; // Sadece en üsttekini kapat
+      return;
     }
   }
 });

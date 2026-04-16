@@ -1255,7 +1255,7 @@ svg{display:block;flex-shrink:0}
 
 @keyframes sbarIn{from{transform:translateY(-16px) scale(.97);opacity:0}to{transform:none;opacity:1}}
 /* ══ ÜRÜN DETAY MODAL ══ */
-#urun-detay-ovl{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
+#urun-detay-ovl{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
 #urun-detay-ovl.show{display:flex}
 #urun-detay-modal{background:#fff;border-radius:20px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.25)}
 .udm-header{position:relative;height:200px;border-radius:20px 20px 0 0;overflow:hidden;display:flex;align-items:flex-end;padding:24px}
@@ -2563,7 +2563,7 @@ function dinamikKartEkle(u){
   // Kart HTML'i
   var resimHtml = '';
   if(u.resim && u.resim.startsWith('/')){
-    resimHtml = '<img src="'+u.resim+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45;border-radius:inherit;pointer-events:none" class="urun-resim" alt="'+u.id+'">';
+    resimHtml = '<img loading="lazy" src="'+u.resim+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45;border-radius:inherit;pointer-events:none" class="urun-resim" alt="'+u.id+'">';
   }
   var kartHtml = '<div class="svc" data-dinamik-id="'+u.id+'">'+
     '<div class="svc-img" style="position:relative;overflow:hidden">'+resimHtml+'<svg viewBox="0 0 24 24">'+svgIkon+'</svg>'+
@@ -2677,7 +2677,7 @@ function hizmetBolumleriniRender(bolumler) {
         var ozellikler = k.ozellikler ? k.ozellikler.split(',').map(function(o){ return o.trim(); }).filter(Boolean) : [];
 
         svc.innerHTML = '<div class="svc-img" style="position:relative">'
-          + (k.resim ? '<img src="' + k.resim + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4;border-radius:inherit">' : '')
+          + (k.resim ? '<img loading="lazy" src="' + k.resim + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4;border-radius:inherit">' : '')
           + '<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>'
           + (k.rozet ? '<div class="svc-bdg">' + k.rozet + '</div>' : '')
           + '</div>'
@@ -2789,6 +2789,7 @@ function fiyatKartlariniYenile(){
           if(!existing){
             var imgEl=document.createElement('img');
             imgEl.className='urun-resim';
+            imgEl.loading='lazy';
             imgEl.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45;border-radius:inherit;pointer-events:none';
             imgEl.alt=id; imgEl.src=u.resim;
             svcImg.insertBefore(imgEl,svcImg.firstChild);
@@ -4140,7 +4141,7 @@ function siteAyarlariniUygula(sa) {
           return '<div class="pc">'
             +'<div class="pc-top"></div>'
             +'<div class="pc-img">'
-              +(u.gorselUrl ? '<img src="'+u.gorselUrl+'" alt="'+u.isim+'" style="width:100%;height:100%;object-fit:cover">' : svgPaket)
+              +(u.gorselUrl ? '<img loading="lazy" src="'+u.gorselUrl+'" alt="'+u.isim+'" style="width:100%;height:100%;object-fit:cover">' : svgPaket)
               +(u.rozet ? '<div class="pc-bdg">'+u.rozet+'</div>' : '')
               +'<div class="pc-fav">'+svgFav+'</div>'
             +'</div>'
@@ -4333,7 +4334,7 @@ function mkModalAc(markaAdi) {
       var ozList = (km.ozellikler||'').split('|').filter(Boolean);
       return '<div class="mk-kamp-kart">'
         + '<div class="mk-kamp-img">'
-          + (km.gorselUrl ? '<img src="'+km.gorselUrl+'" alt="'+km.baslik+'">' : '🚗')
+          + (km.gorselUrl ? '<img loading="lazy" src="'+km.gorselUrl+'" alt="'+km.baslik+'">' : '🚗')
           + (km.rozet ? '<div class="mk-kamp-rozet">'+km.rozet+'</div>' : '')
         + '</div>'
         + '<div class="mk-kamp-body">'
