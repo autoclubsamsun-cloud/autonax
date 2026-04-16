@@ -1384,79 +1384,51 @@ var FIYAT_DATA=[
   {kod:'N9',isim:'N9 250 Mikron',full:90000,on3:0,kaput:0,garanti:'12 Yıl',mensei:'🇺🇸'}
 ];
 
-/* ══ AUTH ══ */
-var ADM_U=(function(){try{return localStorage.getItem('autonax_adm_u')||'admin';}catch(e){return 'admin';}}());
-var ADM_P=''; // Şifre localStorage'da saklanmaz
-/* DB'den güncel şifreyi çek — mobilden ilk girişte doğru şifre gelsin */
-(function(){
-  fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'get_credentials'})})
-  .then(function(r){return r.json();})
-  .then(function(d){
-    if(d.success&&d.username){
-      ADM_U=d.username;
-      ADM_P=d.password;
-      try{localStorage.setItem('autonax_adm_u',d.username);localStorage.setItem('autonax_adm_p',d.password);}catch(e){console.error('Autonax:',e)}
-    }
-  }).catch(function(){});
-})();
+/* ══ AUTH (Cookie-Based Session) ══ */
+var ADM_U='admin'; // Sadece UI gösterimi için — şifre ASLA client'ta tutulmaz
+
+function panelAc(){
+  document.getElementById('login-ovl').style.display='none';
+  document.getElementById('main-header').style.display='flex';
+  document.getElementById('main-layout').style.display='flex';
+  doInit();
+  dbSyncYukle();
+}
+
 function doLogin(){
   var u=document.getElementById('l-user').value.trim();
   var p=document.getElementById('l-pass').value;
   var err=document.getElementById('login-err');
   var btn=document.querySelector('.login-btn');
   if(btn) btn.disabled=true;
-  // Önce API ile dene, başarısız olursa local kontrol
-  fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',username:u,password:p})})
+  fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',username:u,password:p}),credentials:'same-origin'})
   .then(function(r){return r.json();})
   .then(function(d){
     if(d.success){
-      ADM_U=u; ADM_P=p; // Sadece runtime — localStorage'a yazma
-      try{ sessionStorage.setItem('autonax_oturum','1'); }catch(e){console.error('Autonax:',e)}
-      document.getElementById('login-ovl').style.display='none';
-      document.getElementById('main-header').style.display='flex';
-      document.getElementById('main-layout').style.display='flex';
-      doInit();
-      dbSyncYukle();
-    } else {
-      // API başarısız — local kontrol
-      if(u===ADM_U&&p===ADM_P){
-        try{ sessionStorage.setItem('autonax_oturum','1'); }catch(e){console.error('Autonax:',e)}
-        document.getElementById('login-ovl').style.display='none';
-        document.getElementById('main-header').style.display='flex';
-        document.getElementById('main-layout').style.display='flex';
-        doInit();
-        dbSyncYukle();
-      } else {
-        err.style.display='block';
-        setTimeout(function(){err.style.display='none';},2500);
-      }
-    }
-  })
-  .catch(function(){
-    // Offline — local kontrol
-    if(u===ADM_U&&p===ADM_P){
-      try{ sessionStorage.setItem('autonax_oturum','1'); }catch(e){console.error('Autonax:',e)}
-      document.getElementById('login-ovl').style.display='none';
-      document.getElementById('main-header').style.display='flex';
-      document.getElementById('main-layout').style.display='flex';
-      doInit();
+      ADM_U=d.username||u;
+      panelAc();
     } else {
       err.style.display='block';
       setTimeout(function(){err.style.display='none';},2500);
     }
   })
+  .catch(function(){
+    err.textContent='Sunucuya ulaşılamıyor';
+    err.style.display='block';
+    setTimeout(function(){err.style.display='none';err.textContent='Kullanıcı adı veya şifre hatalı!';},2500);
+  })
   .finally(function(){ if(btn) btn.disabled=false; });
 }
 function doCikis(){
   if(!confirm('Çıkış yapılsın mı?'))return;
+  fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'logout'}),credentials:'same-origin'}).catch(function(){});
   try{
     sessionStorage.clear();
-    // localStorage'a çıkış flag'i koy — yenileme sonrası da login göster
-    localStorage.setItem('autonax_cikis','1');
+    localStorage.removeItem('autonax_cikis');
     localStorage.removeItem('autonax_session');
     localStorage.removeItem('autonax_adm_p');
+    localStorage.removeItem('autonax_adm_u');
   }catch(e){console.error('Autonax:',e)}
-  ADM_P='';
   var loginOvl=document.getElementById('login-ovl');
   var mainHeader=document.getElementById('main-header');
   var mainLayout=document.getElementById('main-layout');
@@ -3725,38 +3697,32 @@ function adminBilgiKaydet(){
   if(!yeniU){ toast('Kullanıcı adı boş olamaz!','red'); return; }
 
   // Şifre değişikliği isteniyor mu?
+  var sifre=null;
   if(yeniP || eskiP) {
-    if(eskiP !== ADM_P){ toast('Mevcut şifre yanlış!','red'); return; }
+    if(!eskiP){ toast('Mevcut şifreyi girin!','red'); return; }
     if(!yeniP){ toast('Yeni şifre boş olamaz!','red'); return; }
     if(yeniP !== tekrarP){ toast('Şifreler eşleşmiyor!','red'); return; }
     if(yeniP.length < 6){ toast('Şifre en az 6 karakter olmalı!','red'); return; }
-    ADM_P = yeniP;
-    // Şifreyi temizle
+    sifre=yeniP;
     document.getElementById('adm-pass-eski').value='';
     document.getElementById('adm-pass-yeni').value='';
     document.getElementById('adm-pass-tekrar').value='';
   }
 
   ADM_U = yeniU;
+  if(email) try{localStorage.setItem('autonax_adm_email', email);}catch(e){console.error('Autonax:',e)}
 
-  // localStorage'a SADECE kullanıcı adı kaydet — şifre asla!
-  try{
-    localStorage.setItem('autonax_adm_u', ADM_U);
-    if(email) localStorage.setItem('autonax_adm_email', email);
-  }catch(e){console.error('Autonax:',e)}
-
-  // DB'ye kaydet — önce API, sonra localStorage
+  // DB'ye kaydet (auth token cookie ile gider)
+  var payload={action:'update',username:ADM_U};
+  if(sifre) payload.password=sifre;
   fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'update',username:ADM_U,password:ADM_P})})
+    body:JSON.stringify(payload),credentials:'same-origin'})
   .then(function(r){return r.json();})
   .then(function(d){
     if(d.success) toast('✅ Admin bilgileri kaydedildi!','green');
-    else toast('⚠️ Kaydedildi (DB hatası)','orange');
+    else toast('⚠️ Hata: '+(d.error||'Bilinmeyen'),'red');
   })
-  .catch(function(){ toast('✅ Admin bilgileri kaydedildi (offline)!','green'); });
-  try{
-    localStorage.setItem('autonax_adm_u', ADM_U);
-  }catch(e){console.error('Autonax:',e)}
+  .catch(function(){ toast('⚠️ Sunucuya ulaşılamıyor','red'); });
 }
 
 window.onload=function(){
@@ -3764,37 +3730,39 @@ window.onload=function(){
   var mainHeader=document.getElementById('main-header');
   var mainLayout=document.getElementById('main-layout');
 
-  // Çıkış flag kontrolü — çıkış yapıldıysa sessionStorage'ı temizle
-  try{
-    if(localStorage.getItem('autonax_cikis')==='1'){
-      sessionStorage.clear();
-      localStorage.removeItem('autonax_cikis');
-    }
-  }catch(e){console.error('Autonax:',e)}
-
-  // Oturum kontrolü
-  var aktifOturum=false;
-  try{ aktifOturum=sessionStorage.getItem('autonax_oturum')==='1'; }catch(e){console.error('Autonax:',e)}
-  // Güvenlik: localStorage şifre kalıntısı temizle
+  // Güvenlik: localStorage şifre kalıntılarını temizle
   try{
     localStorage.removeItem('autonax_session');
     localStorage.removeItem('autonax_adm_p');
+    localStorage.removeItem('autonax_adm_u');
+    localStorage.removeItem('autonax_cikis');
   }catch(e){console.error('Autonax:',e)}
 
-  if(aktifOturum){
-    // Oturum aktif — direkt paneli aç
-    if(loginOvl) loginOvl.style.display='none';
-    if(mainHeader) mainHeader.style.display='flex';
-    if(mainLayout) mainLayout.style.display='flex';
-    doInit();
-    dbSyncYukle();
-    setTimeout(dashboardYukle, 100);
-  } else {
-    // Oturum yok — login göster
+  // Cookie-based oturum kontrolü — sunucuya sor
+  fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'check_session'}),credentials:'same-origin'})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.success&&d.authenticated){
+      ADM_U=d.username||'admin';
+      if(loginOvl) loginOvl.style.display='none';
+      if(mainHeader) mainHeader.style.display='flex';
+      if(mainLayout) mainLayout.style.display='flex';
+      doInit();
+      dbSyncYukle();
+      setTimeout(dashboardYukle, 100);
+    } else {
+      // Oturum yok — login göster
+      if(loginOvl) loginOvl.style.cssText='display:flex;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:20px;background:#0a0a0a';
+      if(mainHeader) mainHeader.style.display='none';
+      if(mainLayout) mainLayout.style.display='none';
+    }
+  })
+  .catch(function(){
+    // Sunucuya ulaşılamadı — login göster
     if(loginOvl) loginOvl.style.cssText='display:flex;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:20px;background:#0a0a0a';
     if(mainHeader) mainHeader.style.display='none';
     if(mainLayout) mainLayout.style.display='none';
-  }
+  });
 
   // Keyboard listener
   var up=document.getElementById('l-user');
