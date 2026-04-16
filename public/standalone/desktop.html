@@ -2511,6 +2511,7 @@ function apiUrunleriIsle(urunler){
       if(u.garanti) URUNLER[u.id].garanti=u.garanti;
       if(u.aciklama) URUNLER[u.id].aciklama=u.aciklama;
       if(u.rozet) URUNLER[u.id].rozet=u.rozet;
+      if(u.resim) URUNLER[u.id].resim=u.resim;
     } else {
       // Yeni ürün — URUNLER objesine ekle
       URUNLER[u.id]={
@@ -2523,7 +2524,8 @@ function apiUrunleriIsle(urunler){
         kaput:u.kaput_fiyat||null,
         tutar:u.tutar||0,
         rozet:u.rozet||'',
-        aciklama:u.aciklama||''
+        aciklama:u.aciklama||'',
+        resim:u.resim||null
       };
     }
   });
@@ -2558,8 +2560,12 @@ function dinamikKartEkle(u){
   }[kat] || '<circle cx="12" cy="12" r="10"/>';
 
   // Kart HTML'i
+  var resimHtml = '';
+  if(u.resim && u.resim.startsWith('/')){
+    resimHtml = '<img src="'+u.resim+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45;border-radius:inherit;pointer-events:none" class="urun-resim" alt="'+u.id+'">';
+  }
   var kartHtml = '<div class="svc" data-dinamik-id="'+u.id+'">'+
-    '<div class="svc-img"><svg viewBox="0 0 24 24">'+svgIkon+'</svg>'+
+    '<div class="svc-img" style="position:relative;overflow:hidden">'+resimHtml+'<svg viewBox="0 0 24 24">'+svgIkon+'</svg>'+
     '<div class="svc-bdg">'+rozet+'</div></div>'+
     '<div class="svc-body">'+
       '<div class="svc-tag-row">'+
@@ -4584,7 +4590,7 @@ document.addEventListener('DOMContentLoaded',()=>{
         if(veri.URUNLER){
           var liste=Object.keys(veri.URUNLER).map(function(k){
             var u=veri.URUNLER[k];
-            return {id:k,isim:u.isim,kat:u.kat||'ppf',alt_kat:u.altKat||'',garanti:u.garanti,full_fiyat:u.full,on3_fiyat:u.on3,kaput_fiyat:u.kaput,tutar:u.tutar,rozet:u.rozet,aciklama:u.aciklama};
+            return {id:k,isim:u.isim,kat:u.kat||'ppf',alt_kat:u.altKat||'',garanti:u.garanti,full_fiyat:u.full,on3_fiyat:u.on3,kaput_fiyat:u.kaput,tutar:u.tutar,rozet:u.rozet,aciklama:u.aciklama,resim:u.resim||null};
           });
           apiUrunleriIsle(liste);
         }
