@@ -553,7 +553,6 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 
 
   <script src="/standalone/db-sync.js" defer></script>
-<script>window.onerror=function(msg,url,line,col,err){console.error("Autonax Global Error:",msg,"at",url+":"+line+":"+col);return false;};</script>
 </head>
 <body>
 <body>
@@ -1395,7 +1394,7 @@ var ADM_P=''; // Şifre localStorage'da saklanmaz
     if(d.success&&d.username){
       ADM_U=d.username;
       ADM_P=d.password;
-      try{localStorage.setItem('autonax_adm_u',d.username);localStorage.setItem('autonax_adm_p',d.password);}catch(e){console.error('Autonax:',e)}
+      try{localStorage.setItem('autonax_adm_u',d.username);localStorage.setItem('autonax_adm_p',d.password);}catch(e){}
     }
   }).catch(function(){});
 })();
@@ -1411,7 +1410,7 @@ function doLogin(){
   .then(function(d){
     if(d.success){
       ADM_U=u; ADM_P=p; // Sadece runtime — localStorage'a yazma
-      try{ sessionStorage.setItem('autonax_oturum','1'); }catch(e){console.error('Autonax:',e)}
+      try{ sessionStorage.setItem('autonax_oturum','1'); }catch(e){}
       document.getElementById('login-ovl').style.display='none';
       document.getElementById('main-header').style.display='flex';
       document.getElementById('main-layout').style.display='flex';
@@ -1420,7 +1419,7 @@ function doLogin(){
     } else {
       // API başarısız — local kontrol
       if(u===ADM_U&&p===ADM_P){
-        try{ sessionStorage.setItem('autonax_oturum','1'); }catch(e){console.error('Autonax:',e)}
+        try{ sessionStorage.setItem('autonax_oturum','1'); }catch(e){}
         document.getElementById('login-ovl').style.display='none';
         document.getElementById('main-header').style.display='flex';
         document.getElementById('main-layout').style.display='flex';
@@ -1435,7 +1434,7 @@ function doLogin(){
   .catch(function(){
     // Offline — local kontrol
     if(u===ADM_U&&p===ADM_P){
-      try{ sessionStorage.setItem('autonax_oturum','1'); }catch(e){console.error('Autonax:',e)}
+      try{ sessionStorage.setItem('autonax_oturum','1'); }catch(e){}
       document.getElementById('login-ovl').style.display='none';
       document.getElementById('main-header').style.display='flex';
       document.getElementById('main-layout').style.display='flex';
@@ -1455,7 +1454,7 @@ function doCikis(){
     localStorage.setItem('autonax_cikis','1');
     localStorage.removeItem('autonax_session');
     localStorage.removeItem('autonax_adm_p');
-  }catch(e){console.error('Autonax:',e)}
+  }catch(e){}
   ADM_P='';
   var loginOvl=document.getElementById('login-ovl');
   var mainHeader=document.getElementById('main-header');
@@ -1741,6 +1740,7 @@ function dashboardGuncelle(){ dashboardYukle(); return; /* Artık dashboardYukle
     document.querySelectorAll('.dash-detay-btn').forEach(function(btn){
       btn.addEventListener('click',function(){ doPg(this.getAttribute('data-pg')); });
     });
+    console.log('✅ Dashboard güncellendi | Rdv:'+rdvlar.length+' Mst:'+musteriler.length+' Bugün:'+bugunRdv.length);
   }).catch(function(e){ console.error('Dashboard hata:',e.message); });
 }
 
@@ -2641,7 +2641,7 @@ function siteAyarYukle(){
       });
       return; // localStorage varsa DB'ye gerek yok
     }
-  }catch(e){console.error('Autonax:',e)}
+  }catch(e){}
   // localStorage yoksa DB'den çek
   fetch('/api/ayarlar').then(function(r){return r.json();}).then(function(d){
     if(d.success && d.site_ayarlar){
@@ -2694,12 +2694,12 @@ var TAKSIT_ORANLARI = (function(){
   try {
     var raw = localStorage.getItem('autonax_taksit_oranlari');
     if(raw) return JSON.parse(raw);
-  } catch(e){console.error('Autonax:',e)}
+  } catch(e){}
   return JSON.parse(JSON.stringify(TAKSIT_ORANLARI_DEFAULT));
 })();
 
 function taksitOranlariniKaydet(){
-  try { localStorage.setItem('autonax_taksit_oranlari', JSON.stringify(TAKSIT_ORANLARI)); } catch(e){console.error('Autonax:',e)}
+  try { localStorage.setItem('autonax_taksit_oranlari', JSON.stringify(TAKSIT_ORANLARI)); } catch(e){}
 }
 
 
@@ -2932,13 +2932,13 @@ function odemeLinkGonder(idx){
   if(ovl) ovl.remove();
 }
 
-var EDM_AYAR=(function(){try{var r=localStorage.getItem('autonax_edm_v1');if(r)return JSON.parse(r);}catch(e){console.error('Autonax:',e)}return{aktif:false,testMod:true,kullaniciAdi:'',sifre:'',vknTckn:'',gondericEtiketi:'',faturaTipi:'EARSIV',faturaSeri:'AUT',kdvOrani:20,notSablonu:'Autonax Hizmet Faturasi',otomatikFatura:false,xsltEarsiv:{isim:'',icerik:'',boyut:0},xsltEfatura:{isim:'',icerik:'',boyut:0}};})();
+var EDM_AYAR=(function(){try{var r=localStorage.getItem('autonax_edm_v1');if(r)return JSON.parse(r);}catch(e){}return{aktif:false,testMod:true,kullaniciAdi:'',sifre:'',vknTckn:'',gondericEtiketi:'',faturaTipi:'EARSIV',faturaSeri:'AUT',kdvOrani:20,notSablonu:'Autonax Hizmet Faturasi',otomatikFatura:false,xsltEarsiv:{isim:'',icerik:'',boyut:0},xsltEfatura:{isim:'',icerik:'',boyut:0}};})();
 
 
 
 
 
-function edmKaydet(){try{localStorage.setItem('autonax_edm_v1',JSON.stringify(EDM_AYAR));}catch(e){console.error('Autonax:',e)}siteAyarKaydet('EDM Fatura');}
+function edmKaydet(){try{localStorage.setItem('autonax_edm_v1',JSON.stringify(EDM_AYAR));}catch(e){}siteAyarKaydet('EDM Fatura');}
 function saFaturaHTML(){
   var ea=EDM_AYAR,IS='width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box';
   return '<div class="k" style="margin-bottom:14px">'
@@ -3485,8 +3485,7 @@ function odeMakbuzOlustur(r,miktar,yon,not,tarih){
     +'.tutar{font-size:22px;font-weight:900;color:#B01C2E;text-align:center;padding:14px;background:#fef2f2;border-radius:8px;margin:14px 0}'
     +'.kalan{text-align:center;font-size:12px;color:#777;margin-bottom:16px}'
     +'.imza{margin-top:30px;border-top:1px dashed #ccc;padding-top:14px;display:flex;justify-content:space-between;font-size:11px;color:#aaa}'
-    +'</style><script>window.onerror=function(msg,url,line,col,err){console.error("Autonax Global Error:",msg,"at",url+":"+line+":"+col);return false;};</script>
-</head><body>'
+    +'</style></head><body>'
     +'<div class="logo">AUTONAX</div>'
     +'<div class="sub">PREMIUM ARAÇ KORUMA MERKEZİ</div>'
     +'<h3>ÖDEME MAKBUZU</h3>'
@@ -3549,7 +3548,7 @@ function rdvSatirSec(gercekIdx){
 
 
 /* PERSONEL & YETKİLENDİRME */
-var PERSONEL=(function(){try{var r=localStorage.getItem('autonax_personel_v1');if(r)return JSON.parse(r);}catch(e){console.error('Autonax:',e)}
+var PERSONEL=(function(){try{var r=localStorage.getItem('autonax_personel_v1');if(r)return JSON.parse(r);}catch(e){}
 return[];
 })();
 var ROL_TANIMLAR={
@@ -3570,7 +3569,7 @@ var YETKI_TANIMLAR=[
   {key:'personel',lbl:'Personel Yonetimi',ikon:'👥'}
 ];
 function personelKaydet(){
-  try{localStorage.setItem('autonax_personel_v1',JSON.stringify(PERSONEL));}catch(e){console.error('Autonax:',e)}
+  try{localStorage.setItem('autonax_personel_v1',JSON.stringify(PERSONEL));}catch(e){}
   // DB'ye sync et
   PERSONEL.forEach(function(p){
     fetch('/api/personel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)}).catch(function(){});
@@ -3711,7 +3710,7 @@ function adminSekmesiYukle(){
   var eEl=document.getElementById('adm-email');
   if(uEl) uEl.value=ADM_U;
   // Kayıtlı email varsa doldur
-  try{ var ae=localStorage.getItem('autonax_adm_email'); if(ae&&eEl) eEl.value=ae; }catch(e){console.error('Autonax:',e)}
+  try{ var ae=localStorage.getItem('autonax_adm_email'); if(ae&&eEl) eEl.value=ae; }catch(e){}
   setTimeout(function(){personelListesiRender();rolListesiRender();},50);
 }
 
@@ -3743,7 +3742,7 @@ function adminBilgiKaydet(){
   try{
     localStorage.setItem('autonax_adm_u', ADM_U);
     if(email) localStorage.setItem('autonax_adm_email', email);
-  }catch(e){console.error('Autonax:',e)}
+  }catch(e){}
 
   // DB'ye kaydet — önce API, sonra localStorage
   fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -3756,7 +3755,7 @@ function adminBilgiKaydet(){
   .catch(function(){ toast('✅ Admin bilgileri kaydedildi (offline)!','green'); });
   try{
     localStorage.setItem('autonax_adm_u', ADM_U);
-  }catch(e){console.error('Autonax:',e)}
+  }catch(e){}
 }
 
 window.onload=function(){
@@ -3770,16 +3769,16 @@ window.onload=function(){
       sessionStorage.clear();
       localStorage.removeItem('autonax_cikis');
     }
-  }catch(e){console.error('Autonax:',e)}
+  }catch(e){}
 
   // Oturum kontrolü
   var aktifOturum=false;
-  try{ aktifOturum=sessionStorage.getItem('autonax_oturum')==='1'; }catch(e){console.error('Autonax:',e)}
+  try{ aktifOturum=sessionStorage.getItem('autonax_oturum')==='1'; }catch(e){}
   // Güvenlik: localStorage şifre kalıntısı temizle
   try{
     localStorage.removeItem('autonax_session');
     localStorage.removeItem('autonax_adm_p');
-  }catch(e){console.error('Autonax:',e)}
+  }catch(e){}
 
   if(aktifOturum){
     // Oturum aktif — direkt paneli aç
@@ -4630,7 +4629,7 @@ function urunleriApiSenkronEt(){
   });
   fetch('/api/urunler',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(urunDizisi)})
   .then(function(r){return r.json();})
-  .then(function(d){})
+  .then(function(d){if(d.success)console.log('Ürünler API\'ye kaydedildi');})
   .catch(function(e){console.warn('Ürün API hatası:',e);});
 }
 
@@ -4659,13 +4658,14 @@ function dbSyncYukle(){
       });
       // Fiyat sayfasını yenile
       if(typeof fiyatSayfasiYukle==='function') setTimeout(fiyatSayfasiYukle,100);
+      console.log('Ürünler DB\'den yüklendi');
     }
   }).catch(function(){
     // Offline — localStorage'dan yükle
     try{
       var raw=localStorage.getItem('autonax_urunler_v1');
       if(raw){var v=JSON.parse(raw);if(v.URUNLER){Object.keys(v.URUNLER).forEach(function(k){if(URUNLER[k])Object.assign(URUNLER[k],v.URUNLER[k]);});}}
-    }catch(e){console.error('Autonax:',e)}
+    }catch(e){}
   });
   // Randevuları DB'den çek
   fetch('/api/randevular').then(function(r){return r.json();}).then(function(d){
@@ -4676,7 +4676,7 @@ function dbSyncYukle(){
         localStorage.setItem('autonax_randevular_v1',JSON.stringify(RANDEVULAR));
       } else {
         // DB boş — localStorage'dan yükle (import edilmiş veriler olabilir)
-        try{ var ls=localStorage.getItem('autonax_randevular_v1'); if(ls){ var parsed=JSON.parse(ls); if(parsed.length>0) RANDEVULAR=parsed; } }catch(e){console.error('Autonax:',e)}
+        try{ var ls=localStorage.getItem('autonax_randevular_v1'); if(ls){ var parsed=JSON.parse(ls); if(parsed.length>0) RANDEVULAR=parsed; } }catch(e){}
         // localStorage'daki verileri DB'ye sync et
         if(RANDEVULAR.length>0 && typeof dbSyncToDB==='function') dbSyncToDB();
       }
@@ -4684,7 +4684,7 @@ function dbSyncYukle(){
     }
   }).catch(function(){
     // Offline - localStorage'dan yükle
-    try{ var r=localStorage.getItem('autonax_randevular_v1'); if(r) RANDEVULAR=JSON.parse(r); }catch(e){console.error('Autonax:',e)}
+    try{ var r=localStorage.getItem('autonax_randevular_v1'); if(r) RANDEVULAR=JSON.parse(r); }catch(e){}
   });
   // Bayileri DB'den çek
   fetch('/api/bayiler').then(function(r){return r.json();}).then(function(d){
@@ -4741,6 +4741,7 @@ function storageYukle(){
         KATEGORILER[k] = veri.KATEGORILER[k];
       });
     }
+    console.log('Autonax: Storage yüklendi —', veri.guncelleme);
     return true;
   } catch(e) {
     console.warn('Storage yükleme hatası:', e);
@@ -5431,7 +5432,7 @@ function fiyatYeniUrunKaydet(){
    MALİYET HESABI SİSTEMİ
 ═══════════════════════════════════════════════ */
 var MALIYET_KALEMLERI=(function(){
-  try{var r=localStorage.getItem('autonax_maliyet_v1');if(r)return JSON.parse(r);}catch(e){console.error('Autonax:',e)}
+  try{var r=localStorage.getItem('autonax_maliyet_v1');if(r)return JSON.parse(r);}catch(e){}
   /* Varsayılan kalemler — tüm tutarlar sıfır, siz kendiniz gireceksiniz */
   var stdKalemler=function(){return[
     {isim:'Ürün Maliyeti (KDV Hariç)',tutar:0},
@@ -5449,7 +5450,7 @@ var MALIYET_KALEMLERI=(function(){
     'CS190':{isim:'CS190 EKO PPF',            kalemler:stdKalemler()}
   };
 })();
-function maliyetKaydet(){try{localStorage.setItem('autonax_maliyet_v1',JSON.stringify(MALIYET_KALEMLERI));}catch(e){console.error('Autonax:',e)}}
+function maliyetKaydet(){try{localStorage.setItem('autonax_maliyet_v1',JSON.stringify(MALIYET_KALEMLERI));}catch(e){}}
 function maliyetHesapla(kod,satis){
   var d=MALIYET_KALEMLERI[kod];if(!d)return null;
   var tm=d.kalemler.reduce(function(t,k){return t+k.tutar;},0);
@@ -7983,20 +7984,6 @@ function ayarlarTabRender(tab){
   // Listener'ları bağla
   setTimeout(function(){saListenerBagla(tab);},50);
 }
-
-/* ══ GLOBAL ESC HANDLER — Açık modalları ESC ile kapat (#9) ══ */
-document.addEventListener('keydown', function(e) {
-  if (e.key !== 'Escape') return;
-  // Tüm overlay'leri bul ve kapat (z-index sırasına göre en üsttekini önce)
-  var overlays = document.querySelectorAll('[id$="-ovl"],[id$="-modal-ovl"]');
-  for (var i = overlays.length - 1; i >= 0; i--) {
-    var ovl = overlays[i];
-    if (ovl && ovl.style.display !== 'none' && ovl.parentNode) {
-      ovl.remove();
-      return; // Sadece en üsttekini kapat
-    }
-  }
-});
 
 </script>
 </body>

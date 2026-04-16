@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
   <link rel="icon" type="image/png" href="/uploads/logo/favicon.png">
   <link rel="shortcut icon" type="image/png" href="/uploads/logo/favicon.png">
   <link rel="apple-touch-icon" href="/uploads/logo/favicon.png">
@@ -478,7 +478,7 @@ svg{display:block;flex-shrink:0}
 .ft-bot a{color:#666}
 
 /* ══ DRAWER ══ */
-#drw-ovl{position:fixed;inset:0;z-index:600;display:none;pointer-events:none;background:rgba(0,0,0,0);transition:background .25s}
+#drw-ovl{position:fixed;inset:0;z-index:600;display:flex;pointer-events:none;background:rgba(0,0,0,0);transition:background .25s}
 #drw-ovl.on{pointer-events:all;background:rgba(0,0,0,.55)}
 #drw{width:80%;max-width:290px;background:#fff;height:100%;overflow-y:auto;flex-shrink:0;transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
 #drw::-webkit-scrollbar{display:none}
@@ -1286,7 +1286,6 @@ svg{display:block;flex-shrink:0}
   .udm-header{height:160px;padding:16px}
 }
 </style>
-<script>window.onerror=function(msg,url,line,col,err){console.error("Autonax Global Error:",msg,"at",url+":"+line+":"+col);return false;};</script>
 </head>
 <body>
 
@@ -1378,7 +1377,7 @@ svg{display:block;flex-shrink:0}
     </div>
     <div class="hd-r">
       <div class="hd-b" onclick="event.stopPropagation();openGaraj()"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/><path d="M7 9.5h2v2H7z"/><path d="M15 9.5h2v2h-2z"/></svg>Garajım</div>
-      <div class="hd-b cart" onclick="openSepet()"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Sepet<div class="cart-cnt" id="cart-badge-hd">0</div></div>
+      <div class="hd-b cart" onclick="openSepet()"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Sepet<div class="cart-cnt">2</div></div>
       <div class="hd-b hd-user" id="hd-user-btn" onclick="userMenuToggle()">
         <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         <span id="hd-user-label">Giriş Yap</span>
@@ -1492,7 +1491,7 @@ svg{display:block;flex-shrink:0}
           <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofilik · USA</div>
           <div class="svc-yapistikan ashland"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇺🇸 Ashland Yapışkan · USA</div>
           <div class="svc-price"><span data-urun-id="N8" data-fiyat-tip="full">₺70.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('N8','full')">Randevu Al</button>
+          <button class="svc-btn">Randevu Al</button>
         </div>
       </div>
       <div class="svc">
@@ -1503,7 +1502,7 @@ svg{display:block;flex-shrink:0}
           <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofobik · USA</div>
           <div class="svc-yapistikan ashland"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇺🇸 Ashland Yapışkan · USA</div>
           <div class="svc-price"><span data-urun-id="N7" data-fiyat-tip="full">₺65.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('N7','full')">Randevu Al</button>
+          <button class="svc-btn">Randevu Al</button>
         </div>
       </div>
       <div class="svc">
@@ -1514,7 +1513,7 @@ svg{display:block;flex-shrink:0}
           <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofilik · Alman</div>
           <div class="svc-yapistikan henkel"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇩🇪 Henkel Yapışkan · Alman</div>
           <div class="svc-price"><span data-urun-id="S75" data-fiyat-tip="full">₺55.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('S75','full')">Randevu Al</button>
+          <button class="svc-btn">Randevu Al</button>
         </div>
       </div>
       <div class="svc">
@@ -1525,7 +1524,7 @@ svg{display:block;flex-shrink:0}
           <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofilik · Alman</div>
           <div class="svc-yapistikan henkel"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇩🇪 Henkel Yapışkan · Alman</div>
           <div class="svc-price"><span data-urun-id="CS190" data-fiyat-tip="full">₺45.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('CS190','full')">Randevu Al</button>
+          <button class="svc-btn">Randevu Al</button>
         </div>
       </div>
       <div class="svc">
@@ -1552,7 +1551,7 @@ svg{display:block;flex-shrink:0}
           <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofobik · USA</div>
           <div class="svc-yapistikan ashland"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇺🇸 Ashland Yapışkan · USA</div>
           <div class="svc-price"><span data-urun-id="N7" data-fiyat-tip="full">₺65.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('N7','full')">Randevu Al</button>
+          <button class="svc-btn">Randevu Al</button>
         </div>
       </div>
       <div class="svc">
@@ -1563,7 +1562,7 @@ svg{display:block;flex-shrink:0}
           <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofilik · USA</div>
           <div class="svc-yapistikan ashland"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇺🇸 Ashland Yapışkan · USA</div>
           <div class="svc-price"><span data-urun-id="N8" data-fiyat-tip="full">₺70.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('N8','full')">Randevu Al</button>
+          <button class="svc-btn">Randevu Al</button>
         </div>
       </div>
       <div class="svc">
@@ -1574,7 +1573,7 @@ svg{display:block;flex-shrink:0}
           <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofobik · USA</div>
           <div class="svc-yapistikan ashland"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇺🇸 Ashland Yapışkan · USA</div>
           <div class="svc-price"><span data-urun-id="N9" data-fiyat-tip="full">₺90.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('N9','full')">Randevu Al</button>
+          <button class="svc-btn">Randevu Al</button>
         </div>
       </div>
       <div class="svc">
@@ -1585,7 +1584,7 @@ svg{display:block;flex-shrink:0}
           <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofobik · USA</div>
           <div class="svc-yapistikan ashland"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇺🇸 Ashland Yapışkan · USA</div>
           <div class="svc-price"><span data-urun-id="RENKLI" data-fiyat-tip="full">₺180.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('RENKLI','full')">Randevu Al</button>
+          <button class="svc-btn">Randevu Al</button>
         </div>
       </div>
     </div>
@@ -1600,7 +1599,7 @@ svg{display:block;flex-shrink:0}
           <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofilik · Alman</div>
           <div class="svc-yapistikan henkel"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇩🇪 Henkel Yapışkan · Alman</div>
           <div class="svc-price"><span data-urun-id="CS190" data-fiyat-tip="full">₺45.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('CS190','full')">Randevu Al</button>
+          <button class="svc-btn">Randevu Al</button>
         </div>
       </div>
       <div class="svc">
@@ -1611,7 +1610,7 @@ svg{display:block;flex-shrink:0}
           <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofilik · Alman</div>
           <div class="svc-yapistikan henkel"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇩🇪 Henkel Yapışkan · Alman</div>
           <div class="svc-price"><span data-urun-id="S75" data-fiyat-tip="full">₺55.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('S75','full')">Randevu Al</button>
+          <button class="svc-btn">Randevu Al</button>
         </div>
       </div>
       <div class="svc">
@@ -1650,7 +1649,7 @@ svg{display:block;flex-shrink:0}
           <div class="svc-name">220 Mikron TPU — Ön 3 Parça</div>
           <div class="svc-sub">Kaput · Sağ/Sol Ön Çamurluk · Farlar · USA · ~3 Saat</div>
           <div class="svc-price"><span data-urun-id="N8" data-fiyat-tip="on3">₺20.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('N8','on3')">Randevu Al</button>
+          <button class="svc-btn">Randevu Al</button>
         </div>
       </div>
 
@@ -1665,7 +1664,7 @@ svg{display:block;flex-shrink:0}
           <div class="svc-name">200 Mikron TPU — Ön 3 Parça</div>
           <div class="svc-sub">Kaput · Sağ/Sol Ön Çamurluk · Farlar · USA · ~3 Saat</div>
           <div class="svc-price"><span data-urun-id="N7" data-fiyat-tip="on3">₺17.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('N7','on3')">Randevu Al</button>
+          <button class="svc-btn">Randevu Al</button>
         </div>
       </div>
 
@@ -1680,7 +1679,7 @@ svg{display:block;flex-shrink:0}
           <div class="svc-name">200 Mikron TPU — Ön 3 Parça</div>
           <div class="svc-sub">Kaput · Sağ/Sol Ön Çamurluk · Farlar · Alman · ~3 Saat</div>
           <div class="svc-price"><span data-urun-id="S75" data-fiyat-tip="on3">₺15.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('S75','on3')">Randevu Al</button>
+          <button class="svc-btn">Randevu Al</button>
         </div>
       </div>
 
@@ -1695,7 +1694,7 @@ svg{display:block;flex-shrink:0}
           <div class="svc-name">200 Mikron TPU EKO — Ön 3 Parça</div>
           <div class="svc-sub">Kaput · Sağ/Sol Ön Çamurluk · Farlar · Alman · ~3 Saat</div>
           <div class="svc-price"><span data-urun-id="CS190" data-fiyat-tip="on3">₺13.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('CS190','on3')">Randevu Al</button>
+          <button class="svc-btn">Randevu Al</button>
         </div>
       </div>
 
@@ -1721,7 +1720,7 @@ svg{display:block;flex-shrink:0}
           <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofilik · USA · ~1,5 Saat</div>
           <div class="svc-yapistikan ashland"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇺🇸 Ashland Yapışkan · USA</div>
           <div class="svc-price"><span data-urun-id="N8" data-fiyat-tip="kaput">₺7.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('N8','kaput')">Randevu Al</button>
+          <button class="svc-btn">Randevu Al</button>
         </div>
       </div>
       <div class="svc">
@@ -1732,7 +1731,7 @@ svg{display:block;flex-shrink:0}
           <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofobik · USA · ~1,5 Saat</div>
           <div class="svc-yapistikan ashland"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇺🇸 Ashland Yapışkan · USA</div>
           <div class="svc-price"><span data-urun-id="N7" data-fiyat-tip="kaput">₺5.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('N7','kaput')">Randevu Al</button>
+          <button class="svc-btn">Randevu Al</button>
         </div>
       </div>
       <div class="svc">
@@ -1743,7 +1742,7 @@ svg{display:block;flex-shrink:0}
           <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofilik · Alman · ~1,5 Saat</div>
           <div class="svc-yapistikan henkel"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇩🇪 Henkel Yapışkan · Alman</div>
           <div class="svc-price"><span data-urun-id="S75" data-fiyat-tip="kaput">₺4.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('S75','kaput')">Randevu Al</button>
+          <button class="svc-btn">Randevu Al</button>
         </div>
       </div>
       <div class="svc">
@@ -1754,7 +1753,7 @@ svg{display:block;flex-shrink:0}
           <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofilik · Alman · ~1,5 Saat</div>
           <div class="svc-yapistikan henkel"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇩🇪 Henkel Yapışkan · Alman</div>
           <div class="svc-price"><span data-urun-id="CS190" data-fiyat-tip="kaput">₺3.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('CS190','kaput')">Randevu Al</button>
+          <button class="svc-btn">Randevu Al</button>
         </div>
       </div>
     </div>
@@ -2131,7 +2130,7 @@ svg{display:block;flex-shrink:0}
 <!-- ══ KAPLAMA ROBOTU MODAL ══ -->
 <style>
 /* OVERLAY */
-#robot-ovl{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:900;display:none;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .3s}
+#robot-ovl{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:900;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .3s}
 #robot-ovl.show{opacity:1;pointer-events:all}
 
 /* MODAL */
@@ -2512,7 +2511,6 @@ function apiUrunleriIsle(urunler){
       if(u.garanti) URUNLER[u.id].garanti=u.garanti;
       if(u.aciklama) URUNLER[u.id].aciklama=u.aciklama;
       if(u.rozet) URUNLER[u.id].rozet=u.rozet;
-      if(u.resim) URUNLER[u.id].resim=u.resim;
     } else {
       // Yeni ürün — URUNLER objesine ekle
       URUNLER[u.id]={
@@ -2525,8 +2523,7 @@ function apiUrunleriIsle(urunler){
         kaput:u.kaput_fiyat||null,
         tutar:u.tutar||0,
         rozet:u.rozet||'',
-        aciklama:u.aciklama||'',
-        resim:u.resim||null
+        aciklama:u.aciklama||''
       };
     }
   });
@@ -2561,12 +2558,8 @@ function dinamikKartEkle(u){
   }[kat] || '<circle cx="12" cy="12" r="10"/>';
 
   // Kart HTML'i
-  var resimHtml = '';
-  if(u.resim && u.resim.startsWith('/')){
-    resimHtml = '<img src="'+u.resim+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45;border-radius:inherit;pointer-events:none" class="urun-resim" alt="'+u.id+'">';
-  }
   var kartHtml = '<div class="svc" data-dinamik-id="'+u.id+'">'+
-    '<div class="svc-img" style="position:relative;overflow:hidden">'+resimHtml+'<svg viewBox="0 0 24 24">'+svgIkon+'</svg>'+
+    '<div class="svc-img"><svg viewBox="0 0 24 24">'+svgIkon+'</svg>'+
     '<div class="svc-bdg">'+rozet+'</div></div>'+
     '<div class="svc-body">'+
       '<div class="svc-tag-row">'+
@@ -2576,7 +2569,7 @@ function dinamikKartEkle(u){
       '<div class="svc-name">'+aciklama.slice(0,40)+'</div>'+
       '<div class="svc-sub">'+aciklama+'</div>'+
       '<div class="svc-price"><span data-urun-id="'+u.id+'" data-fiyat-tip="full">'+fiyatStr+'</span></div>'+
-      '<button class="svc-btn" data-uid="'+u.id+'" data-tip="full" onclick="urunDetayAc(this.dataset.uid,this.dataset.tip)">Randevu Al</button>'+
+      '<button class="svc-btn">Randevu Al</button>'+
     '</div>'+
   '</div>';
 
@@ -2618,6 +2611,7 @@ function dinamikKartEkle(u){
     if(btn) btn.addEventListener('click',function(){
       SEPET.add({id:u.id+'_'+Date.now(),isim:u.isim,aciklama:aciklama,fiyat:fiyat,fiyatStr:fiyatStr});
     });
+    console.log('Autonax: Yeni ürün kartı eklendi —', u.id, u.isim);
   }
 }
 
@@ -2846,16 +2840,11 @@ const R = {
 
 /* ── MODAL ── */
 function openRobot(){
-  var ovl=document.getElementById('robot-ovl');
-  if(ovl){ ovl.style.display='flex'; ovl.style.opacity='1'; ovl.style.pointerEvents='all'; ovl.classList.add('show'); }
+  document.getElementById('robot-ovl').classList.add('show');
   document.body.style.overflow='hidden';
   if(R.step===0) adim_tur();
 }
-function closeRobot(){
-  var ovl=document.getElementById('robot-ovl');
-  if(ovl){ ovl.classList.remove('show'); ovl.style.display='none'; ovl.style.opacity='0'; ovl.style.pointerEvents='none'; }
-  document.body.style.overflow='';
-}
+function closeRobot(){ document.getElementById('robot-ovl').classList.remove('show'); document.body.style.overflow=''; }
 
 /* ── YARDIMCILAR ── */
 const avatarBot=`<svg viewBox="0 0 24 24" fill="none" stroke="#B01C2E" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><circle cx="8.5" cy="15.5" r="1" fill="#B01C2E" stroke="none"/><circle cx="15.5" cy="15.5" r="1" fill="#B01C2E" stroke="none"/></svg>`;
@@ -2907,119 +2896,6 @@ function setStep(n, lbl){
 /* ════════════════════════════════
    ADIM 1 — KORUMA TÜRÜ
 ════════════════════════════════ */
-
-/* ════ ROBOT — SEÇİM YÖNETİCİSİ ════ */
-function handleSec(val){
-  const step = R.step;
-  const akis = R.akis;
-
-  // ADIM 1 — TÜR SEÇİMİ
-  if(step===1){
-    R.akis = val; // komple, bolgesel, seramik, kombo
-    R.s.tur = val;
-    setTimeout(()=>adim_marka(), 300);
-    return;
-  }
-
-  // ADIM 2 — MARKA
-  if(step===2){
-    R.s.marka = val;
-    setTimeout(()=>adim_aractipi(), 300);
-    return;
-  }
-
-  // ADIM 3 — ARAÇ TİPİ
-  if(step===3){
-    R.s.aractipi = val;
-    // Seramik için bölge seçimi yok, direkt garanti
-    setTimeout(()=>adim_garanti(), 300);
-    return;
-  }
-
-  // ADIM 4 — GARANTİ
-  if(step===4){
-    R.s.garanti = val;
-    // Bölgesel için bölge seçimi, diğerleri bütçeye geç
-    if(R.akis==='bolgesel'){
-      setTimeout(()=>adim_kapsam_bolgesel(), 300);
-    } else {
-      setTimeout(()=>adim_butce(), 300);
-    }
-    return;
-  }
-
-  // ADIM 5 — BÜTÇE (komple/seramik/kombo)
-  if(step===5){
-    R.s.butce = val;
-    setTimeout(()=>adim_oneri(), 300);
-    return;
-  }
-
-  // ADIM 7 — SON SEÇİM (randevu/bilgi/yeniden)
-  if(step===7){
-    handleSonSec(val);
-    return;
-  }
-}
-
-
-/* ════ ROBOT — ÖNERİ SONUCU ════ */
-function adim_oneri(){
-  setStep(6,'Öneri');
-  showTyping();
-  setTimeout(()=>{
-    hideTyping();
-
-    // Akışa ve seçimlere göre ürün öner
-    var oneri = [];
-    if(R.akis==='komple' || R.akis==='kombo'){
-      if(R.s.garanti<=4) oneri=[{id:'CS190', label:'CS190 EKO', fiyat:'₺45.000'}];
-      else if(R.s.garanti<=6) oneri=[{id:'S75', label:'S75', fiyat:'₺55.000'}];
-      else if(R.s.garanti<=8) oneri=[{id:'N7', label:'N7', fiyat:'₺65.000'}];
-      else if(R.s.garanti<=10) oneri=[{id:'N8', label:'N8', fiyat:'₺70.000'}];
-      else oneri=[{id:'N9', label:'N9', fiyat:'₺90.000'}];
-    } else if(R.akis==='seramik'){
-      oneri=[{id:'seramik_'+R.s.garanti, label:'Nano Seramik '+R.s.garanti+' Yıl', fiyat:'₺'+(R.s.garanti<=2?'12.000':R.s.garanti<=4?'18.000':'25.000')}];
-    } else {
-      oneri=[{id:'N8', label:'N8 Bölgesel', fiyat:'Fiyat için arayın'}];
-    }
-
-    var urun = oneri[0];
-    var msg = `🎉 <b>${R.s.marka} ${R.s.aractipi}</b> aracınız için en uygun öneri hazır!<br><br>`
-      +`<div style="background:linear-gradient(135deg,#1a1a1a,#2d0a0a);border-radius:12px;padding:16px;margin:8px 0">`
-      +`<div style="color:var(--r);font-weight:700;font-size:16px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${urun.label}</div>`
-      +`<div style="color:#aaa;font-size:12px;margin:4px 0">${R.s.garanti} Yıl Garanti · ${R.s.aractipi}</div>`
-      +`<div style="color:#fff;font-weight:700;font-size:18px;margin-top:8px">${urun.fiyat}</div>`
-      +`</div>`
-      +`<br>Randevu almak ister misiniz?`;
-
-    addMsg('bot', msg, [
-      {icon:'📅', label:'Randevu Al', val:'randevu'},
-      {icon:'💬', label:'Bilgi Al', val:'bilgi'},
-      {icon:'🔄', label:'Yeniden Başla', val:'yeniden'},
-    ]);
-    R.step = 7;
-  }, 1000);
-}
-
-/* ADIM 7 — Son seçim */
-function handleSonSec(val){
-  if(val==='randevu'){
-    closeRobot();
-    var urunId = R.s.garanti<=4?'CS190':R.s.garanti<=6?'S75':R.s.garanti<=8?'N7':R.s.garanti<=10?'N8':'N9';
-    if(R.akis==='bolgesel'||R.akis==='seramik') urunId = null;
-    if(urunId && typeof urunDetayAc==='function') urunDetayAc(urunId,'full');
-    else openSepet();
-  } else if(val==='bilgi'){
-    addMsg('bot','Size en kısa sürede ulaşacağız! 📞<br>Ya da hemen aramak için: <a href="tel:08503052055" style="color:var(--r);font-weight:700">0850 305 20 55</a>');
-  } else if(val==='yeniden'){
-    // Robotu sıfırla
-    R.step=0; R.akis=''; R.s={tur:'',marka:'',aractipi:'',yil:'',garanti:'',kapsam:'',bolgeler:[],kullanim:'',butce:''};
-    document.getElementById('rm-chat').innerHTML='';
-    adim_tur();
-  }
-}
-
 function adim_tur(){
   setStep(1,'Tür');
   setTimeout(()=>{
@@ -3303,6 +3179,7 @@ const URUNLER = {
       SERAMIK.length = 0;
       veri.SERAMIK.forEach(function(s){ SERAMIK.push(s); });
     }
+    console.log('Autonax: Admin fiyatları yüklendi');
   } catch(e) {
     console.warn('Autonax storage okuma hatası:', e);
   }
@@ -3548,28 +3425,7 @@ var SEPET = {
   secilenSaat: ''
 };
 
-function openSepet(){
-  document.getElementById('sepet-ovl').classList.add('show');
-  document.body.style.overflow='hidden';
-  SEPET.render();
-  // Giriş yapmamışsa misafir formu göster
-  var isLoggedIn = typeof AuthManager!=='undefined' && AuthManager.getUser && AuthManager.getUser();
-  var mf = document.getElementById('rdv-misafir-form');
-  if(!mf){
-    mf = document.createElement('div');
-    mf.id = 'rdv-misafir-form';
-    mf.style.cssText = 'background:rgba(176,28,46,.05);border:1.5px solid rgba(176,28,46,.2);border-radius:10px;padding:14px;margin:12px 16px 0';
-    mf.innerHTML = '<div style="font-size:11px;font-weight:700;color:#b01c2e;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">📋 İletişim Bilgileriniz</div>'
-      +'<input id="rdv-misafir-ad" placeholder="Ad Soyad *" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:7px;font-size:13px;margin-bottom:8px;box-sizing:border-box">'
-      +'<input id="rdv-misafir-tel" type="tel" placeholder="Telefon *" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:7px;font-size:13px;margin-bottom:8px;box-sizing:border-box">'
-      +'<input id="rdv-misafir-email" type="email" placeholder="E-posta (isteğe bağlı)" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:7px;font-size:13px;margin-bottom:0;box-sizing:border-box">'
-      +'<div style="font-size:10px;color:#888;margin-top:6px">veya <a href="javascript:void(0)" id="rdv-giris-link" style="color:#b01c2e;font-weight:700">giriş yapın</a> → bilgileriniz otomatik gelsin</div>';
-    setTimeout(function(){ var lnk=document.getElementById('rdv-giris-link'); if(lnk) lnk.onclick=function(){closeSepet();openAuth('giris');}; },100);
-    var sepetBody = document.getElementById('sepet-body');
-    if(sepetBody) sepetBody.parentNode.insertBefore(mf, sepetBody);
-  }
-  mf.style.display = isLoggedIn ? 'none' : 'block';
-}
+function openSepet(){ document.getElementById('sepet-ovl').classList.add('show'); document.body.style.overflow='hidden'; SEPET.render(); }
 function closeSepet(){ document.getElementById('sepet-ovl').classList.remove('show'); document.body.style.overflow=''; }
 function sepetOverlayClick(e){ if(e.target===document.getElementById('sepet-ovl')) closeSepet(); }
 function sepetOde(){
@@ -3590,39 +3446,11 @@ function sepetOde(){
   // Randevuyu /api/randevular'a gönder
   var hizmetler=SEPET.items.map(function(i){return i.isim;}).join(' + ');
   var toplam=SEPET.total();
-  // Giriş yapmamışsa misafir bilgilerini al
-  var loggedUser = (typeof AuthManager!=='undefined'&&AuthManager.currentUser) ? AuthManager.currentUser : null;
-  var musteriAd, musteriTel, musteriEmail;
-  if(loggedUser){
-    musteriAd = loggedUser.name||loggedUser.ad||'Müşteri';
-    musteriTel = loggedUser.phone||loggedUser.tel||'-';
-    musteriEmail = loggedUser.email||'';
-  } else {
-    // Misafir — bilgi formu göster
-    musteriAd = document.getElementById('rdv-misafir-ad')?.value?.trim();
-    musteriTel = document.getElementById('rdv-misafir-tel')?.value?.trim();
-    musteriEmail = document.getElementById('rdv-misafir-email')?.value?.trim();
-    if(!musteriAd||!musteriTel){
-      // Misafir formu göster
-      var misafirForm = document.getElementById('rdv-misafir-form');
-      if(misafirForm){ misafirForm.style.display='block'; misafirForm.scrollIntoView({behavior:'smooth'}); }
-      var errEl=document.createElement('div');
-      errEl.style.cssText='color:#b01c2e;font-size:12px;font-weight:700;margin-top:8px;padding:8px;background:rgba(176,28,46,.08);border-radius:6px';
-      errEl.textContent='Lütfen iletişim bilgilerinizi girin';
-      var existErr=document.getElementById('rdv-misafir-err');
-      if(existErr) existErr.remove();
-      errEl.id='rdv-misafir-err';
-      misafirForm?.appendChild(errEl);
-      return;
-    }
-    if(!musteriEmail) musteriEmail='-';
-  }
   var rdv={
     tarih: SEPET.secilenTarih.split('-').reverse().join('.'),
     saat: SEPET.secilenSaat,
-    musteri: musteriAd||'Misafir',
-    tel: musteriTel||'-',
-    email: musteriEmail||'',
+    musteri: (typeof AuthManager!=='undefined'&&AuthManager.currentUser)?AuthManager.currentUser.name||'Müşteri':'Müşteri',
+    tel: (typeof AuthManager!=='undefined'&&AuthManager.currentUser)?AuthManager.currentUser.phone||'':'-',
     hizmet: hizmetler,
     tutar: toplam,
     durum: 'bekl',
@@ -3945,26 +3773,10 @@ function doLogin(){
   setTimeout(authUIGuncelle, 2200);
 }
 function doRegister(){
-  const ad=document.getElementById('kayit-ad')?.value?.trim();
-  const soyad='';
-  const tel=document.getElementById('kayit-tel')?.value?.trim()||'';
-  const email=document.getElementById('kayit-email')?.value?.trim();
+  const ad=document.getElementById('kayit-ad')?.value;
+  const tel=document.getElementById('kayit-tel')?.value;
+  const email=document.getElementById('kayit-email')?.value;
   const pass=document.getElementById('kayit-sifre')?.value;
-  if(!ad){
-    var err=document.getElementById('auth-error');
-    if(err){err.textContent='Ad Soyad zorunludur';err.style.display='block';}
-    return;
-  }
-  if(!email){
-    var err=document.getElementById('auth-error');
-    if(err){err.textContent='E-posta zorunludur';err.style.display='block';}
-    return;
-  }
-  if(!pass||pass.length<6){
-    var err=document.getElementById('auth-error');
-    if(err){err.textContent='Şifre en az 6 karakter olmalı';err.style.display='block';}
-    return;
-  }
   const r=AuthManager.register(ad,soyad,tel,email,pass);
   if(!r.ok){
     const errEl=document.getElementById('auth-error');
@@ -3985,7 +3797,7 @@ function socialLogin(provider){ alert(provider+' girişi yakında aktif edilecek
 
 /* ══ SITE AYARLARINI YÜKLEYİP UYGULA ══ */
 
-function bakimUrunSepet(btn){ var urunId=btn.getAttribute('data-uid');
+function bakimUrunSepet(btn, urunId){
   // Bakım ürününü sepete ekle
   var sa = window._SITE_AYARLAR_CACHE;
   var urun = sa && sa.bakimUrunleri ? sa.bakimUrunleri.find(function(u){return u.id===urunId;}) : null;
@@ -4150,7 +3962,7 @@ function siteAyarlariniUygula(sa) {
               +'<div class="pc-meta">'+svgKargo+(u.kargo||'Hızlı Teslimat')+'</div>'
               +'<div class="pc-uyumlu">'+svgEv+'Aracıma Uyumlu Mu?</div>'
               +(u.fiyat ? '<div class="pc-price">₺'+Number(u.fiyat).toLocaleString("tr-TR")+'</div>' : '')
-              +'<button class="pc-btn" data-uid="'+u.id+'" onclick="bakimUrunSepet(this)">Sepete Ekle</button>'
+              +'<button class="pc-btn" onclick="bakimUrunSepet(this,''+u.id+'')">Sepete Ekle</button>'
             +'</div>'
           +'</div>';
         }).join('');
@@ -4221,7 +4033,7 @@ function mkModalAc(markaIdx) {
   var mkler = sa.anaSayfa && sa.anaSayfa.markaKartlari;
   if(!mkler) {
     // localStorage'dan dene
-    try { var raw=localStorage.getItem('autonax_site_v1'); if(raw){var v=JSON.parse(raw); mkler=v.anaSayfa&&v.anaSayfa.markaKartlari;} } catch(e){console.error('Autonax:',e)}
+    try { var raw=localStorage.getItem('autonax_site_v1'); if(raw){var v=JSON.parse(raw); mkler=v.anaSayfa&&v.anaSayfa.markaKartlari;} } catch(e){}
   }
   if(!mkler || !mkler[markaIdx]) return;
   var m = mkler[markaIdx];
@@ -4589,12 +4401,12 @@ document.addEventListener('DOMContentLoaded',()=>{
         if(veri.URUNLER){
           var liste=Object.keys(veri.URUNLER).map(function(k){
             var u=veri.URUNLER[k];
-            return {id:k,isim:u.isim,kat:u.kat||'ppf',alt_kat:u.altKat||'',garanti:u.garanti,full_fiyat:u.full,on3_fiyat:u.on3,kaput_fiyat:u.kaput,tutar:u.tutar,rozet:u.rozet,aciklama:u.aciklama,resim:u.resim||null};
+            return {id:k,isim:u.isim,kat:u.kat||'ppf',alt_kat:u.altKat||'',garanti:u.garanti,full_fiyat:u.full,on3_fiyat:u.on3,kaput_fiyat:u.kaput,tutar:u.tutar,rozet:u.rozet,aciklama:u.aciklama};
           });
           apiUrunleriIsle(liste);
         }
       }
-    }catch(e){console.error('Autonax:',e)}
+    }catch(e){}
   });
   // Ürün kartlarına detay tıklaması ekle
   document.querySelectorAll('.svc').forEach(function(kart){
@@ -4643,9 +4455,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   SEPET.updateBadge();
   authUIGuncelle();
-  // Robot overlay başlangıçta kapalı olsun
-  var robotOvl=document.getElementById('robot-ovl');
-  if(robotOvl){ robotOvl.style.display='none'; robotOvl.classList.remove('show'); }
   // Bottom nav Garajım
   // Svc-btn "Randevu Al" → sepete ekle
   document.querySelectorAll('.svc-btn').forEach(btn=>{

@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
   <link rel="icon" type="image/png" href="/uploads/logo/favicon.png">
   <link rel="shortcut icon" type="image/png" href="/uploads/logo/favicon.png">
   <link rel="apple-touch-icon" href="/uploads/logo/favicon.png">
@@ -1286,7 +1286,6 @@ svg{display:block;flex-shrink:0}
   .udm-header{height:160px;padding:16px}
 }
 </style>
-<script>window.onerror=function(msg,url,line,col,err){console.error("Autonax Global Error:",msg,"at",url+":"+line+":"+col);return false;};</script>
 </head>
 <body>
 
@@ -2512,7 +2511,6 @@ function apiUrunleriIsle(urunler){
       if(u.garanti) URUNLER[u.id].garanti=u.garanti;
       if(u.aciklama) URUNLER[u.id].aciklama=u.aciklama;
       if(u.rozet) URUNLER[u.id].rozet=u.rozet;
-      if(u.resim) URUNLER[u.id].resim=u.resim;
     } else {
       // Yeni ürün — URUNLER objesine ekle
       URUNLER[u.id]={
@@ -2525,8 +2523,7 @@ function apiUrunleriIsle(urunler){
         kaput:u.kaput_fiyat||null,
         tutar:u.tutar||0,
         rozet:u.rozet||'',
-        aciklama:u.aciklama||'',
-        resim:u.resim||null
+        aciklama:u.aciklama||''
       };
     }
   });
@@ -2561,12 +2558,8 @@ function dinamikKartEkle(u){
   }[kat] || '<circle cx="12" cy="12" r="10"/>';
 
   // Kart HTML'i
-  var resimHtml = '';
-  if(u.resim && u.resim.startsWith('/')){
-    resimHtml = '<img src="'+u.resim+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45;border-radius:inherit;pointer-events:none" class="urun-resim" alt="'+u.id+'">';
-  }
   var kartHtml = '<div class="svc" data-dinamik-id="'+u.id+'">'+
-    '<div class="svc-img" style="position:relative;overflow:hidden">'+resimHtml+'<svg viewBox="0 0 24 24">'+svgIkon+'</svg>'+
+    '<div class="svc-img"><svg viewBox="0 0 24 24">'+svgIkon+'</svg>'+
     '<div class="svc-bdg">'+rozet+'</div></div>'+
     '<div class="svc-body">'+
       '<div class="svc-tag-row">'+
@@ -2618,6 +2611,7 @@ function dinamikKartEkle(u){
     if(btn) btn.addEventListener('click',function(){
       SEPET.add({id:u.id+'_'+Date.now(),isim:u.isim,aciklama:aciklama,fiyat:fiyat,fiyatStr:fiyatStr});
     });
+    console.log('Autonax: Yeni ürün kartı eklendi —', u.id, u.isim);
   }
 }
 
@@ -2907,119 +2901,6 @@ function setStep(n, lbl){
 /* ════════════════════════════════
    ADIM 1 — KORUMA TÜRÜ
 ════════════════════════════════ */
-
-/* ════ ROBOT — SEÇİM YÖNETİCİSİ ════ */
-function handleSec(val){
-  const step = R.step;
-  const akis = R.akis;
-
-  // ADIM 1 — TÜR SEÇİMİ
-  if(step===1){
-    R.akis = val; // komple, bolgesel, seramik, kombo
-    R.s.tur = val;
-    setTimeout(()=>adim_marka(), 300);
-    return;
-  }
-
-  // ADIM 2 — MARKA
-  if(step===2){
-    R.s.marka = val;
-    setTimeout(()=>adim_aractipi(), 300);
-    return;
-  }
-
-  // ADIM 3 — ARAÇ TİPİ
-  if(step===3){
-    R.s.aractipi = val;
-    // Seramik için bölge seçimi yok, direkt garanti
-    setTimeout(()=>adim_garanti(), 300);
-    return;
-  }
-
-  // ADIM 4 — GARANTİ
-  if(step===4){
-    R.s.garanti = val;
-    // Bölgesel için bölge seçimi, diğerleri bütçeye geç
-    if(R.akis==='bolgesel'){
-      setTimeout(()=>adim_kapsam_bolgesel(), 300);
-    } else {
-      setTimeout(()=>adim_butce(), 300);
-    }
-    return;
-  }
-
-  // ADIM 5 — BÜTÇE (komple/seramik/kombo)
-  if(step===5){
-    R.s.butce = val;
-    setTimeout(()=>adim_oneri(), 300);
-    return;
-  }
-
-  // ADIM 7 — SON SEÇİM (randevu/bilgi/yeniden)
-  if(step===7){
-    handleSonSec(val);
-    return;
-  }
-}
-
-
-/* ════ ROBOT — ÖNERİ SONUCU ════ */
-function adim_oneri(){
-  setStep(6,'Öneri');
-  showTyping();
-  setTimeout(()=>{
-    hideTyping();
-
-    // Akışa ve seçimlere göre ürün öner
-    var oneri = [];
-    if(R.akis==='komple' || R.akis==='kombo'){
-      if(R.s.garanti<=4) oneri=[{id:'CS190', label:'CS190 EKO', fiyat:'₺45.000'}];
-      else if(R.s.garanti<=6) oneri=[{id:'S75', label:'S75', fiyat:'₺55.000'}];
-      else if(R.s.garanti<=8) oneri=[{id:'N7', label:'N7', fiyat:'₺65.000'}];
-      else if(R.s.garanti<=10) oneri=[{id:'N8', label:'N8', fiyat:'₺70.000'}];
-      else oneri=[{id:'N9', label:'N9', fiyat:'₺90.000'}];
-    } else if(R.akis==='seramik'){
-      oneri=[{id:'seramik_'+R.s.garanti, label:'Nano Seramik '+R.s.garanti+' Yıl', fiyat:'₺'+(R.s.garanti<=2?'12.000':R.s.garanti<=4?'18.000':'25.000')}];
-    } else {
-      oneri=[{id:'N8', label:'N8 Bölgesel', fiyat:'Fiyat için arayın'}];
-    }
-
-    var urun = oneri[0];
-    var msg = `🎉 <b>${R.s.marka} ${R.s.aractipi}</b> aracınız için en uygun öneri hazır!<br><br>`
-      +`<div style="background:linear-gradient(135deg,#1a1a1a,#2d0a0a);border-radius:12px;padding:16px;margin:8px 0">`
-      +`<div style="color:var(--r);font-weight:700;font-size:16px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${urun.label}</div>`
-      +`<div style="color:#aaa;font-size:12px;margin:4px 0">${R.s.garanti} Yıl Garanti · ${R.s.aractipi}</div>`
-      +`<div style="color:#fff;font-weight:700;font-size:18px;margin-top:8px">${urun.fiyat}</div>`
-      +`</div>`
-      +`<br>Randevu almak ister misiniz?`;
-
-    addMsg('bot', msg, [
-      {icon:'📅', label:'Randevu Al', val:'randevu'},
-      {icon:'💬', label:'Bilgi Al', val:'bilgi'},
-      {icon:'🔄', label:'Yeniden Başla', val:'yeniden'},
-    ]);
-    R.step = 7;
-  }, 1000);
-}
-
-/* ADIM 7 — Son seçim */
-function handleSonSec(val){
-  if(val==='randevu'){
-    closeRobot();
-    var urunId = R.s.garanti<=4?'CS190':R.s.garanti<=6?'S75':R.s.garanti<=8?'N7':R.s.garanti<=10?'N8':'N9';
-    if(R.akis==='bolgesel'||R.akis==='seramik') urunId = null;
-    if(urunId && typeof urunDetayAc==='function') urunDetayAc(urunId,'full');
-    else openSepet();
-  } else if(val==='bilgi'){
-    addMsg('bot','Size en kısa sürede ulaşacağız! 📞<br>Ya da hemen aramak için: <a href="tel:08503052055" style="color:var(--r);font-weight:700">0850 305 20 55</a>');
-  } else if(val==='yeniden'){
-    // Robotu sıfırla
-    R.step=0; R.akis=''; R.s={tur:'',marka:'',aractipi:'',yil:'',garanti:'',kapsam:'',bolgeler:[],kullanim:'',butce:''};
-    document.getElementById('rm-chat').innerHTML='';
-    adim_tur();
-  }
-}
-
 function adim_tur(){
   setStep(1,'Tür');
   setTimeout(()=>{
@@ -3303,6 +3184,7 @@ const URUNLER = {
       SERAMIK.length = 0;
       veri.SERAMIK.forEach(function(s){ SERAMIK.push(s); });
     }
+    console.log('Autonax: Admin fiyatları yüklendi');
   } catch(e) {
     console.warn('Autonax storage okuma hatası:', e);
   }
@@ -4221,7 +4103,7 @@ function mkModalAc(markaIdx) {
   var mkler = sa.anaSayfa && sa.anaSayfa.markaKartlari;
   if(!mkler) {
     // localStorage'dan dene
-    try { var raw=localStorage.getItem('autonax_site_v1'); if(raw){var v=JSON.parse(raw); mkler=v.anaSayfa&&v.anaSayfa.markaKartlari;} } catch(e){console.error('Autonax:',e)}
+    try { var raw=localStorage.getItem('autonax_site_v1'); if(raw){var v=JSON.parse(raw); mkler=v.anaSayfa&&v.anaSayfa.markaKartlari;} } catch(e){}
   }
   if(!mkler || !mkler[markaIdx]) return;
   var m = mkler[markaIdx];
@@ -4589,12 +4471,12 @@ document.addEventListener('DOMContentLoaded',()=>{
         if(veri.URUNLER){
           var liste=Object.keys(veri.URUNLER).map(function(k){
             var u=veri.URUNLER[k];
-            return {id:k,isim:u.isim,kat:u.kat||'ppf',alt_kat:u.altKat||'',garanti:u.garanti,full_fiyat:u.full,on3_fiyat:u.on3,kaput_fiyat:u.kaput,tutar:u.tutar,rozet:u.rozet,aciklama:u.aciklama,resim:u.resim||null};
+            return {id:k,isim:u.isim,kat:u.kat||'ppf',alt_kat:u.altKat||'',garanti:u.garanti,full_fiyat:u.full,on3_fiyat:u.on3,kaput_fiyat:u.kaput,tutar:u.tutar,rozet:u.rozet,aciklama:u.aciklama};
           });
           apiUrunleriIsle(liste);
         }
       }
-    }catch(e){console.error('Autonax:',e)}
+    }catch(e){}
   });
   // Ürün kartlarına detay tıklaması ekle
   document.querySelectorAll('.svc').forEach(function(kart){

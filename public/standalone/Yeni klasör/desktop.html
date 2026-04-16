@@ -2901,6 +2901,119 @@ function setStep(n, lbl){
 /* ════════════════════════════════
    ADIM 1 — KORUMA TÜRÜ
 ════════════════════════════════ */
+
+/* ════ ROBOT — SEÇİM YÖNETİCİSİ ════ */
+function handleSec(val){
+  const step = R.step;
+  const akis = R.akis;
+
+  // ADIM 1 — TÜR SEÇİMİ
+  if(step===1){
+    R.akis = val; // komple, bolgesel, seramik, kombo
+    R.s.tur = val;
+    setTimeout(()=>adim_marka(), 300);
+    return;
+  }
+
+  // ADIM 2 — MARKA
+  if(step===2){
+    R.s.marka = val;
+    setTimeout(()=>adim_aractipi(), 300);
+    return;
+  }
+
+  // ADIM 3 — ARAÇ TİPİ
+  if(step===3){
+    R.s.aractipi = val;
+    // Seramik için bölge seçimi yok, direkt garanti
+    setTimeout(()=>adim_garanti(), 300);
+    return;
+  }
+
+  // ADIM 4 — GARANTİ
+  if(step===4){
+    R.s.garanti = val;
+    // Bölgesel için bölge seçimi, diğerleri bütçeye geç
+    if(R.akis==='bolgesel'){
+      setTimeout(()=>adim_kapsam_bolgesel(), 300);
+    } else {
+      setTimeout(()=>adim_butce(), 300);
+    }
+    return;
+  }
+
+  // ADIM 5 — BÜTÇE (komple/seramik/kombo)
+  if(step===5){
+    R.s.butce = val;
+    setTimeout(()=>adim_oneri(), 300);
+    return;
+  }
+
+  // ADIM 7 — SON SEÇİM (randevu/bilgi/yeniden)
+  if(step===7){
+    handleSonSec(val);
+    return;
+  }
+}
+
+
+/* ════ ROBOT — ÖNERİ SONUCU ════ */
+function adim_oneri(){
+  setStep(6,'Öneri');
+  showTyping();
+  setTimeout(()=>{
+    hideTyping();
+
+    // Akışa ve seçimlere göre ürün öner
+    var oneri = [];
+    if(R.akis==='komple' || R.akis==='kombo'){
+      if(R.s.garanti<=4) oneri=[{id:'CS190', label:'CS190 EKO', fiyat:'₺45.000'}];
+      else if(R.s.garanti<=6) oneri=[{id:'S75', label:'S75', fiyat:'₺55.000'}];
+      else if(R.s.garanti<=8) oneri=[{id:'N7', label:'N7', fiyat:'₺65.000'}];
+      else if(R.s.garanti<=10) oneri=[{id:'N8', label:'N8', fiyat:'₺70.000'}];
+      else oneri=[{id:'N9', label:'N9', fiyat:'₺90.000'}];
+    } else if(R.akis==='seramik'){
+      oneri=[{id:'seramik_'+R.s.garanti, label:'Nano Seramik '+R.s.garanti+' Yıl', fiyat:'₺'+(R.s.garanti<=2?'12.000':R.s.garanti<=4?'18.000':'25.000')}];
+    } else {
+      oneri=[{id:'N8', label:'N8 Bölgesel', fiyat:'Fiyat için arayın'}];
+    }
+
+    var urun = oneri[0];
+    var msg = `🎉 <b>${R.s.marka} ${R.s.aractipi}</b> aracınız için en uygun öneri hazır!<br><br>`
+      +`<div style="background:linear-gradient(135deg,#1a1a1a,#2d0a0a);border-radius:12px;padding:16px;margin:8px 0">`
+      +`<div style="color:var(--r);font-weight:700;font-size:16px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${urun.label}</div>`
+      +`<div style="color:#aaa;font-size:12px;margin:4px 0">${R.s.garanti} Yıl Garanti · ${R.s.aractipi}</div>`
+      +`<div style="color:#fff;font-weight:700;font-size:18px;margin-top:8px">${urun.fiyat}</div>`
+      +`</div>`
+      +`<br>Randevu almak ister misiniz?`;
+
+    addMsg('bot', msg, [
+      {icon:'📅', label:'Randevu Al', val:'randevu'},
+      {icon:'💬', label:'Bilgi Al', val:'bilgi'},
+      {icon:'🔄', label:'Yeniden Başla', val:'yeniden'},
+    ]);
+    R.step = 7;
+  }, 1000);
+}
+
+/* ADIM 7 — Son seçim */
+function handleSonSec(val){
+  if(val==='randevu'){
+    closeRobot();
+    var urunId = R.s.garanti<=4?'CS190':R.s.garanti<=6?'S75':R.s.garanti<=8?'N7':R.s.garanti<=10?'N8':'N9';
+    if(R.akis==='bolgesel'||R.akis==='seramik') urunId = null;
+    if(urunId && typeof urunDetayAc==='function') urunDetayAc(urunId,'full');
+    else openSepet();
+  } else if(val==='bilgi'){
+    addMsg('bot','Size en kısa sürede ulaşacağız! 📞<br>Ya da hemen aramak için: <a href="tel:08503052055" style="color:var(--r);font-weight:700">0850 305 20 55</a>');
+  } else if(val==='yeniden'){
+    // Robotu sıfırla
+    R.step=0; R.akis=''; R.s={tur:'',marka:'',aractipi:'',yil:'',garanti:'',kapsam:'',bolgeler:[],kullanim:'',butce:''};
+    document.getElementById('rm-chat').innerHTML='';
+    adim_tur();
+  }
+}
+
 function adim_tur(){
   setStep(1,'Tür');
   setTimeout(()=>{

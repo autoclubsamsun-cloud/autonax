@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
   <link rel="icon" type="image/png" href="/uploads/logo/favicon.png">
   <link rel="shortcut icon" type="image/png" href="/uploads/logo/favicon.png">
   <link rel="apple-touch-icon" href="/uploads/logo/favicon.png">
@@ -1286,7 +1286,6 @@ svg{display:block;flex-shrink:0}
   .udm-header{height:160px;padding:16px}
 }
 </style>
-<script>window.onerror=function(msg,url,line,col,err){console.error("Autonax Global Error:",msg,"at",url+":"+line+":"+col);return false;};</script>
 </head>
 <body>
 
@@ -2562,7 +2561,7 @@ function dinamikKartEkle(u){
 
   // Kart HTML'i
   var resimHtml = '';
-  if(u.resim && u.resim.startsWith('/')){
+  if(u.resim && (u.resim.startsWith('/') || u.resim.startsWith('data:image'))){
     resimHtml = '<img src="'+u.resim+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45;border-radius:inherit;pointer-events:none" class="urun-resim" alt="'+u.id+'">';
   }
   var kartHtml = '<div class="svc" data-dinamik-id="'+u.id+'">'+
@@ -2618,6 +2617,7 @@ function dinamikKartEkle(u){
     if(btn) btn.addEventListener('click',function(){
       SEPET.add({id:u.id+'_'+Date.now(),isim:u.isim,aciklama:aciklama,fiyat:fiyat,fiyatStr:fiyatStr});
     });
+    console.log('Autonax: Yeni ürün kartı eklendi —', u.id, u.isim);
   }
 }
 
@@ -2781,7 +2781,7 @@ function fiyatKartlariniYenile(){
       var bdgEl=svc.querySelector('.svc-bdg');
       if(bdgEl && u.rozet) bdgEl.textContent=u.rozet;
       // Resim
-      if(u.resim && u.resim.startsWith('/')){
+      if(u.resim && (u.resim.startsWith('/') || u.resim.startsWith('data:image'))){
         var svcImg=svc.querySelector('.svc-img');
         if(svcImg){
           svcImg.style.cssText+='position:relative;overflow:hidden';
@@ -3303,6 +3303,7 @@ const URUNLER = {
       SERAMIK.length = 0;
       veri.SERAMIK.forEach(function(s){ SERAMIK.push(s); });
     }
+    console.log('Autonax: Admin fiyatları yüklendi');
   } catch(e) {
     console.warn('Autonax storage okuma hatası:', e);
   }
@@ -4221,7 +4222,7 @@ function mkModalAc(markaIdx) {
   var mkler = sa.anaSayfa && sa.anaSayfa.markaKartlari;
   if(!mkler) {
     // localStorage'dan dene
-    try { var raw=localStorage.getItem('autonax_site_v1'); if(raw){var v=JSON.parse(raw); mkler=v.anaSayfa&&v.anaSayfa.markaKartlari;} } catch(e){console.error('Autonax:',e)}
+    try { var raw=localStorage.getItem('autonax_site_v1'); if(raw){var v=JSON.parse(raw); mkler=v.anaSayfa&&v.anaSayfa.markaKartlari;} } catch(e){}
   }
   if(!mkler || !mkler[markaIdx]) return;
   var m = mkler[markaIdx];
@@ -4465,7 +4466,7 @@ function urunDetayAc(urunId, tip) {
   // Header
   var bg = document.getElementById('udm-bg');
   var img = document.getElementById('udm-img');
-  if (u.resim && u.resim.startsWith('/')) {
+  if (u.resim && (u.resim.startsWith('/') || u.resim.startsWith('data:image'))) {
     img.src = u.resim; img.style.display = 'block';
   } else {
     img.style.display = 'none';
@@ -4594,7 +4595,7 @@ document.addEventListener('DOMContentLoaded',()=>{
           apiUrunleriIsle(liste);
         }
       }
-    }catch(e){console.error('Autonax:',e)}
+    }catch(e){}
   });
   // Ürün kartlarına detay tıklaması ekle
   document.querySelectorAll('.svc').forEach(function(kart){
