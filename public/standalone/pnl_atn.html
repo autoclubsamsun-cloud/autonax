@@ -5139,47 +5139,79 @@ function urunResimYukle(e,id,tip,idx){
   var file=e.target.files[0]; if(!file) return;
   // Tip kontrolü
   if(!file.type.startsWith('image/')){ toast('⚠️ Sadece resim dosyası yüklenebilir!','red'); return; }
-  // Boyut kontrolü (max 2MB)
-  if(file.size > 2*1024*1024){ toast('⚠️ Resim 2MB\'den küçük olmalı!','red'); return; }
+  // Boyut kontrolü (max 5MB orijinal)
+  if(file.size > 5*1024*1024){ toast('⚠️ Resim 5MB\'den küçük olmalı!','red'); return; }
 
   var kart = e.target.closest('.urun-kart');
   var header = kart ? kart.querySelector('.urun-kart-header') : null;
   
   // Yükleniyor göster
-  toast('⏳ Resim yükleniyor...','blue');
+  toast('⏳ Resim optimize ediliyor...','blue');
 
-  var fd = new FormData();
-  fd.append('file', file);
-  fd.append('klasor', 'urunler');
+  // Resmi canvas ile küçült ve optimize et
+  resimOptimizeEt(file, 600, 400, 0.82, function(optimizedBlob, optimizedFileName){
+    var fd = new FormData();
+    fd.append('file', optimizedBlob, optimizedFileName);
+    fd.append('klasor', 'urunler');
 
-  fetch('/api/resim', {method:'POST', body:fd})
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    if(!d.success){ toast('❌ '+d.error,'red'); return; }
-    var url = d.url; // örn: /uploads/urunler/1234_foto.jpg
-    // Ürün objesine kaydet
-    var u = tip==='ppf' ? URUNLER[id] : [].concat(SERAMIK,DIGER_HIZMETLER)[idx||0];
-    if(u) u.resim = url;
-    // Header arka planını güncelle
-    if(header){
-      var img = header.querySelector('img');
-      if(img){ img.src=url; }
-      else {
-        var i2=document.createElement('img');
-        i2.src=url;
-        i2.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.35;border-radius:inherit';
-        header.style.position='relative';
-        header.insertBefore(i2,header.firstChild);
+    fetch('/api/resim', {method:'POST', body:fd})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d.success){ toast('❌ '+d.error,'red'); return; }
+      var url = d.url;
+      // Ürün objesine kaydet
+      var u = tip==='ppf' ? URUNLER[id] : [].concat(SERAMIK,DIGER_HIZMETLER)[idx||0];
+      if(u) u.resim = url;
+      // Header arka planını güncelle
+      if(header){
+        var img = header.querySelector('img');
+        if(img){ img.src=url; }
+        else {
+          var i2=document.createElement('img');
+          i2.src=url;
+          i2.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.35;border-radius:inherit';
+          header.style.position='relative';
+          header.insertBefore(i2,header.firstChild);
+        }
       }
-    }
-    // DB'ye kaydet
-    storageKaydet();
-    urunleriApiSenkronEt();
-    toast('✅ Resim yüklendi! — '+d.fileName,'green');
-  })
-  .catch(function(err){
-    toast('❌ Yükleme hatası: '+err.message,'red');
+      // DB'ye kaydet
+      storageKaydet();
+      urunleriApiSenkronEt();
+      toast('✅ Resim yüklendi! — '+d.fileName,'green');
+    })
+    .catch(function(err){
+      toast('❌ Yükleme hatası: '+err.message,'red');
+    });
   });
+}
+
+/* ── Resim Optimize (Canvas ile küçült) ── */
+function resimOptimizeEt(file, maxW, maxH, quality, callback){
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    var img = new Image();
+    img.onload = function(){
+      var w = img.width, h = img.height;
+      // Oran koruyarak küçült
+      if(w > maxW || h > maxH){
+        var ratio = Math.min(maxW/w, maxH/h);
+        w = Math.round(w * ratio);
+        h = Math.round(h * ratio);
+      }
+      var canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      canvas.toBlob(function(blob){
+        var ext = file.name.split('.').pop().toLowerCase();
+        var safeName = file.name.replace(/\.[^.]+$/, '') + '_opt.' + (ext==='png'?'png':'jpg');
+        callback(blob, safeName);
+      }, file.type === 'image/png' ? 'image/png' : 'image/jpeg', quality);
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 function urunDetayGor(btn){
