@@ -2561,7 +2561,7 @@ function dinamikKartEkle(u){
 
   // Kart HTML'i
   var resimHtml = '';
-  if(u.resim && u.resim.startsWith('/')){
+  if(u.resim && (u.resim.startsWith('/') || u.resim.startsWith('data:image'))){
     resimHtml = '<img src="'+u.resim+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45;border-radius:inherit;pointer-events:none" class="urun-resim" alt="'+u.id+'">';
   }
   var kartHtml = '<div class="svc" data-dinamik-id="'+u.id+'">'+
@@ -2781,7 +2781,7 @@ function fiyatKartlariniYenile(){
       var bdgEl=svc.querySelector('.svc-bdg');
       if(bdgEl && u.rozet) bdgEl.textContent=u.rozet;
       // Resim
-      if(u.resim && u.resim.startsWith('/')){
+      if(u.resim && (u.resim.startsWith('/') || u.resim.startsWith('data:image'))){
         var svcImg=svc.querySelector('.svc-img');
         if(svcImg){
           svcImg.style.cssText+='position:relative;overflow:hidden';
@@ -4466,7 +4466,7 @@ function urunDetayAc(urunId, tip) {
   // Header
   var bg = document.getElementById('udm-bg');
   var img = document.getElementById('udm-img');
-  if (u.resim && u.resim.startsWith('/')) {
+  if (u.resim && (u.resim.startsWith('/') || u.resim.startsWith('data:image'))) {
     img.src = u.resim; img.style.display = 'block';
   } else {
     img.style.display = 'none';
