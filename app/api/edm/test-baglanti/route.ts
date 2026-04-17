@@ -60,9 +60,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Şifre frontend'de "b64:XXX" formatında maskeli gelebilir — backend'de çöz
+    let gercekSifre = body.sifre;
+    if (gercekSifre.startsWith('b64:')) {
+      try {
+        gercekSifre = Buffer.from(gercekSifre.slice(4), 'base64').toString('utf-8');
+      } catch {
+        // Decode başarısızsa olduğu gibi kullan
+      }
+    }
+
     const sonuc = await checkUser({
       kullaniciAdi: body.kullaniciAdi,
-      sifre: body.sifre,
+      sifre: gercekSifre,
       testMod: !!body.testMod,
     });
 

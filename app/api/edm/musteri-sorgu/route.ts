@@ -70,9 +70,19 @@ export async function POST(req: NextRequest) {
         </INPUT>
       </con:checkGIBUserRequest>`;
 
+    // b64: prefix'li şifreyi çöz
+    let gercekSifre = body.sifre;
+    if (gercekSifre.startsWith('b64:')) {
+      try {
+        gercekSifre = Buffer.from(gercekSifre.slice(4), 'base64').toString('utf-8');
+      } catch {
+        // Decode başarısızsa olduğu gibi kullan
+      }
+    }
+
     const sonuc = await soapCagri('checkGIBUser', soapBody, {
       kullaniciAdi: body.kullaniciAdi,
-      sifre: body.sifre,
+      sifre: gercekSifre,
       testMod: !!body.testMod,
     });
 
