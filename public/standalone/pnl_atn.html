@@ -388,6 +388,13 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 
   /* Ödeme modal */
   #odeme-modal-ovl > div{width:100% !important;max-width:100% !important}
+
+  /* Randevu tablosu — İşlem butonları mobilde küçült */
+  #rdv-tablo .ab{padding:3px 6px;font-size:9px}
+  #rdv-tablo button{font-size:10px !important;padding:4px 6px !important}
+
+  /* Randevu filtre barı — mobilde daha kompakt */
+  #rdv-filtre-bar select{font-size:10px;padding:4px 6px}
 }
 
 @media(max-width:400px){
@@ -1750,6 +1757,13 @@ function doTakvim(){
 function doDurumFiltre(d){
   _rdvDurum=d;
   _borcluFiltre=false;
+  // Tümü seçildiğinde ay/gün filtrelerini sıfırla
+  if(d==='hepsi'){
+    var ayEl=document.getElementById('filtre-ay');
+    var gunEl=document.getElementById('filtre-gun');
+    if(ayEl) ayEl.value='';
+    if(gunEl) gunEl.value='';
+  }
   var btn=document.getElementById('btn-borc');
   if(btn){btn.style.background='';btn.style.color='';}
   var btnB=document.getElementById('btn-bugun');
