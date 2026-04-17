@@ -82,7 +82,15 @@ export async function soapCagri(
   const endpoint = auth.testMod ? EDM_ENDPOINTS.test : EDM_ENDPOINTS.canli;
   const envelope = soapEnvelopeOlustur(bodyXml);
 
+  console.log('[EDM SOAP] ===== İstek başlıyor =====');
+  console.log('[EDM SOAP] Endpoint:', endpoint);
+  console.log('[EDM SOAP] SOAPAction:', `"${EDM_NAMESPACE}/IEFaturaEDM/${soapAction}"`);
+  console.log('[EDM SOAP] Operasyon:', soapAction);
+  console.log('[EDM SOAP] testMod:', auth.testMod);
+  console.log('[EDM SOAP] Envelope ilk 500 char:', envelope.slice(0, 500));
+
   try {
+    const baslangic = Date.now();
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
@@ -91,15 +99,21 @@ export async function soapCagri(
       },
       body: envelope,
     });
+    const sure = Date.now() - baslangic;
+
+    console.log('[EDM SOAP] Yanıt geldi, HTTP status:', response.status, '- süre:', sure, 'ms');
 
     const xmlYanit = await response.text();
+    console.log('[EDM SOAP] Yanıt gövdesi ilk 500 char:', xmlYanit.slice(0, 500));
 
     const fault = soapFaultKontrol(xmlYanit);
     if (fault) {
+      console.log('[EDM SOAP] SOAP Fault:', fault);
       return { basarili: false, hata: fault, xml: xmlYanit };
     }
 
     if (!response.ok) {
+      console.log('[EDM SOAP] HTTP başarısız:', response.status, response.statusText);
       return {
         basarili: false,
         hata: {
@@ -110,12 +124,33 @@ export async function soapCagri(
       };
     }
 
+    console.log('[EDM SOAP] BAŞARILI');
     return { basarili: true, xml: xmlYanit };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
+    const stack = err instanceof Error ? err.stack : '';
+    const cause = err instanceof Error && 'cause' in err ? (err as any).cause : undefined;
+
+    console.error('[EDM SOAP] ===== HATA =====');
+    console.error('[EDM SOAP] Hata mesajı:', msg);
+    console.error('[EDM SOAP] Hata stack:', stack);
+    console.error('[EDM SOAP] Hata cause:', cause);
+    console.error('[EDM SOAP] Endpoint:', endpoint);
+
+    // cause nesnesi Node.js fetch hatalarında TLS/DNS detayları içerir
+    let detayliMesaj = msg;
+    if (cause && typeof cause === 'object') {
+      const c = cause as any;
+      if (c.code) detayliMesaj += ` [code=${c.code}]`;
+      if (c.errno) detayliMesaj += ` [errno=${c.errno}]`;
+      if (c.hostname) detayliMesaj += ` [host=${c.hostname}]`;
+      if (c.syscall) detayliMesaj += ` [syscall=${c.syscall}]`;
+      if (c.reason) detayliMesaj += ` [reason=${c.reason}]`;
+    }
+
     return {
       basarili: false,
-      hata: { kod: 'NETWORK', mesaj: msg },
+      hata: { kod: 'NETWORK', mesaj: detayliMesaj },
     };
   }
 }
