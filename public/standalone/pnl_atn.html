@@ -3651,6 +3651,41 @@ function faturaKes(){
     edmDurum:window.FAT_EDM_DURUM||'MANUEL'
   };
 
+  // EDM CANLI GÖNDERİM — aktif + canlı mod + kullanıcı adı varsa şablonla birlikte gönder
+  if(EDM_AYAR.aktif && !EDM_AYAR.testMod && EDM_AYAR.kullaniciAdi){
+    var xsltObj = (faturaTipi==='EFATURA') ? EDM_AYAR.xsltEfatura : EDM_AYAR.xsltEarsiv;
+    var xsltIcerik = (xsltObj && xsltObj.icerik) ? xsltObj.icerik : '';
+    var xsltIsim   = (xsltObj && xsltObj.isim)   ? xsltObj.isim   : '';
+
+    fatura.xsltSablon = xsltIsim;
+
+    var payload = {
+      kullaniciAdi: EDM_AYAR.kullaniciAdi,
+      sifre: EDM_AYAR.sifre,
+      gondericVknTckn: EDM_AYAR.vknTckn,
+      gondericEtiketi: EDM_AYAR.gondericEtiketi,
+      fatura: fatura,
+      xslt: { isim: xsltIsim, icerik: xsltIcerik }
+    };
+
+    fetch('/api/edm/fatura-kes',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    }).then(function(r){ return r.ok ? r.json() : Promise.reject(new Error('HTTP '+r.status)); })
+      .then(function(d){
+        if(d && d.faturaNo){ fatura.edmFaturaNo = d.faturaNo; }
+        if(d && d.uuid){ fatura.edmUuid = d.uuid; }
+        fatura.edmGonderim = 'BASARILI';
+        faturaKaydet();
+        if(typeof faturaSayfasiYukle==='function') faturaSayfasiYukle();
+      }).catch(function(e){
+        fatura.edmGonderim = 'HATA: '+(e.message||e);
+        faturaKaydet();
+        console.error('EDM gönderim hatası:', e);
+      });
+  }
+
   FATURALAR.unshift(fatura);
   faturaKaydet();
 
@@ -3675,6 +3710,64 @@ function faturaIptal(i){
 
 function faturaPDFGoster(i){
   var f=FATURALAR[i];if(!f)return;
+
+  // XSLT ŞABLONU YÜKLÜ İSE ONU KULLAN (placeholder replace)
+  var xsltObj = (f.faturaTipi==='EFATURA') ? EDM_AYAR.xsltEfatura : EDM_AYAR.xsltEarsiv;
+  if(xsltObj && xsltObj.icerik){
+    var tpl = xsltObj.icerik;
+
+    // Kalemleri HTML tablosuna çevir (şablonda {{kalemler}} varsa)
+    var kalemHTML = '';
+    if(f.kalemler && f.kalemler.length){
+      kalemHTML = '<table style="width:100%;border-collapse:collapse;margin:10px 0"><thead><tr style="background:#f3f4f6"><th style="text-align:left;padding:6px;border:1px solid #e5e7eb">Açıklama</th><th style="padding:6px;border:1px solid #e5e7eb">Adet</th><th style="text-align:right;padding:6px;border:1px solid #e5e7eb">B.Fiyat</th><th style="padding:6px;border:1px solid #e5e7eb">KDV%</th><th style="text-align:right;padding:6px;border:1px solid #e5e7eb">Toplam</th></tr></thead><tbody>';
+      f.kalemler.forEach(function(k){
+        var top=k.adet*k.fiyat*(1+k.kdv/100);
+        kalemHTML += '<tr><td style="padding:6px;border:1px solid #e5e7eb">'+(k.ad||'')+'</td><td style="text-align:center;padding:6px;border:1px solid #e5e7eb">'+k.adet+'</td><td style="text-align:right;padding:6px;border:1px solid #e5e7eb">₺'+Number(k.fiyat).toLocaleString('tr-TR')+'</td><td style="text-align:center;padding:6px;border:1px solid #e5e7eb">%'+k.kdv+'</td><td style="text-align:right;padding:6px;border:1px solid #e5e7eb">₺'+top.toLocaleString('tr-TR',{maximumFractionDigits:2})+'</td></tr>';
+      });
+      kalemHTML += '</tbody></table>';
+    }
+
+    // Tüm placeholder'ları değiştir
+    var repl = {
+      '{{faturaNo}}': f.faturaNo||'',
+      '{{faturaTipi}}': f.faturaTipi||'',
+      '{{tarih}}': f.tarih||'',
+      '{{musteri}}': f.musteri||'',
+      '{{musteriTipi}}': f.musteriTipi||'',
+      '{{vknTckn}}': f.vknTckn||'',
+      '{{email}}': f.email||'',
+      '{{telefon}}': f.telefon||'',
+      '{{adres}}': f.adres||'',
+      '{{il}}': f.il||'',
+      '{{ilce}}': f.ilce||'',
+      '{{vergiDairesi}}': f.vergiDairesi||'',
+      '{{kdvsizTutar}}': '₺'+(f.kdvsizTutar||0).toLocaleString('tr-TR'),
+      '{{kdvTutar}}': '₺'+(f.kdvTutar||0).toLocaleString('tr-TR'),
+      '{{kdvOrani}}': '%'+(f.kdvOrani||0),
+      '{{toplamTutar}}': '₺'+(f.toplamTutar||0).toLocaleString('tr-TR'),
+      '{{durum}}': f.durum||'',
+      '{{not}}': f.not||'',
+      '{{odeme}}': f.odeme||'',
+      '{{kalemler}}': kalemHTML,
+      '{{gondericVkn}}': EDM_AYAR.vknTckn||'',
+      '{{gondericEtiketi}}': EDM_AYAR.gondericEtiketi||''
+    };
+    Object.keys(repl).forEach(function(k){
+      tpl = tpl.split(k).join(repl[k]);
+    });
+
+    // Print butonu ekle (şablonda yoksa)
+    if(tpl.indexOf('window.print')===-1){
+      tpl = tpl.replace(/<\/body>/i, '<div style="text-align:center;margin-top:20px"><button onclick="window.print()" style="padding:8px 24px;background:#B01C2E;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px">🖨️ Yazdır / PDF</button></div></body>');
+    }
+
+    var wx=window.open('','_blank','width=700,height=800');
+    wx.document.write(tpl);
+    wx.document.close();
+    return;
+  }
+
+  // XSLT YOKSA — varsayılan basit şablon (mevcut tasarım)
   var html='<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>Fatura '+f.faturaNo+'</title>'
     +'<style>body{font-family:Outfit,Arial,sans-serif;max-width:500px;margin:40px auto;padding:0 20px;color:#111}'
     +'.logo{font-size:28px;font-weight:900;color:#B01C2E;letter-spacing:4px;text-align:center;margin-bottom:4px}'
