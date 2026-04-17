@@ -3,7 +3,7 @@
  *
  * Doğru endpoint'ler:
  *   Test:  https://test.edmbilisim.com.tr/EFaturaEDM21ea/EFaturaEDM.svc
- *   Canlı: https://efatura.edmbilisim.com.tr/EFaturaEDM21ea/EFaturaEDM.svc
+ *   Canlı: https://interaktif.edmbilisim.com.tr/EFaturaEDM/EFaturaEDM.svc
  *
  * Akış:
  *   1. login(kullaniciAdi, sifre) → SessionID döner
@@ -89,8 +89,9 @@ export async function soapCagri(
 
   try {
     const baslangic = Date.now();
-    // soapAction parametresi artık tam path (ör: "IEFaturaEDM/Login")
-    const soapActionUrl = `${EDM_NAMESPACE}${soapAction}`;
+    // EDM WSDL'e göre SOAPAction = operasyon adı + "Request" (tırnak içinde)
+    // Örn: "LoginRequest", "SendInvoiceRequest", "ArchiveInvoiceRequest"
+    const soapActionUrl = soapAction;
     console.log('[EDM SOAP] Tam SOAPAction URL:', soapActionUrl);
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -159,9 +160,8 @@ export async function soapCagri(
 /**
  * LOGIN — kullanıcı/şifre ile giriş yap, SessionID al
  *
- * EDM Login metodu REQUEST_HEADER ile USER_NAME/PASSWORD bekler.
- * ActionNotSupported hatasıyla karşılaştığımız için 4 farklı SOAPAction
- * formatını sırayla deniyoruz — ilk geçeni kullanırız.
+ * WSDL'den öğrendiğimiz üzere SOAPAction = "LoginRequest" (tırnaklı literal)
+ * Element adı da LoginRequest, namespace tempuri.org
  */
 export async function login(auth: EdmAuth): Promise<SoapSonuc> {
   const txnId = 'autonax-' + Date.now();
@@ -181,42 +181,10 @@ export async function login(auth: EdmAuth): Promise<SoapSonuc> {
       <PASSWORD xmlns="">${xmlEsc(auth.sifre)}</PASSWORD>
     </LoginRequest>`;
 
-  // Olası SOAPAction formatlarını sırayla dene
-  const actionVaryantlari = [
-    'IEFaturaEDM/Login',
-    'EFaturaEDMPort/Login',
-    'IEFaturaEDMPortType/Login',
-    'EFaturaEDM/Login',
-    'Login',
-  ];
+  const sonuc = await soapCagri('LoginRequest', body, auth);
+  if (!sonuc.basarili) return sonuc;
 
-  let sonSonuc: SoapSonuc = {
-    basarili: false,
-    hata: { kod: 'NO_ACTION', mesaj: 'Hiçbir SOAPAction formatı denenmedi' },
-  };
-
-  for (const varyant of actionVaryantlari) {
-    console.log('[EDM SOAP] SOAPAction varyantı deneniyor:', varyant);
-    const sonuc = await soapCagri(varyant, body, auth);
-    sonSonuc = sonuc;
-
-    // ActionNotSupported hatasıysa bir sonraki varyantı dene
-    const actionNotSupported =
-      sonuc.hata?.kod?.includes('ActionNotSupported') ||
-      sonuc.hata?.mesaj?.includes('ActionNotSupported') ||
-      sonuc.hata?.mesaj?.includes('ContractFilter');
-
-    if (!actionNotSupported) {
-      console.log('[EDM SOAP] Kabul edilen varyant:', varyant);
-      break; // Bu varyant sunucu tarafından tanındı (başarılı veya farklı bir hata)
-    }
-
-    console.log('[EDM SOAP] ActionNotSupported, bir sonraki varyant deneniyor...');
-  }
-
-  if (!sonSonuc.basarili) return sonSonuc;
-
-  const xml = sonSonuc.xml ?? '';
+  const xml = sonuc.xml ?? '';
   const sessionId =
     tagCek(xml, 'SESSION_ID') ||
     tagCek(xml, 'SessionId') ||
