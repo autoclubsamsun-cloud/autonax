@@ -11,6 +11,9 @@ export interface CheckUserSonuc {
   kod?: string;
   firma?: string | null;
   xml?: string;
+  gonderilenEnvelope?: string;
+  endpoint?: string;
+  soapAction?: string;
 }
 
 export interface FaturaGonderimSonuc {
@@ -35,6 +38,10 @@ export async function checkUser(auth: EdmAuth): Promise<CheckUserSonuc> {
       basarili: false,
       mesaj: sonuc.hata?.mesaj ?? 'Bilinmeyen hata',
       kod: sonuc.hata?.kod,
+      xml: sonuc.xml,
+      gonderilenEnvelope: sonuc.gonderilenEnvelope,
+      endpoint: sonuc.endpoint,
+      soapAction: sonuc.soapAction,
     };
   }
 
@@ -43,6 +50,9 @@ export async function checkUser(auth: EdmAuth): Promise<CheckUserSonuc> {
     mesaj: 'Bağlantı başarılı, kullanıcı doğrulandı. (SessionID alındı)',
     firma: null,
     xml: sonuc.xml,
+    gonderilenEnvelope: sonuc.gonderilenEnvelope,
+    endpoint: sonuc.endpoint,
+    soapAction: sonuc.soapAction,
   };
 }
 

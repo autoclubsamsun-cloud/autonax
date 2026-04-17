@@ -76,14 +76,23 @@ export async function POST(req: NextRequest) {
       testMod: !!body.testMod,
     });
 
-    const yanit: TestBaglantiYaniti = {
+    const yanit: TestBaglantiYaniti & { envelope?: string; xml?: string } = {
       basarili: sonuc.basarili,
       mesaj: sonuc.mesaj,
       firma: sonuc.firma,
       kod: sonuc.kod,
+      envelope: (sonuc as any).xml ? undefined : undefined, // gercek envelope alta eklenecek
+      xml: sonuc.xml,
     };
 
-    return NextResponse.json<ApiResponse<TestBaglantiYaniti>>({
+    // Debug: Login sonucu SoapSonuc'dan envelope/endpoint/soapAction gelir
+    // checkUser'dan gelmiyor, direkt login'den alalım
+    const soapSonuc = sonuc as any;
+    if (soapSonuc.gonderilenEnvelope) {
+      yanit.envelope = soapSonuc.gonderilenEnvelope;
+    }
+
+    return NextResponse.json<ApiResponse<typeof yanit>>({
       success: true,
       data: yanit,
     });

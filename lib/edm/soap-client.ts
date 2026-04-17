@@ -26,6 +26,9 @@ export interface SoapSonuc {
   xml?: string;
   hata?: SoapHata;
   sessionId?: string;
+  gonderilenEnvelope?: string;
+  endpoint?: string;
+  soapAction?: string;
 }
 
 const EDM_ENDPOINTS = {
@@ -108,10 +111,16 @@ export async function soapCagri(
     const xmlYanit = await response.text();
     console.log('[EDM SOAP] Yanıt gövdesi ilk 500 char:', xmlYanit.slice(0, 500));
 
+    const debugInfo = {
+      gonderilenEnvelope: envelope,
+      endpoint,
+      soapAction: soapActionUrl,
+    };
+
     const fault = soapFaultKontrol(xmlYanit);
     if (fault) {
       console.log('[EDM SOAP] SOAP Fault:', fault);
-      return { basarili: false, hata: fault, xml: xmlYanit };
+      return { basarili: false, hata: fault, xml: xmlYanit, ...debugInfo };
     }
 
     if (!response.ok) {
@@ -123,11 +132,12 @@ export async function soapCagri(
           mesaj: xmlYanit.slice(0, 500) || response.statusText,
         },
         xml: xmlYanit,
+        ...debugInfo,
       };
     }
 
     console.log('[EDM SOAP] BAŞARILI');
-    return { basarili: true, xml: xmlYanit };
+    return { basarili: true, xml: xmlYanit, ...debugInfo };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     const stack = err instanceof Error ? err.stack : '';
@@ -153,6 +163,8 @@ export async function soapCagri(
     return {
       basarili: false,
       hata: { kod: 'NETWORK', mesaj: detayliMesaj },
+      gonderilenEnvelope: envelope,
+      endpoint,
     };
   }
 }
@@ -197,8 +209,18 @@ export async function login(auth: EdmAuth): Promise<SoapSonuc> {
         mesaj: 'Login başarılı gözüküyor ama SessionID alınamadı. Yanıt: ' + xml.slice(0, 500),
       },
       xml,
+      gonderilenEnvelope: sonuc.gonderilenEnvelope,
+      endpoint: sonuc.endpoint,
+      soapAction: sonuc.soapAction,
     };
   }
 
-  return { basarili: true, sessionId, xml };
+  return {
+    basarili: true,
+    sessionId,
+    xml,
+    gonderilenEnvelope: sonuc.gonderilenEnvelope,
+    endpoint: sonuc.endpoint,
+    soapAction: sonuc.soapAction,
+  };
 }
