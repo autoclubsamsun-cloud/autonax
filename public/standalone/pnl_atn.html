@@ -1248,6 +1248,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
         <button class="siteayar-tab" data-stab="anasayfa">📄 Ana Sayfa</button>
         <button class="siteayar-tab" data-stab="seo">🔍 SEO</button>
         <button class="siteayar-tab" data-stab="sosyal">📱 Sosyal</button>
+        <button class="siteayar-tab" data-stab="footer">🦶 Footer</button>
         <button class="siteayar-tab" data-stab="medya">🗂️ Medya</button>
         <button class="siteayar-tab" data-stab="odeme">💳 Ödeme</button>
         <button class="siteayar-tab" data-stab="fatura">🧾 Fatura</button>
@@ -2609,6 +2610,16 @@ var SITE_AYARLAR={
     tiktokAktif:false,linkedinAktif:false,xAktif:false
   },
   medya:[],
+  footer:{
+    aciklama:'Türkiye\'nin premium PPF kaplama ve seramik araç koruma merkezi. XPEL, 3M ve Llumar yetkili uygulama noktası.',
+    copyright:'© 2025 Autonax — Tüm hakları saklıdır.',
+    sutunlar:[
+      {baslik:'Hizmetler',linkler:['PPF Kaplama','Seramik Kaplama','Cam Filmi','Detailing','Boya Koruma']},
+      {baslik:'Müşteri',linkler:['Garajım','Garanti Belgelerim','Siparişlerim','Faturalarım','Randevu Takip']},
+      {baslik:'Kurumsal',linkler:['Hakkımızda','Blog','SSS','KVKK','İletişim']}
+    ],
+    altLinkler:['KVKK','Çerez Politikası','Kullanım Koşulları']
+  },
   sistem:{yayinModu:'canli',sonGuncelleme:null,taslak:null}
 };
 var SITE_AYAR_KEY='autonax_site_v1';
@@ -6421,7 +6432,7 @@ function saSekmeRender(tab){
       importEl.style.display='';
       importEl.innerHTML=saImportHTML();
       setTimeout(saImportListenerBagla,50);
-      ['admin','genel','gorsel','banner','kampanya','anasayfa','seo','sosyal','medya','odeme','fatura'].forEach(function(t){
+      ['admin','genel','gorsel','banner','kampanya','anasayfa','seo','sosyal','footer','medya','odeme','fatura'].forEach(function(t){
         var e=document.getElementById('stab-'+t);if(e)e.style.display='none';
       });
       return;
@@ -6438,6 +6449,7 @@ function saSekmeRender(tab){
     else if(tab==='anasayfa') el.innerHTML=saAnaSayfaHTML();
     else if(tab==='seo') el.innerHTML=saSeoHTML();
     else if(tab==='sosyal') el.innerHTML=saSosyalHTML();
+    else if(tab==='footer') el.innerHTML=saFooterHTML();
     else if(tab==='medya') el.innerHTML=saMedyaHTML();
     else if(tab==='odeme'){el.innerHTML=saOdemeHTML();setTimeout(saOdemeListenerBagla,50);return;}
     setTimeout(function(){saListenerBagla(tab);},50);
@@ -7401,6 +7413,112 @@ function saSosyalKaydet(){
   siteAyarKaydet('Sosyal Medya');
 }
 
+/* ── FOOTER AYARLARI ── */
+function saFooterHTML(){
+  var ft=SITE_AYARLAR.footer||{};
+  var sutunlar=ft.sutunlar||[];
+  var altLinkler=ft.altLinkler||[];
+
+  var sutunHTML='';
+  sutunlar.forEach(function(s,i){
+    var linklerHTML=(s.linkler||[]).map(function(l,li){
+      return '<div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">'
+        +'<input class="sa-inp" id="ft-sut-'+i+'-lnk-'+li+'" value="'+l+'" style="flex:1">'
+        +'<button onclick="saFooterLinkSil('+i+','+li+')" style="border:none;background:none;color:#dc2626;cursor:pointer;font-size:16px;padding:2px 4px">×</button>'
+        +'</div>';
+    }).join('');
+
+    sutunHTML+='<div style="background:#f9fafb;border:1.5px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:10px">'
+      +'<div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:10px">'
+        +'<div style="flex:1"><div class="sa-lbl">Sütun Başlığı</div>'
+          +'<input class="sa-inp" id="ft-sut-'+i+'-baslik" value="'+(s.baslik||'')+'">'
+        +'</div>'
+        +'<button onclick="saFooterSutunSil('+i+')" style="padding:6px 10px;border:1.5px solid #fee2e2;background:#fff;color:#dc2626;border-radius:7px;font-size:11px;cursor:pointer">🗑️ Sil</button>'
+      +'</div>'
+      +'<div class="sa-lbl">Linkler</div>'
+      +'<div id="ft-sut-'+i+'-linkler">'+linklerHTML+'</div>'
+      +'<button onclick="saFooterLinkEkle('+i+')" style="font-size:11px;color:var(--r);border:1.5px dashed rgba(176,28,46,.3);border-radius:7px;background:rgba(176,28,46,.04);padding:5px 10px;cursor:pointer;width:100%;margin-top:4px">+ Link Ekle</button>'
+    +'</div>';
+  });
+
+  var altHTML=altLinkler.map(function(l,i){
+    return '<div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">'
+      +'<input class="sa-inp" id="ft-alt-'+i+'" value="'+l+'" style="flex:1">'
+      +'<button onclick="saFooterAltSil('+i+')" style="border:none;background:none;color:#dc2626;cursor:pointer;font-size:16px;padding:2px 4px">×</button>'
+      +'</div>';
+  }).join('');
+
+  return '<div class="k"><div class="kh"><div class="kt">🦶 Footer (Alt Bilgi)</div><div class="kd">Ana site alt bilgi alanı</div></div><div class="kb">'
+    +'<div class="sa-lbl">Footer Açıklama Metni</div>'
+    +'<textarea class="sa-inp sa-textarea" id="ft-aciklama" rows="2">'+(ft.aciklama||'')+'</textarea>'
+    +'<div class="sa-lbl" style="margin-top:10px">Copyright</div>'
+    +'<input class="sa-inp" id="ft-copyright" value="'+(ft.copyright||'')+'">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;margin-bottom:8px">'
+      +'<div class="sa-lbl" style="margin:0">Footer Sütunları</div>'
+      +'<button onclick="saFooterSutunEkle()" style="padding:5px 10px;background:var(--r);color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">+ Sütun Ekle</button>'
+    +'</div>'
+    +'<div id="ft-sutunlar">'+sutunHTML+'</div>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;margin-bottom:8px">'
+      +'<div class="sa-lbl" style="margin:0">Alt Satır Linkleri</div>'
+      +'<button onclick="saFooterAltEkle()" style="padding:5px 10px;background:var(--r);color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">+ Link Ekle</button>'
+    +'</div>'
+    +'<div id="ft-alt-linkler">'+altHTML+'</div>'
+  +'</div></div>'
+  +saYayinlaBar('Footer Kaydet','saFooterKaydet()');
+}
+
+function saFooterSutunEkle(){
+  if(!SITE_AYARLAR.footer) SITE_AYARLAR.footer={sutunlar:[],altLinkler:[]};
+  if(!SITE_AYARLAR.footer.sutunlar) SITE_AYARLAR.footer.sutunlar=[];
+  SITE_AYARLAR.footer.sutunlar.push({baslik:'Yeni Sütun',linkler:['Link 1']});
+  saTabSec('footer');
+}
+function saFooterSutunSil(i){
+  if(!confirm('Bu sütunu silmek istediğinize emin misiniz?')) return;
+  SITE_AYARLAR.footer.sutunlar.splice(i,1);
+  saTabSec('footer');
+}
+function saFooterLinkEkle(si){
+  SITE_AYARLAR.footer.sutunlar[si].linkler.push('Yeni Link');
+  saTabSec('footer');
+}
+function saFooterLinkSil(si,li){
+  SITE_AYARLAR.footer.sutunlar[si].linkler.splice(li,1);
+  saTabSec('footer');
+}
+function saFooterAltEkle(){
+  if(!SITE_AYARLAR.footer.altLinkler) SITE_AYARLAR.footer.altLinkler=[];
+  SITE_AYARLAR.footer.altLinkler.push('Yeni Link');
+  saTabSec('footer');
+}
+function saFooterAltSil(i){
+  SITE_AYARLAR.footer.altLinkler.splice(i,1);
+  saTabSec('footer');
+}
+function saFooterKaydet(){
+  var ft=SITE_AYARLAR.footer;
+  ft.aciklama=saG('ft-aciklama')||'';
+  ft.copyright=saG('ft-copyright')||'';
+  (ft.sutunlar||[]).forEach(function(s,i){
+    s.baslik=saG('ft-sut-'+i+'-baslik')||'';
+    s.linkler=[];
+    var cont=document.getElementById('ft-sut-'+i+'-linkler');
+    if(cont){
+      cont.querySelectorAll('input').forEach(function(inp){
+        var v=inp.value.trim(); if(v) s.linkler.push(v);
+      });
+    }
+  });
+  ft.altLinkler=[];
+  var altCont=document.getElementById('ft-alt-linkler');
+  if(altCont){
+    altCont.querySelectorAll('input').forEach(function(inp){
+      var v=inp.value.trim(); if(v) ft.altLinkler.push(v);
+    });
+  }
+  siteAyarKaydet('Footer');
+}
+
 /* MEDYA KUTUPHANESI */
 function saMedyaHTML(){
   var medya=SITE_AYARLAR.medya||[];
@@ -7954,6 +8072,7 @@ function ayarlarTabRender(tab){
   else if(tab==='anasayfa') el.innerHTML=saAnaSayfaHTML();
   else if(tab==='seo') el.innerHTML=saSeoHTML();
   else if(tab==='sosyal') el.innerHTML=saSosyalHTML();
+  else if(tab==='footer') el.innerHTML=saFooterHTML();
   else if(tab==='medya') el.innerHTML=saMedyaHTML();
   else if(tab==='odeme'){el.innerHTML=saOdemeHTML();setTimeout(saOdemeListenerBagla,50);return;}
   else if(tab==='fatura'){el.innerHTML=saFaturaHTML();setTimeout(saFaturaListenerBagla,50);return;}
