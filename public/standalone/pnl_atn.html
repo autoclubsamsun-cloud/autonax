@@ -2209,7 +2209,7 @@ function odemeEkle(idx,yontem){
   var tarihStr=bugun.getDate().toString().padStart(2,'0')+'.'+(bugun.getMonth()+1).toString().padStart(2,'0')+'.'+bugun.getFullYear();
   r.odemeGecmisi.push({tarih:tarihStr,yontem:yontem,miktar:miktar,not:not});
   r.odenenToplam=(r.odenenToplam||0)+miktar;
-  if(r.odenenToplam>=r.tutar){r.odendi=true;r.islem=true;}
+  if(r.odenenToplam>=r.tutar){r.odendi=true;r.islem=true;if(typeof rdvOtomatikFaturaKes==='function')rdvOtomatikFaturaKes(r);}
   storageKaydet();
   // DB'ye kaydet
   if(typeof dbRandevuKaydet==='function') dbRandevuKaydet(r);
@@ -2245,6 +2245,7 @@ function detOdemeYap(idx,yontem){
   var net=Math.max(0,r.tutar-ind);
   r.odendi=true;r.islem=true;
   if(ind>0)r.tutar=net;
+  if(typeof rdvOtomatikFaturaKes==='function') rdvOtomatikFaturaKes(r);
   document.getElementById('rdv-modal-ovl').remove();
   doRdvListele();
   var toast=document.createElement('div');
@@ -3036,13 +3037,103 @@ function odemeLinkGonder(idx){
   if(ovl) ovl.remove();
 }
 
-var EDM_AYAR=(function(){try{var r=localStorage.getItem('autonax_edm_v1');if(r)return JSON.parse(r);}catch(e){console.error('Autonax:',e)}return{aktif:false,testMod:true,kullaniciAdi:'',sifre:'',vknTckn:'',gondericEtiketi:'',faturaTipi:'EARSIV',faturaSeri:'AUT',kdvOrani:20,notSablonu:'Autonax Hizmet Faturasi',otomatikFatura:false,xsltEarsiv:{isim:'',icerik:'',boyut:0},xsltEfatura:{isim:'',icerik:'',boyut:0}};})();
+var EDM_AYAR=(function(){
+  var def={aktif:false,testMod:true,kullaniciAdi:'',sifre:'',vknTckn:'',gondericEtiketi:'',faturaTipi:'EARSIV',faturaSeri:'AUT',kdvOrani:20,notSablonu:'Autonax Hizmet Faturasi',otomatikFatura:false,xsltEarsiv:{isim:'',icerik:'',boyut:0},xsltEfatura:{isim:'',icerik:'',boyut:0}};
+  try{
+    var r=localStorage.getItem('autonax_edm_v1');
+    if(r){
+      var o=JSON.parse(r);
+      // Şifreyi bellek içinde çöz
+      if(o.sifre && String(o.sifre).startsWith('b64:')){
+        try{o.sifre=decodeURIComponent(escape(atob(String(o.sifre).slice(4))));}catch(e){o.sifre='';}
+      }
+      // Eksik alanları default'tan tamamla
+      Object.keys(def).forEach(function(k){if(o[k]===undefined)o[k]=def[k];});
+      return o;
+    }
+  }catch(e){console.error('Autonax:',e);}
+  return def;
+})();
 
 
 
 
 
-function edmKaydet(){try{localStorage.setItem('autonax_edm_v1',JSON.stringify(EDM_AYAR));}catch(e){console.error('Autonax:',e)}siteAyarKaydet('EDM Fatura');}
+function edmKaydet(){
+  try{
+    // Şifre maskelemesi (base64) — plaintext localStorage'da durmasın
+    var kopya=JSON.parse(JSON.stringify(EDM_AYAR));
+    if(kopya.sifre && !kopya.sifre.startsWith('b64:')){
+      try{kopya.sifre='b64:'+btoa(unescape(encodeURIComponent(kopya.sifre)));}catch(e){}
+    }
+    localStorage.setItem('autonax_edm_v1',JSON.stringify(kopya));
+  }catch(e){console.error('Autonax:',e);}
+  siteAyarKaydet('EDM Fatura');
+}
+function edmSifreCoz(s){
+  if(!s)return'';
+  if(String(s).startsWith('b64:')){try{return decodeURIComponent(escape(atob(s.slice(4))));}catch(e){return '';}}
+  return s;
+}
+
+/* #8: Randevu tamamlanınca otomatik fatura kes */
+function rdvOtomatikFaturaKes(r){
+  if(!EDM_AYAR.otomatikFatura) return;        // ayar kapalıysa yapma
+  if(!r || r.faturaNo) return;                // zaten kesilmişse yapma
+  if(!(r.islem||r.odendi||r.onlineOdeme)) return; // tamamlanmadıysa yapma
+  var tutar=Number(r.tutar)||0; if(tutar<=0) return;
+
+  var bugun=new Date();
+  var tarih=bugun.getDate().toString().padStart(2,'0')+'.'+(bugun.getMonth()+1).toString().padStart(2,'0')+'.'+bugun.getFullYear();
+  var seri=EDM_AYAR.faturaSeri||'AUT';
+  var faturaNo=seri+bugun.getFullYear()+String(Date.now()).slice(-6);
+  var kdvO=EDM_AYAR.kdvOrani||20;
+  var kdvsiz=Math.round(tutar/(1+kdvO/100));
+  var kdvTutar=tutar-kdvsiz;
+
+  // Müşteri tipi: VKN 10 hane → kurumsal, yoksa bireysel
+  var vknTckn=r.vkn||r.tckn||'';
+  var musteriTipi=(/^\d{10}$/.test(vknTckn))?'kurumsal':'bireysel';
+  var faturaTipi=(musteriTipi==='kurumsal')?'EFATURA':'EARSIV';
+
+  var fatura={
+    faturaNo:faturaNo, faturaTipi:faturaTipi,
+    musteri:r.musteri||'', musteriTipi:musteriTipi,
+    vknTckn:vknTckn, email:r.email||'', telefon:r.tel||'',
+    adres:r.adres||'', il:r.il||'', ilce:r.ilce||'', vergiDairesi:r.vergiDairesi||'',
+    tarih:tarih, kdvsizTutar:kdvsiz, kdvTutar:kdvTutar, kdvOrani:kdvO,
+    toplamTutar:tutar,
+    kalemler:[{ad:r.hizmet||'Hizmet', adet:1, fiyat:kdvsiz, kdv:kdvO}],
+    odeme:(r.odemeGecmisi&&r.odemeGecmisi.length)?r.odemeGecmisi[r.odemeGecmisi.length-1].yontem:'otomatik',
+    durum:'KESILDI',
+    not:EDM_AYAR.notSablonu||'',
+    edmDurum:'OTOMATIK',
+    kaynakRandevu:r.id||null
+  };
+
+  FATURALAR.unshift(fatura);
+  faturaKaydet();
+  r.faturaNo=faturaNo;
+  r.faturaDurum='KESILDI';
+  if(typeof storageKaydet==='function') storageKaydet();
+  if(typeof dbRandevuKaydet==='function') dbRandevuKaydet(r);
+  toast('🧾 Otomatik fatura kesildi: '+faturaNo,'green');
+
+  // EDM canlı gönderim (aynı faturaKes içindeki mantık)
+  if(EDM_AYAR.aktif && !EDM_AYAR.testMod && EDM_AYAR.kullaniciAdi){
+    var xsltObj=(faturaTipi==='EFATURA')?EDM_AYAR.xsltEfatura:EDM_AYAR.xsltEarsiv;
+    var xsltIcerik=(xsltObj&&xsltObj.icerik)?xsltObj.icerik:'';
+    var xsltIsim=(xsltObj&&xsltObj.isim)?xsltObj.isim:'';
+    fatura.xsltSablon=xsltIsim;
+    fetch('/api/edm/fatura-kes',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({kullaniciAdi:EDM_AYAR.kullaniciAdi,sifre:EDM_AYAR.sifre,gondericVknTckn:EDM_AYAR.vknTckn,gondericEtiketi:EDM_AYAR.gondericEtiketi,fatura:fatura,xslt:{isim:xsltIsim,icerik:xsltIcerik}})
+    }).then(function(rsp){return rsp.ok?rsp.json():Promise.reject(new Error('HTTP '+rsp.status));})
+      .then(function(d){if(d&&d.faturaNo)fatura.edmFaturaNo=d.faturaNo;if(d&&d.uuid)fatura.edmUuid=d.uuid;fatura.edmGonderim='BASARILI';faturaKaydet();})
+      .catch(function(e){fatura.edmGonderim='HATA: '+(e.message||e);faturaKaydet();console.error('EDM otomatik gönderim hatası:',e);});
+  }
+}
 function saFaturaHTML(){
   var ea=EDM_AYAR,IS='width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box';
   return '<div class="k" style="margin-bottom:14px">'
@@ -3225,23 +3316,129 @@ function xsltListenerBagla(){
 function saFaturaListenerBagla(){
   xsltListenerBagla();
   function tL(id,fn){var b=document.getElementById(id);if(b&&!b._l){b._l=true;b.addEventListener('click',fn);}}
-  tL('tgl-edm-aktif',function(){var b=document.getElementById('tgl-edm-aktif');b.classList.toggle('on');EDM_AYAR.aktif=b.classList.contains('on');});
-  tL('tgl-edm-oto',function(){var b=document.getElementById('tgl-edm-oto');b.classList.toggle('on');EDM_AYAR.otomatikFatura=b.classList.contains('on');});
-  tL('edm-test-btn',function(){EDM_AYAR.testMod=true;var t=document.getElementById('edm-test-btn'),cc=document.getElementById('edm-canli-btn');if(t){t.style.background='var(--r)';t.style.color='#fff';}if(cc){cc.style.background='#fff';cc.style.color='var(--ink4)';}});
-  tL('edm-canli-btn',function(){EDM_AYAR.testMod=false;var t=document.getElementById('edm-test-btn'),cc=document.getElementById('edm-canli-btn');if(cc){cc.style.background='#1a6b3c';cc.style.color='#fff';}if(t){t.style.background='#fff';t.style.color='var(--ink4)';}});
+
+  // #2: Her toggle değişiminde otomatik kaydet (sayfa yenilenince kaybolmaz)
+  tL('tgl-edm-aktif',function(){
+    var b=document.getElementById('tgl-edm-aktif');
+    // Canlıya geçişte kritik alan kontrolü
+    if(!b.classList.contains('on')){ // şu an kapalıysa, açmaya çalışıyor
+      if(!EDM_AYAR.kullaniciAdi || !EDM_AYAR.sifre || !EDM_AYAR.vknTckn || !EDM_AYAR.gondericEtiketi){
+        toast('Önce Kullanıcı Adı, Şifre, VKN ve Gönderici Etiketi alanlarını doldurun, kaydedin!','red');
+        return;
+      }
+    }
+    b.classList.toggle('on');
+    EDM_AYAR.aktif=b.classList.contains('on');
+    edmKaydet();
+    toast(EDM_AYAR.aktif?'✓ EDM entegrasyonu AKTİF':'EDM entegrasyonu kapatıldı', EDM_AYAR.aktif?'green':'red');
+  });
+
+  tL('tgl-edm-oto',function(){
+    var b=document.getElementById('tgl-edm-oto');
+    b.classList.toggle('on');
+    EDM_AYAR.otomatikFatura=b.classList.contains('on');
+    edmKaydet();
+    toast(EDM_AYAR.otomatikFatura?'✓ Otomatik fatura AÇIK':'Otomatik fatura KAPALI','green');
+  });
+
+  tL('edm-test-btn',function(){
+    EDM_AYAR.testMod=true;
+    edmKaydet();
+    var t=document.getElementById('edm-test-btn'),cc=document.getElementById('edm-canli-btn');
+    if(t){t.style.background='var(--r)';t.style.color='#fff';}
+    if(cc){cc.style.background='#fff';cc.style.color='var(--ink4)';}
+    toast('Test Modu aktif','green');
+  });
+
+  tL('edm-canli-btn',function(){
+    // Canlıya geçmek için zorunlu alanlar dolu olmalı
+    if(!EDM_AYAR.kullaniciAdi || !EDM_AYAR.sifre || !EDM_AYAR.vknTckn || !EDM_AYAR.gondericEtiketi){
+      toast('Canlı moda geçmek için tüm EDM bilgilerini doldurun ve kaydedin!','red');
+      return;
+    }
+    if(!confirm('CANLI MOD\'a geçmek üzeresiniz. Bu moddaki her fatura GİB\'e gerçek olarak gönderilir. Emin misiniz?')) return;
+    EDM_AYAR.testMod=false;
+    edmKaydet();
+    var t=document.getElementById('edm-test-btn'),cc=document.getElementById('edm-canli-btn');
+    if(cc){cc.style.background='#1a6b3c';cc.style.color='#fff';}
+    if(t){t.style.background='#fff';t.style.color='var(--ink4)';}
+    toast('⚠ CANLI MOD aktif — gerçek faturalar kesilecek!','green');
+  });
+
+  // #1, #4, #6: KAYDET butonu — validasyon + geri bildirim
   tL('edm-kyt',function(){
     var g=function(id){var el=document.getElementById(id);return el?el.value.trim():'';};
-    EDM_AYAR.kullaniciAdi=g('edm-kadi');EDM_AYAR.sifre=g('edm-sifre');EDM_AYAR.vknTckn=g('edm-vkn');EDM_AYAR.gondericEtiketi=g('edm-etiket');
-    EDM_AYAR.faturaSeri=g('edm-seri')||'AUT';EDM_AYAR.kdvOrani=parseInt(g('edm-kdv'))||20;EDM_AYAR.notSablonu=g('edm-not');
-    var ft=document.getElementById('edm-tip');if(ft)EDM_AYAR.faturaTipi=ft.value;
+    var s=document.getElementById('edm-sonuc');
+    var kadi=g('edm-kadi'), sifre=g('edm-sifre'), vkn=g('edm-vkn'), etiket=g('edm-etiket');
+    var seri=(g('edm-seri')||'AUT').toUpperCase(), kdv=parseInt(g('edm-kdv')), notT=g('edm-not');
+    var ft=document.getElementById('edm-tip');
+
+    // #4 + #6: Canlı mod için validasyon (test modunda gevşek)
+    var hatalar=[];
+    if(!EDM_AYAR.testMod){
+      if(!kadi) hatalar.push('Kullanıcı Adı boş olamaz');
+      if(!sifre) hatalar.push('Şifre boş olamaz');
+      if(!vkn) hatalar.push('VKN/TCKN boş olamaz');
+      if(!etiket) hatalar.push('Gönderici Etiketi boş olamaz');
+    }
+    // Format kontrolü
+    if(vkn && !/^\d{10,11}$/.test(vkn)) hatalar.push('VKN 10 hane, TCKN 11 hane olmalı');
+    if(etiket && !/^urn:mail:.+@.+\..+$/.test(etiket)) hatalar.push('Etiket formatı: urn:mail:xxx@hs.edmbilisim.com.tr');
+    if(seri && !/^[A-Z]{3}$/.test(seri)) hatalar.push('Fatura serisi 3 harf olmalı (ör: AUT)');
+    if(isNaN(kdv) || kdv<0 || kdv>100) hatalar.push('KDV oranı 0-100 arası olmalı');
+
+    if(hatalar.length){
+      if(s) s.innerHTML='<div style="padding:10px;background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.2);border-radius:8px;font-size:11px;color:#dc2626;margin-bottom:10px;line-height:1.6">⚠ <b>Kayıt yapılamadı:</b><br>• '+hatalar.join('<br>• ')+'</div>';
+      toast('Hatalar var — lütfen kontrol edin','red');
+      return;
+    }
+
+    EDM_AYAR.kullaniciAdi=kadi;
+    EDM_AYAR.sifre=sifre;
+    EDM_AYAR.vknTckn=vkn;
+    EDM_AYAR.gondericEtiketi=etiket;
+    EDM_AYAR.faturaSeri=seri||'AUT';
+    EDM_AYAR.kdvOrani=kdv||20;
+    EDM_AYAR.notSablonu=notT;
+    if(ft) EDM_AYAR.faturaTipi=ft.value;
     edmKaydet();
+    if(s) s.innerHTML='<div style="padding:10px;background:rgba(26,107,60,.06);border:1px solid rgba(26,107,60,.2);border-radius:8px;font-size:11px;color:#1a6b3c;margin-bottom:10px">✓ Ayarlar kaydedildi. Bağlantıyı test etmek için "BAGLANTI TEST" butonuna basın.</div>';
+    toast('✓ EDM ayarları kaydedildi','green');
   });
+
+  // #3: GERÇEK bağlantı testi (backend /api/edm/test-baglanti'ya POST)
   tL('edm-bag',function(){
     var s=document.getElementById('edm-sonuc');if(!s)return;
-    if(!EDM_AYAR.kullaniciAdi){s.innerHTML='<div style="padding:10px;background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.2);border-radius:8px;font-size:11px;color:#dc2626;margin-bottom:10px">Kullanici adi zorunlu!</div>';return;}
-    s.innerHTML='<div style="padding:10px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.2);border-radius:8px;font-size:11px;color:#2563EB;margin-bottom:10px">Test ediliyor...</div>';
-    setTimeout(function(){s.innerHTML='<div style="padding:10px;background:rgba(26,107,60,.06);border:1px solid rgba(26,107,60,.2);border-radius:8px;font-size:11px;color:#1a6b3c;margin-bottom:10px">Simulasyon basarili! Backend ile canli test yapilabilir.</div>';},1200);
+    if(!EDM_AYAR.kullaniciAdi){
+      s.innerHTML='<div style="padding:10px;background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.2);border-radius:8px;font-size:11px;color:#dc2626;margin-bottom:10px">⚠ Önce kullanıcı bilgilerini doldurup KAYDET\'e basın!</div>';
+      return;
+    }
+    s.innerHTML='<div style="padding:10px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.2);border-radius:8px;font-size:11px;color:#2563EB;margin-bottom:10px">⏳ EDM sunucusuna bağlanılıyor...</div>';
+
+    fetch('/api/edm/test-baglanti',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        kullaniciAdi:EDM_AYAR.kullaniciAdi,
+        sifre:EDM_AYAR.sifre,
+        vknTckn:EDM_AYAR.vknTckn,
+        gondericEtiketi:EDM_AYAR.gondericEtiketi,
+        testMod:EDM_AYAR.testMod
+      })
+    }).then(function(r){
+      if(!r.ok) return r.text().then(function(t){throw new Error('HTTP '+r.status+(t?': '+t.slice(0,100):''));});
+      return r.json();
+    }).then(function(d){
+      if(d && d.basarili){
+        s.innerHTML='<div style="padding:10px;background:rgba(26,107,60,.08);border:1px solid rgba(26,107,60,.3);border-radius:8px;font-size:11px;color:#1a6b3c;margin-bottom:10px;line-height:1.6">✓ <b>Bağlantı başarılı!</b><br>'+(d.mesaj||'EDM servisine erişildi, kimlik doğrulandı.')+(d.firma?'<br>Firma: '+d.firma:'')+'</div>';
+      }else{
+        s.innerHTML='<div style="padding:10px;background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.2);border-radius:8px;font-size:11px;color:#dc2626;margin-bottom:10px;line-height:1.6">✗ <b>Bağlantı başarısız:</b><br>'+((d&&d.mesaj)||'Kimlik doğrulanamadı. Kullanıcı adı/şifre/VKN bilgilerinizi kontrol edin.')+'</div>';
+      }
+    }).catch(function(e){
+      s.innerHTML='<div style="padding:10px;background:rgba(217,119,6,.06);border:1px solid rgba(217,119,6,.25);border-radius:8px;font-size:11px;color:#d97706;margin-bottom:10px;line-height:1.6">⚠ <b>Backend endpoint hazır değil:</b> '+(e.message||e)+'<br><br>Ayarlar kaydedildi ama gerçek EDM testi için <code>/api/edm/test-baglanti</code> backend endpoint\'inin aktif olması gerekir.</div>';
+    });
   });
+
   document.querySelectorAll('#edm-tablo button[data-kes]').forEach(function(btn){
     if(btn._l)return;btn._l=true;
     btn.addEventListener('click',function(){
