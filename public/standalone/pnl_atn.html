@@ -4665,12 +4665,8 @@ function dbSyncYukle(){
 }
 
 function dbRandevuKaydet(r){
-  var existing=RANDEVULAR.find(function(x){return x.id===r.id;});
-  if(existing){
-    dbSync('/api/randevular','PUT',r);
-  } else {
-    dbSync('/api/randevular','POST',r);
-  }
+  // Her zaman POST gönder — backend UPSERT yapacak
+  dbSync('/api/randevular','POST',r);
 }
 
 function dbRandevuSil(id){

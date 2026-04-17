@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     await ensureDB();
     const b = await req.json();
     const id = b.id || 'rdv-' + Date.now();
-    await sql`INSERT INTO randevular (id,tarih,saat,musteri,tel,plaka,arac,hizmet,tutar,odenen_toplam,durum,odendi,islem,online_odeme,fatura_no,fatura_durum,odeme_gecmisi) VALUES (${id},${b.tarih},${b.saat||'09:00'},${b.musteri},${b.tel||''},${b.plaka||''},${b.arac||''},${b.hizmet||''},${b.tutar||0},${b.odenenToplam||0},${b.durum||'bekl'},${b.odendi||false},${b.islem||false},${b.onlineOdeme||false},${b.faturaNo||null},${b.faturaDurum||null},${JSON.stringify(b.odemeGecmisi||[])}::jsonb)`;
+    await sql`INSERT INTO randevular (id,tarih,saat,musteri,tel,plaka,arac,hizmet,tutar,odenen_toplam,durum,odendi,islem,online_odeme,fatura_no,fatura_durum,odeme_gecmisi) VALUES (${id},${b.tarih},${b.saat||'09:00'},${b.musteri},${b.tel||''},${b.plaka||''},${b.arac||''},${b.hizmet||''},${b.tutar||0},${b.odenenToplam||0},${b.durum||'bekl'},${b.odendi||false},${b.islem||false},${b.onlineOdeme||false},${b.faturaNo||null},${b.faturaDurum||null},${JSON.stringify(b.odemeGecmisi||[])}::jsonb) ON CONFLICT (id) DO UPDATE SET tarih=${b.tarih},saat=${b.saat||'09:00'},musteri=${b.musteri},tel=${b.tel||''},plaka=${b.plaka||''},arac=${b.arac||''},hizmet=${b.hizmet||''},tutar=${b.tutar||0},odenen_toplam=${b.odenenToplam||0},durum=${b.durum||'bekl'},odendi=${b.odendi||false},islem=${b.islem||false},fatura_no=${b.faturaNo||null},fatura_durum=${b.faturaDurum||null},odeme_gecmisi=${JSON.stringify(b.odemeGecmisi||[])}::jsonb,guncelleme=NOW()`;
     return NextResponse.json({ success: true, data: { ...b, id } }, { status: 201 });
   } catch (e: any) { return NextResponse.json({ success: false, error: e.message }, { status: 500 }); }
 }
