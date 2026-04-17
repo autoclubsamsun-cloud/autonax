@@ -2,7 +2,7 @@
  * EDM EFaturaEDMConnectorService operasyonları
  */
 
-import { soapCagri, tagCek, xmlEsc, type EdmAuth, type SoapHata } from './soap-client';
+import { soapCagri, tagCek, xmlEsc, login, type EdmAuth, type SoapHata } from './soap-client';
 import { faturaUblOlustur, type FaturaData, type GondericiData } from './ubl-builder';
 
 export interface CheckUserSonuc {
@@ -22,19 +22,13 @@ export interface FaturaGonderimSonuc {
 }
 
 /**
- * 1. CheckUser — kullanıcı/şifre doğruluğunu test et
+ * CheckUser — Login testi (kullanıcı/şifre doğruluğunu test eder)
+ *
+ * EDM'de "Login" doğrudan kimlik doğrulama operasyonudur.
+ * Login başarılıysa SessionID döner = credentials doğru.
  */
 export async function checkUser(auth: EdmAuth): Promise<CheckUserSonuc> {
-  const body = `
-    <con:checkUserRequest>
-      <REQUEST_HEADER>
-        <SESSION_ID></SESSION_ID>
-        <CLIENT_TXN_ID></CLIENT_TXN_ID>
-      </REQUEST_HEADER>
-      <INPUT/>
-    </con:checkUserRequest>`;
-
-  const sonuc = await soapCagri('checkUser', body, auth);
+  const sonuc = await login(auth);
 
   if (!sonuc.basarili) {
     return {
@@ -44,25 +38,11 @@ export async function checkUser(auth: EdmAuth): Promise<CheckUserSonuc> {
     };
   }
 
-  const xml = sonuc.xml ?? '';
-  const errorCode = tagCek(xml, 'ERROR_CODE');
-  const errorDesc = tagCek(xml, 'ERROR_DESCRIPTION');
-
-  if (errorCode && errorCode !== '0') {
-    return {
-      basarili: false,
-      mesaj: errorDesc || 'Kimlik doğrulanamadı',
-      kod: errorCode,
-    };
-  }
-
-  const firma = tagCek(xml, 'DEFINITION') || tagCek(xml, 'COMPANY_NAME');
-
   return {
     basarili: true,
-    mesaj: 'Bağlantı başarılı, kullanıcı doğrulandı.',
-    firma,
-    xml,
+    mesaj: 'Bağlantı başarılı, kullanıcı doğrulandı. (SessionID alındı)',
+    firma: null,
+    xml: sonuc.xml,
   };
 }
 
