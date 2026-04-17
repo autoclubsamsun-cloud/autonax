@@ -83,18 +83,19 @@ export async function soapCagri(
 
   console.log('[EDM SOAP] ===== İstek başlıyor =====');
   console.log('[EDM SOAP] Endpoint:', endpoint);
-  console.log('[EDM SOAP] SOAPAction:', `"${EDM_NAMESPACE}/IEFaturaEDM/${soapAction}"`);
   console.log('[EDM SOAP] Operasyon:', soapAction);
   console.log('[EDM SOAP] testMod:', auth.testMod);
   console.log('[EDM SOAP] Envelope ilk 500 char:', envelope.slice(0, 500));
 
   try {
     const baslangic = Date.now();
+    const soapActionUrl = `${EDM_NAMESPACE}IEFaturaEDM/${soapAction}`;
+    console.log('[EDM SOAP] Tam SOAPAction URL:', soapActionUrl);
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'text/xml; charset=UTF-8',
-        SOAPAction: `"${EDM_NAMESPACE}/IEFaturaEDM/${soapAction}"`,
+        SOAPAction: `"${soapActionUrl}"`,
       },
       body: envelope,
     });
