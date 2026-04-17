@@ -2020,10 +2020,10 @@ svg{display:block;flex-shrink:0}
         </svg>
         Google ile Hızlı Giriş
       </button>
-      <div class="auth-sep">veya e-posta ile</div>
+      <div class="auth-sep">veya e-posta / telefon ile</div>
       <div class="auth-field">
-        <label>E-posta</label>
-        <input type="email" id="giris-email" placeholder="ornek@mail.com" autocomplete="email">
+        <label>E-posta veya Telefon</label>
+        <input type="text" id="giris-email" placeholder="ornek@mail.com veya 05XX XXX XX XX" autocomplete="email">
       </div>
       <div class="auth-field">
         <label>Şifre</label>
@@ -2424,21 +2424,67 @@ const AuthManager = {
     }catch(e){return null;}
   },
   login(email,sifre){
-    email=(email||'').toLowerCase().trim();
-    const u=DEMO_USERS[email];
-    if(!u||u.sifre!==sifre) return {ok:false,hata:'E-posta veya şifre hatalı.'};
-    const user={email,ad:u.ad,soyad:u.soyad,tel:u.tel,sehir:u.sehir,avatar:u.avatar,puan:u.puan,seviye:u.seviye,uye_tarih:u.uye_tarih};
-    localStorage.setItem(SESSION_KEY,JSON.stringify({user,time:Date.now()}));
-    localStorage.setItem('garaj_araclar',JSON.stringify(u.araclar));
-    return {ok:true,user};
+    var girdi=(email||'').trim();
+    // Telefon mu email mi belirle
+    var telNormalize=function(t){return (t||'').replace(/[\s\-\(\)]/g,'');};
+    var isTel=/^[0-9\s\-\(\)+]{7,15}$/.test(girdi) || girdi.startsWith('05') || girdi.startsWith('+90');
+    var u=null; var foundEmail='';
+    if(isTel){
+      // Telefon ile giriş — tüm kullanıcılarda ara
+      var telKey=telNormalize(girdi);
+      // Demo kullanıcılarda ara
+      for(var e in DEMO_USERS){
+        if(telNormalize(DEMO_USERS[e].tel)===telKey){u=DEMO_USERS[e];foundEmail=e;break;}
+      }
+      // Kayıtlı kullanıcılarda ara
+      if(!u){
+        try{var kayitlilar=JSON.parse(localStorage.getItem('autonax_users')||'{}');
+        for(var e2 in kayitlilar){
+          if(telNormalize(kayitlilar[e2].tel)===telKey){u=kayitlilar[e2];foundEmail=e2;break;}
+        }}catch(ex){}
+      }
+    } else {
+      // Email ile giriş
+      foundEmail=girdi.toLowerCase();
+      u=DEMO_USERS[foundEmail];
+      if(!u){
+        try{var kayitlilar2=JSON.parse(localStorage.getItem('autonax_users')||'{}');u=kayitlilar2[foundEmail];}catch(ex2){}
+      }
+    }
+    if(!u||u.sifre!==sifre) return {ok:false,hata:'E-posta/telefon veya şifre hatalı.'};
+    var user={email:foundEmail,ad:u.ad,soyad:u.soyad,tel:u.tel,sehir:u.sehir,avatar:u.avatar,puan:u.puan,seviye:u.seviye,uye_tarih:u.uye_tarih};
+    localStorage.setItem(SESSION_KEY,JSON.stringify({user:user,time:Date.now()}));
+    localStorage.setItem('garaj_araclar',JSON.stringify(u.araclar||[]));
+    return {ok:true,user:user};
   },
   register(ad,soyad,tel,email,sifre){
     if(!ad||!email||!sifre) return {ok:false,hata:'Tüm alanları doldurun.'};
     if(sifre.length<6) return {ok:false,hata:'Şifre en az 6 karakter olmalı.'};
-    const user={email,ad,soyad,tel,sehir:'',avatar:(ad[0]+(soyad?soyad[0]:'')).toUpperCase(),puan:0,seviye:'Bronz',uye_tarih:new Date().toLocaleDateString('tr-TR')};
-    localStorage.setItem(SESSION_KEY,JSON.stringify({user,time:Date.now()}));
+    email=(email||'').toLowerCase().trim();
+    var telNormalize=function(t){return (t||'').replace(/[\s\-\(\)]/g,'');};
+    var telKey=telNormalize(tel);
+    // Demo kullanıcılarda email veya telefon var mı kontrol
+    if(DEMO_USERS[email]) return {ok:false,hata:'Bu e-posta adresi zaten kayıtlı.'};
+    if(telKey){
+      for(var e in DEMO_USERS){
+        if(telNormalize(DEMO_USERS[e].tel)===telKey) return {ok:false,hata:'Bu telefon numarası zaten kayıtlı.'};
+      }
+    }
+    // Kayıtlı kullanıcılarda email veya telefon var mı kontrol
+    var kayitlilar={}; try{kayitlilar=JSON.parse(localStorage.getItem('autonax_users')||'{}');}catch(ex){}
+    if(kayitlilar[email]) return {ok:false,hata:'Bu e-posta adresi zaten kayıtlı.'};
+    if(telKey){
+      for(var e2 in kayitlilar){
+        if(telNormalize(kayitlilar[e2].tel)===telKey) return {ok:false,hata:'Bu telefon numarası zaten kayıtlı.'};
+      }
+    }
+    // Yeni kullanıcı kaydet
+    var user={email:email,ad:ad,soyad:soyad,tel:tel,sehir:'',avatar:(ad[0]+(soyad?soyad[0]:'')).toUpperCase(),puan:0,seviye:'Bronz',uye_tarih:new Date().toLocaleDateString('tr-TR')};
+    kayitlilar[email]={sifre:sifre,ad:ad,soyad:soyad,tel:tel,sehir:'',avatar:user.avatar,puan:0,seviye:'Bronz',uye_tarih:user.uye_tarih,araclar:[]};
+    localStorage.setItem('autonax_users',JSON.stringify(kayitlilar));
+    localStorage.setItem(SESSION_KEY,JSON.stringify({user:user,time:Date.now()}));
     localStorage.setItem('garaj_araclar',JSON.stringify([]));
-    return {ok:true,user};
+    return {ok:true,user:user};
   },
   logout(){localStorage.removeItem(SESSION_KEY);},
   saveCart(items){localStorage.setItem(CART_KEY,JSON.stringify(items||[]));},
