@@ -89,7 +89,8 @@ export async function soapCagri(
 
   try {
     const baslangic = Date.now();
-    const soapActionUrl = `${EDM_NAMESPACE}IEFaturaEDM/${soapAction}`;
+    // soapAction parametresi artık tam path (ör: "IEFaturaEDM/Login")
+    const soapActionUrl = `${EDM_NAMESPACE}${soapAction}`;
     console.log('[EDM SOAP] Tam SOAPAction URL:', soapActionUrl);
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -159,6 +160,8 @@ export async function soapCagri(
  * LOGIN — kullanıcı/şifre ile giriş yap, SessionID al
  *
  * EDM Login metodu REQUEST_HEADER ile USER_NAME/PASSWORD bekler.
+ * ActionNotSupported hatasıyla karşılaştığımız için 4 farklı SOAPAction
+ * formatını sırayla deniyoruz — ilk geçeni kullanırız.
  */
 export async function login(auth: EdmAuth): Promise<SoapSonuc> {
   const txnId = 'autonax-' + Date.now();
@@ -178,10 +181,42 @@ export async function login(auth: EdmAuth): Promise<SoapSonuc> {
       <PASSWORD xmlns="">${xmlEsc(auth.sifre)}</PASSWORD>
     </LoginRequest>`;
 
-  const sonuc = await soapCagri('Login', body, auth);
-  if (!sonuc.basarili) return sonuc;
+  // Olası SOAPAction formatlarını sırayla dene
+  const actionVaryantlari = [
+    'IEFaturaEDM/Login',
+    'EFaturaEDMPort/Login',
+    'IEFaturaEDMPortType/Login',
+    'EFaturaEDM/Login',
+    'Login',
+  ];
 
-  const xml = sonuc.xml ?? '';
+  let sonSonuc: SoapSonuc = {
+    basarili: false,
+    hata: { kod: 'NO_ACTION', mesaj: 'Hiçbir SOAPAction formatı denenmedi' },
+  };
+
+  for (const varyant of actionVaryantlari) {
+    console.log('[EDM SOAP] SOAPAction varyantı deneniyor:', varyant);
+    const sonuc = await soapCagri(varyant, body, auth);
+    sonSonuc = sonuc;
+
+    // ActionNotSupported hatasıysa bir sonraki varyantı dene
+    const actionNotSupported =
+      sonuc.hata?.kod?.includes('ActionNotSupported') ||
+      sonuc.hata?.mesaj?.includes('ActionNotSupported') ||
+      sonuc.hata?.mesaj?.includes('ContractFilter');
+
+    if (!actionNotSupported) {
+      console.log('[EDM SOAP] Kabul edilen varyant:', varyant);
+      break; // Bu varyant sunucu tarafından tanındı (başarılı veya farklı bir hata)
+    }
+
+    console.log('[EDM SOAP] ActionNotSupported, bir sonraki varyant deneniyor...');
+  }
+
+  if (!sonSonuc.basarili) return sonSonuc;
+
+  const xml = sonSonuc.xml ?? '';
   const sessionId =
     tagCek(xml, 'SESSION_ID') ||
     tagCek(xml, 'SessionId') ||
@@ -193,7 +228,7 @@ export async function login(auth: EdmAuth): Promise<SoapSonuc> {
       basarili: false,
       hata: {
         kod: 'NO_SESSION',
-        mesaj: 'Login başarılı gözüküyor ama SessionID alınamadı. Yanıt: ' + xml.slice(0, 300),
+        mesaj: 'Login başarılı gözüküyor ama SessionID alınamadı. Yanıt: ' + xml.slice(0, 500),
       },
       xml,
     };

@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
   }
   kayit.sayac++;
   rateLimit.set(ip, kayit);
-  if (kayit.sayac > 5) {
+  if (kayit.sayac > 30) {
     return NextResponse.json<ApiResponse>(
       { success: false, error: 'Çok fazla deneme, 1 dakika sonra tekrar deneyin' },
       { status: 429 }
