@@ -479,7 +479,7 @@ svg{display:block;flex-shrink:0}
 
 /* ══ DRAWER ══ */
 #drw-ovl{position:fixed;inset:0;z-index:600;display:none;pointer-events:none;background:rgba(0,0,0,0);transition:background .25s}
-#drw-ovl.on{pointer-events:all;background:rgba(0,0,0,.55)}
+#drw-ovl.on{display:flex;pointer-events:all;background:rgba(0,0,0,.55)}
 #drw{width:80%;max-width:290px;background:#fff;height:100%;overflow-y:auto;flex-shrink:0;transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
 #drw::-webkit-scrollbar{display:none}
 #drw-ovl.on #drw{transform:translateX(0)}
