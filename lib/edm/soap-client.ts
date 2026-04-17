@@ -33,7 +33,7 @@ const EDM_ENDPOINTS = {
   canli: 'https://efatura.edmbilisim.com.tr/EFaturaEDM21ea/EFaturaEDM.svc',
 } as const;
 
-const EDM_NAMESPACE = 'http://schemas.i2i.com/ei/wsdl';
+const EDM_NAMESPACE = 'http://tempuri.org/';
 
 /** XML için özel karakterleri kaçış */
 export function xmlEsc(s: unknown): string {
@@ -62,15 +62,14 @@ export function soapFaultKontrol(xml: string): SoapHata | null {
   return null;
 }
 
-/** SOAP 1.1 zarfı oluşturur — EDM WSDL namespace'i ile */
+/** SOAP 1.1 zarfı oluşturur */
 function soapEnvelopeOlustur(bodyXml: string): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="${EDM_NAMESPACE}">
-  <soapenv:Header/>
-  <soapenv:Body>
-${bodyXml}
-  </soapenv:Body>
-</soapenv:Envelope>`;
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+  <s:Body xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    ${bodyXml}
+  </s:Body>
+</s:Envelope>`;
 }
 
 /** EDM SOAP endpoint'ine POST gönderir */
@@ -157,21 +156,34 @@ export async function soapCagri(
 
 /**
  * LOGIN — kullanıcı/şifre ile giriş yap, SessionID al
+ *
+ * EDM Login metodu REQUEST_HEADER ile USER_NAME/PASSWORD bekler.
  */
 export async function login(auth: EdmAuth): Promise<SoapSonuc> {
-  const body = `
-    <tem:Login>
-      <tem:user>${xmlEsc(auth.kullaniciAdi)}</tem:user>
-      <tem:password>${xmlEsc(auth.sifre)}</tem:password>
-    </tem:Login>`;
+  const txnId = 'autonax-' + Date.now();
+  const actionDate = new Date().toISOString();
+
+  const body = `<LoginRequest xmlns="${EDM_NAMESPACE}">
+      <REQUEST_HEADER xmlns="">
+        <SESSION_ID></SESSION_ID>
+        <CLIENT_TXN_ID>${txnId}</CLIENT_TXN_ID>
+        <ACTION_DATE>${actionDate}</ACTION_DATE>
+        <APPLICATION_NAME>Autonax</APPLICATION_NAME>
+        <HOSTNAME>autonax.com.tr</HOSTNAME>
+        <CHANNEL_NAME>WEB</CHANNEL_NAME>
+        <COMPRESSED>N</COMPRESSED>
+      </REQUEST_HEADER>
+      <USER_NAME xmlns="">${xmlEsc(auth.kullaniciAdi)}</USER_NAME>
+      <PASSWORD xmlns="">${xmlEsc(auth.sifre)}</PASSWORD>
+    </LoginRequest>`;
 
   const sonuc = await soapCagri('Login', body, auth);
   if (!sonuc.basarili) return sonuc;
 
   const xml = sonuc.xml ?? '';
   const sessionId =
-    tagCek(xml, 'SessionId') ||
     tagCek(xml, 'SESSION_ID') ||
+    tagCek(xml, 'SessionId') ||
     tagCek(xml, 'LoginResult') ||
     tagCek(xml, 'sessionId');
 
