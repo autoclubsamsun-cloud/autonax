@@ -9,7 +9,7 @@ import type { ApiResponse } from '@/lib/types';
 import { requireAuth } from '@/lib/utils/auth-check';
 
 const WSDL_URLS = {
-  canli: 'https://efatura.edmbilisim.com.tr/EFaturaEDM21ea/EFaturaEDM.svc?wsdl',
+  canli: 'https://interaktif.edmbilisim.com.tr/EFaturaEDM/EFaturaEDM.svc?wsdl',
   test: 'https://test.edmbilisim.com.tr/EFaturaEDM21ea/EFaturaEDM.svc?wsdl',
 };
 

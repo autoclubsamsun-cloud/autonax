@@ -29,9 +29,8 @@ export interface SoapSonuc {
 }
 
 const EDM_ENDPOINTS = {
-  // Geçici olarak canli da test sunucusuna bağlı — EDM doğru canlı URL'i verince değişecek
   test: 'https://test.edmbilisim.com.tr/EFaturaEDM21ea/EFaturaEDM.svc',
-  canli: 'https://test.edmbilisim.com.tr/EFaturaEDM21ea/EFaturaEDM.svc',
+  canli: 'https://interaktif.edmbilisim.com.tr/EFaturaEDM/EFaturaEDM.svc',
 } as const;
 
 const EDM_NAMESPACE = 'http://tempuri.org/';
