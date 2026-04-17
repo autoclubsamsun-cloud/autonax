@@ -3136,7 +3136,20 @@ function rdvOtomatikFaturaKes(r){
 }
 function saFaturaHTML(){
   var ea=EDM_AYAR,IS='width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box';
-  return '<div class="k" style="margin-bottom:14px">'
+  // Canlı mod banner'ı (en üstte)
+  var canliBanner = '';
+  if(ea.aktif && !ea.testMod && ea.kullaniciAdi){
+    canliBanner = '<div style="background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;padding:14px 18px;border-radius:12px;margin-bottom:14px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 12px rgba(220,38,38,.25);animation:fat-canli-puls 2s ease-in-out infinite">'
+      +'<div style="font-size:28px">🚨</div>'
+      +'<div style="flex:1">'
+        +'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:1.5px">CANLI MOD AKTİF</div>'
+        +'<div style="font-size:11px;opacity:.95;margin-top:2px">Bu moddaki her fatura GİB\'e gerçek olarak gönderilir ve iptal edilemez. Test yapıyorsanız Test Modu\'na geçin.</div>'
+      +'</div>'
+      +'<button onclick="if(confirm(\'Test Modu\\\'na geçmek istediğinizden emin misiniz?\\n\\nCanlı modda şu ana kadar kesilen faturalar silinmez.\')){EDM_AYAR.testMod=true;edmKaydet();var fEl=document.getElementById(\'stab-fatura\');if(fEl){fEl.innerHTML=saFaturaHTML();saFaturaListenerBagla();}toast(\'Test Moduna geçildi\',\'green\');}" style="padding:8px 14px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);border-radius:8px;color:#fff;font-family:Bebas Neue,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer;white-space:nowrap">TEST MODU\'NA AL</button>'
+    +'</div>'
+    +'<style>@keyframes fat-canli-puls{0%,100%{box-shadow:0 4px 12px rgba(220,38,38,.25)}50%{box-shadow:0 6px 20px rgba(220,38,38,.5)}}</style>';
+  }
+  return canliBanner + '<div class="k" style="margin-bottom:14px">'
     +'<div class="kh" style="background:linear-gradient(135deg,#1a6b3c,#2d9e5f)">'
       +'<div style="display:flex;align-items:center;gap:10px">'
         +'<div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:22px">🧾</div>'
@@ -3598,6 +3611,34 @@ function faturaYeniAc(){
   document.body.appendChild(ovl);
   document.getElementById('fat-kapat').onclick=function(){ovl.remove();};
   faturaKalemEkle(); // başlangıçta 1 boş satır
+
+  // Canlı mod rozeti + buton uyarısı
+  var canliModAktif = (EDM_AYAR.aktif && !EDM_AYAR.testMod && EDM_AYAR.kullaniciAdi);
+  if(canliModAktif){
+    var btn=document.getElementById('fat-kes-btn');
+    if(btn){
+      btn.innerHTML='🚨 CANLI MOD — FATURAYI KES';
+      btn.style.background='linear-gradient(135deg,#dc2626,#991b1b)';
+      btn.style.boxShadow='0 0 0 2px #991b1b,0 0 12px rgba(220,38,38,.4)';
+      btn.style.animation='fat-canli-puls 2s ease-in-out infinite';
+    }
+    // Header altına uyarı bandı
+    var header=ovl.querySelector('[style*="background:var(--ink)"]');
+    if(header && !document.getElementById('fat-canli-uyari')){
+      var uyari=document.createElement('div');
+      uyari.id='fat-canli-uyari';
+      uyari.style.cssText='background:linear-gradient(90deg,#dc2626,#991b1b);color:#fff;padding:8px 18px;font-size:11px;font-weight:700;text-align:center;letter-spacing:0.5px;border-top:1px solid rgba(255,255,255,.1)';
+      uyari.innerHTML='⚠ CANLI MOD AKTİF — Kestiğin fatura GİB\'e gidecek, İPTAL EDİLEMEZ';
+      header.insertAdjacentElement('afterend',uyari);
+    }
+    // CSS animasyonu yoksa ekle
+    if(!document.getElementById('fat-canli-style')){
+      var st=document.createElement('style');
+      st.id='fat-canli-style';
+      st.textContent='@keyframes fat-canli-puls{0%,100%{opacity:1}50%{opacity:.85}}';
+      document.head.appendChild(st);
+    }
+  }
 }
 
 /* Mevcut müşteriyi seçince alanları doldur */
@@ -3815,6 +3856,38 @@ function faturaKes(){
   var ara=0,kdvTop=0;
   kalemler.forEach(function(k){var m=k.adet*k.fiyat;ara+=m;kdvTop+=m*(k.kdv/100);});
   var genel=Math.round((ara+kdvTop)*100)/100;
+
+  // ⚠ CANLI MOD ONAY EKRANI — EDM aktif + canlı mod + kullanıcı adı varsa
+  var canliMod = (EDM_AYAR.aktif && !EDM_AYAR.testMod && EDM_AYAR.kullaniciAdi);
+  if(canliMod){
+    var ozet =
+      '🚨 CANLI MOD — GERÇEK FATURA KESİLİYOR!\n\n'+
+      'Bu fatura GİB\'e iletilecek ve İPTAL EDİLEMEZ.\n'+
+      'Sadece iade faturası ile düzeltilebilir.\n\n'+
+      '━━━━━━━━━━━━━━━━━━━━━━━\n'+
+      'Tip: '+(faturaTipi==='EFATURA'?'e-Fatura (Kurumsal)':'e-Arşiv (Bireysel)')+'\n'+
+      'Alıcı: '+ad+'\n'+
+      (vkn?(tip==='kurumsal'?'VKN: ':'TC: ')+vkn+'\n':'')+
+      'E-posta: '+mail+'\n'+
+      'Adres: '+adres+', '+ilce+'/'+il+'\n'+
+      '━━━━━━━━━━━━━━━━━━━━━━━\n'+
+      'Kalemler:\n'+
+      kalemler.map(function(k){return '  • '+k.ad+' ('+k.adet+' x ₺'+Number(k.fiyat).toLocaleString('tr-TR')+' +KDV%'+k.kdv+')';}).join('\n')+'\n'+
+      '━━━━━━━━━━━━━━━━━━━━━━━\n'+
+      'KDV\'siz: ₺'+ara.toLocaleString('tr-TR',{maximumFractionDigits:2})+'\n'+
+      'KDV: ₺'+kdvTop.toLocaleString('tr-TR',{maximumFractionDigits:2})+'\n'+
+      'TOPLAM: ₺'+genel.toLocaleString('tr-TR',{maximumFractionDigits:2})+'\n'+
+      '━━━━━━━━━━━━━━━━━━━━━━━\n\n'+
+      'Bu faturayı GİB\'e göndermek istiyor musunuz?\n\n'+
+      '(Devam etmek için "TAMAM" yazın, aksi halde iptal edin)';
+    var cevap = prompt(ozet, '');
+    if(cevap === null) return; // iptal
+    if(String(cevap).trim().toUpperCase() !== 'TAMAM'){
+      toast('Fatura iptal edildi (TAMAM yazılmadı)','red');
+      return;
+    }
+  }
+
   var kdvOrtalama=ara>0?Math.round(kdvTop/ara*100):(EDM_AYAR.kdvOrani||20);
 
   // Fatura no + tarih
