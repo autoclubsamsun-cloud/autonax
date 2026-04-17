@@ -2,16 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PERSONEL_DEMO } from '@/lib/data/personel';
 import type { Personel, ApiResponse } from '@/lib/types';
 import { randomUUID } from 'crypto';
+import { requireAuth } from '@/lib/utils/auth-check';
 
 let STORE: Personel[] = [...PERSONEL_DEMO];
 
-export async function GET() {
-  // Şifreleri döndürme
+export async function GET(req: NextRequest) {
+  const auth = requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
   const safe = STORE.map(({ sifre: _, ...p }) => p);
   return NextResponse.json<ApiResponse<typeof safe>>({ success: true, data: safe });
 }
 
 export async function POST(req: NextRequest) {
+  const auth = requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
   try {
     const body = await req.json() as Omit<Personel, 'id'>;
     const yeni: Personel = { ...body, id: `p-${randomUUID().slice(0, 8)}` };
@@ -23,6 +27,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  const auth = requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
   try {
     const body = await req.json() as Personel;
     const idx = STORE.findIndex(p => p.id === body.id);
@@ -35,6 +41,8 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const auth = requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
   if (!id) return NextResponse.json<ApiResponse>({ success: false, error: 'ID gerekli' }, { status: 400 });

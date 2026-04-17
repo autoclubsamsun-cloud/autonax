@@ -2,14 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { BAYILER_DEMO } from '@/lib/data/bayiler';
 import type { Bayi, ApiResponse } from '@/lib/types';
 import { randomUUID } from 'crypto';
+import { requireAuth } from '@/lib/utils/auth-check';
 
 let STORE: Bayi[] = [...BAYILER_DEMO];
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const auth = requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
   return NextResponse.json<ApiResponse<Bayi[]>>({ success: true, data: STORE });
 }
 
 export async function POST(req: NextRequest) {
+  const auth = requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
   try {
     const body = await req.json() as Omit<Bayi, 'id'>;
     const yeni: Bayi = { ...body, id: `b-${randomUUID().slice(0, 8)}` };
@@ -21,6 +26,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  const auth = requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
   try {
     const body = await req.json() as Bayi;
     const idx = STORE.findIndex(b => b.id === body.id);
@@ -33,6 +40,8 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const auth = requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
   if (!id) return NextResponse.json<ApiResponse>({ success: false, error: 'ID gerekli' }, { status: 400 });

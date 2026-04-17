@@ -1449,8 +1449,8 @@ async function dashboardYukle() {
   var skVals0=document.querySelectorAll('#pg-dashboard .sk-val');
   skVals0.forEach(function(el){if(el.textContent==='0'||el.textContent==='₺0')el.style.opacity='0.3';});
   try {
-    var rdvRes = await fetch('/api/randevular').then(function(r){return r.json();});
-    var mstRes = await fetch('/api/musteriler').then(function(r){return r.json();});
+    var rdvRes = await fetch('/api/randevular',{credentials:'same-origin'}).then(function(r){return r.json();});
+    var mstRes = await fetch('/api/musteriler',{credentials:'same-origin'}).then(function(r){return r.json();});
     var randevular = rdvRes.data || [];
     var musteriler = mstRes.data || [];
 
@@ -1632,9 +1632,9 @@ function doRdvListele(){
 /* ════════════ DASHBOARD DB ENTEGRASYONU ════════════ */
 function dashboardGuncelle(){ dashboardYukle(); return; /* Artık dashboardYukle kullanılıyor */
   Promise.all([
-    fetch('/api/randevular').then(function(r){return r.json();}),
-    fetch('/api/musteriler').then(function(r){return r.json();}),
-    fetch('/api/urunler').then(function(r){return r.json();})
+    fetch('/api/randevular',{credentials:'same-origin'}).then(function(r){return r.json();}),
+    fetch('/api/musteriler',{credentials:'same-origin'}).then(function(r){return r.json();}),
+    fetch('/api/urunler',{credentials:'same-origin'}).then(function(r){return r.json();})
   ]).then(function(results){
     var rdvlar = results[0].data || results[0].randevular || [];
     var musteriler = results[1].data || results[1].musteriler || [];
@@ -2616,7 +2616,7 @@ function siteAyarYukle(){
     }
   }catch(e){console.error('Autonax:',e)}
   // localStorage yoksa DB'den çek
-  fetch('/api/ayarlar').then(function(r){return r.json();}).then(function(d){
+  fetch('/api/ayarlar',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
     if(d.success && d.site_ayarlar){
       var v=d.site_ayarlar;
       Object.keys(v).forEach(function(k){
@@ -2636,7 +2636,7 @@ function siteAyarKaydet(bolum){
     localStorage.setItem(SITE_AYAR_KEY,JSON.stringify(SITE_AYARLAR));
     // DB'ye kaydet — site_ayarlar key altında
     fetch('/api/ayarlar',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({site_ayarlar:SITE_AYARLAR})})
+      body:JSON.stringify({site_ayarlar:SITE_AYARLAR}),credentials:'same-origin'})
     .then(function(r){return r.json();})
     .then(function(d){ if(d.success) toast('✅ '+(bolum||'Ayarlar')+' kaydedildi!','green'); else toast('⚠️ Kaydedildi (DB hatası)','orange'); })
     .catch(function(){ toast('✅ '+(bolum||'Ayarlar')+' kaydedildi (offline)!','green'); });
@@ -3545,7 +3545,7 @@ function personelKaydet(){
   try{localStorage.setItem('autonax_personel_v1',JSON.stringify(PERSONEL));}catch(e){console.error('Autonax:',e)}
   // DB'ye sync et
   PERSONEL.forEach(function(p){
-    fetch('/api/personel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)}).catch(function(){});
+    fetch('/api/personel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p),credentials:'same-origin'}).catch(function(){});
   });
 }
 
@@ -3578,7 +3578,7 @@ function personelListesiRender(){
       if(!confirm(PERSONEL[i].ad+' silinsin mi?')) return;
       var silId=PERSONEL[i].id;
       PERSONEL.splice(i,1);personelKaydet();personelListesiRender();
-      if(silId) fetch('/api/personel?id='+silId,{method:'DELETE'}).catch(function(){});
+      if(silId) fetch('/api/personel?id='+silId,{method:'DELETE',credentials:'same-origin'}).catch(function(){});
       toast('Personel silindi','green');
     });
   });
@@ -3671,7 +3671,7 @@ function personelModalAc(i){
     if(yeni)PERSONEL.push(p);else PERSONEL[i]=p;
     personelKaydet();
     // DB'ye kaydet
-    fetch('/api/personel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)}).catch(function(){});
+    fetch('/api/personel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p),credentials:'same-origin'}).catch(function(){});
     ovl.remove();personelListesiRender();
     toast(yeni?'Personel eklendi':'Personel guncellendi','green');
   });
@@ -4271,7 +4271,7 @@ function bolumlerSayfasiYukle(){
   var el = document.getElementById('fkat-icerik');
   if(!el) return;
   el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--ink4)">Yükleniyor...</div>';
-  fetch('/api/hizmet-bolumleri')
+  fetch('/api/hizmet-bolumleri',{credentials:'same-origin'})
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(d.success){ _bolumlerData = d.data; bolumlerRender(); }
@@ -4388,7 +4388,7 @@ function bolumKaydet(){
     sira: parseInt(document.getElementById('bol-sira').value) || 0,
     aktif: document.getElementById('bol-aktif').checked
   };
-  fetch('/api/hizmet-bolumleri', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)})
+  fetch('/api/hizmet-bolumleri', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data),credentials:'same-origin'})
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(d.success){
@@ -4419,7 +4419,7 @@ function bolumMevcutKartlariImport(bolumId, navKat){
   // Sırayla kaydet
   var importEdilen = 0;
   kartlar.forEach(function(k){
-    fetch('/api/hizmet-kartlari', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(k)})
+    fetch('/api/hizmet-kartlari', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(k),credentials:'same-origin'})
       .then(function(r){ return r.json(); })
       .then(function(){ importEdilen++; if(importEdilen===kartlar.length){ toast('✅ '+importEdilen+' kart otomatik eklendi', 'green'); bolumlerSayfasiYukle(); }});
   });
@@ -4429,7 +4429,7 @@ function bolumMevcutKartlariImport(bolumId, navKat){
 function bolumSil(id){
   var b = _bolumlerData.find(function(x){ return x.id === id; });
   if(!confirm((b ? b.isim : id) + ' bölümü silinsin mi? İçindeki kartlar da silinecek!')) return;
-  fetch('/api/hizmet-bolumleri?id=' + id, {method:'DELETE'})
+  fetch('/api/hizmet-bolumleri?id=' + id, {method:'DELETE',credentials:'same-origin'})
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(d.success){ toast('✅ Bölüm silindi', 'green'); bolumlerSayfasiYukle(); }
@@ -4477,7 +4477,7 @@ function kartResimYukle(input){
   var fd = new FormData(); fd.append('file', file); fd.append('klasor', 'hizmetler');
   var btn = document.getElementById('krt-resim-btn');
   btn.textContent = '⏳ Yükleniyor...'; btn.disabled = true;
-  fetch('/api/resim', {method:'POST', body:fd})
+  fetch('/api/resim', {method:'POST', body:fd,credentials:'same-origin'})
     .then(function(r){ return r.json(); })
     .then(function(d){
       btn.disabled = false;
@@ -4506,7 +4506,7 @@ function kartKaydet(){
     sira: parseInt(document.getElementById('krt-sira').value) || 0,
     aktif: true
   };
-  fetch('/api/hizmet-kartlari', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)})
+  fetch('/api/hizmet-kartlari', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data),credentials:'same-origin'})
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(d.success){
@@ -4521,7 +4521,7 @@ function kartKaydet(){
 
 function kartSil(id){
   if(!confirm('Bu kart silinsin mi?')) return;
-  fetch('/api/hizmet-kartlari?id=' + id, {method:'DELETE'})
+  fetch('/api/hizmet-kartlari?id=' + id, {method:'DELETE',credentials:'same-origin'})
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(d.success){ toast('✅ Kart silindi', 'green'); bolumlerSayfasiYukle(); }
@@ -4596,7 +4596,7 @@ function urunleriApiSenkronEt(){
   SERAMIK.forEach(function(u,i){
     urunDizisi.push({id:'seramik_'+i,isim:u.isim,kat:'seramik',altKat:u.altKat||'',tutar:u.tutar||0,bayiIndirim:u.bayiIndirim||0,aciklama:u.aciklama||''});
   });
-  fetch('/api/urunler',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(urunDizisi)})
+  fetch('/api/urunler',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(urunDizisi),credentials:'same-origin'})
   .then(function(r){return r.json();})
   .then(function(d){})
   .catch(function(e){console.warn('Ürün API hatası:',e);});
@@ -4609,7 +4609,7 @@ function dbSync(url, method, body){
 
 function dbSyncYukle(){
   // Ürünleri DB'den çek — fiyat yönetimi ile senkron
-  fetch('/api/urunler').then(function(r){return r.json();}).then(function(d){
+  fetch('/api/urunler',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
     if(d.success&&d.data&&d.data.length>0){
       d.data.forEach(function(u){
         if(u.id&&URUNLER[u.id]){
@@ -4636,7 +4636,7 @@ function dbSyncYukle(){
     }catch(e){console.error('Autonax:',e)}
   });
   // Randevuları DB'den çek
-  fetch('/api/randevular').then(function(r){return r.json();}).then(function(d){
+  fetch('/api/randevular',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
     if(d.success&&d.data){
       // DB verisi varsa kullan, yoksa localStorage'ı koru
       if(d.data.length > 0){
@@ -4655,11 +4655,11 @@ function dbSyncYukle(){
     try{ var r=localStorage.getItem('autonax_randevular_v1'); if(r) RANDEVULAR=JSON.parse(r); }catch(e){console.error('Autonax:',e)}
   });
   // Bayileri DB'den çek
-  fetch('/api/bayiler').then(function(r){return r.json();}).then(function(d){
+  fetch('/api/bayiler',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
     if(d.success&&d.data) BAYILER=d.data;
   }).catch(function(){});
   // Personeli DB'den çek
-  fetch('/api/personel').then(function(r){return r.json();}).then(function(d){
+  fetch('/api/personel',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
     if(d.success&&d.data) PERSONEL=d.data;
   }).catch(function(){});
 }
@@ -5058,7 +5058,7 @@ function fUrunKaydet(btn){
 
 function fiyatSayfasiYukle(){
   // Önce DB'den güncel fiyatları çek, sonra sayfayı oluştur
-  fetch('/api/urunler').then(function(r){return r.json();}).then(function(data){
+  fetch('/api/urunler',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(data){
     if(data.success && data.data && data.data.length > 0){
       data.data.forEach(function(u){
         if(u.kat === 'seramik' || u.kat === 'bakim') return; // PPF dışı ayrı işle
@@ -5119,7 +5119,7 @@ function urunResimYukle(e,id,tip,idx){
   fd.append('file', file);
   fd.append('klasor', 'urunler');
 
-  fetch('/api/resim', {method:'POST', body:fd})
+  fetch('/api/resim', {method:'POST', body:fd,credentials:'same-origin'})
   .then(function(r){ return r.json(); })
   .then(function(d){
     if(!d.success){ toast('❌ '+d.error,'red'); return; }
@@ -6354,7 +6354,7 @@ function bayiKaydet(id){
     b.genelIndirim=parseInt(g('be-indirim'))||b.genelIndirim;
     b.durum=g('be-durum');b.sozlesmeTarih=g('be-soz-bas');
     b.sozlesmeBitis=g('be-soz-bit');b.adres=g('be-adres');b.notlar=g('be-notlar');
-    fetch('/api/bayiler',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).catch(function(){});
+    fetch('/api/bayiler',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b),credentials:'same-origin'}).catch(function(){});
     toast('✅ Bayi güncellendi!','green');
   } else {
     var yeniId='B'+String(Date.now()).slice(-4);
@@ -6368,7 +6368,7 @@ function bayiKaydet(id){
       notlar:g('be-notlar'),odemeler:[],satislar:[]
     };
     BAYILER.push(yeniB);
-    fetch('/api/bayiler',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(yeniB)}).catch(function(){});
+    fetch('/api/bayiler',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(yeniB),credentials:'same-origin'}).catch(function(){});
     toast('✅ '+isim+' eklendi!','green');
   }
   document.getElementById('bayi-ekle-ovl').remove();
@@ -7778,7 +7778,7 @@ function saListenerBagla(tab){
           var fd=new FormData();
           fd.append('file',file);
           fd.append('klasor','logo');
-          fetch('/api/resim',{method:'POST',body:fd})
+          fetch('/api/resim',{method:'POST',body:fd,credentials:'same-origin'})
           .then(function(r){return r.json();})
           .then(function(d){
             if(d.success){
@@ -7823,7 +7823,7 @@ function saListenerBagla(tab){
             if(file.size>2*1024*1024){toast('Max 2MB!','red');return;}
             toast('⏳ Yükleniyor...','blue');
             var fd=new FormData(); fd.append('file',file); fd.append('klasor','banner');
-            fetch('/api/resim',{method:'POST',body:fd})
+            fetch('/api/resim',{method:'POST',body:fd,credentials:'same-origin'})
             .then(function(r){return r.json();})
             .then(function(d){
               if(d.success){
@@ -7866,7 +7866,7 @@ function saListenerBagla(tab){
           if(file.size>2*1024*1024){toast('Max 2MB!','red');return;}
           toast('⏳ Yükleniyor...','blue');
           var fd2=new FormData(); fd2.append('file',file); fd2.append('klasor','kampanya');
-          fetch('/api/resim',{method:'POST',body:fd2})
+          fetch('/api/resim',{method:'POST',body:fd2,credentials:'same-origin'})
           .then(function(r){return r.json();})
           .then(function(d){
             if(d.success){

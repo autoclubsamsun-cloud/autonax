@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql, initDB } from '@/lib/db';
+import { requireAuth } from '@/lib/utils/auth-check';
 
 let dbReady = false;
 async function ensureDB() {
   if (!dbReady) { await initDB(); dbReady = true; }
 }
-
 function mapRandevu(r: any) {
   return {
     id: r.id, tarih: r.tarih, saat: r.saat, musteri: r.musteri, tel: r.tel,
@@ -15,8 +15,9 @@ function mapRandevu(r: any) {
     faturaDurum: r.fatura_durum, odemeGecmisi: r.odeme_gecmisi || [],
   };
 }
-
 export async function GET(req: NextRequest) {
+  const auth = requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
   try {
     await ensureDB();
     const { searchParams } = new URL(req.url);
@@ -31,8 +32,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, data: rows.map(mapRandevu) });
   } catch (e: any) { return NextResponse.json({ success: false, error: e.message }, { status: 500 }); }
 }
-
 export async function POST(req: NextRequest) {
+  const auth = requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
   try {
     await ensureDB();
     const b = await req.json();
@@ -41,8 +43,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: { ...b, id } }, { status: 201 });
   } catch (e: any) { return NextResponse.json({ success: false, error: e.message }, { status: 500 }); }
 }
-
 export async function PUT(req: NextRequest) {
+  const auth = requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
   try {
     await ensureDB();
     const b = await req.json();
@@ -51,8 +54,9 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ success: true, data: b });
   } catch (e: any) { return NextResponse.json({ success: false, error: e.message }, { status: 500 }); }
 }
-
 export async function DELETE(req: NextRequest) {
+  const auth = requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
   try {
     await ensureDB();
     const id = new URL(req.url).searchParams.get('id');

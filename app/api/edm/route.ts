@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiResponse } from '@/lib/types';
+import { requireAuth } from '@/lib/utils/auth-check';
 
 interface FaturaIstegi {
   randevuId: string;
@@ -13,16 +14,13 @@ interface FaturaIstegi {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
   try {
     const body = await req.json() as FaturaIstegi;
-
-    // TODO: EDM Bilişim SOAP API entegrasyonu
-    // https://earsiv.ggmm.com.tr → WS endpoint
-
     const kdvsiz = Math.round(body.tutar / (1 + body.kdvOrani / 100));
     const kdvTutar = body.tutar - kdvsiz;
     const faturaNo = `AUT${new Date().getFullYear()}${String(Date.now()).slice(-6)}`;
-
     return NextResponse.json<ApiResponse>({
       success: true,
       data: {
@@ -41,11 +39,11 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// EDM bağlantı testi
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const auth = requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
   const edmUser = process.env.EDM_USERNAME;
   const testMod = process.env.NODE_ENV !== 'production';
-
   return NextResponse.json<ApiResponse>({
     success: true,
     data: { bagli: !!edmUser, testMod, mesaj: testMod ? 'Test modunda çalışıyor' : 'Canlı bağlantı' },

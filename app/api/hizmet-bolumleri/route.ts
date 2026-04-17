@@ -1,8 +1,13 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { sql, initDB } from '@/lib/db';
+import { requireAuth } from '@/lib/utils/auth-check';
+
 let dbReady = false;
 async function ensureDB() { if (!dbReady) { await initDB(); dbReady = true; } }
-export async function GET() {
+
+export async function GET(req: NextRequest) {
+  const auth = requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
   try {
     await ensureDB();
     const bolumleri = await sql`SELECT * FROM hizmet_bolumleri ORDER BY sira, olusturma`;
@@ -11,7 +16,10 @@ export async function GET() {
     return NextResponse.json({ success: true, data });
   } catch (e: any) { return NextResponse.json({ success: false, error: e.message }, { status: 500 }); }
 }
+
 export async function POST(req: NextRequest) {
+  const auth = requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
   try {
     await ensureDB();
     const b = await req.json();
@@ -20,7 +28,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: { ...b, id } }, { status: 201 });
   } catch (e: any) { return NextResponse.json({ success: false, error: e.message }, { status: 500 }); }
 }
+
 export async function DELETE(req: NextRequest) {
+  const auth = requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
   try {
     await ensureDB();
     const id = new URL(req.url).searchParams.get('id');

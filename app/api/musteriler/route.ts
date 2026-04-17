@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { RANDEVULAR_DEMO } from '@/lib/data/randevular';
 import type { ApiResponse } from '@/lib/types';
+import { requireAuth } from '@/lib/utils/auth-check';
 
 export async function GET(req: NextRequest) {
+  const auth = requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+
   const { searchParams } = new URL(req.url);
   const q = searchParams.get('q')?.toLowerCase();
 
-  // Randevulardan müşterileri çıkar
   const map = new Map<string, { isim: string; tel: string; plaka: string; arac: string; islemSayisi: number; toplamTutar: number; sonTarih: string }>();
 
   RANDEVULAR_DEMO.forEach(r => {
