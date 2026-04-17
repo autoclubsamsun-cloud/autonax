@@ -559,7 +559,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 <body>
 
 <!-- ══ GİRİŞ OVERLAY ══ -->
-<div id="login-ovl" role="dialog" aria-label="Giriş" style="display:flex;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:20px;background:#0a0a0a">
+<div id="login-ovl" role="dialog" aria-label="Giriş" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:20px;background:#0a0a0a">
   <div class="login-bg-glow"></div>
   <div class="login-bg-glow2"></div>
   <div class="login-card">
@@ -4604,7 +4604,7 @@ function urunleriApiSenkronEt(){
 
 /* ─── DB SYNC — API'ye yaz ─── */
 function dbSync(url, method, body){
-  return fetch(url,{method:method,headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined}).catch(function(e){console.warn('DB sync hata:',e);});
+  return fetch(url,{method:method,headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,credentials:'same-origin'}).catch(function(e){console.warn('DB sync hata:',e);});
 }
 
 function dbSyncYukle(){
@@ -6019,17 +6019,18 @@ function karsilastirmaYukle(){
 
 function bayiKPIler(){
   var el=document.getElementById('bayi-kpiler'); if(!el) return;
+  if(!BAYILER||!BAYILER.length) return;
   var aktif=BAYILER.filter(function(b){return b.durum==='aktif';}).length;
-  var toplamOdeme=BAYILER.reduce(function(s,b){return s+b.odemeler.reduce(function(ss,o){return ss+o.miktar;},0);},0);
+  var toplamOdeme=BAYILER.reduce(function(s,b){return s+(b.odemeler||[]).reduce(function(ss,o){return ss+o.miktar;},0);},0);
   var buAy=new Date().getMonth(); var buYil=new Date().getFullYear();
   var buAyOdeme=BAYILER.reduce(function(s,b){
-    return s+b.odemeler.filter(function(o){
+    return s+(b.odemeler||[]).filter(function(o){
       var p=o.tarih.split('.'); return parseInt(p[1])-1===buAy&&parseInt(p[2])===buYil;
     }).reduce(function(ss,o){return ss+o.miktar;},0);
   },0);
   var enIyi=BAYILER.reduce(function(best,b){
-    var t=b.odemeler.reduce(function(s,o){return s+o.miktar;},0);
-    var bt=best.odemeler?best.odemeler.reduce(function(s,o){return s+o.miktar;},0):0;
+    var t=(b.odemeler||[]).reduce(function(s,o){return s+o.miktar;},0);
+    var bt=(best.odemeler||[]).reduce(function(s,o){return s+o.miktar;},0);
     return t>bt?b:best;
   },{odemeler:[]});
 
