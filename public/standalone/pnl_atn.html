@@ -649,6 +649,10 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
         <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         Raporlar
       </div>
+      <div class="sn" onclick="doPg('odemeler')">
+        <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Ödemeler
+      </div>
       <div class="sn" onclick="doPg('bayiler')">
         <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         Bayiler
@@ -1184,6 +1188,61 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 
     </div>
 
+<!-- ══ ÖDEMELER ══ -->
+    <div id="pg-odemeler" class="pg">
+      <div class="ph">
+        <div class="ph-title">ÖDEME YÖNETİMİ</div>
+        <div class="ph-sub">Tüm ödeme kayıtları · Durum takibi · Dekont görüntüleme</div>
+      </div>
+
+      <!-- KPI Kartları -->
+      <div class="g4" id="odeme-kpiler" style="margin-bottom:16px"></div>
+
+      <!-- Filtre -->
+      <div class="k" style="margin-bottom:0">
+        <div class="kh" style="display:flex;flex-direction:column;gap:8px;padding:12px 16px">
+          <div style="display:flex;align-items:center;gap:8px;width:100%;flex-wrap:wrap">
+            <div class="kt" style="flex:0 0 auto;white-space:nowrap">Ödeme Kayıtları</div>
+            <div style="position:relative;flex:1;min-width:160px">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#aaa" stroke-width="2" stroke-linecap="round" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="odeme-arama" placeholder="Müşteri, plaka ara..." oninput="odemeListeYukle()" style="width:100%;padding:7px 10px 7px 30px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
+            </div>
+          </div>
+          <div style="width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch">
+            <div style="display:flex;gap:5px;align-items:center;min-width:max-content;flex-wrap:nowrap">
+              <select id="odeme-ay" onchange="odemeListeYukle()" style="border:1.5px solid var(--bd);border-radius:7px;padding:5px 8px;font-size:11px;font-family:Outfit,sans-serif;outline:none;color:var(--ink3)">
+                <option value="">Tüm Aylar</option>
+                <option value="01">Ocak</option><option value="02">Şubat</option><option value="03">Mart</option>
+                <option value="04">Nisan</option><option value="05">Mayıs</option><option value="06">Haziran</option>
+                <option value="07">Temmuz</option><option value="08">Ağustos</option><option value="09">Eylül</option>
+                <option value="10">Ekim</option><option value="11">Kasım</option><option value="12">Aralık</option>
+              </select>
+              <select id="odeme-yontem" onchange="odemeListeYukle()" style="border:1.5px solid var(--bd);border-radius:7px;padding:5px 8px;font-size:11px;font-family:Outfit,sans-serif;outline:none;color:var(--ink3)">
+                <option value="">Tüm Yöntemler</option>
+                <option value="Nakit">💵 Nakit</option>
+                <option value="Kredi Kart">💳 Kart/POS</option>
+                <option value="Taksit">📋 Taksit</option>
+                <option value="Havale">🏦 Havale/EFT</option>
+              </select>
+              <select id="odeme-durum" onchange="odemeListeYukle()" style="border:1.5px solid var(--bd);border-radius:7px;padding:5px 8px;font-size:11px;font-family:Outfit,sans-serif;outline:none;color:var(--ink3)">
+                <option value="">Tüm Durumlar</option>
+                <option value="tamam">✅ Tamamlanan</option>
+                <option value="kismi">⏳ Kısmi Ödeme</option>
+                <option value="bekl">❌ Ödenmemiş</option>
+              </select>
+              <button class="ab ab-n" style="font-size:10px;white-space:nowrap" onclick="odemeFiltreTemizle()">✕ Sıfırla</button>
+            </div>
+          </div>
+        </div>
+        <div class="kb" style="padding:0">
+          <div class="tbl-wrap"><table class="tbl" id="odeme-tablo">
+            <thead><tr><th>Tarih</th><th>Müşteri</th><th>Plaka</th><th>Hizmet</th><th>Toplam</th><th>Ödenen</th><th>Kalan</th><th>Yöntem</th><th>Durum</th><th>İşlem</th></tr></thead>
+            <tbody id="odeme-tbody"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
 <!-- ══ BAYİLER ══ -->
     <div id="pg-bayiler" class="pg">
       <div class="ph">
@@ -1550,6 +1609,7 @@ function doPg(id){
   if(id==='musteriler')setTimeout(mstListele,50);
   if(id==='hizmetler')setTimeout(hgListele,50);
   if(id==='fiyatlar'){setTimeout(fiyatSayfasiYukle,50);}
+  if(id==='odemeler'){setTimeout(odemeSayfasiYukle,50);}
   if(id==='bayiler'){setTimeout(bayiSayfasiYukle,50);}
   if(id==='ayarlar'){setTimeout(function(){siteAyarYukle();ayarlarSayfasiYukle();adminSekmesiYukle();},50);}
   if(id==='raporlar'){setTimeout(function(){raporYukle();karsilastirmaSelDoldur();karsilastirmaYukle();setTimeout(maliyetSayfasiYukle,100);},50);}
@@ -1629,10 +1689,9 @@ function doRdvListele(){
       +'<td style="display:flex;gap:5px;flex-wrap:wrap">'
         +(s.ekBtn?'<button class="ab ab-g" onclick="rdvIslemYap(this)">Tamamla</button>':'')
         +'<button class="ab ab-n" onclick="rdvDetay('+i+')">Detay</button>'
-        +'<button class="ab ab-r" onclick="rdvOdemeAl('+i+')">💳</button>'
         +'<button style="padding:5px 8px;border:1.5px solid #2563EB;border-radius:6px;background:transparent;color:#2563EB;font-size:11px;font-weight:600;cursor:pointer" onclick="rdvDuzenle('+i+')">✏️ Düzenle</button>'
         +'<button style="padding:5px 8px;border:1.5px solid #1a6b3c;border-radius:6px;background:transparent;color:#1a6b3c;font-size:11px;font-weight:600;cursor:pointer" onclick="rdvFaturaKes('+i+')">🧾 Fatura</button>'
-        +'<button style="padding:5px 8px;border:1.5px solid #d97706;border-radius:6px;background:transparent;color:#d97706;font-size:11px;font-weight:600;cursor:pointer" onclick="rdvHariciOdeme('+i+')">💵 Ödeme Al</button>'
+        +'<button style="padding:5px 8px;border:1.5px solid #d97706;border-radius:6px;background:transparent;color:#d97706;font-size:11px;font-weight:600;cursor:pointer" onclick="rdvHariciOdeme('+i+')">💳 Ödeme Al</button>'
       +'</td></tr>';
   }).join('');
 }
@@ -3292,6 +3351,215 @@ function rdvFaturaKes(idx){
 }
 
 /* HARİCİ ÖDEME AL — nakit/kart/havale */
+/* ══ ÖDEME YÖNETİMİ SAYFASI ══ */
+function odemeSayfasiYukle(){
+  odemeKPIGuncelle();
+  odemeListeYukle();
+}
+
+function odemeKPIGuncelle(){
+  var el=document.getElementById('odeme-kpiler'); if(!el) return;
+  var topTutar=0,topOdenen=0,topKalan=0,tamSay=0,kismiSay=0,beklSay=0,topOdSay=0;
+  RANDEVULAR.forEach(function(r){
+    var tutar=r.tutar||0; var odenen=r.odenenToplam||0; var kalan=Math.max(0,tutar-odenen);
+    topTutar+=tutar; topOdenen+=odenen; topKalan+=kalan;
+    if(r.odemeGecmisi&&r.odemeGecmisi.length) topOdSay+=r.odemeGecmisi.length;
+    if(kalan<=0&&tutar>0) tamSay++;
+    else if(odenen>0) kismiSay++;
+    else if(tutar>0) beklSay++;
+  });
+  el.innerHTML='<div class="sk"><div class="sk-val" style="color:var(--r)">₺'+topTutar.toLocaleString('tr-TR')+'</div><div class="sk-lbl">Toplam Tutar</div></div>'
+    +'<div class="sk"><div class="sk-val" style="color:#16a34a">₺'+topOdenen.toLocaleString('tr-TR')+'</div><div class="sk-lbl">Toplam Ödenen</div></div>'
+    +'<div class="sk"><div class="sk-val" style="color:#d97706">₺'+topKalan.toLocaleString('tr-TR')+'</div><div class="sk-lbl">Kalan Borç</div></div>'
+    +'<div class="sk"><div class="sk-val">'+topOdSay+'</div><div class="sk-lbl">Ödeme İşlemi</div></div>';
+}
+
+function odemeListeYukle(){
+  var tbody=document.getElementById('odeme-tbody'); if(!tbody) return;
+  var arama=((document.getElementById('odeme-arama')||{}).value||'').toLowerCase().trim();
+  var ay=(document.getElementById('odeme-ay')||{}).value||'';
+  var yontem=(document.getElementById('odeme-yontem')||{}).value||'';
+  var durum=(document.getElementById('odeme-durum')||{}).value||'';
+
+  // Tüm randevulardan ödeme satırları oluştur
+  var satirlar=[];
+  RANDEVULAR.forEach(function(r,ri){
+    var tutar=r.tutar||0; var odenen=r.odenenToplam||0; var kalan=Math.max(0,tutar-odenen);
+    var durumTip=kalan<=0&&tutar>0?'tamam':odenen>0?'kismi':'bekl';
+    // Tarih filtresi
+    var tarihParts=r.tarih.split('.');
+    var rAy=tarihParts[1]||'';
+    if(ay&&rAy!==ay) return;
+    // Arama filtresi
+    if(arama&&(r.musteri||'').toLowerCase().indexOf(arama)<0&&(r.plaka||'').toLowerCase().indexOf(arama)<0) return;
+    // Durum filtresi
+    if(durum&&durumTip!==durum) return;
+    // Yöntem filtresi — ödeme geçmişindeki yöntemlere bak
+    if(yontem){
+      var yontemVar=false;
+      if(r.odemeGecmisi&&r.odemeGecmisi.length){
+        r.odemeGecmisi.forEach(function(og){ if((og.yontem||'').indexOf(yontem)>-1) yontemVar=true; });
+      }
+      if(!yontemVar) return;
+    }
+    // Son ödeme yöntemi
+    var sonYontem='—';
+    if(r.odemeGecmisi&&r.odemeGecmisi.length){
+      var son=r.odemeGecmisi[r.odemeGecmisi.length-1];
+      sonYontem=son.yontem||'—';
+    }
+    var durumHTML,durumRenk;
+    if(durumTip==='tamam'){durumHTML='✅ Tamamlandı';durumRenk='#16a34a';}
+    else if(durumTip==='kismi'){durumHTML='⏳ Kısmi';durumRenk='#d97706';}
+    else {durumHTML='❌ Ödenmemiş';durumRenk='#dc2626';}
+
+    satirlar.push({r:r,ri:ri,tutar:tutar,odenen:odenen,kalan:kalan,durumTip:durumTip,durumHTML:durumHTML,durumRenk:durumRenk,sonYontem:sonYontem});
+  });
+
+  if(!satirlar.length){
+    tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:#999">Ödeme kaydı bulunamadı</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML=satirlar.map(function(s){
+    var r=s.r;
+    var yonIkon=s.sonYontem.indexOf('Nakit')>-1?'💵':s.sonYontem.indexOf('Havale')>-1?'🏦':s.sonYontem.indexOf('Taksit')>-1?'📋':s.sonYontem.indexOf('Kart')>-1?'💳':'—';
+    return '<tr>'
+      +'<td><b>'+r.tarih+'</b><br><small>'+r.saat+'</small></td>'
+      +'<td><b>'+r.musteri+'</b><br><small style="color:var(--ink4)">'+r.tel+'</small></td>'
+      +'<td><span class="tbl-plaka">'+r.plaka+'</span></td>'
+      +'<td style="font-size:11px">'+r.hizmet.substring(0,30)+(r.hizmet.length>30?'...':'')+'</td>'
+      +'<td class="tbl-fiyat">₺'+s.tutar.toLocaleString('tr-TR')+'</td>'
+      +'<td style="color:#16a34a;font-weight:700">₺'+s.odenen.toLocaleString('tr-TR')+'</td>'
+      +'<td style="color:'+(s.kalan>0?'#dc2626':'#16a34a')+';font-weight:700">'+(s.kalan>0?'₺'+s.kalan.toLocaleString('tr-TR'):'✓')+'</td>'
+      +'<td><span style="font-size:11px">'+yonIkon+' '+s.sonYontem+'</span></td>'
+      +'<td><span style="font-size:11px;background:'+s.durumRenk+'15;color:'+s.durumRenk+';padding:3px 8px;border-radius:10px;font-weight:600;white-space:nowrap">'+s.durumHTML+'</span></td>'
+      +'<td style="display:flex;gap:4px;flex-wrap:wrap">'
+        +(s.kalan>0?'<button class="ab ab-r" style="font-size:10px" onclick="rdvHariciOdeme('+s.ri+')">💳 Ödeme Al</button>':'')
+        +'<button class="ab ab-n" style="font-size:10px" onclick="odemeDetayGoster('+s.ri+')">📄 Detay</button>'
+        +(s.odenen>0?'<button class="ab ab-n" style="font-size:10px" onclick="odemeDekontGoster('+s.ri+')">🧾 Dekont</button>':'')
+      +'</td>'
+    +'</tr>';
+  }).join('');
+}
+
+function odemeFiltreTemizle(){
+  ['odeme-arama','odeme-ay','odeme-yontem','odeme-durum'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
+  odemeListeYukle();
+}
+
+function odemeDetayGoster(idx){
+  var r=RANDEVULAR[idx]; if(!r) return;
+  var tutar=r.tutar||0; var odenen=r.odenenToplam||0; var kalan=Math.max(0,tutar-odenen);
+  var yzd=tutar>0?Math.min(100,Math.round(odenen/tutar*100)):0;
+
+  var gecmisHTML='<div style="text-align:center;padding:14px;color:#999;font-size:12px">Henüz ödeme kaydı yok</div>';
+  if(r.odemeGecmisi&&r.odemeGecmisi.length){
+    gecmisHTML=r.odemeGecmisi.map(function(og,i){
+      var ikon=og.yontem.indexOf('Nakit')>-1?'💵':og.yontem.indexOf('Havale')>-1?'🏦':og.yontem.indexOf('Taksit')>-1?'📋':'💳';
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bg)">'
+        +'<div style="font-size:18px;flex-shrink:0">'+ikon+'</div>'
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:12px;font-weight:700">'+og.yontem+'</div>'
+          +(og.not?'<div style="font-size:10px;color:var(--ink4)">'+og.not+'</div>':'')
+        +'</div>'
+        +'<div style="text-align:right;flex-shrink:0">'
+          +'<div style="font-family:Bebas Neue,sans-serif;font-size:15px;color:#16a34a">+₺'+og.miktar.toLocaleString('tr-TR')+'</div>'
+          +'<div style="font-size:10px;color:var(--ink4)">'+og.tarih+'</div>'
+        +'</div>'
+      +'</div>';
+    }).join('');
+  }
+
+  var ovl=document.createElement('div');
+  ovl.style.cssText='position:fixed;inset:0;z-index:980;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto';
+  ovl.onclick=function(e){if(e.target===ovl)ovl.remove();};
+  ovl.innerHTML='<div style="background:#fff;border-radius:16px;max-width:480px;width:100%;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.25);max-height:90vh;display:flex;flex-direction:column">'
+    +'<div style="background:var(--ink);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">'
+      +'<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#fff">ÖDEME DETAY</div>'
+      +'<div style="cursor:pointer;color:#888;font-size:26px" onclick="this.closest(\'[style]\').parentElement.remove()">&times;</div>'
+    +'</div>'
+    +'<div style="padding:14px 16px;background:var(--bg);border-bottom:1px solid var(--bd);flex-shrink:0">'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:6px">'
+        +'<div><div style="font-size:14px;font-weight:700">'+r.musteri+'</div><div style="font-size:11px;color:var(--ink4)">'+r.plaka+' · '+r.tarih+'</div><div style="font-size:11px;color:var(--ink4);margin-top:2px">'+r.hizmet.substring(0,40)+'</div></div>'
+        +'<div style="text-align:right"><div style="font-size:10px;color:var(--ink4)">Toplam</div><div style="font-family:Bebas Neue,sans-serif;font-size:20px;color:var(--ink)">₺'+tutar.toLocaleString('tr-TR')+'</div></div>'
+      +'</div>'
+      +'<div style="height:6px;background:var(--bg);border-radius:3px;overflow:hidden;margin:8px 0;border:1px solid var(--bd)">'
+        +'<div style="height:100%;width:'+yzd+'%;background:'+(yzd>=100?'#16a34a':'var(--r)')+';border-radius:3px;transition:.4s"></div></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:11px">'
+        +'<span style="color:#16a34a;font-weight:700">Ödenen: ₺'+odenen.toLocaleString('tr-TR')+'</span>'
+        +'<span style="color:'+(kalan>0?'var(--r)':'#16a34a')+';font-weight:700">'+(kalan>0?'Kalan: ₺'+kalan.toLocaleString('tr-TR'):'✓ Tamamlandı')+'</span>'
+      +'</div>'
+    +'</div>'
+    +'<div style="overflow-y:auto;flex:1;padding:14px 16px">'
+      +'<div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:8px">Ödeme Geçmişi ('+((r.odemeGecmisi||[]).length)+' kayıt)</div>'
+      +gecmisHTML
+    +'</div>'
+    +'<div style="padding:12px 16px;border-top:1px solid var(--bd);display:flex;gap:8px;flex-shrink:0">'
+      +(kalan>0?'<button onclick="this.closest(\'[style]\').parentElement.remove();rdvHariciOdeme('+idx+')" style="flex:1;padding:10px;border:none;border-radius:8px;background:var(--r);color:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;cursor:pointer">💳 ÖDEME AL</button>':'')
+      +(odenen>0?'<button onclick="this.closest(\'[style]\').parentElement.remove();odemeDekontGoster('+idx+')" style="flex:1;padding:10px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;cursor:pointer">🧾 DEKONT</button>':'')
+    +'</div>'
+  +'</div>';
+  document.body.appendChild(ovl);
+}
+
+function odemeDekontGoster(idx){
+  var r=RANDEVULAR[idx]; if(!r||!r.odemeGecmisi||!r.odemeGecmisi.length) return;
+  var tutar=r.tutar||0; var odenen=r.odenenToplam||0; var kalan=Math.max(0,tutar-odenen);
+  var satirlar=r.odemeGecmisi.map(function(og,i){
+    return '<tr><td style="padding:6px 10px;border:1px solid #eee;font-size:12px">'+(i+1)+'</td>'
+      +'<td style="padding:6px 10px;border:1px solid #eee;font-size:12px">'+og.tarih+'</td>'
+      +'<td style="padding:6px 10px;border:1px solid #eee;font-size:12px">'+og.yontem+'</td>'
+      +'<td style="padding:6px 10px;border:1px solid #eee;font-size:12px;text-align:right;font-weight:700;color:#16a34a">₺'+og.miktar.toLocaleString('tr-TR')+'</td>'
+      +'<td style="padding:6px 10px;border:1px solid #eee;font-size:11px">'+( og.not||'—')+'</td></tr>';
+  }).join('');
+
+  var html='<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>Ödeme Dekont - '+r.musteri+'</title>'
+    +'<style>body{font-family:Outfit,Arial,sans-serif;max-width:500px;margin:40px auto;padding:0 20px;color:#111}'
+    +'.logo{font-size:28px;font-weight:900;color:#B01C2E;letter-spacing:4px;text-align:center;margin-bottom:4px}'
+    +'.sub{text-align:center;font-size:11px;color:#777;margin-bottom:20px}'
+    +'h3{text-align:center;border-top:2px solid #B01C2E;padding:10px 0;margin:0 0 16px;font-size:16px}'
+    +'.row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:13px}'
+    +'table{width:100%;border-collapse:collapse;margin:16px 0}'
+    +'th{padding:8px 10px;border:1px solid #ddd;background:#f5f5f5;font-size:11px;text-align:left}'
+    +'.total{font-size:14px;font-weight:700;text-align:right;padding:10px 0;border-top:2px solid #111}'
+    +'@media print{body{margin:20px}}</style></head><body>'
+    +'<div class="logo">AUTONAX</div>'
+    +'<div class="sub">Premium Araç Koruma · Ödeme Dekont</div>'
+    +'<h3>ÖDEME DEKONT</h3>'
+    +'<div class="row"><span>Müşteri</span><b>'+r.musteri+'</b></div>'
+    +'<div class="row"><span>Telefon</span><b>'+(r.tel||'—')+'</b></div>'
+    +'<div class="row"><span>Plaka</span><b>'+r.plaka+'</b></div>'
+    +'<div class="row"><span>Hizmet</span><b>'+r.hizmet+'</b></div>'
+    +'<div class="row"><span>Randevu Tarihi</span><b>'+r.tarih+'</b></div>'
+    +'<table><thead><tr><th>#</th><th>Tarih</th><th>Yöntem</th><th style="text-align:right">Tutar</th><th>Not</th></tr></thead>'
+    +'<tbody>'+satirlar+'</tbody></table>'
+    +'<div class="total">Toplam Tutar: ₺'+tutar.toLocaleString('tr-TR')+'</div>'
+    +'<div class="total" style="color:#16a34a;border-top:none">Ödenen: ₺'+odenen.toLocaleString('tr-TR')+'</div>'
+    +(kalan>0?'<div class="total" style="color:#dc2626;border-top:none">Kalan: ₺'+kalan.toLocaleString('tr-TR')+'</div>':'')
+    +'<div style="text-align:center;margin-top:30px;font-size:10px;color:#999">Bu dekont Autonax sistemi tarafından oluşturulmuştur.</div>'
+    +'<div style="text-align:center;margin-top:8px"><button onclick="window.print()" style="padding:8px 24px;background:#B01C2E;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px">🖨️ Yazdır / PDF</button></div>'
+    +'</body></html>';
+  var w=window.open('','_blank','width=600,height=700');
+  w.document.write(html);
+  w.document.close();
+}
+
+/* Kart numarası formatlama — 4'lü gruplar */
+function kartNoFormat(el){
+  var v=el.value.replace(/\D/g,'').substring(0,16);
+  var formatted=v.replace(/(.{4})/g,'$1 ').trim();
+  el.value=formatted;
+}
+/* Son kullanma tarihi formatlama — AA/YY */
+function kartSktFormat(el){
+  var v=el.value.replace(/\D/g,'').substring(0,4);
+  if(v.length>=3) v=v.substring(0,2)+'/'+v.substring(2);
+  el.value=v;
+}
+
 function rdvHariciOdeme(idx){
   var r=RANDEVULAR[idx]; if(!r) return;
   var toplamTutar=r.tutar||0;
@@ -3382,12 +3650,39 @@ function rdvHariciOdeme(idx){
             +'</div>'
             // Yöntem butonları
             +'<div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:8px">Ödeme Yöntemi</div>'
-            +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">'
+            +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">'
               +'<button data-yon="Nakit" class="ho-yon" style="padding:10px 6px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-size:11px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:20px">💵</span>Nakit</button>'
               +'<button data-yon="Kredi Kart" class="ho-yon" style="padding:10px 6px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-size:11px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:20px">💳</span>Kart/POS</button>'
+              +'<button data-yon="Taksit" class="ho-yon" style="padding:10px 6px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-size:11px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:20px">📋</span>Taksit</button>'
               +'<button data-yon="Havale" class="ho-yon" style="padding:10px 6px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-size:11px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:20px">🏦</span>Havale/EFT</button>'
             +'</div>'
             +'<div id="ho-yon-uyari" style="font-size:11px;color:#dc2626;display:none;margin-bottom:8px">Ödeme yöntemi seçin!</div>'
+            // Kredi kartı bilgi alanları — Kart/POS veya Taksit seçildiğinde gösterilir
+            +'<div id="ho-kart-alanlari" style="display:none;margin-bottom:12px;padding:12px;background:rgba(37,99,235,.04);border:1.5px solid rgba(37,99,235,.15);border-radius:10px">'
+              +'<div style="font-size:10px;font-weight:700;color:#2563EB;text-transform:uppercase;margin-bottom:10px">💳 Kart Bilgileri</div>'
+              +'<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:600;color:var(--ink4);margin-bottom:3px">Kart Numarası</div>'
+                +'<input type="text" id="ho-kart-no" placeholder="•••• •••• •••• ••••" maxlength="19" style="width:100%;padding:9px 10px;border:1.5px solid var(--bd);border-radius:8px;font-size:14px;font-family:monospace;outline:none;box-sizing:border-box;letter-spacing:2px" oninput="kartNoFormat(this)">'
+              +'</div>'
+              +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'
+                +'<div><div style="font-size:10px;font-weight:600;color:var(--ink4);margin-bottom:3px">Son Kullanma</div>'
+                  +'<input type="text" id="ho-kart-skt" placeholder="AA/YY" maxlength="5" style="width:100%;padding:9px 10px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;font-family:monospace;outline:none;box-sizing:border-box;text-align:center" oninput="kartSktFormat(this)">'
+                +'</div>'
+                +'<div><div style="font-size:10px;font-weight:600;color:var(--ink4);margin-bottom:3px">CVV</div>'
+                  +'<input type="password" id="ho-kart-cvv" placeholder="•••" maxlength="4" style="width:100%;padding:9px 10px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;font-family:monospace;outline:none;box-sizing:border-box;text-align:center">'
+                +'</div>'
+                +'<div><div style="font-size:10px;font-weight:600;color:var(--ink4);margin-bottom:3px">Kart Sahibi</div>'
+                  +'<input type="text" id="ho-kart-sahip" placeholder="Ad Soyad" style="width:100%;padding:9px 10px;border:1.5px solid var(--bd);border-radius:8px;font-size:12px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">'
+                +'</div>'
+              +'</div>'
+              // Taksit seçimi — sadece Taksit yönteminde gösterilir
+              +'<div id="ho-taksit-sec" style="display:none;margin-top:10px">'
+                +'<div style="font-size:10px;font-weight:600;color:var(--ink4);margin-bottom:3px">Taksit Sayısı</div>'
+                +'<select id="ho-taksit-sayi" style="width:100%;padding:9px 10px;border:1.5px solid var(--bd);border-radius:8px;font-size:12px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">'
+                  +'<option value="2">2 Taksit</option><option value="3">3 Taksit</option><option value="4">4 Taksit</option>'
+                  +'<option value="6">6 Taksit</option><option value="9">9 Taksit</option><option value="12">12 Taksit</option>'
+                +'</select>'
+              +'</div>'
+            +'</div>'
             // Makbuz checkbox
             +'<div style="display:flex;align-items:center;gap:8px;padding:10px;background:rgba(37,99,235,.04);border:1px solid rgba(37,99,235,.15);border-radius:8px;margin-bottom:12px">'
               +'<input type="checkbox" id="ho-makbuz" style="width:16px;height:16px;cursor:pointer">'
@@ -3429,6 +3724,12 @@ function rdvHariciOdeme(idx){
         // POS alanını kart için göster
         var bankaRow=document.getElementById('ho-banka');
         if(bankaRow) bankaRow.closest('div').style.display=secilenYon==='Nakit'?'none':'block';
+        // Kart bilgi alanlarını göster/gizle
+        var kartAlanlari=document.getElementById('ho-kart-alanlari');
+        if(kartAlanlari) kartAlanlari.style.display=(secilenYon==='Kredi Kart'||secilenYon==='Taksit')?'block':'none';
+        // Taksit seçimi sadece Taksit yönteminde
+        var taksitSec=document.getElementById('ho-taksit-sec');
+        if(taksitSec) taksitSec.style.display=secilenYon==='Taksit'?'block':'none';
       });
     });
 
@@ -3463,11 +3764,30 @@ function rdvHariciOdeme(idx){
       var kln=Math.max(0,(r.tutar||0)-(r.odenenToplam||0));
       if(miktar<=0){toast('Geçerli tutar girin!','red');return;}
       if(miktar>kln){toast('Tutardan fazla girilemez!','red');return;}
+      // Kart bilgi validasyonu
+      if(secilenYon==='Kredi Kart'||secilenYon==='Taksit'){
+        var kartNo=(document.getElementById('ho-kart-no')||{}).value||'';
+        var kartSkt=(document.getElementById('ho-kart-skt')||{}).value||'';
+        var kartCvv=(document.getElementById('ho-kart-cvv')||{}).value||'';
+        kartNo=kartNo.replace(/\s/g,'');
+        if(kartNo.length<15||kartNo.length>16){toast('Geçerli kart numarası girin!','red');return;}
+        if(kartSkt.length<5){toast('Son kullanma tarihini girin!','red');return;}
+        if(kartCvv.length<3){toast('CVV kodunu girin!','red');return;}
+        // Kart son 4 hane not'a ekle
+        var son4=kartNo.slice(-4);
+        banka=(banka||'Kart')+' (****'+son4+')';
+      }
+      // Taksit bilgisi
+      var yontemKayit=secilenYon;
+      if(secilenYon==='Taksit'){
+        var taksitSayi=(document.getElementById('ho-taksit-sayi')||{}).value||'';
+        if(taksitSayi) yontemKayit='Taksit ('+taksitSayi+'x)';
+      }
       if(!r.odemeGecmisi) r.odemeGecmisi=[];
       var bugun=new Date();
       var tarih=bugun.getDate().toString().padStart(2,'0')+'.'+(bugun.getMonth()+1).toString().padStart(2,'0')+'.'+bugun.getFullYear();
       var notTam=not+(banka?' ('+banka+')':'');
-      r.odemeGecmisi.push({tarih:tarih,yontem:secilenYon,miktar:miktar,not:notTam});
+      r.odemeGecmisi.push({tarih:tarih,yontem:yontemKayit,miktar:miktar,not:notTam});
       r.odenenToplam=(r.odenenToplam||0)+miktar;
       odenenToplam=r.odenenToplam;
       if(r.odenenToplam>=r.tutar){r.odendi=true;}
