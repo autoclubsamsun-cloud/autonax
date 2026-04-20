@@ -2821,16 +2821,15 @@ window.autonaxOdemeAyarGetir = function(){
 };
 
 var TAKSIT_ORANLARI_DEFAULT={
-  'Garanti (Bonus)':{3:1.69,6:2.99,9:4.29,12:5.59},
-  'Is Bankasi (Maximum)':{3:1.69,6:2.99,9:4.49,12:5.99},
-  'Yapi Kredi':{3:1.79,6:3.09,9:4.59,12:6.09},
-  'Akbank (Axess)':{3:1.69,6:2.99,9:4.39,12:5.79},
-  'Ziraat Bankasi':{3:1.49,6:2.79,9:4.09,12:5.39},
-  'Halkbank':{3:1.49,6:2.79,9:4.09,12:5.39},
-  'Vakifbank':{3:1.59,6:2.89,9:4.19,12:5.49},
-  'Denizbank':{3:1.79,6:3.19,9:4.69,12:6.19},
-  'QNB Finansbank':{3:1.79,6:3.09,9:4.59,12:6.09},
-  'TEB':{3:1.69,6:3.09,9:4.59,12:6.09}
+  'Advantage':{1:2.59,2:5.51,3:7.38,4:9.24,5:11.11,6:12.98,7:14.85,8:16.72,9:18.59,10:20.46,11:22.33,12:24.20},
+  'Axess':{1:2.59,2:5.51,3:7.38,4:9.24,5:11.11,6:12.98,7:14.85,8:16.72,9:18.59,10:20.46,11:22.33,12:24.20},
+  'Bonus':{1:2.59,2:5.51,3:7.38,4:9.24,5:11.11,6:12.98,7:14.85,8:16.72,9:18.59,10:20.46,11:22.33,12:24.20},
+  'CardFinans':{1:2.59,2:5.51,3:7.38,4:9.24,5:11.11,6:12.98,7:14.85,8:16.72,9:18.59,10:20.46,11:22.33,12:24.20},
+  'Bankkart':{1:2.59,2:5.51,3:7.38,4:9.24,5:11.11,6:12.98,7:14.85,8:16.72,9:18.59,10:20.46,11:22.33,12:24.20},
+  'Maximum':{1:2.59,2:5.51,3:7.38,4:9.24,5:11.11,6:12.98,7:14.85,8:16.72,9:18.59,10:20.46,11:22.33,12:24.20},
+  'Paraf':{1:2.59,2:5.51,3:7.38,4:9.24,5:11.11,6:12.98,7:14.85,8:16.72,9:18.59,10:20.46,11:22.33,12:24.20},
+  'Saglamkart':{1:2.59,2:5.51,3:7.38,4:9.24,5:11.11,6:12.98,7:14.85,8:16.72,9:18.59,10:20.46,11:22.33,12:24.20},
+  'World':{1:2.59,2:5.51,3:7.38,4:9.24,5:11.11,6:12.98,7:14.85,8:16.72,9:18.59,10:20.46,11:22.33,12:24.20}
 };
 
 var TAKSIT_ORANLARI = (function(){
@@ -2843,6 +2842,15 @@ var TAKSIT_ORANLARI = (function(){
 
 function taksitOranlariniKaydet(){
   try { localStorage.setItem('autonax_taksit_oranlari', JSON.stringify(TAKSIT_ORANLARI)); } catch(e){console.error('Autonax:',e)}
+  // DB'ye de yaz (ayarlar endpoint'ine POST)
+  try {
+    fetch('/api/ayarlar',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'same-origin',
+      body: JSON.stringify({ taksit_oranlari: TAKSIT_ORANLARI })
+    }).catch(function(e){console.error('Autonax taksit DB kayit:',e);});
+  } catch(e){console.error('Autonax taksit DB:',e);}
 }
 
 
@@ -2870,25 +2878,28 @@ function taksitAc(idx){
 function taksitModalHTML(kln,idx){
   var fN=ODEME_AYAR.vadeKarsilayanFirma;
   var bankalar=Object.keys(TAKSIT_ORANLARI);
-  var tablo='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">'
+  var AYLAR=[1,2,3,4,5,6,7,8,9,10,11,12];
+  var tablo='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:10px">'
     +'<thead><tr style="background:var(--bg)">'
-    +'<th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--bd);font-size:10px;color:var(--ink4);font-weight:700">Banka</th>';
-  [3,6,9,12].forEach(function(ay){
-    tablo+='<th style="padding:8px 10px;text-align:center;border-bottom:1px solid var(--bd);font-size:10px;color:var(--ink4);font-weight:700;cursor:pointer">'+ay+' Ay</th>';
+    +'<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--bd);font-size:9px;color:var(--ink4);font-weight:700;position:sticky;left:0;background:var(--bg);z-index:1">Banka</th>';
+  AYLAR.forEach(function(ay){
+    var baslik=ay===1?'Tek Cekim':ay+' Ay';
+    tablo+='<th style="padding:6px 6px;text-align:center;border-bottom:1px solid var(--bd);font-size:9px;color:var(--ink4);font-weight:700;cursor:pointer">'+baslik+'</th>';
   });
   tablo+='</tr></thead><tbody>';
   bankalar.forEach(function(banka,bi){
     var oranlар=TAKSIT_ORANLARI[banka];
     tablo+='<tr style="'+(bi%2?'background:var(--bg)':'')+'">'
-      +'<td style="padding:7px 10px;border-bottom:1px solid var(--bd);font-weight:600;white-space:nowrap;font-size:11px">'+banka+'</td>';
-    [3,6,9,12].forEach(function(ay){
-      var h=taksitHesapla(kln,ay,oranlар[ay],fN);
+      +'<td style="padding:5px 8px;border-bottom:1px solid var(--bd);font-weight:600;white-space:nowrap;font-size:10px;position:sticky;left:0;background:'+(bi%2?'var(--bg)':'#fff')+';z-index:1">'+banka+'</td>';
+    AYLAR.forEach(function(ay){
+      var oran=oranlар[ay]||0;
+      var h=taksitHesapla(kln,ay,oran,fN);
       var vfRenk=fN?'#16a34a':'#dc2626';
       var vfTxt=fN?'Firma':'+'+(h.vf>0?'₺'+h.vf.toLocaleString('tr-TR'):'0');
-      tablo+='<td style="padding:7px 10px;border-bottom:1px solid var(--bd);text-align:center;cursor:pointer" data-b="'+banka+'" data-ay="'+ay+'" data-al="'+h.aylik+'" data-tp="'+h.toplam+'" data-vf="'+h.vf+'">'
-        +'<div style="font-family:Bebas Neue,sans-serif;font-size:14px">₺'+h.aylik.toLocaleString('tr-TR')+'</div>'
-        +'<div style="font-size:9px;color:'+vfRenk+'">'+vfTxt+'</div>'
-        +'<div style="font-size:9px;color:var(--ink4)">%'+oranlар[ay]+'</div>'
+      tablo+='<td style="padding:5px 6px;border-bottom:1px solid var(--bd);text-align:center;cursor:pointer" data-b="'+banka+'" data-ay="'+ay+'" data-al="'+h.aylik+'" data-tp="'+h.toplam+'" data-vf="'+h.vf+'">'
+        +'<div style="font-family:Bebas Neue,sans-serif;font-size:12px">₺'+h.aylik.toLocaleString('tr-TR')+'</div>'
+        +'<div style="font-size:8px;color:'+vfRenk+'">'+vfTxt+'</div>'
+        +'<div style="font-size:8px;color:var(--ink4)">%'+oran+'</div>'
         +'</td>';
     });
     tablo+='</tr>';
@@ -8263,15 +8274,15 @@ function saOdemeHTML(){
     +'</div>'
     +'<div class="kb" style="padding:0">'
       +'<div style="overflow-x:auto">'
-        +'<table style="width:100%;border-collapse:collapse;font-size:12px" id="taksit-oran-tablo">'
+        +'<table style="width:100%;border-collapse:collapse;font-size:11px" id="taksit-oran-tablo">'
           +'<thead>'
             +'<tr style="background:var(--bg)">'
-              +'<th style="padding:10px 14px;text-align:left;border-bottom:1.5px solid var(--bd);font-size:11px;color:var(--ink4);font-weight:700">Banka / Kurum</th>'
-              +'<th style="padding:10px 14px;text-align:center;border-bottom:1.5px solid var(--bd);font-size:11px;color:var(--ink4);font-weight:700">3 Taksit %</th>'
-              +'<th style="padding:10px 14px;text-align:center;border-bottom:1.5px solid var(--bd);font-size:11px;color:var(--ink4);font-weight:700">6 Taksit %</th>'
-              +'<th style="padding:10px 14px;text-align:center;border-bottom:1.5px solid var(--bd);font-size:11px;color:var(--ink4);font-weight:700">9 Taksit %</th>'
-              +'<th style="padding:10px 14px;text-align:center;border-bottom:1.5px solid var(--bd);font-size:11px;color:var(--ink4);font-weight:700">12 Taksit %</th>'
-              +'<th style="padding:10px 14px;text-align:center;border-bottom:1.5px solid var(--bd);font-size:11px;color:var(--ink4);font-weight:700">Sil</th>'
+              +'<th style="padding:8px 10px;text-align:left;border-bottom:1.5px solid var(--bd);font-size:10px;color:var(--ink4);font-weight:700;position:sticky;left:0;background:var(--bg);z-index:1">Kart Markasi / Kurum</th>'
+              +[1,2,3,4,5,6,7,8,9,10,11,12].map(function(ay){
+                var baslik=ay===1?'Tek<br>Cekim %':ay+'<br>Taksit %';
+                return '<th style="padding:8px 4px;text-align:center;border-bottom:1.5px solid var(--bd);font-size:9px;color:var(--ink4);font-weight:700;line-height:1.3">'+baslik+'</th>';
+              }).join('')
+              +'<th style="padding:8px 8px;text-align:center;border-bottom:1.5px solid var(--bd);font-size:10px;color:var(--ink4);font-weight:700">Sil</th>'
             +'</tr>'
           +'</thead>'
           +'<tbody id="taksit-oran-tbody">'
@@ -8279,14 +8290,14 @@ function saOdemeHTML(){
           +'</tbody>'
           +'<tfoot>'
             +'<tr>'
-              +'<td colspan="6" style="padding:10px 14px;border-top:1.5px solid var(--bd)">'
-                +'<button id="taksit-banka-ekle" style="font-size:11px;color:var(--r);border:1.5px dashed rgba(176,28,46,.3);border-radius:7px;background:rgba(176,28,46,.04);padding:6px 14px;cursor:pointer;width:100%">+ Yeni Banka / Kurum Ekle</button>'
+              +'<td colspan="14" style="padding:10px 14px;border-top:1.5px solid var(--bd)">'
+                +'<button id="taksit-banka-ekle" style="font-size:11px;color:var(--r);border:1.5px dashed rgba(176,28,46,.3);border-radius:7px;background:rgba(176,28,46,.04);padding:6px 14px;cursor:pointer;width:100%">+ Yeni Kart Markasi / Kurum Ekle</button>'
               +'</td>'
             +'</tr>'
           +'</tfoot>'
         +'</table>'
       +'</div>'
-      +'<div style="padding:10px 14px;font-size:10px;color:var(--ink4)">Taksit oranı = Müşteriye yansıtılacak vade farkı yüzdesi. Firma karşılarsa bu oran dahili maliyet olarak hesaplanır.</div>'
+      +'<div style="padding:10px 14px;font-size:10px;color:var(--ink4)">Taksit oranı = Müşteriye yansıtılacak vade farkı yüzdesi. Firma karşılarsa bu oran dahili maliyet olarak hesaplanır. Tek Çekim için oranı boş bırakabilirsiniz.</div>'
     +'</div>'
   +'</div>'
 
@@ -8295,45 +8306,43 @@ function saOdemeHTML(){
 
 
 function taksitOranTbodyHTML(){
-  var IS_td='border:1.5px solid var(--bd);border-radius:6px;padding:5px 6px;width:70px;text-align:center;font-size:12px;font-family:Outfit,sans-serif;outline:none;font-weight:700';
+  var IS_td='border:1.5px solid var(--bd);border-radius:6px;padding:3px 3px;width:48px;text-align:center;font-size:10px;font-family:Outfit,sans-serif;outline:none;font-weight:700';
+  var AYLAR=[1,2,3,4,5,6,7,8,9,10,11,12];
   return Object.keys(TAKSIT_ORANLARI).map(function(banka,bi){
-    var o=TAKSIT_ORANLARI[banka];
+    var o=TAKSIT_ORANLARI[banka]||{};
     var bg=bi%2===0?'':'background:var(--bg)';
-    return '<tr style="'+bg+'">'
-      +'<td style="padding:8px 14px;border-bottom:1px solid var(--bd)">'
-        +'<input style="border:1.5px solid var(--bd);border-radius:6px;padding:5px 8px;font-size:12px;font-family:Outfit,sans-serif;outline:none;width:180px" data-banka="'+bi+'" data-field="isim" value="'+banka+'">'
-      +'</td>'
-      +'<td style="padding:6px 10px;border-bottom:1px solid var(--bd);text-align:center">'
-        +'<input type="number" step="0.01" min="0" max="30" style="'+IS_td+'" data-banka="'+bi+'" data-ay="3" value="'+o[3]+'">'
-      +'</td>'
-      +'<td style="padding:6px 10px;border-bottom:1px solid var(--bd);text-align:center">'
-        +'<input type="number" step="0.01" min="0" max="30" style="'+IS_td+'" data-banka="'+bi+'" data-ay="6" value="'+o[6]+'">'
-      +'</td>'
-      +'<td style="padding:6px 10px;border-bottom:1px solid var(--bd);text-align:center">'
-        +'<input type="number" step="0.01" min="0" max="30" style="'+IS_td+'" data-banka="'+bi+'" data-ay="9" value="'+o[9]+'">'
-      +'</td>'
-      +'<td style="padding:6px 10px;border-bottom:1px solid var(--bd);text-align:center">'
-        +'<input type="number" step="0.01" min="0" max="30" style="'+IS_td+'" data-banka="'+bi+'" data-ay="12" value="'+o[12]+'">'
-      +'</td>'
-      +'<td style="padding:6px 10px;border-bottom:1px solid var(--bd);text-align:center">'
-        +'<button data-del="'+bi+'" style="border:none;background:none;color:#dc2626;cursor:pointer;font-size:18px;line-height:1">&times;</button>'
-      +'</td>'
+    var rowBg=bi%2===0?'#fff':'var(--bg)';
+    var html='<tr style="'+bg+'">'
+      +'<td style="padding:6px 10px;border-bottom:1px solid var(--bd);position:sticky;left:0;background:'+rowBg+';z-index:1">'
+        +'<input style="border:1.5px solid var(--bd);border-radius:6px;padding:4px 8px;font-size:11px;font-family:Outfit,sans-serif;outline:none;width:120px" data-banka="'+bi+'" data-field="isim" value="'+banka+'">'
+      +'</td>';
+    AYLAR.forEach(function(ay){
+      var val=o[ay]!==undefined?o[ay]:'';
+      html+='<td style="padding:4px 3px;border-bottom:1px solid var(--bd);text-align:center">'
+        +'<input type="number" step="0.01" min="0" max="30" style="'+IS_td+'" data-banka="'+bi+'" data-ay="'+ay+'" value="'+val+'">'
+      +'</td>';
+    });
+    html+='<td style="padding:4px 8px;border-bottom:1px solid var(--bd);text-align:center">'
+      +'<button data-del="'+bi+'" style="border:none;background:none;color:#dc2626;cursor:pointer;font-size:16px;line-height:1">&times;</button>'
+    +'</td>'
     +'</tr>';
+    return html;
   }).join('');
 }
 
 function taksitTabloOku(){
   // Input'lardan TAKSIT_ORANLARI'nı güncelle
   var yeni = {};
+  var AYLAR=[1,2,3,4,5,6,7,8,9,10,11,12];
   var isimInputs = document.querySelectorAll('#taksit-oran-tbody input[data-field="isim"]');
   isimInputs.forEach(function(inp){
     var bi = inp.getAttribute('data-banka');
     var isim = inp.value.trim();
     if(!isim) return;
-    yeni[isim] = {3:0,6:0,9:0,12:0};
-    [3,6,9,12].forEach(function(ay){
+    yeni[isim] = {};
+    AYLAR.forEach(function(ay){
       var ayInp = document.querySelector('#taksit-oran-tbody input[data-banka="'+bi+'"][data-ay="'+ay+'"]');
-      if(ayInp) yeni[isim][ay] = parseFloat(ayInp.value)||0;
+      yeni[isim][ay] = ayInp ? (parseFloat(ayInp.value)||0) : 0;
     });
   });
   return yeni;
@@ -8362,7 +8371,7 @@ function taksitTabloListenerBagla(){
   if(ekleBtn && !ekleBtn._l){
     ekleBtn._l=true;
     ekleBtn.addEventListener('click',function(){
-      TAKSIT_ORANLARI['Yeni Banka'] = {3:1.50,6:2.80,9:4.10,12:5.40};
+      TAKSIT_ORANLARI['Yeni Banka'] = {1:2.59,2:5.51,3:7.38,4:9.24,5:11.11,6:12.98,7:14.85,8:16.72,9:18.59,10:20.46,11:22.33,12:24.20};
       taksitTabloYenile();
     });
   }
