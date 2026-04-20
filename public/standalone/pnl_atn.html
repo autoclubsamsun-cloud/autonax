@@ -7413,19 +7413,76 @@ function saSekmeRender(tab){
 /* ═══════════════════════════════════════════════
    VERİ AKTAR (CSV IMPORT) SİSTEMİ
 ═══════════════════════════════════════════════ */
+function veriSifirla(){
+  var onay1=prompt('TÜM RANDEVULARI VE ÖDEMELERİ SİLECEKSİNİZ!\n\nDevam etmek için "SIL" yazın:','');
+  if(onay1!=='SIL'){toast('İptal edildi','red');return;}
+
+  var sayi=RANDEVULAR.length;
+  var onay2=confirm('SON UYARI: '+sayi+' randevu ve tüm ödeme kayıtları KALICI silinecek. Emin misiniz?');
+  if(!onay2){toast('İptal edildi','red');return;}
+
+  // Bellekte sıfırla
+  RANDEVULAR.length=0;
+  if(typeof MUSTERILER!=='undefined' && Array.isArray(MUSTERILER)){MUSTERILER.length=0;}
+  try{ storageKaydet(); }catch(e){}
+
+  // localStorage temizle (tüm randevu/müşteri keylerini)
+  try{
+    ['autonax_randevular','autonax_musteriler','autonax_odemeler','autonax_urunler_v1'].forEach(function(k){
+      localStorage.removeItem(k);
+    });
+  }catch(e){}
+
+  // DB'de randevuları sil - POST ile bos array gönder (upsert mantığı)
+  // Alternatif: her birini DELETE et
+  fetch('/api/randevular',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
+    var eskiler=d.data||d.randevular||[];
+    if(!eskiler.length){
+      toast('✅ Zaten boş. Sayfa yenilenecek...','green');
+      setTimeout(function(){location.reload();},1000);
+      return;
+    }
+    toast(eskiler.length+' kayıt DB\'den siliniyor...','green');
+    var sildi=0,hata=0;
+    eskiler.forEach(function(r){
+      fetch('/api/randevular/'+r.id,{method:'DELETE',credentials:'same-origin'})
+        .then(function(res){return res.ok?sildi++:hata++;})
+        .catch(function(){hata++;})
+        .finally(function(){
+          if(sildi+hata===eskiler.length){
+            toast('✅ '+sildi+' silindi'+(hata?' ('+hata+' hata)':'')+'. Sayfa yenilenecek...','green');
+            setTimeout(function(){location.reload();},1500);
+          }
+        });
+    });
+  }).catch(function(err){
+    toast('⚠️ Bellek sıfırlandı ama DB\'ye ulaşılamadı. Sayfa yenile.','red');
+    setTimeout(function(){location.reload();},2000);
+  });
+}
 function saImportHTML(){
   return '<div>'
+    /* ── UYARI + SİL BUTONU ── */
+    +'<div class="k" style="margin-bottom:14px;border:2px solid #dc2626">'
+      +'<div class="kh" style="background:rgba(220,38,38,.08)"><div class="kt" style="color:#dc2626">⚠️ TEHLİKELİ BÖLGE - Tüm Veriyi Sıfırla</div></div>'
+      +'<div class="kb">'
+        +'<div style="font-size:12px;line-height:1.7;color:var(--ink3);margin-bottom:10px">'
+          +'Bu buton <b>tüm randevuları, ödemeleri ve borç kayıtlarını kalıcı olarak siler</b>. Import öncesi eski deneme verilerini temizlemek için kullanın. <b>Önce yedek aldığınızdan emin olun!</b>'
+        +'</div>'
+        +'<button onclick="veriSifirla()" style="padding:10px 18px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer">🗑️ Tüm Veriyi Sil (Sıfırla)</button>'
+      +'</div>'
+    +'</div>'
     /* ── RANDEVU IMPORT ── */
     +'<div class="k" style="margin-bottom:14px">'
       +'<div class="kh"><div class="kt">📅 Randevu / Sipariş İçe Aktar</div></div>'
       +'<div class="kb">'
         +'<div style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:14px;font-size:12px;color:var(--ink3);line-height:1.8">'
-          +'<b>CSV formatı (autonax.com sipariş formatı):</b><br>'
+          +'<b>CSV formatı (autonax.com sipariş formatı - ; veya , ayracı otomatik tanınır):</b><br>'
           +'<code style="font-size:11px;background:#fff;padding:4px 8px;border-radius:6px;border:1px solid var(--bd);display:block;margin-top:6px;overflow-x:auto;white-space:nowrap">'
-            +'Sipariş No,Sipariş Sayısı,Durum,Sepet,İndirim,Toplam,Kalan,Ürünler,Randevu Tarihi,Randevu Saati,Müşteri,Telefon,Plaka'
+            +'"Sipariş No";"Sipariş Sayısı";"Durum";"Sepet";"İndirim";"Toplam";"Kalan";"Ürünler";"Randevu Tarihi";"Randevu Saati";"Müşteri";"Telefon";"Plaka"'
           +'</code>'
           +'<div style="margin-top:8px;font-size:11px;color:var(--ink4)">'
-            +'<b>Durum:</b> Onaylı / Bekliyor / İptal &nbsp;|&nbsp; Sütun adları büyük/küçük harf duyarsız'
+            +'💡 <b>Not:</b> "Hazırlanıyor" statüsü tamamlanmış/ödenmiş olarak içe aktarılır'
           +'</div>'
         +'</div>'
         +'<label id="rdv-import-label" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:30px;border:2px dashed var(--bd);border-radius:12px;cursor:pointer;background:var(--bg);transition:.2s;text-align:center" onmouseover="this.style.borderColor=\'var(--r)\'" onmouseout="this.style.borderColor=\'var(--bd)\'">'
@@ -7524,11 +7581,40 @@ var _csvRdvData=[];
 var _csvOdemeData=[];
 
 function csvParse(text){
+  // BOM temizle
+  if(text.charCodeAt(0)===0xFEFF) text=text.slice(1);
+
   var lines=text.split(/\r?\n/).filter(function(l){return l.trim();});
   if(lines.length<2)return[];
-  var headers=lines[0].split(',').map(function(h){return h.trim().replace(/^"|"$/g,'');});
+
+  // Ayraç tespit: ilk satırda ; daha çok var mı , daha çok var mı?
+  var ilk=lines[0];
+  var ayrac=(ilk.split(';').length > ilk.split(',').length) ? ';' : ',';
+
+  // CSV satırını parse et (tırnak içindeki ayraçları kesme)
+  function satirParse(line){
+    var alanlar=[];
+    var mevcut='';
+    var tirnakIcinde=false;
+    for(var i=0;i<line.length;i++){
+      var c=line[i];
+      if(c==='"'){
+        if(tirnakIcinde && line[i+1]==='"'){ mevcut+='"'; i++; }
+        else { tirnakIcinde=!tirnakIcinde; }
+      } else if(c===ayrac && !tirnakIcinde){
+        alanlar.push(mevcut);
+        mevcut='';
+      } else {
+        mevcut+=c;
+      }
+    }
+    alanlar.push(mevcut);
+    return alanlar.map(function(a){return a.trim();});
+  }
+
+  var headers=satirParse(lines[0]);
   return lines.slice(1).map(function(line){
-    var vals=line.split(',').map(function(v){return v.trim().replace(/^"|"$/g,'');});
+    var vals=satirParse(line);
     var obj={};
     headers.forEach(function(h,i){obj[h]=vals[i]||'';});
     return obj;
@@ -7589,48 +7675,97 @@ function csvRdvIptal(){
 function csvRdvYukle(){
   if(!_csvRdvData.length){toast('Önce CSV seçin!','red');return;}
   var eklenen=0,atlanan=0;
+
+  // Para ayrıştırıcı: "60,000.00 ₺" -> 60000
+  function paraParse(s){
+    if(!s) return 0;
+    var t=s.toString().replace(/[^\d.,]/g,'');
+    // Türk formatı: 60,000.00 -> hem virgül (binlik) hem nokta (ondalık)
+    // Virgülü kaldır, noktadan sonrası ondalık
+    var parts=t.split('.');
+    if(parts.length===2){
+      t=parts[0].replace(/,/g,'')+'.'+parts[1];
+    } else {
+      t=t.replace(/,/g,'');
+    }
+    return Math.round(parseFloat(t)||0);
+  }
+
+  // Tarih: "13.01.2026" -> "2026-01-13"
+  function tarihParse(s){
+    if(!s) return '';
+    var m=s.match(/(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/);
+    if(m) return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
+    return s;
+  }
+
   _csvRdvData.forEach(function(r){
-    // autonax.com sütunlarını oku
     var musteri = r['Müşteri']||r['MUSTERI']||r['musteri']||'';
     var tel     = r['Telefon']||r['TELEFON']||r['tel']||'';
     var plaka   = (r['Plaka']||r['PLAKA']||r['plaka']||'').toUpperCase();
     var urunler = r['Ürünler']||r['URUNLER']||r['hizmet']||'';
-    var tarih   = r['Randevu Tarihi']||r['RANDEVU_TARIHI']||r['tarih']||'';
+    var tarihRaw= r['Randevu Tarihi']||r['RANDEVU_TARIHI']||r['tarih']||'';
     var saat    = r['Randevu Saati']||r['RANDEVU_SAATI']||r['saat']||'09:00';
-    var toplam  = parseInt((r['Toplam']||r['TOPLAM']||r['tutar']||'0').toString().replace(/[^\d]/g,''))||0;
-    var kalan   = parseInt((r['Kalan']||r['KALAN']||'0').toString().replace(/[^\d]/g,''))||0;
-    var sepet   = parseInt((r['Sepet']||r['SEPET']||'0').toString().replace(/[^\d]/g,''))||toplam;
-    var indirim = parseInt((r['İndirim']||r['Indirim']||'0').toString().replace(/[^\d]/g,''))||0;
+    var toplam  = paraParse(r['Toplam']||r['TOPLAM']||r['tutar']||'0');
+    var kalan   = paraParse(r['Kalan']||r['KALAN']||'0');
+    var sepet   = paraParse(r['Sepet']||r['SEPET']||'0') || toplam;
+    var indirim = paraParse(r['İndirim']||r['Indirim']||'0');
     var durumRaw= r['Durum']||r['DURUM']||r['durum']||'';
     var no      = r['Sipariş No']||r['no']||'';
 
     if(!musteri&&!plaka){atlanan++;return;}
 
-    // Durum çevir
-    var durum='bekl';
-    if(durumRaw.toLowerCase().includes('onay')||durumRaw.toLowerCase().includes('tamam')||durumRaw.toLowerCase().includes('tamamland')) durum='onay';
-    else if(durumRaw.toLowerCase().includes('iptal')) durum='iptal';
+    var tarih = tarihParse(tarihRaw);
 
-    // Ödenen hesapla
-    var odenen = toplam - kalan;
-    var odendi = kalan === 0 && toplam > 0;
+    // "Hazırlanıyor" = tamamlanmis kabul (kullanici karari)
+    var durum='onay';
+    if(durumRaw.toLowerCase().indexOf('iptal')>=0) durum='iptal';
+    else if(durumRaw.toLowerCase().indexOf('bekl')>=0 && kalan>0) durum='bekl';
+
+    // Odenen = toplam - kalan
+    var odenen = Math.max(0, toplam - kalan);
+    var odendi = kalan===0 && toplam>0;
+
+    // Unique ID
+    var tsId = Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    var temizNo = (no||'').replace(/[^a-z0-9]/gi,'').slice(-8);
+    var yeniId = 'AUTNX'+(temizNo||tsId).toUpperCase();
+
+    var odemeGecmisi = [];
+    if(odenen>0){
+      odemeGecmisi.push({
+        tarih: tarihRaw || new Date().toISOString().slice(0,10),
+        yontem: 'Kredi Kartı',
+        miktar: odenen,
+        tutar: odenen,
+        not: 'CSV import - '+no
+      });
+    }
 
     var yeni={
-      id:'rdv-'+no.replace(/[^a-z0-9]/gi,'').slice(-6)+'-'+Math.random().toString(36).slice(2,5),
-      tarih:tarih,
-      saat:saat.slice(0,5),
-      musteri:musteri,
-      tel:tel,
-      plaka:plaka,
-      arac:'',
-      hizmet:urunler,
-      tutar:toplam,
-      odenenToplam:odened,
-      durum:durum,
-      odendi:odendi,
-      islem:durum==='onay',
-      onlineOdeme:false,
-      odemeGecmisi:odened>0?[{tarih:tarih,yontem:'Geçmiş',miktar:odened,not:'Eski sistemden aktarıldı'}]:[]
+      id: yeniId,
+      tarih: tarih,
+      saat: (saat||'09:00').slice(0,5),
+      musteri: musteri,
+      musteriAdi: musteri,
+      tel: tel,
+      musteriTel: tel,
+      plaka: plaka,
+      arac: '',
+      hizmet: urunler,
+      tutar: toplam,
+      odenenToplam: odenen,
+      durum: durum,
+      odendi: odendi,
+      islem: durum==='onay',
+      onlineOdeme: odendi,
+      faturaNo: '',
+      faturaDurum: 'Bekliyor',
+      siparisNo: no,
+      sepet: sepet,
+      indirim: indirim,
+      odemeGecmisi: odemeGecmisi,
+      notlar: 'CSV import - autonax.com eski sistemi'
     };
     RANDEVULAR.push(yeni);
     eklenen++;
@@ -7693,67 +7828,124 @@ function csvOdemeIptal(){
 
 function csvOdemeYukle(){
   if(!_csvOdemeData.length){toast('Önce CSV seçin!','red');return;}
-  var eklenen=0;
+  var eklenen=0,atlanan=0,bagimsiz=0;
+
+  function paraParse(s){
+    if(!s) return 0;
+    var t=s.toString().replace(/[^\d.,]/g,'');
+    var parts=t.split('.');
+    if(parts.length===2){ t=parts[0].replace(/,/g,'')+'.'+parts[1]; }
+    else { t=t.replace(/,/g,''); }
+    return Math.round(parseFloat(t)||0);
+  }
+
   _csvOdemeData.forEach(function(r){
-    // autonax.com sütunlarını oku
     var tarih  = r['TARİH / SAAT']||r['TARIH / SAAT']||r['tarih']||'';
     var banka  = r['BANKA']||r['banka']||'';
     var sahip  = r['KART SAHİBİ']||r['KART SAHIBI']||r['kart_sahibi']||'';
     var kartNo = r['KART NO']||r['KART_NO']||'';
     var taksit = r['TAKSİT']||r['TAKSIT']||r['taksit']||'Tek Çekim';
-    var tutar  = parseInt((r['ÖDENEN TUTAR']||r['ODENEN TUTAR']||r['tutar']||r['miktar']||'0').toString().replace(/[^\d]/g,''))||0;
+    var tutar  = paraParse(r['ÖDENEN TUTAR']||r['ODENEN TUTAR']||r['tutar']||r['miktar']||'0');
     var not_   = r['NOT']||r['not']||'';
     var kom    = r['KOMİSYON']||r['KOMISYON']||'';
     var durum  = r['DURUM']||r['durum']||'';
+    var no     = r['#']||r['No']||r['no']||'';
 
-    if(!tutar){return;}
+    // Sadece BAŞARILI olanları al
+    if(durum.toUpperCase().indexOf('BAŞAR')<0 || durum.toUpperCase().indexOf('BASARISIZ')>=0){
+      if(durum.toUpperCase().indexOf('BAŞARILI')<0){ atlanan++; return; }
+    }
+    if(!tutar){atlanan++;return;}
 
-    // Yöntem belirle
-    var yontem = 'Kredi Kart';
-    if(banka.toLowerCase().includes('nakit')) yontem='Nakit';
-    else if(banka.toLowerCase().includes('havale')||banka.toLowerCase().includes('eft')) yontem='Havale';
-    else if(taksit&&taksit!=='Tek Çekim'&&taksit!=='1') yontem='Taksit';
+    // Yöntem
+    var yontem='Kredi Kartı';
+    if(banka.toLowerCase().indexOf('nakit')>=0) yontem='Nakit';
+    else if(banka.toLowerCase().indexOf('havale')>=0||banka.toLowerCase().indexOf('eft')>=0) yontem='Havale';
 
     // Not birleştir
-    var notBirlesik = [
+    var notBirlesik=[
       banka?'Banka: '+banka:'',
       kartNo?'Kart: ****'+kartNo.slice(-4):'',
       sahip?'Sahip: '+sahip:'',
-      taksit&&taksit!=='Tek Çekim'?'Taksit: '+taksit:'',
+      taksit&&taksit!=='1'?'Taksit: '+taksit:'',
       kom?'Komisyon: '+kom:'',
-      not_
+      not_,
+      '#'+no
     ].filter(Boolean).join(' | ');
-
-    // Müşteri adına göre randevu bul (ID yoksa)
-    var rdvId = r['randevu_id']||r['RANDEVU_ID']||'';
-    var rdv = rdvId ? RANDEVULAR.find(function(x){return x.id===rdvId;}) : null;
-
-    // ID yoksa kart sahibi adıyla eşleştir
-    if(!rdv && sahip){
-      rdv = RANDEVULAR.find(function(x){
-        return x.musteri && x.musteri.toLowerCase().includes(sahip.toLowerCase().split(' ')[0]);
-      });
-    }
 
     var odemeKaydi={
       tarih: tarih,
       yontem: yontem,
       miktar: tutar,
-      not: notBirlesik
+      tutar: tutar,
+      taksit: parseInt(taksit)||1,
+      not: notBirlesik,
+      siparisId: 'LEGACY-'+no,
+      kartSahibi: sahip,
+      banka: banka
     };
 
-    if(rdv){
-      if(!rdv.odemeGecmisi)rdv.odemeGecmisi=[];
-      rdv.odemeGecmisi.push(odemeKaydi);
-      rdv.odenenToplam=(rdv.odenenToplam||0)+tutar;
-      rdv.odendi=rdv.odenenToplam>=rdv.tutar;
+    // Randevu eşleşmesi - kart sahibi adı + TAM eşleşme dene
+    function adNormal(s){return (s||'').trim().toUpperCase().replace(/İ/g,'I').replace(/Ş/g,'S').replace(/Ğ/g,'G').replace(/Ç/g,'C').replace(/Ö/g,'O').replace(/Ü/g,'U');}
+    var sahipNorm=adNormal(sahip);
+    var rdv=null;
+    if(sahip){
+      // 1. Tam eşleşme
+      rdv=RANDEVULAR.find(function(x){return adNormal(x.musteri||'')===sahipNorm;});
+      // 2. İçerir eşleşme (soyad ortak olanlara dikkat)
+      if(!rdv){
+        var kelimeler=sahipNorm.split(/\s+/).filter(function(w){return w.length>=3;});
+        if(kelimeler.length>=2){
+          rdv=RANDEVULAR.find(function(x){
+            var mn=adNormal(x.musteri||'');
+            return kelimeler.every(function(k){return mn.indexOf(k)>=0;});
+          });
+        }
+      }
     }
-    // Randevu bulunamasa bile kayıt sayılsın
-    eklenen++;
+
+    if(rdv){
+      if(!rdv.odemeGecmisi) rdv.odemeGecmisi=[];
+      rdv.odemeGecmisi.push(odemeKaydi);
+      // odenenToplam'ı tekrar eklemeyelim, sipariş import ederken zaten odenen=toplam koyduk
+      eklenen++;
+    } else {
+      // Bağımsız ödeme - "ghost" randevu oluştur
+      var tsId=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+      var ghostRdv={
+        id: 'AUTNX-BAGIMSIZ-'+tsId.toUpperCase(),
+        tarih: tarih.split(' ')[0]||'',
+        saat: '09:00',
+        musteri: sahip||'Bilinmeyen',
+        musteriAdi: sahip||'Bilinmeyen',
+        tel: '',
+        musteriTel: '',
+        plaka: '',
+        arac: '',
+        hizmet: 'Bağımsız Ödeme (siparişsiz)',
+        tutar: tutar,
+        odenenToplam: tutar,
+        durum: 'onay',
+        odendi: true,
+        islem: true,
+        onlineOdeme: true,
+        faturaNo: '',
+        faturaDurum: 'Bekliyor',
+        siparisNo: '',
+        odemeGecmisi: [odemeKaydi],
+        notlar: 'CSV import - bagimsiz odeme (sipariş eşleşmedi)'
+      };
+      RANDEVULAR.push(ghostRdv);
+      bagimsiz++;
+      eklenen++;
+    }
   });
   storageKaydet();
   csvOdemeIptal();
-  toast('✅ '+eklenen+' ödeme kaydı işlendi','green');
+  toast('✅ '+eklenen+' ödeme işlendi ('+bagimsiz+' bağımsız), '+atlanan+' atlandı','green');
+  // DB'ye sync
+  if(typeof dbSyncToDB==='function') dbSyncToDB();
+  setTimeout(function(){doPg('odemeler');},500);
 }
 
 /* ── EXPORT FONKSİYONLARI ── */
