@@ -4881,11 +4881,23 @@ function musteriListesiOlustur(){
   var map={};
   RANDEVULAR.forEach(function(r){
     var key=(r.musteri+'__'+(r.tel||'')).toLowerCase().replace(/\s/g,'');
-    if(!map[key]){map[key]={isim:r.musteri,tel:r.tel||'—',plakalar:[],araclar:[],rdvSayisi:0,toplamTutar:0,sonTarih:'',sonHizmet:'',bekleyen:0};}
+    if(!map[key]){map[key]={
+      isim:r.musteri, tel:r.tel||'—',
+      plakalar:[], araclar:[], rdvIndexleri:[],
+      rdvSayisi:0, toplamTutar:0, toplamOdenen:0, toplamKalan:0,
+      sonTarih:'', sonHizmet:'', bekleyen:0
+    };}
     var m=map[key];
+    var rdvIdx=RANDEVULAR.indexOf(r);
+    m.rdvIndexleri.push(rdvIdx);
     m.rdvSayisi++;
-    m.toplamTutar+=(r.tutar||0);
-    if(!r.odendi&&!r.onlineOdeme) m.bekleyen++;
+    var tutar=Number(r.tutar)||0;
+    var odenen=Number(r.odenenToplam)||0;
+    var kalan=Math.max(0,tutar-odenen);
+    m.toplamTutar+=tutar;
+    m.toplamOdenen+=odenen;
+    m.toplamKalan+=kalan;
+    if(kalan>0) m.bekleyen++;
     if(r.plaka&&m.plakalar.indexOf(r.plaka)<0) m.plakalar.push(r.plaka);
     if(r.arac&&r.arac!='—'&&m.araclar.indexOf(r.arac)<0) m.araclar.push(r.arac);
     if(!m.sonTarih||r.tarih>m.sonTarih){m.sonTarih=r.tarih;m.sonHizmet=r.hizmet;}
@@ -4901,6 +4913,7 @@ function mstListele(){
   if(_mstSort==='isim') liste.sort(function(a,b){return a.isim.localeCompare(b.isim,'tr');});
   else if(_mstSort==='tutar') liste.sort(function(a,b){return b.toplamTutar-a.toplamTutar;});
   else liste.sort(function(a,b){return b.rdvSayisi-a.rdvSayisi;});
+  _mstSonListe=liste; // detay popup'ta kullanmak icin
   var bas=document.getElementById('mst-baslik');
   if(bas) bas.textContent='Tüm Müşteriler ('+liste.length+')';
   // Statlar
@@ -4916,28 +4929,135 @@ function mstListele(){
     var harf=m.isim.split(' ').map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,2);
     var renk=renkler[m.isim.charCodeAt(0)%renkler.length];
     var plar=m.plakalar.slice(0,2).map(function(p){return '<span class="tbl-plaka" style="font-size:10px">'+p+'</span>';}).join(' ');
-    var dur=m.bekleyen>0?'<span class="tag bekl">'+m.bekleyen+' Bekl.</span>':'<span class="tag onay">✓</span>';
+    var dur=m.toplamKalan>0
+      ?'<span class="tag bekl" style="font-size:10px">₺'+m.toplamKalan.toLocaleString('tr-TR')+' borc</span>'
+      :'<span class="tag onay" style="font-size:10px">✓ Odendi</span>';
+    var tutarHTML='<div style="font-size:12px"><b>₺'+m.toplamTutar.toLocaleString('tr-TR')+'</b></div>'
+      +'<div style="font-size:10px;color:#16a34a">Odenen: ₺'+m.toplamOdenen.toLocaleString('tr-TR')+'</div>'
+      +(m.toplamKalan>0?'<div style="font-size:10px;color:#dc2626">Kalan: ₺'+m.toplamKalan.toLocaleString('tr-TR')+'</div>':'');
     return '<tr data-musteri="'+idx+'">'
       +'<td><div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:32px;border-radius:50%;background:'+renk+';display:flex;align-items:center;justify-content:center;font-family:Bebas Neue,sans-serif;font-size:13px;color:#fff;flex-shrink:0">'+harf+'</div><div><b>'+m.isim+'</b></div></div></td>'
       +'<td style="font-size:12px">'+m.tel+'</td>'
       +'<td>'+plar+(m.araclar[0]?'<br><small style="color:var(--ink4)">'+m.araclar[0]+'</small>':'')+'</td>'
       +'<td style="text-align:center;font-weight:700">'+m.rdvSayisi+'</td>'
-      +'<td style="font-size:11px">'+m.sonTarih+'<br><small style="color:var(--ink4)">'+m.sonHizmet.slice(0,20)+'</small></td>'
-      +'<td class="tbl-fiyat">₺'+m.toplamTutar.toLocaleString('tr-TR')+'</td>'
+      +'<td style="font-size:11px">'+m.sonTarih+'<br><small style="color:var(--ink4)">'+(m.sonHizmet||'').slice(0,20)+'</small></td>'
+      +'<td>'+tutarHTML+'</td>'
       +'<td>'+dur+'</td>'
-      +'<td><button class="ab ab-n" onclick="mstGit(this)">Detay</button></td>'
+      +'<td><button class="ab ab-n" onclick="mstDetayAc('+idx+')">Detay</button></td>'
       +'</tr>';
   });
   tbody.innerHTML=rows.join('');
 }
-function mstGit(btn){
-  var tr=btn.closest('tr');
-  var isim=tr?tr.querySelector('b').textContent:'';
+
+// Secili musteri listesi (filtre ve siralama sonrasi)
+var _mstSonListe=[];
+
+function mstDetayAc(mstIdx){
+  var liste=_mstSonListe;
+  if(!liste||!liste[mstIdx]) return;
+  var m=liste[mstIdx];
+
+  // Bu musterinin randevularini topla
+  var rdvlar=m.rdvIndexleri.map(function(i){
+    return {rdv:RANDEVULAR[i], origIdx:i};
+  }).filter(function(x){return x.rdv;});
+
+  // Randevu satirlari
+  var satirlar=rdvlar.map(function(x){
+    var r=x.rdv;
+    var tutar=Number(r.tutar)||0;
+    var odenen=Number(r.odenenToplam)||0;
+    var kalan=Math.max(0,tutar-odenen);
+    var durumHTML;
+    if(kalan<=0) durumHTML='<span style="color:#16a34a;font-weight:700">✓ Ödendi</span>';
+    else if(odenen>0) durumHTML='<span style="color:#d97706;font-weight:700">Kismi</span>';
+    else durumHTML='<span style="color:#dc2626;font-weight:700">Bekliyor</span>';
+
+    var btnlar='<button class="ab ab-n" style="font-size:10px;padding:4px 8px" onclick="mstDetayKapat();setTimeout(function(){rdvDetay('+x.origIdx+');},100)">Detay</button>';
+    if(kalan<=0 && r.odemeGecmisi && r.odemeGecmisi.length){
+      btnlar+=' <button class="ab ab-n" style="font-size:10px;padding:4px 8px;color:#16a34a;border-color:#16a34a" onclick="odemeDekontGoster('+x.origIdx+')">🧾 Dekont</button>';
+    }
+
+    return '<tr>'
+      +'<td style="padding:6px 8px;border-bottom:1px solid var(--bd);font-size:11px">'+(r.tarih||'-')+'</td>'
+      +'<td style="padding:6px 8px;border-bottom:1px solid var(--bd);font-size:11px">'+(r.plaka||'-')+'</td>'
+      +'<td style="padding:6px 8px;border-bottom:1px solid var(--bd);font-size:11px">'+(r.hizmet||'-').slice(0,25)+'</td>'
+      +'<td style="padding:6px 8px;border-bottom:1px solid var(--bd);text-align:right;font-weight:700">₺'+tutar.toLocaleString('tr-TR')+'</td>'
+      +'<td style="padding:6px 8px;border-bottom:1px solid var(--bd);text-align:right;color:#16a34a;font-weight:600">₺'+odenen.toLocaleString('tr-TR')+'</td>'
+      +'<td style="padding:6px 8px;border-bottom:1px solid var(--bd);text-align:right;color:'+(kalan>0?'#dc2626':'#16a34a')+';font-weight:700">'+(kalan>0?'₺'+kalan.toLocaleString('tr-TR'):'—')+'</td>'
+      +'<td style="padding:6px 8px;border-bottom:1px solid var(--bd);text-align:center">'+durumHTML+'</td>'
+      +'<td style="padding:6px 8px;border-bottom:1px solid var(--bd);text-align:center">'+btnlar+'</td>'
+      +'</tr>';
+  }).join('');
+
+  var harf=m.isim.split(' ').map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,2);
+  var renkler=['#B01C2E','#1e40af','#065f46','#92400e','#4c1d95','#831843'];
+  var renk=renkler[m.isim.charCodeAt(0)%renkler.length];
+
+  var ovl=document.createElement('div');
+  ovl.id='mst-detay-ovl';
+  ovl.style.cssText='position:fixed;inset:0;z-index:985;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto';
+  ovl.onclick=function(e){if(e.target===ovl)mstDetayKapat();};
+  ovl.innerHTML=''
+    +'<div style="background:#fff;border-radius:16px;width:100%;max-width:900px;max-height:90vh;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.3);display:flex;flex-direction:column">'
+      +'<div style="background:var(--ink);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">'
+        +'<div style="display:flex;align-items:center;gap:10px">'
+          +'<div style="width:36px;height:36px;border-radius:50%;background:'+renk+';display:flex;align-items:center;justify-content:center;font-family:Bebas Neue,sans-serif;font-size:15px;color:#fff">'+harf+'</div>'
+          +'<div><div style="color:#fff;font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:1px">'+m.isim.toUpperCase()+'</div>'
+          +'<div style="color:#aaa;font-size:11px">'+m.tel+' · '+m.rdvSayisi+' randevu</div></div>'
+        +'</div>'
+        +'<div onclick="mstDetayKapat()" style="cursor:pointer;color:#888;font-size:24px">&times;</div>'
+      +'</div>'
+      // Ozet kutular
+      +'<div style="padding:14px 18px;background:var(--bg);border-bottom:1px solid var(--bd);flex-shrink:0">'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">'
+          +'<div style="padding:10px;background:#fff;border-radius:8px;text-align:center"><div style="font-size:10px;color:var(--ink4);letter-spacing:1px">TOPLAM TUTAR</div><div style="font-family:Bebas Neue,sans-serif;font-size:22px">₺'+m.toplamTutar.toLocaleString('tr-TR')+'</div></div>'
+          +'<div style="padding:10px;background:rgba(22,163,74,.08);border-radius:8px;text-align:center;border:1px solid rgba(22,163,74,.2)"><div style="font-size:10px;color:#16a34a;letter-spacing:1px">ÖDENEN</div><div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:#16a34a">₺'+m.toplamOdenen.toLocaleString('tr-TR')+'</div></div>'
+          +'<div style="padding:10px;background:'+(m.toplamKalan>0?'rgba(220,38,38,.08)':'rgba(22,163,74,.08)')+';border-radius:8px;text-align:center;border:1px solid '+(m.toplamKalan>0?'rgba(220,38,38,.2)':'rgba(22,163,74,.2)')+'"><div style="font-size:10px;color:'+(m.toplamKalan>0?'#dc2626':'#16a34a')+';letter-spacing:1px">KALAN BORÇ</div><div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:'+(m.toplamKalan>0?'#dc2626':'#16a34a')+'">'+(m.toplamKalan>0?'₺'+m.toplamKalan.toLocaleString('tr-TR'):'✓')+'</div></div>'
+        +'</div>'
+        +(m.plakalar.length?'<div style="margin-top:10px;font-size:11px;color:var(--ink4)">Plakalar: '+m.plakalar.map(function(p){return '<span class="tbl-plaka" style="font-size:10px;margin-right:4px">'+p+'</span>';}).join('')+'</div>':'')
+      +'</div>'
+      // Randevu tablosu
+      +'<div style="padding:14px 18px;overflow-y:auto;flex:1">'
+        +'<div style="font-size:11px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Randevu ve Ödeme Geçmişi</div>'
+        +'<div style="overflow-x:auto">'
+        +'<table style="width:100%;border-collapse:collapse;font-size:11px">'
+          +'<thead><tr style="background:var(--bg)">'
+            +'<th style="padding:8px 6px;text-align:left;border-bottom:1.5px solid var(--bd);font-size:10px;color:var(--ink4)">Tarih</th>'
+            +'<th style="padding:8px 6px;text-align:left;border-bottom:1.5px solid var(--bd);font-size:10px;color:var(--ink4)">Plaka</th>'
+            +'<th style="padding:8px 6px;text-align:left;border-bottom:1.5px solid var(--bd);font-size:10px;color:var(--ink4)">Hizmet</th>'
+            +'<th style="padding:8px 6px;text-align:right;border-bottom:1.5px solid var(--bd);font-size:10px;color:var(--ink4)">Tutar</th>'
+            +'<th style="padding:8px 6px;text-align:right;border-bottom:1.5px solid var(--bd);font-size:10px;color:var(--ink4)">Ödenen</th>'
+            +'<th style="padding:8px 6px;text-align:right;border-bottom:1.5px solid var(--bd);font-size:10px;color:var(--ink4)">Kalan</th>'
+            +'<th style="padding:8px 6px;text-align:center;border-bottom:1.5px solid var(--bd);font-size:10px;color:var(--ink4)">Durum</th>'
+            +'<th style="padding:8px 6px;text-align:center;border-bottom:1.5px solid var(--bd);font-size:10px;color:var(--ink4)">İşlem</th>'
+          +'</tr></thead>'
+          +'<tbody>'+satirlar+'</tbody>'
+        +'</table></div>'
+      +'</div>'
+      // Alt butonlar
+      +'<div style="padding:12px 16px;display:flex;gap:8px;flex-shrink:0;border-top:1px solid var(--bd)">'
+        +'<button onclick="mstDetayRandevulariGoster(\''+m.isim.replace(/\'/g,"\\'")+'\')" style="flex:1;padding:10px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer">📋 Randevularina Git</button>'
+        +'<button onclick="mstDetayKapat()" style="flex:1;padding:10px;border:none;border-radius:8px;background:var(--r);color:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer">Kapat</button>'
+      +'</div>'
+    +'</div>';
+  document.body.appendChild(ovl);
+}
+
+function mstDetayKapat(){
+  var ovl=document.getElementById('mst-detay-ovl');
+  if(ovl) ovl.remove();
+}
+
+function mstDetayRandevulariGoster(isim){
+  mstDetayKapat();
   doPg('randevular');
-  var el=document.getElementById('filtre-arama');
-  if(el) el.value=isim;
-  _rdvDurum='hepsi';_borcluFiltre=false;
-  doRdvListele();
+  setTimeout(function(){
+    var el=document.getElementById('filtre-arama');
+    if(el) el.value=isim;
+    _rdvDurum='hepsi'; _borcluFiltre=false;
+    doRdvListele();
+  },100);
 }
 
 
