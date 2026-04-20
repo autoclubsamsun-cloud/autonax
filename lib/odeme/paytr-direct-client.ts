@@ -215,9 +215,6 @@ export async function directOdemeBaslat(
       ? istek.expiryYear.slice(-2)
       : istek.expiryYear,
     cvv: istek.cvv,
-
-    // Sync mode: 1 = anlik yanit al (PayTR'dan JSON dondurur, 3DS icin html da iceride)
-    sync_mode: '1',
   };
 
   try {
