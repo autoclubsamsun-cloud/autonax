@@ -65,6 +65,9 @@ export interface DirectOdemeIstek {
   /** Taksit sayisi (0 = tek cekim, 2-12 = taksit) */
   installmentCount?: number;
 
+  /** Kart markasi (taksitli islem icin). Degerler: advantage, axess, combo, bonus, cardfinans, maximum, paraf, world, saglamkart */
+  cardType?: string;
+
   /** Opsiyonel not (musteri notu) */
   musteriNotu?: string;
 }
@@ -222,6 +225,15 @@ export async function directOdemeBaslat(
       : istek.expiryYear,
     cvv: istek.cvv,
   };
+
+  // card_type: PayTR taksit icin bekliyor (advantage, axess, bonus, cardfinans, maximum, paraf, world, saglamkart, combo)
+  if (istek.cardType) {
+    const geçerli = ['advantage', 'axess', 'combo', 'bonus', 'cardfinans', 'maximum', 'paraf', 'world', 'saglamkart'];
+    const normalize = istek.cardType.toLowerCase().replace(/\s/g, '');
+    if (geçerli.includes(normalize)) {
+      postData.card_type = normalize;
+    }
+  }
 
   try {
     const body = new URLSearchParams(postData).toString();

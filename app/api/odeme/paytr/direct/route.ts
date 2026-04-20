@@ -208,6 +208,7 @@ export async function POST(req: NextRequest) {
       expiryYear,
       cvv,
       installmentCount,
+      cardType: secilenMarka || undefined,
       musteriNotu: body.musteriNotu,
     });
 
