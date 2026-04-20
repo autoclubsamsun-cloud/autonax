@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     const durum = searchParams.get('durum') as BorcDurumu | null;
     const telefon = searchParams.get('telefon') || undefined;
 
-    const borclar = tumBorclarListele({
+    const borclar = await tumBorclarListele({
       durum: durum || undefined,
       telefon,
     });
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
       odemeUrl: `${siteUrl}/odeme/${b.kod}`,
     }));
 
-    const istatistik = borcIstatistik();
+    const istatistik = await borcIstatistik();
 
     return NextResponse.json<ApiResponse>({
       success: true,
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (islem === 'iptal') {
-      const basarili = borcIptal(kod);
+      const basarili = await borcIptal(kod);
       if (!basarili) {
         return NextResponse.json<ApiResponse>(
           {

@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     if (isBorcModu) {
       // BORC MODU - link uzerinden gelen musteri
       const borcData = body as BorcModuIstegi;
-      const borc = borcBulKod(borcData.borcKod.toUpperCase());
+      const borc = await borcBulKod(borcData.borcKod.toUpperCase());
 
       if (!borc) {
         return NextResponse.json<ApiResponse<OdemeBaslatYaniti>>({

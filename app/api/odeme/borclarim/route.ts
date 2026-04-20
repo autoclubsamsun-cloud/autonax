@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const borclar = musteriBorclari({ telefon, email });
+    const borclar = await musteriBorclari({ telefon, email });
 
     // Gruplama: Bekleyenler ve gecmis
     const bekleyenler = borclar.filter((b) => b.durum === 'BEKLEMEDE');

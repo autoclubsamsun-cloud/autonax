@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
     const siparisId = siparisIdUret();
 
     // Borc kaydi olustur
-    const borc = borcOlustur({
+    const borc = await borcOlustur({
       siparisId,
       musteriAdi: body.musteriAdi.trim(),
       musteriTelefon: body.musteriTelefon.trim(),

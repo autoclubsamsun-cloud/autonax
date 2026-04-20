@@ -1,63 +1,141 @@
 /**
- * Borç Kayıt Store — Sprint 2
+ * Borç Kayıt Store — PostgreSQL versiyon (Sprint 5)
  *
- * In-memory store (sunucu restart'ta sifirlanir).
- * Sprint 3: PostgreSQL / Supabase'e gecilecek.
+ * Vercel/Neon Postgres'e baglanir.
+ * In-memory'den gecis - Vercel restart'larda bor\u00e7lar kaybolmaz.
  *
- * Her odeme linki = bir Borc kaydi.
- * Admin linki olusturur, musteri tiklar ve oder.
+ * Tablo: borclar
+ *   kod TEXT PRIMARY KEY
+ *   siparis_id TEXT UNIQUE
+ *   musteri_adi, musteri_telefon, musteri_email TEXT
+ *   musteri_id TEXT NULL
+ *   tutar NUMERIC
+ *   aciklama TEXT
+ *   randevu_id TEXT NULL
+ *   durum TEXT ('BEKLEMEDE' | 'ODENDI' | 'IPTAL' | 'SURESI_DOLDU')
+ *   olusturma_tarihi TIMESTAMPTZ
+ *   son_gecerlilik TIMESTAMPTZ
+ *   odeme_tarihi TIMESTAMPTZ NULL
+ *   odeme_yontemi TEXT NULL
+ *   taksit INT NULL
+ *   olusturan_kullanici TEXT NULL
  */
+
+import { sql, initDB } from '@/lib/db';
 
 export type BorcDurumu = 'BEKLEMEDE' | 'ODENDI' | 'IPTAL' | 'SURESI_DOLDU';
 
 export interface Borc {
-  // Kimlik
-  kod: string;                  // Linkte gorunen kisa kod (8 karakter)
-  siparisId: string;            // PayTR merchant_oid (AUTNX...)
-
-  // Musteri bilgisi
+  kod: string;
+  siparisId: string;
   musteriAdi: string;
   musteriTelefon: string;
   musteriEmail: string;
-  musteriId?: string;           // hesabim.html icin eslestirme (opsiyonel)
-
-  // Borc detayi
-  tutar: number;                // TL cinsinden
-  aciklama: string;             // "Seramik kaplama - 34ABC123"
-  randevuId?: string;           // Hangi randevuya bagli (opsiyonel)
-
-  // Durum
+  musteriId?: string;
+  tutar: number;
+  aciklama: string;
+  randevuId?: string;
   durum: BorcDurumu;
-  olusturmaTarihi: string;      // ISO date
-  sonGecerlilik: string;        // ISO date (24 saat sonra default)
-  odemeTarihi?: string;         // ISO date
-
-  // Odeme detayi (basarili odendiyse)
-  odemeYontemi?: string;        // "Kredi Karti", "Havale" vs
+  olusturmaTarihi: string;
+  sonGecerlilik: string;
+  odemeTarihi?: string;
+  odemeYontemi?: string;
   taksit?: number;
-
-  // Meta
-  olusturanKullanici?: string;  // Admin paneldeki kullanici
+  olusturanKullanici?: string;
 }
 
-const borclar = new Map<string, Borc>();
-const siparisKodIndex = new Map<string, string>();
+// ─────────────────────────────────────────────────────────────────────────
+// Tablo olusturma - ilk cagirida otomatik
+// ─────────────────────────────────────────────────────────────────────────
+
+let tabloHazir = false;
+
+async function tabloHazirla(): Promise<void> {
+  if (tabloHazir) return;
+  await initDB();
+  await sql`
+    CREATE TABLE IF NOT EXISTS borclar (
+      kod TEXT PRIMARY KEY,
+      siparis_id TEXT UNIQUE NOT NULL,
+      musteri_adi TEXT NOT NULL,
+      musteri_telefon TEXT NOT NULL,
+      musteri_email TEXT NOT NULL,
+      musteri_id TEXT,
+      tutar NUMERIC NOT NULL,
+      aciklama TEXT NOT NULL,
+      randevu_id TEXT,
+      durum TEXT NOT NULL DEFAULT 'BEKLEMEDE',
+      olusturma_tarihi TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      son_gecerlilik TIMESTAMPTZ NOT NULL,
+      odeme_tarihi TIMESTAMPTZ,
+      odeme_yontemi TEXT,
+      taksit INT,
+      olusturan_kullanici TEXT
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_borclar_siparis_id ON borclar(siparis_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_borclar_durum ON borclar(durum)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_borclar_telefon ON borclar(musteri_telefon)`;
+  tabloHazir = true;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Row -> Borc cevirici
+// ─────────────────────────────────────────────────────────────────────────
+
+function rowToBorc(row: any): Borc {
+  return {
+    kod: row.kod,
+    siparisId: row.siparis_id,
+    musteriAdi: row.musteri_adi,
+    musteriTelefon: row.musteri_telefon,
+    musteriEmail: row.musteri_email,
+    musteriId: row.musteri_id || undefined,
+    tutar: parseFloat(row.tutar),
+    aciklama: row.aciklama,
+    randevuId: row.randevu_id || undefined,
+    durum: row.durum as BorcDurumu,
+    olusturmaTarihi: row.olusturma_tarihi instanceof Date
+      ? row.olusturma_tarihi.toISOString()
+      : String(row.olusturma_tarihi),
+    sonGecerlilik: row.son_gecerlilik instanceof Date
+      ? row.son_gecerlilik.toISOString()
+      : String(row.son_gecerlilik),
+    odemeTarihi: row.odeme_tarihi
+      ? (row.odeme_tarihi instanceof Date ? row.odeme_tarihi.toISOString() : String(row.odeme_tarihi))
+      : undefined,
+    odemeYontemi: row.odeme_yontemi || undefined,
+    taksit: row.taksit !== null && row.taksit !== undefined ? Number(row.taksit) : undefined,
+    olusturanKullanici: row.olusturan_kullanici || undefined,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Kod uretme
+// ─────────────────────────────────────────────────────────────────────────
 
 /**
  * 8 karakterli benzersiz kod uretir.
- * Karisabilecek karakterler (I, O, 0, 1) cikarildi.
  */
-export function kodUret(): string {
+export async function kodUret(): Promise<string> {
+  await tabloHazirla();
   const karakterler = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let kod = '';
-  for (let i = 0; i < 8; i++) {
-    kod += karakterler[Math.floor(Math.random() * karakterler.length)];
+  for (let deneme = 0; deneme < 10; deneme++) {
+    let kod = '';
+    for (let i = 0; i < 8; i++) {
+      kod += karakterler[Math.floor(Math.random() * karakterler.length)];
+    }
+    const mevcut = await sql`SELECT kod FROM borclar WHERE kod = ${kod} LIMIT 1`;
+    if (mevcut.length === 0) return kod;
   }
-  if (borclar.has(kod)) return kodUret();
-  return kod;
+  throw new Error('Kod uretilemedi - 10 deneme de cakisti');
 }
 
-export function borcOlustur(params: {
+// ─────────────────────────────────────────────────────────────────────────
+// CRUD
+// ─────────────────────────────────────────────────────────────────────────
+
+export async function borcOlustur(params: {
   siparisId: string;
   musteriAdi: string;
   musteriTelefon: string;
@@ -68,161 +146,196 @@ export function borcOlustur(params: {
   randevuId?: string;
   olusturanKullanici?: string;
   gecerlilikSaat?: number;
-}): Borc {
-  const kod = kodUret();
-  const simdi = new Date();
+}): Promise<Borc> {
+  await tabloHazirla();
+  const kod = await kodUret();
   const gecerlilikSaat = params.gecerlilikSaat ?? 24;
-  const sonGecerlilik = new Date(simdi.getTime() + gecerlilikSaat * 3600 * 1000);
+  const sonGecerlilik = new Date(Date.now() + gecerlilikSaat * 3600 * 1000);
 
-  const borc: Borc = {
-    kod,
-    siparisId: params.siparisId,
-    musteriAdi: params.musteriAdi,
-    musteriTelefon: params.musteriTelefon,
-    musteriEmail: params.musteriEmail,
-    musteriId: params.musteriId,
-    tutar: params.tutar,
-    aciklama: params.aciklama,
-    randevuId: params.randevuId,
-    durum: 'BEKLEMEDE',
-    olusturmaTarihi: simdi.toISOString(),
-    sonGecerlilik: sonGecerlilik.toISOString(),
-    olusturanKullanici: params.olusturanKullanici,
-  };
+  const rows = await sql`
+    INSERT INTO borclar (
+      kod, siparis_id, musteri_adi, musteri_telefon, musteri_email,
+      musteri_id, tutar, aciklama, randevu_id,
+      durum, son_gecerlilik, olusturan_kullanici
+    ) VALUES (
+      ${kod}, ${params.siparisId}, ${params.musteriAdi}, ${params.musteriTelefon}, ${params.musteriEmail},
+      ${params.musteriId || null}, ${params.tutar}, ${params.aciklama}, ${params.randevuId || null},
+      'BEKLEMEDE', ${sonGecerlilik.toISOString()}, ${params.olusturanKullanici || null}
+    )
+    RETURNING *
+  `;
 
-  borclar.set(kod, borc);
-  siparisKodIndex.set(params.siparisId, kod);
-  return borc;
+  return rowToBorc(rows[0]);
 }
 
-export function borcBulKod(kod: string): Borc | null {
-  const borc = borclar.get(kod);
-  if (!borc) return null;
+export async function borcBulKod(kod: string): Promise<Borc | null> {
+  await tabloHazirla();
+  const rows = await sql`SELECT * FROM borclar WHERE kod = ${kod} LIMIT 1`;
+  if (rows.length === 0) return null;
 
-  // Suresi dolduysa otomatik guncelle
+  const borc = rowToBorc(rows[0]);
+
+  // Suresi dolduysa durumu guncelle
   if (borc.durum === 'BEKLEMEDE' && new Date() > new Date(borc.sonGecerlilik)) {
+    await sql`UPDATE borclar SET durum = 'SURESI_DOLDU' WHERE kod = ${kod}`;
     borc.durum = 'SURESI_DOLDU';
-    borclar.set(kod, borc);
   }
   return borc;
 }
 
-export function borcBulSiparis(siparisId: string): Borc | null {
-  const kod = siparisKodIndex.get(siparisId);
-  if (!kod) return null;
-  return borclar.get(kod) || null;
+export async function borcBulSiparis(siparisId: string): Promise<Borc | null> {
+  await tabloHazirla();
+  const rows = await sql`SELECT * FROM borclar WHERE siparis_id = ${siparisId} LIMIT 1`;
+  if (rows.length === 0) return null;
+  return rowToBorc(rows[0]);
 }
 
-export function borcDurumGuncelle(
+export async function borcDurumGuncelle(
   siparisId: string,
   durum: BorcDurumu,
   detay?: { odemeYontemi?: string; taksit?: number }
-): Borc | null {
-  const kod = siparisKodIndex.get(siparisId);
-  if (!kod) return null;
+): Promise<Borc | null> {
+  await tabloHazirla();
 
-  const borc = borclar.get(kod);
-  if (!borc) return null;
-
-  borc.durum = durum;
+  let rows;
   if (durum === 'ODENDI') {
-    borc.odemeTarihi = new Date().toISOString();
-    if (detay?.odemeYontemi) borc.odemeYontemi = detay.odemeYontemi;
-    if (detay?.taksit) borc.taksit = detay.taksit;
+    rows = await sql`
+      UPDATE borclar SET
+        durum = ${durum},
+        odeme_tarihi = NOW(),
+        odeme_yontemi = COALESCE(${detay?.odemeYontemi || null}, odeme_yontemi),
+        taksit = COALESCE(${detay?.taksit || null}, taksit)
+      WHERE siparis_id = ${siparisId}
+      RETURNING *
+    `;
+  } else {
+    rows = await sql`
+      UPDATE borclar SET durum = ${durum}
+      WHERE siparis_id = ${siparisId}
+      RETURNING *
+    `;
   }
 
-  borclar.set(kod, borc);
-  return borc;
+  if (rows.length === 0) return null;
+  return rowToBorc(rows[0]);
 }
 
-export function tumBorclarListele(filtre?: {
+export async function tumBorclarListele(filtre?: {
   durum?: BorcDurumu;
   musteriId?: string;
   telefon?: string;
-}): Borc[] {
-  let sonuc = Array.from(borclar.values());
+}): Promise<Borc[]> {
+  await tabloHazirla();
 
-  if (filtre?.durum) sonuc = sonuc.filter((b) => b.durum === filtre.durum);
-  if (filtre?.musteriId) sonuc = sonuc.filter((b) => b.musteriId === filtre.musteriId);
-  if (filtre?.telefon) {
+  let rows;
+  if (filtre?.durum && filtre?.musteriId) {
+    rows = await sql`
+      SELECT * FROM borclar
+      WHERE durum = ${filtre.durum} AND musteri_id = ${filtre.musteriId}
+      ORDER BY olusturma_tarihi DESC
+    `;
+  } else if (filtre?.durum && filtre?.telefon) {
     const temiz = filtre.telefon.replace(/\D/g, '');
-    sonuc = sonuc.filter((b) => b.musteriTelefon.replace(/\D/g, '') === temiz);
+    rows = await sql`
+      SELECT * FROM borclar
+      WHERE durum = ${filtre.durum}
+        AND regexp_replace(musteri_telefon, '\D', '', 'g') = ${temiz}
+      ORDER BY olusturma_tarihi DESC
+    `;
+  } else if (filtre?.durum) {
+    rows = await sql`SELECT * FROM borclar WHERE durum = ${filtre.durum} ORDER BY olusturma_tarihi DESC`;
+  } else if (filtre?.musteriId) {
+    rows = await sql`SELECT * FROM borclar WHERE musteri_id = ${filtre.musteriId} ORDER BY olusturma_tarihi DESC`;
+  } else if (filtre?.telefon) {
+    const temiz = filtre.telefon.replace(/\D/g, '');
+    rows = await sql`
+      SELECT * FROM borclar
+      WHERE regexp_replace(musteri_telefon, '\D', '', 'g') = ${temiz}
+      ORDER BY olusturma_tarihi DESC
+    `;
+  } else {
+    rows = await sql`SELECT * FROM borclar ORDER BY olusturma_tarihi DESC`;
   }
 
-  return sonuc.sort(
-    (a, b) =>
-      new Date(b.olusturmaTarihi).getTime() - new Date(a.olusturmaTarihi).getTime()
-  );
+  return rows.map((r: any) => rowToBorc(r));
 }
 
-export function musteriBorclari(params: {
+export async function musteriBorclari(params: {
   telefon?: string;
   email?: string;
-}): Borc[] {
-  const sonuc: Borc[] = [];
-  for (const borc of borclar.values()) {
-    const telEslesme =
-      params.telefon &&
-      borc.musteriTelefon.replace(/\D/g, '') === params.telefon.replace(/\D/g, '');
-    const emailEslesme =
-      params.email &&
-      borc.musteriEmail.toLowerCase() === params.email.toLowerCase();
+}): Promise<Borc[]> {
+  await tabloHazirla();
 
-    if (telEslesme || emailEslesme) sonuc.push(borc);
+  let rows;
+  if (params.telefon && params.email) {
+    const temiz = params.telefon.replace(/\D/g, '');
+    rows = await sql`
+      SELECT * FROM borclar
+      WHERE regexp_replace(musteri_telefon, '\D', '', 'g') = ${temiz}
+         OR LOWER(musteri_email) = LOWER(${params.email})
+      ORDER BY olusturma_tarihi DESC
+    `;
+  } else if (params.telefon) {
+    const temiz = params.telefon.replace(/\D/g, '');
+    rows = await sql`
+      SELECT * FROM borclar
+      WHERE regexp_replace(musteri_telefon, '\D', '', 'g') = ${temiz}
+      ORDER BY olusturma_tarihi DESC
+    `;
+  } else if (params.email) {
+    rows = await sql`
+      SELECT * FROM borclar
+      WHERE LOWER(musteri_email) = LOWER(${params.email})
+      ORDER BY olusturma_tarihi DESC
+    `;
+  } else {
+    return [];
   }
-  return sonuc.sort(
-    (a, b) =>
-      new Date(b.olusturmaTarihi).getTime() - new Date(a.olusturmaTarihi).getTime()
-  );
+
+  return rows.map((r: any) => rowToBorc(r));
 }
 
-export function borcIptal(kod: string): boolean {
-  const borc = borclar.get(kod);
-  if (!borc) return false;
-  if (borc.durum !== 'BEKLEMEDE') return false;
-
-  borc.durum = 'IPTAL';
-  borclar.set(kod, borc);
-  return true;
+export async function borcIptal(kod: string): Promise<boolean> {
+  await tabloHazirla();
+  const rows = await sql`
+    UPDATE borclar SET durum = 'IPTAL'
+    WHERE kod = ${kod} AND durum = 'BEKLEMEDE'
+    RETURNING kod
+  `;
+  return rows.length > 0;
 }
 
-/**
- * Dashboard istatistik
- */
-export function borcIstatistik(): {
+// ─────────────────────────────────────────────────────────────────────────
+// Istatistik
+// ─────────────────────────────────────────────────────────────────────────
+
+export async function borcIstatistik(): Promise<{
   toplamBekleyen: number;
   toplamBekleyenTutar: number;
   toplamOdenen: number;
   toplamOdenenTutar: number;
   bugunOdenenTutar: number;
-} {
-  const simdi = new Date();
-  const bugunBaslangic = new Date(simdi.getFullYear(), simdi.getMonth(), simdi.getDate()).getTime();
+}> {
+  await tabloHazirla();
 
-  let toplamBekleyen = 0;
-  let toplamBekleyenTutar = 0;
-  let toplamOdenen = 0;
-  let toplamOdenenTutar = 0;
-  let bugunOdenenTutar = 0;
+  const rows = await sql`
+    SELECT
+      COUNT(*) FILTER (WHERE durum = 'BEKLEMEDE') AS toplam_bekleyen,
+      COALESCE(SUM(tutar) FILTER (WHERE durum = 'BEKLEMEDE'), 0) AS toplam_bekleyen_tutar,
+      COUNT(*) FILTER (WHERE durum = 'ODENDI') AS toplam_odenen,
+      COALESCE(SUM(tutar) FILTER (WHERE durum = 'ODENDI'), 0) AS toplam_odenen_tutar,
+      COALESCE(SUM(tutar) FILTER (
+        WHERE durum = 'ODENDI' AND odeme_tarihi >= DATE_TRUNC('day', NOW())
+      ), 0) AS bugun_odenen_tutar
+    FROM borclar
+  `;
 
-  for (const b of borclar.values()) {
-    if (b.durum === 'BEKLEMEDE') {
-      toplamBekleyen++;
-      toplamBekleyenTutar += b.tutar;
-    } else if (b.durum === 'ODENDI') {
-      toplamOdenen++;
-      toplamOdenenTutar += b.tutar;
-      if (b.odemeTarihi && new Date(b.odemeTarihi).getTime() >= bugunBaslangic) {
-        bugunOdenenTutar += b.tutar;
-      }
-    }
-  }
-
+  const r: any = rows[0];
   return {
-    toplamBekleyen,
-    toplamBekleyenTutar,
-    toplamOdenen,
-    toplamOdenenTutar,
-    bugunOdenenTutar,
+    toplamBekleyen: Number(r.toplam_bekleyen),
+    toplamBekleyenTutar: Number(r.toplam_bekleyen_tutar),
+    toplamOdenen: Number(r.toplam_odenen),
+    toplamOdenenTutar: Number(r.toplam_odenen_tutar),
+    bugunOdenenTutar: Number(r.bugun_odenen_tutar),
   };
 }

@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
       // YENI: Borc kaydini guncelle
       const odemeYontemi = paymentType === 'card' ? 'Kredi Karti' : paymentType || 'Kredi Karti';
       const taksit = installmentCount ? parseInt(installmentCount, 10) : 1;
-      const borc = borcDurumGuncelle(merchantOid, 'ODENDI', {
+      const borc = await borcDurumGuncelle(merchantOid, 'ODENDI', {
         odemeYontemi,
         taksit: isNaN(taksit) ? 1 : taksit,
       });

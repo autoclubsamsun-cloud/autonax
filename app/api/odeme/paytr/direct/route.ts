@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
 
     if (body.kod) {
       // Borc odeme modu
-      const borc = borcBulKod(body.kod);
+      const borc = await borcBulKod(body.kod);
       if (!borc) {
         return NextResponse.json(
           { success: false, error: 'Odeme kodu bulunamadi veya gecersiz' },

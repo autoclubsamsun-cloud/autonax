@@ -39,7 +39,7 @@ export async function GET(_req: NextRequest, context: RouteContext) {
       );
     }
 
-    const borc = borcBulKod(kod.toUpperCase());
+    const borc = await borcBulKod(kod.toUpperCase());
     if (!borc) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Odeme linki bulunamadi' },
