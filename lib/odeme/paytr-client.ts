@@ -1,10 +1,9 @@
 /**
- * PayTR iFrame API İstemci Kütüphanesi - v2
+ * PayTR iFrame API İstemci Kütüphanesi - v4
  *
- * Sprint 1'den farkı:
- * - Credentials artık .env yerine /api/ayarlar endpoint'inden okunuyor
- * - Sunnet'in yazdığı panel ile tam uyumlu
- * - .env fallback hâlâ var (development kolaylığı için)
+ * v3'ten fark: /api/ayarlar HTTP cagrisi yerine DB'den direkt okur.
+ * Sunnet'in endpoint'i auth gerektiriyordu, backend kendi cagirinca 401 aliyor.
+ * Cozum: lib/odeme/ayarlar-okuyucu.ts -> DB'den direkt.
  */
 
 import crypto from 'crypto';
@@ -13,64 +12,9 @@ import type {
   PayTRSepetUrunu,
   PayTRBildirimi,
 } from './paytr-types';
+import { odemeAyariOku } from './ayarlar-okuyucu';
 
 const PAYTR_TOKEN_URL = 'https://www.paytr.com/odeme/api/get-token';
-
-/**
- * Ayarlar endpoint'inin tam URL'ini döndürür.
- * Dahili (same-origin) fetch için base URL gerekir.
- */
-function ayarlarUrlAl(): string {
-  // Vercel/production
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL;
-  if (siteUrl) {
-    const clean = siteUrl.replace(/\/$/, '');
-    const withProtocol = clean.startsWith('http') ? clean : `https://${clean}`;
-    return `${withProtocol}/api/ayarlar`;
-  }
-  // Local development
-  return 'http://localhost:3000/api/ayarlar';
-}
-
-/**
- * /api/ayarlar endpoint'inden odeme_ayar bilgisini çeker.
- * Sunnet'in panel kodu bu endpoint'e "odeme_ayar" anahtarı altında kaydediyor.
- */
-async function odemeAyariCek(): Promise<{
-  paytrMerchantId?: string;
-  paytrMerchantKey?: string;
-  paytrMerchantSalt?: string;
-  paytrAktif?: boolean;
-  paytrTestMod?: boolean;
-} | null> {
-  try {
-    const url = ayarlarUrlAl();
-    const res = await fetch(url, {
-      method: 'GET',
-      // Panel tarafında cookie auth gerekebilir, same-origin çalıştığımız için cache'siz çekelim
-      cache: 'no-store',
-    });
-
-    if (!res.ok) {
-      console.log('[PayTR Config] /api/ayarlar status:', res.status);
-      return null;
-    }
-
-    const json = await res.json();
-    // Sunnet'in mimarisi: { success: true, data: { odeme_ayar: {...}, site_ayarlar: {...}, ... } }
-    // Ya da (eski): { success: true, odeme_ayar: {...} }
-    const odeme =
-      json?.data?.odeme_ayar ||
-      json?.odeme_ayar ||
-      null;
-
-    if (!odeme || typeof odeme !== 'object') return null;
-    return odeme;
-  } catch (err) {
-    console.log('[PayTR Config] /api/ayarlar fetch hatası:', err);
-    return null;
-  }
-}
 
 /**
  * .env.local'den config okur (fallback)
@@ -100,15 +44,13 @@ function envConfigOku(): PayTRConfig | null {
 /**
  * PayTR konfigurasyonunu okur.
  *
- * Öncelik sırası:
- * 1. /api/ayarlar → odeme_ayar (panelden kaydedilmiş)
+ * Oncelik sirasi:
+ * 1. DB'den odeme_ayar (panelden kaydedilmis) - v4'te DB direkt
  * 2. .env.local (fallback)
- *
- * Panel KAYDET basılınca backend anında yeni bilgilerle çalışır.
  */
 export async function payTRConfigOku(): Promise<PayTRConfig> {
-  // 1. Panelden kaydedilmiş ayarları dene
-  const panelAyar = await odemeAyariCek();
+  // 1. DB'den oku
+  const panelAyar = await odemeAyariOku();
 
   if (
     panelAyar &&
@@ -123,7 +65,6 @@ export async function payTRConfigOku(): Promise<PayTRConfig> {
       merchantId: panelAyar.paytrMerchantId,
       merchantKey: panelAyar.paytrMerchantKey,
       merchantSalt: panelAyar.paytrMerchantSalt,
-      // paytrTestMod true/undefined ise test modu aktif (güvenli default)
       testModu: panelAyar.paytrTestMod !== false,
       maxTaksit: 12,
       siteUrl,
@@ -133,33 +74,27 @@ export async function payTRConfigOku(): Promise<PayTRConfig> {
   // 2. Fallback: .env.local
   const envConfig = envConfigOku();
   if (envConfig) {
-    console.log('[PayTR Config] .env fallback kullanılıyor');
+    console.log('[PayTR Config] .env fallback kullaniliyor');
     return envConfig;
   }
 
-  // 3. Hiç yok — hata fırlat
   throw new Error(
-    'PayTR konfigurasyonu bulunamadı: Admin paneli → Ayarlar → Ödeme ' +
-      'bölümünden MERCHANT ID/KEY/SALT girilmeli ve kaydedilmeli. ' +
-      'Alternatif olarak .env.local dosyasına PAYTR_MERCHANT_ID, ' +
-      'PAYTR_MERCHANT_KEY, PAYTR_MERCHANT_SALT eklenebilir.'
+    'PayTR konfigurasyonu bulunamadi: Admin paneli → Ayarlar → Odeme ' +
+      'bolumunden MERCHANT ID/KEY/SALT girilmeli ve kaydedilmeli.'
   );
 }
 
 /**
- * PayTR aktif mi kontrol eder — panelde Aktif toggle'ı kapalıysa false.
- * Ödeme başlatmadan önce çağrılmalı.
+ * PayTR aktif mi kontrol eder — panelde Aktif toggle'i kapaliysa false.
  */
 export async function payTRAktifMi(): Promise<boolean> {
-  const panelAyar = await odemeAyariCek();
+  const panelAyar = await odemeAyariOku();
   if (!panelAyar) return false;
-  // paytrAktif true ise aktif. undefined ise false sayalım (güvenli default)
   return !!panelAyar.paytrAktif;
 }
 
 /**
- * Müşteri sepetini PayTR formatına çevirir.
- * [['Ürün adı', 'fiyat_kurus', adet], ...]  →  base64(JSON)
+ * Musteri sepetini PayTR formatina cevirir.
  */
 export function sepetiPayTRFormatinaCevir(
   sepet: PayTRSepetUrunu[]
@@ -173,7 +108,7 @@ export function sepetiPayTRFormatinaCevir(
 }
 
 /**
- * TL tutarını kuruş string'ine çevirir. 199.99 → "19999"
+ * TL tutarini kurus string'ine cevirir. 199.99 -> "19999"
  */
 export function tlToKurusString(tl: number): string {
   if (!Number.isFinite(tl) || tl < 0) {
@@ -183,7 +118,7 @@ export function tlToKurusString(tl: number): string {
 }
 
 /**
- * Sepet toplam tutarını kuruş olarak hesaplar
+ * Sepet toplam tutarini kurus olarak hesaplar
  */
 export function sepetToplamiKurus(sepet: PayTRSepetUrunu[]): number {
   return sepet.reduce((toplam, u) => {
@@ -193,9 +128,6 @@ export function sepetToplamiKurus(sepet: PayTRSepetUrunu[]): number {
 
 /**
  * iFrame token hash
- * hash_str = merchant_id + user_ip + merchant_oid + email + payment_amount
- *            + user_basket + no_installment + max_installment + currency + test_mode
- * paytr_token = base64( HMAC-SHA256(hash_str + merchant_salt, merchant_key) )
  */
 export function iFrameTokenHashOlustur(params: {
   config: PayTRConfig;
@@ -229,8 +161,7 @@ export function iFrameTokenHashOlustur(params: {
 }
 
 /**
- * Callback bildirim hash doğrulama
- * hash = base64( HMAC-SHA256(merchant_oid + merchant_salt + status + total_amount, merchant_key) )
+ * Callback bildirim hash dogrulama
  */
 export function bildirimHashDogrula(
   config: PayTRConfig,
@@ -258,7 +189,7 @@ export function bildirimHashDogrula(
 }
 
 /**
- * PayTR'dan iFrame token alır
+ * PayTR'dan iFrame token alir
  */
 export async function iFrameTokenAl(params: {
   config: PayTRConfig;
@@ -374,7 +305,7 @@ export async function iFrameTokenAl(params: {
 }
 
 /**
- * HTTP isteğinden müşteri IP'sini çıkarır
+ * HTTP istegindan musteri IP'sini cikarir
  */
 export function istekIpAl(headers: Headers): string {
   const forwarded = headers.get('x-forwarded-for');
@@ -385,8 +316,7 @@ export function istekIpAl(headers: Headers): string {
 }
 
 /**
- * Sipariş ID üretir (merchant_oid)
- * Format: AUTNX + timestamp + 6 hex = sadece alfanumerik, PayTR uyumlu
+ * Siparis ID uretir (merchant_oid)
  */
 export function siparisIdUret(prefix: string = 'AUTNX'): string {
   const timestamp = Date.now().toString();
