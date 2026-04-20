@@ -109,10 +109,16 @@ function hashOlustur(hashStr: string, merchantKey: string): string {
 }
 
 /**
- * Tutari PayTR formatina cevirir: 100.50 TL -> 10050 (kurus olarak gonderilir)
+ * Tutari PayTR Direkt API formatina cevirir.
+ * 
+ * DIKKAT: Direkt API'de payment_amount TL cinsinden DECIMAL string olarak gonderilir.
+ * Ornek: 100.50 TL -> "100.50"
+ * 
+ * NOT: iFrame API'de kurus formati kullanilir ama DIREKT API FARKLI!
+ * PayTR resmi dokuman: https://dev.paytr.com/en/direkt-api/direkt-api-1-adim
  */
-function tutariKurusaCevir(tutarTL: number): number {
-  return Math.round(tutarTL * 100);
+function tutariPayTRFormatina(tutarTL: number): string {
+  return tutarTL.toFixed(2);
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -155,8 +161,8 @@ export async function directOdemeBaslat(
   const merchantSalt = ayar.paytrMerchantSalt;
   const testMode = ayar.paytrTestMod ? '1' : '0';
 
-  // Tutari kurus cinsine cevir
-  const paymentAmount = tutariKurusaCevir(istek.tutar);
+  // Tutari Direkt API formatina cevir (TL decimal string)
+  const paymentAmount = tutariPayTRFormatina(istek.tutar);
 
   // Sepeti encode et
   const userBasket = sepetiPayTRFormatinaCevir(istek.sepet);
@@ -192,7 +198,7 @@ export async function directOdemeBaslat(
     merchant_oid: istek.merchantOid,
     email: istek.email,
     payment_type: paymentType,
-    payment_amount: paymentAmount.toString(),
+    payment_amount: paymentAmount,
     currency: currency,
     test_mode: testMode,
     non_3d: non3d,
