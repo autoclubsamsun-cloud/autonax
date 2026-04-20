@@ -7853,53 +7853,76 @@ function csvRdvYukle(){
   storageKaydet();
   csvRdvIptal();
 
-  // ═══ MÜŞTERİLERİ DB'YE KAYDET ═══
-  // Benzersiz müşterileri topla (isim + telefon kombinasyonuna göre)
-  var musteriMap={};
-  RANDEVULAR.forEach(function(r){
-    var isim=(r.musteri||'').trim();
-    var tel=(r.tel||r.musteriTel||'').replace(/\D/g,'');
-    if(!isim) return;
-    var key=isim.toUpperCase()+'__'+tel;
-    if(!musteriMap[key]){
-      musteriMap[key]={
-        id: 'MST-'+key.replace(/[^A-Z0-9]/g,'').slice(0,20)+'-'+Math.random().toString(36).slice(2,6).toUpperCase(),
-        adSoyad: isim,
-        telefon: tel || r.tel || '',
-        email: '',
-        plakalar: [],
-        kayitTarihi: new Date().toISOString(),
-        notlar: 'CSV import',
-        toplamRandevu: 0,
-        toplamHarcama: 0
-      };
-    }
-    var m=musteriMap[key];
-    if(r.plaka && m.plakalar.indexOf(r.plaka)<0) m.plakalar.push(r.plaka);
-    m.toplamRandevu++;
-    m.toplamHarcama+=Number(r.tutar)||0;
-  });
-  var musteriListesi=Object.values(musteriMap);
+  if(!eklenen){
+    toast('Hic randevu eklenemedi','red');
+    return;
+  }
 
-  toast('📤 '+musteriListesi.length+' musteri DB\'ye kaydediliyor...','green');
+  toast('📤 '+eklenen+' randevu DB\'ye kaydediliyor...','green');
 
-  // Toplu DB kaydı
-  var kaydedilen=0, hataliKayit=0;
-  var tumPromises=musteriListesi.map(function(m){
-    return fetch('/api/musteriler',{
+  // ═══ 1) RANDEVULARI DB'YE YAZ (her birini tek tek POST) ═══
+  var rdvPromises=RANDEVULAR.map(function(r){
+    return fetch('/api/randevular',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       credentials:'same-origin',
-      body:JSON.stringify(m)
-    }).then(function(res){return res.ok?kaydedilen++:hataliKayit++;})
-      .catch(function(){hataliKayit++;});
+      body:JSON.stringify(r)
+    }).then(function(res){return res.ok;}).catch(function(){return false;});
   });
 
-  Promise.all(tumPromises).then(function(){
-    toast('✅ '+eklenen+' randevu + '+kaydedilen+' musteri kaydedildi'+(hataliKayit?' ('+hataliKayit+' musteri hatasi)':'')+(atlanan?', '+atlanan+' atlandi':''),'green');
-    // Randevuları da DB'ye sync et
-    if(typeof dbSyncToDB==='function') dbSyncToDB();
-    setTimeout(function(){doPg('randevular');},1000);
+  Promise.all(rdvPromises).then(function(rdvSonuclar){
+    var rdvBasarili=rdvSonuclar.filter(function(x){return x;}).length;
+    var rdvHata=rdvSonuclar.length-rdvBasarili;
+
+    // ═══ 2) MÜŞTERİLERİ DB'YE YAZ ═══
+    var musteriMap={};
+    RANDEVULAR.forEach(function(r){
+      var isim=(r.musteri||'').trim();
+      var tel=(r.tel||r.musteriTel||'').replace(/\D/g,'');
+      if(!isim) return;
+      var key=isim.toUpperCase()+'__'+tel;
+      if(!musteriMap[key]){
+        musteriMap[key]={
+          id: 'MST-'+key.replace(/[^A-Z0-9]/g,'').slice(0,20)+'-'+Math.random().toString(36).slice(2,6).toUpperCase(),
+          adSoyad: isim,
+          telefon: tel || r.tel || '',
+          email: '',
+          plakalar: [],
+          kayitTarihi: new Date().toISOString(),
+          notlar: 'CSV import',
+          toplamRandevu: 0,
+          toplamHarcama: 0
+        };
+      }
+      var m=musteriMap[key];
+      if(r.plaka && m.plakalar.indexOf(r.plaka)<0) m.plakalar.push(r.plaka);
+      m.toplamRandevu++;
+      m.toplamHarcama+=Number(r.tutar)||0;
+    });
+    var musteriListesi=Object.values(musteriMap);
+
+    toast('📤 '+musteriListesi.length+' musteri DB\'ye kaydediliyor...','green');
+
+    var mstPromises=musteriListesi.map(function(m){
+      return fetch('/api/musteriler',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        credentials:'same-origin',
+        body:JSON.stringify(m)
+      }).then(function(res){return res.ok;}).catch(function(){return false;});
+    });
+
+    return Promise.all(mstPromises).then(function(mstSonuclar){
+      var mstBasarili=mstSonuclar.filter(function(x){return x;}).length;
+      var mstHata=mstSonuclar.length-mstBasarili;
+
+      var mesaj='✅ '+rdvBasarili+'/'+eklenen+' randevu + '+mstBasarili+'/'+musteriListesi.length+' musteri DB\'ye kaydedildi';
+      if(rdvHata||mstHata) mesaj+=' | Hata: '+rdvHata+' rdv, '+mstHata+' musteri';
+      if(atlanan) mesaj+=' | '+atlanan+' atlandi';
+
+      toast(mesaj,'green');
+      setTimeout(function(){doPg('randevular');},1500);
+    });
   });
 }
 
@@ -8067,10 +8090,24 @@ function csvOdemeYukle(){
   });
   storageKaydet();
   csvOdemeIptal();
-  toast('✅ '+eklenen+' ödeme işlendi ('+bagimsiz+' bağımsız), '+atlanan+' atlandı','green');
-  // DB'ye sync
-  if(typeof dbSyncToDB==='function') dbSyncToDB();
-  setTimeout(function(){doPg('odemeler');},500);
+
+  toast('📤 Degisiklikler DB\'ye yaziliyor...','green');
+
+  // Degisen/yeni randevuları DB'ye yaz
+  var odmPromises=RANDEVULAR.map(function(r){
+    return fetch('/api/randevular',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'same-origin',
+      body:JSON.stringify(r)
+    }).then(function(res){return res.ok;}).catch(function(){return false;});
+  });
+
+  Promise.all(odmPromises).then(function(sonuclar){
+    var basarili=sonuclar.filter(function(x){return x;}).length;
+    toast('✅ '+eklenen+' odeme islendi ('+bagimsiz+' bagimsiz), '+basarili+' randevu DB\'ye yazildi'+(atlanan?', '+atlanan+' atlandi':''),'green');
+    setTimeout(function(){doPg('odemeler');},1500);
+  });
 }
 
 /* ── EXPORT FONKSİYONLARI ── */
