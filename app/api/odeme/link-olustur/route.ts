@@ -71,11 +71,15 @@ export async function POST(req: NextRequest) {
     // Siparis ID uret
     const siparisId = siparisIdUret();
 
+    // Telefonu normalize et - yoksa veya geçersizse dummy kullan
+    const telefonTemiz = (body.musteriTelefon || '').replace(/\D/g, '');
+    const gecerliTelefon = telefonTemiz.length >= 10 ? body.musteriTelefon.trim() : '05000000000';
+
     // Borc kaydi olustur
     const borc = await borcOlustur({
       siparisId,
       musteriAdi: body.musteriAdi.trim(),
-      musteriTelefon: body.musteriTelefon.trim(),
+      musteriTelefon: gecerliTelefon,
       musteriEmail: body.musteriEmail.trim().toLowerCase(),
       tutar: body.tutar,
       aciklama: body.aciklama.trim(),
@@ -127,9 +131,7 @@ function girisDogrula(b: LinkOlusturIstegi): string | null {
   if (!b.musteriAdi || b.musteriAdi.trim().length < 2) {
     return 'Musteri adi gerekli (en az 2 karakter)';
   }
-  if (!b.musteriTelefon || b.musteriTelefon.replace(/\D/g, '').length < 10) {
-    return 'Gecerli telefon numarasi gerekli';
-  }
+  // Telefon opsiyonel - yoksa / geçersizse dummy koyulur
   if (!b.musteriEmail || !b.musteriEmail.includes('@')) {
     return 'Gecerli e-posta gerekli';
   }

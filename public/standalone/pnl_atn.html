@@ -3269,15 +3269,40 @@ function payTROdemeBaslat(idx){
 function payTRDirektOdemeAc(idx,tutar){
   var r=RANDEVULAR[idx]; if(!r){toast('Randevu bulunamadi','red');return;}
 
+  // Telefon geçerli mi kontrol et
+  var telefon=(r.musteriTel||r.tel||'').replace(/\D/g,'');
+  if(telefon.length<10){
+    var girilen=prompt('Musteri telefonu gerekli (10 haneli, ornek: 5551234567). Devam etmek icin telefon girin:','');
+    if(!girilen) return;
+    telefon=girilen.replace(/\D/g,'');
+    if(telefon.length<10){
+      toast('Gecersiz telefon numarasi','red');
+      return;
+    }
+  }
+
+  // Email kontrol
+  var email=r.musteriEmail||'';
+  if(!email || email.indexOf('@')<0){
+    email='musteri@autonax.com.tr';
+  }
+
+  // Musteri adi kontrol
+  var adSoyad=(r.musteriAdi||r.musteri||'').trim();
+  if(!adSoyad || adSoyad.length<2){
+    adSoyad='Autonax Musteri';
+  }
+
   // Link uret
   toast('Odeme ekrani aciliyor...','green');
   fetch('/api/odeme/link-olustur',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
+    credentials:'same-origin',
     body:JSON.stringify({
-      musteriAdi: r.musteriAdi || r.musteri || 'Musteri',
-      musteriTelefon: r.musteriTel || r.tel || '05000000000',
-      musteriEmail: r.musteriEmail || 'musteri@autonax.com.tr',
+      musteriAdi: adSoyad,
+      musteriTelefon: telefon,
+      musteriEmail: email,
       tutar: tutar,
       aciklama: (r.hizmet||'Autonax Hizmeti')+' - '+(r.plaka||''),
       randevuId: r.id
@@ -3288,9 +3313,7 @@ function payTRDirektOdemeAc(idx,tutar){
       var _ovl=document.getElementById('online-odeme-ovl'); if(_ovl) _ovl.remove();
       return;
     }
-    // Popup acikken kapat (online-odeme'den geldiyse)
     var _ovl=document.getElementById('online-odeme-ovl'); if(_ovl) _ovl.remove();
-    // Yeni sekmede ac
     window.open(d.data.odemeUrl,'_blank');
     toast('Odeme ekrani yeni sekmede acildi','green');
   }).catch(function(err){
