@@ -2124,7 +2124,7 @@ function rdvDetay(idx){
     if(kln>0){
       odemeFormHtml='<div style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:12px">'
         +'<div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Ödeme Al</div>'
-        // Kısmi miktar
+        // ─── 1. YONTEM satiri ───
         +'<div style="display:flex;gap:8px;margin-bottom:8px">'
           +'<div style="flex:1">'
             +'<div style="font-size:10px;color:var(--ink4);margin-bottom:3px">Miktar (₺)</div>'
@@ -2136,15 +2136,42 @@ function rdvDetay(idx){
             +'<input type="text" id="odeme-not" placeholder="Kalan Mayıs sonu..." style="width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">'
           +'</div>'
         +'</div>'
-        +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">'
-        +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">'
-          +'<button data-yontem="Nakit" onclick="odemeEkleBtnClick(this,'+idx+')" style="padding:9px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-size:12px;font-weight:700;cursor:pointer">Nakit</button>'
-          +'<button data-yontem="Kredi Kartı" onclick="odemeEkleBtnClick(this,'+idx+')" style="padding:9px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-size:12px;font-weight:700;cursor:pointer">Kart</button>'
-          +'<button data-yontem="Havale" onclick="odemeEkleBtnClick(this,'+idx+')" style="padding:9px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-size:12px;font-weight:700;cursor:pointer">Havale</button>'
-        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">'
+        +'<div style="font-size:10px;color:var(--ink4);margin-bottom:6px">💡 Tek y\u00f6ntem i\u00e7in: Miktar\u0131 yazip butona bas. Karisik (\u00f6rn 20k nakit + 30k kart) i\u00e7in: "+ Yontem Ekle".</div>'
+        +'<div id="yontem1-btn-grup" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">'
+          +'<button data-yontem="Nakit" onclick="yontem1Click(this,'+idx+')" style="padding:9px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-size:12px;font-weight:700;cursor:pointer">💵 Nakit</button>'
+          +'<button data-yontem="Kredi Kartı" onclick="yontem1Click(this,'+idx+')" style="padding:9px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-size:12px;font-weight:700;cursor:pointer">💳 Kart</button>'
+          +'<button data-yontem="Havale" onclick="yontem1Click(this,'+idx+')" style="padding:9px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-size:12px;font-weight:700;cursor:pointer">🏦 Havale</button>'
+        +'</div>'
+        // ─── 2. YONTEM alani (gizli) ───
+        +'<div id="yontem2-alani" style="display:none;margin-top:10px;padding-top:10px;border-top:1.5px dashed var(--bd)">'
+          +'<div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">2. Ödeme Yöntemi</div>'
+          +'<div style="display:flex;gap:8px;margin-bottom:8px">'
+            +'<div style="flex:1">'
+              +'<div style="font-size:10px;color:var(--ink4);margin-bottom:3px">Miktar (₺)</div>'
+              +'<div style="position:relative"><span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:11px;color:#999">₺</span>'
+              +'<input type="number" id="odeme2-miktar" min="1" max="'+kln+'" placeholder="0" style="width:100%;padding:8px 8px 8px 20px;border:1.5px solid var(--bd);border-radius:7px;font-size:14px;font-weight:700;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box;-moz-appearance:textfield">'
+              +'</div></div>'
+            +'<div style="flex:1">'
+              +'<div style="font-size:10px;color:var(--ink4);margin-bottom:3px">Not (Opsiyonel)</div>'
+              +'<input type="text" id="odeme2-not" placeholder="..." style="width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">'
+            +'</div>'
+          +'</div>'
+          +'<div id="yontem2-btn-grup" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">'
+            +'<button data-yontem="Nakit" onclick="yontem2Sec(this)" style="padding:9px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-size:12px;font-weight:700;cursor:pointer">💵 Nakit</button>'
+            +'<button data-yontem="Kredi Kartı" onclick="yontem2Sec(this)" style="padding:9px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-size:12px;font-weight:700;cursor:pointer">💳 Kart</button>'
+            +'<button data-yontem="Havale" onclick="yontem2Sec(this)" style="padding:9px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-size:12px;font-weight:700;cursor:pointer">🏦 Havale</button>'
+          +'</div>'
+          +'<div style="margin-top:8px"><button onclick="ikiYontemKaydet('+idx+')" style="width:100%;padding:10px;border:none;border-radius:8px;background:#16a34a;color:#fff;font-size:12px;font-weight:700;cursor:pointer">✓ Her Iki Odemeyi Kaydet</button></div>'
+          +'<div style="margin-top:4px;text-align:center"><button onclick="yontem2Kapat()" style="background:none;border:none;color:var(--ink4);font-size:10px;cursor:pointer;text-decoration:underline">Iptal</button></div>'
+        +'</div>'
+        +'<div id="yontem-ekle-btn-alani" style="margin-top:8px;text-align:center">'
+          +'<button onclick="yontem2Ac()" style="background:none;border:1.5px dashed var(--bd);border-radius:7px;padding:6px 12px;font-size:11px;color:var(--ink4);cursor:pointer;font-weight:600">+ Yöntem Ekle (Karisik Odeme)</button>'
+        +'</div>'
+        // ─── Online/Taksit/Direkt butonlari ───
+        +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px;padding-top:10px;border-top:1.5px dashed var(--bd)">'
           +'<button onclick="taksitAc('+idx+')" style="padding:9px;border:1.5px solid #2563EB;border-radius:8px;background:rgba(37,99,235,.06);font-size:11px;font-weight:700;cursor:pointer;color:#2563EB">Taksitli Odeme</button>'
           +'<button onclick="onlineOdemeAc('+idx+')" style="padding:9px;border:1.5px solid var(--r);border-radius:8px;background:rgba(176,28,46,.06);font-size:11px;font-weight:700;cursor:pointer;color:var(--r)">Online Odeme</button>'
-        +'</div>'
+          +'<button onclick="payTRDirektOdemeAc('+idx+','+kln+')" style="padding:9px;border:1.5px solid #1A1A1A;border-radius:8px;background:#1A1A1A;color:#fff;font-size:11px;font-weight:700;cursor:pointer">💳 Direkt Ode</button>'
         +'</div>'
       +'</div>';
     } else {
@@ -2193,6 +2220,144 @@ function rdvDetay(idx){
   window._rdvDetayRender=render;
 }
 
+
+// ═══ KARISIK (2 YONTEMLI) ODEME ═══
+// ═══ ODEME - KARISIK YONTEM ═══
+function yontem1Click(btn, idx){
+  var alan2=document.getElementById('yontem2-alani');
+  var alan2Acik=alan2 && alan2.style.display!=='none';
+  var yontem=btn.getAttribute('data-yontem');
+
+  if(!alan2Acik){
+    // Tek yontem modu - klasik davranis: anında kaydet
+    odemeEkle(idx, yontem);
+    return;
+  }
+
+  // Karisik mod - sadece sec, kaydetme (Her Ikisini Kaydet butonu bekliyor)
+  var grup=document.getElementById('yontem1-btn-grup');
+  if(grup){
+    grup.querySelectorAll('button[data-yontem]').forEach(function(b){
+      b.style.background='#fff'; b.style.color=''; b.style.borderColor='var(--bd)';
+    });
+    grup.setAttribute('data-secili-yontem', yontem);
+  }
+  btn.style.background='var(--r)';
+  btn.style.color='#fff';
+  btn.style.borderColor='var(--r)';
+}
+
+function yontem2Ac(){
+  var alan=document.getElementById('yontem2-alani');
+  var btnAlani=document.getElementById('yontem-ekle-btn-alani');
+  if(alan){alan.style.display='block';}
+  if(btnAlani){btnAlani.style.display='none';}
+
+  // 1. yontem butonlarini resetle (artik secim bekleniyor, anında kaydedilmeyecek)
+  var grup1=document.getElementById('yontem1-btn-grup');
+  if(grup1){
+    grup1.querySelectorAll('button[data-yontem]').forEach(function(b){
+      b.style.background='#fff'; b.style.color=''; b.style.borderColor='var(--bd)';
+    });
+    grup1.removeAttribute('data-secili-yontem');
+  }
+
+  // Default miktar onerisi: kalan borcun yarisi
+  var miktar1El=document.getElementById('odeme-miktar');
+  var miktar2El=document.getElementById('odeme2-miktar');
+  if(miktar1El && miktar2El && miktar2El.value===''){
+    var kalan=parseFloat(miktar1El.value)||0;
+    if(kalan>0){
+      var yari=Math.floor(kalan/2);
+      miktar1El.value=yari;
+      miktar2El.value=kalan-yari;
+    }
+  }
+}
+
+function yontem2Kapat(){
+  var alan=document.getElementById('yontem2-alani');
+  var btnAlani=document.getElementById('yontem-ekle-btn-alani');
+  if(alan){
+    alan.style.display='none';
+    var inp=document.getElementById('odeme2-miktar'); if(inp) inp.value='';
+    var notInp=document.getElementById('odeme2-not'); if(notInp) notInp.value='';
+    var grup2=document.getElementById('yontem2-btn-grup');
+    if(grup2){
+      grup2.querySelectorAll('button[data-yontem]').forEach(function(b){
+        b.style.background='#fff'; b.style.color=''; b.style.borderColor='var(--bd)';
+      });
+      grup2.removeAttribute('data-secili-yontem');
+    }
+  }
+  if(btnAlani){btnAlani.style.display='block';}
+
+  // 1. yontem buton secimini de resetle
+  var grup1=document.getElementById('yontem1-btn-grup');
+  if(grup1){
+    grup1.querySelectorAll('button[data-yontem]').forEach(function(b){
+      b.style.background='#fff'; b.style.color=''; b.style.borderColor='var(--bd)';
+    });
+    grup1.removeAttribute('data-secili-yontem');
+  }
+}
+
+function yontem2Sec(btn){
+  var grup=document.getElementById('yontem2-btn-grup');
+  if(!grup) return;
+  grup.querySelectorAll('button[data-yontem]').forEach(function(b){
+    b.style.background='#fff'; b.style.color=''; b.style.borderColor='var(--bd)';
+  });
+  btn.style.background='var(--r)';
+  btn.style.color='#fff';
+  btn.style.borderColor='var(--r)';
+  grup.setAttribute('data-secili-yontem', btn.getAttribute('data-yontem'));
+}
+
+function ikiYontemKaydet(idx){
+  var r=RANDEVULAR[idx]; if(!r) return;
+  var kalan=Math.max(0,r.tutar-(r.odenenToplam||0));
+
+  var miktar1=parseFloat(document.getElementById('odeme-miktar').value)||0;
+  var not1=document.getElementById('odeme-not').value.trim();
+  var grup1=document.getElementById('yontem1-btn-grup');
+  var yontem1=grup1?grup1.getAttribute('data-secili-yontem'):null;
+
+  var miktar2=parseFloat(document.getElementById('odeme2-miktar').value)||0;
+  var not2=document.getElementById('odeme2-not').value.trim();
+  var grup2=document.getElementById('yontem2-btn-grup');
+  var yontem2=grup2?grup2.getAttribute('data-secili-yontem'):null;
+
+  if(!yontem1){alert('1. yontem icin Nakit/Kart/Havale butonuna basin');return;}
+  if(!yontem2){alert('2. yontem icin Nakit/Kart/Havale butonuna basin');return;}
+  if(miktar1<=0){alert('1. yontem icin miktar girin');return;}
+  if(miktar2<=0){alert('2. yontem icin miktar girin');return;}
+
+  var toplam=miktar1+miktar2;
+  if(toplam>kalan){
+    alert('Iki yontem toplami ('+toplam.toLocaleString('tr-TR')+' ₺) kalan borcu ('+kalan.toLocaleString('tr-TR')+' ₺) asiyor!');
+    return;
+  }
+
+  if(!r.odemeGecmisi) r.odemeGecmisi=[];
+  var bugun=new Date();
+  var tarihStr=bugun.getDate().toString().padStart(2,'0')+'.'+(bugun.getMonth()+1).toString().padStart(2,'0')+'.'+bugun.getFullYear();
+
+  r.odemeGecmisi.push({tarih:tarihStr,yontem:yontem1,miktar:miktar1,not:not1});
+  r.odemeGecmisi.push({tarih:tarihStr,yontem:yontem2,miktar:miktar2,not:not2});
+  r.odenenToplam=(r.odenenToplam||0)+miktar1+miktar2;
+  if(r.odenenToplam>=r.tutar){r.odendi=true;r.islem=true;}
+  storageKaydet();
+  if(typeof dbRandevuKaydet==='function') dbRandevuKaydet(r);
+  doRdvListele();
+  if(window._rdvDetayRender) window._rdvDetayRender();
+
+  var toastEl=document.createElement('div');
+  toastEl.style.cssText='position:fixed;bottom:24px;right:24px;background:#16A34A;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.2)';
+  toastEl.textContent='✓ '+yontem1+' ₺'+miktar1.toLocaleString('tr-TR')+' + '+yontem2+' ₺'+miktar2.toLocaleString('tr-TR')+' alindi';
+  document.body.appendChild(toastEl);
+  setTimeout(function(){toastEl.remove();},4000);
+}
 
 function odemeEkleBtnClick(btn,idx){
   var yontem = btn.getAttribute('data-yontem') || btn.textContent.trim();
@@ -3103,19 +3268,9 @@ function payTROdemeBaslat(idx){
 
 function payTRDirektOdemeAc(idx,tutar){
   var r=RANDEVULAR[idx]; if(!r){toast('Randevu bulunamadi','red');return;}
-  var ovl=document.getElementById('online-odeme-ovl');
-  if(!ovl) return;
-
-  // Yukleniyor ekrani
-  var wrap=document.getElementById('ptr-form-wrap');
-  if(wrap){
-    wrap.innerHTML='<div style="padding:30px;text-align:center">'
-      +'<div style="width:40px;height:40px;border:3px solid var(--bd);border-top-color:var(--r);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 14px"></div>'
-      +'<div style="font-size:13px;color:var(--ink4)">Odeme ekrani aciliyor...</div>'
-    +'</div>';
-  }
 
   // Link uret
+  toast('Odeme ekrani aciliyor...','green');
   fetch('/api/odeme/link-olustur',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
@@ -3125,22 +3280,22 @@ function payTRDirektOdemeAc(idx,tutar){
       musteriEmail: r.musteriEmail || 'musteri@autonax.com.tr',
       tutar: tutar,
       aciklama: (r.hizmet||'Autonax Hizmeti')+' - '+(r.plaka||''),
-      randevuId: r.id  // kritik: callback'te randevu guncellenebilsin
+      randevuId: r.id
     })
   }).then(function(r){return r.json();}).then(function(d){
     if(!d.success){
       toast('Link olusturulamadi: '+(d.error||'Bilinmeyen hata'),'red');
-      document.getElementById('online-odeme-ovl').remove();
+      var _ovl=document.getElementById('online-odeme-ovl'); if(_ovl) _ovl.remove();
       return;
     }
-    // Popup kapat
-    document.getElementById('online-odeme-ovl').remove();
+    // Popup acikken kapat (online-odeme'den geldiyse)
+    var _ovl=document.getElementById('online-odeme-ovl'); if(_ovl) _ovl.remove();
     // Yeni sekmede ac
     window.open(d.data.odemeUrl,'_blank');
     toast('Odeme ekrani yeni sekmede acildi','green');
   }).catch(function(err){
     toast('Baglanti hatasi: '+err.message,'red');
-    document.getElementById('online-odeme-ovl').remove();
+    var _ovl=document.getElementById('online-odeme-ovl'); if(_ovl) _ovl.remove();
   });
 }
 
