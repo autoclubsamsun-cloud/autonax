@@ -3269,16 +3269,11 @@ function payTROdemeBaslat(idx){
 function payTRDirektOdemeAc(idx,tutar){
   var r=RANDEVULAR[idx]; if(!r){toast('Randevu bulunamadi','red');return;}
 
-  // Telefon geçerli mi kontrol et
+  // Telefon geçerli mi?
   var telefon=(r.musteriTel||r.tel||'').replace(/\D/g,'');
   if(telefon.length<10){
-    var girilen=prompt('Musteri telefonu gerekli (10 haneli, ornek: 5551234567). Devam etmek icin telefon girin:','');
-    if(!girilen) return;
-    telefon=girilen.replace(/\D/g,'');
-    if(telefon.length<10){
-      toast('Gecersiz telefon numarasi','red');
-      return;
-    }
+    toast('Bu randevuda musteri telefonu eksik. Once telefonu ekleyin (Randevu Duzenle).','red');
+    return;
   }
 
   // Email kontrol
@@ -3293,7 +3288,16 @@ function payTRDirektOdemeAc(idx,tutar){
     adSoyad='Autonax Musteri';
   }
 
-  // Link uret
+  // Link uret ve direkt yeni sekmede ac (ayni click icinde, popup engellemez)
+  // Onemli: fetch'ten ONCE window.open yap ki pop-up engellenmesin
+  var yeniSekme=window.open('about:blank','_blank');
+  if(!yeniSekme){
+    toast('Pop-up engellenmis. Tarayici ayarlarindan izin verin.','red');
+    return;
+  }
+  // Yukleme gosterimi
+  yeniSekme.document.write('<html><head><title>Odeme Hazirlaniyor...</title></head><body style="font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#fff5f3"><div style="text-align:center"><div style="width:40px;height:40px;border:3px solid #f9d2c8;border-top-color:#a13128;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px"></div><div style="color:#a13128;font-weight:600">Odeme ekrani hazirlaniyor...</div><style>@keyframes spin{to{transform:rotate(360deg)}}</style></div></body></html>');
+
   toast('Odeme ekrani aciliyor...','green');
   fetch('/api/odeme/link-olustur',{
     method:'POST',
@@ -3310,14 +3314,21 @@ function payTRDirektOdemeAc(idx,tutar){
   }).then(function(r){return r.json();}).then(function(d){
     if(!d.success){
       toast('Link olusturulamadi: '+(d.error||'Bilinmeyen hata'),'red');
+      if(yeniSekme && !yeniSekme.closed) yeniSekme.close();
       var _ovl=document.getElementById('online-odeme-ovl'); if(_ovl) _ovl.remove();
       return;
     }
     var _ovl=document.getElementById('online-odeme-ovl'); if(_ovl) _ovl.remove();
-    window.open(d.data.odemeUrl,'_blank');
+    // Zaten acik olan sekmeye URL'i yonlendir
+    if(yeniSekme && !yeniSekme.closed){
+      yeniSekme.location.href=d.data.odemeUrl;
+    } else {
+      window.open(d.data.odemeUrl,'_blank');
+    }
     toast('Odeme ekrani yeni sekmede acildi','green');
   }).catch(function(err){
     toast('Baglanti hatasi: '+err.message,'red');
+    if(yeniSekme && !yeniSekme.closed) yeniSekme.close();
     var _ovl=document.getElementById('online-odeme-ovl'); if(_ovl) _ovl.remove();
   });
 }
