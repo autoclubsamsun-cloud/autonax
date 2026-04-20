@@ -88,7 +88,59 @@ export async function POST(req: NextRequest) {
 
       if (borc) {
         console.log('[PayTR Bildirim] Borc guncellendi:', borc.kod);
-        // TODO Sprint 3: Otomatik fatura kesimi (EDM), email bildirim, vs.
+
+        // YENI: Borc randevuya bagliysa randevuyu da guncelle
+        if (borc.randevuId) {
+          try {
+            const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.autonax.com.tr').replace(/\/$/, '');
+            // Once randevuyu oku
+            const rdvRes = await fetch(`${siteUrl}/api/randevular`, {
+              method: 'GET',
+            });
+            const rdvData = await rdvRes.json();
+            const rdvlar = rdvData.data || rdvData.randevular || [];
+            const rdv = rdvlar.find((x: { id: string }) => x.id === borc.randevuId);
+
+            if (rdv) {
+              // Mevcut odeme gecmisine ekle
+              if (!rdv.odemeGecmisi) rdv.odemeGecmisi = [];
+              rdv.odemeGecmisi.push({
+                tarih: new Date().toISOString(),
+                tutar: borc.tutar,
+                yontem: 'PayTR ' + odemeYontemi,
+                taksit: isNaN(taksit) ? 1 : taksit,
+                siparisId: merchantOid,
+                borcKod: borc.kod,
+              });
+              // Toplam odeneni guncelle
+              rdv.odenenToplam = (Number(rdv.odenenToplam) || 0) + borc.tutar;
+              rdv.onlineOdeme = true;
+              if (rdv.odenenToplam >= rdv.tutar) {
+                rdv.odendi = true;
+              }
+
+              // POST ile kaydet (upsert)
+              const updateRes = await fetch(`${siteUrl}/api/randevular`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rdv),
+              });
+              const updateJson = await updateRes.json();
+              if (updateJson.success) {
+                console.log('[PayTR Bildirim] Randevu guncellendi:', rdv.id);
+              } else {
+                console.error('[PayTR Bildirim] Randevu guncelleme hatasi:', updateJson.error);
+              }
+            } else {
+              console.log('[PayTR Bildirim] Randevu bulunamadi:', borc.randevuId);
+            }
+          } catch (rdvErr) {
+            console.error('[PayTR Bildirim] Randevu guncelleme istegi hatasi:', rdvErr);
+            // Randevu guncellemesi basarisiz olsa bile callback basarili donmeli
+          }
+        } else {
+          console.log('[PayTR Bildirim] Borc randevuya bagli degil (randevuId yok)');
+        }
       } else {
         console.log('[PayTR Bildirim] Borc bulunamadi (manuel odeme?):', merchantOid);
       }
