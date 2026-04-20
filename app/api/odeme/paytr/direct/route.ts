@@ -144,6 +144,54 @@ export async function POST(req: NextRequest) {
       tutar = sepet.reduce((s: number, u: SepetUrunu) => s + u.fiyat * u.adet, 0);
     }
 
+    // Vade farki hesaplama - musteri oderse tutari arttir
+    const vadeKarsilayanFirma = body.vadeKarsilayanFirma !== false; // default true
+    const secilenMarka = body.secilenMarka || null;
+
+    if (!vadeKarsilayanFirma) {
+      // Musteri odeyecek - taksit oranlarini DB'den al
+      try {
+        const { sql, initDB } = await import('@/lib/db');
+        await initDB();
+        const rows = await sql`SELECT deger FROM site_ayarlar WHERE anahtar='taksit_oranlari'`;
+        if (rows.length > 0 && rows[0].deger) {
+          const oranlar = rows[0].deger as Record<string, Record<string, number>>;
+          // Markayi sec - yoksa ilk markayi kullan
+          const markalar = Object.keys(oranlar);
+          let kullanilacakMarka: string | null = null;
+          if (secilenMarka && oranlar[secilenMarka]) {
+            kullanilacakMarka = secilenMarka;
+          } else if (markalar.length > 0) {
+            kullanilacakMarka = markalar[0];
+          }
+
+          if (kullanilacakMarka) {
+            const ay = installmentCount === 0 ? 1 : installmentCount;
+            const oran = oranlar[kullanilacakMarka][ay] || oranlar[kullanilacakMarka][String(ay)] || 0;
+            if (oran > 0) {
+              const ekVadeFarki = tutar * (oran / 100);
+              tutar = tutar + ekVadeFarki;
+              // Sepet'teki fiyati da guncelle (1 urun varsa)
+              if (sepet.length === 1) {
+                sepet[0].fiyat = tutar;
+              } else {
+                // Coklu sepet - oransal dagit
+                const eskiToplam = sepet.reduce((s, u) => s + u.fiyat * u.adet, 0);
+                sepet = sepet.map(u => ({
+                  ...u,
+                  fiyat: u.fiyat * (tutar / eskiToplam),
+                }));
+              }
+              console.log('[Direct] Vade musteride - yeni tutar:', tutar.toFixed(2), 'oran:', oran, 'marka:', kullanilacakMarka);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[Direct] Vade hesaplamasi hatasi:', err);
+        // Hata durumunda orijinal tutari kullan
+      }
+    }
+
     // PayTR'a gonder
     const yanit = await directOdemeBaslat({
       merchantOid,

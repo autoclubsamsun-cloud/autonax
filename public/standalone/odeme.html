@@ -71,6 +71,21 @@
     .form-grup textarea { resize: vertical; min-height: 60px; }
     .form-satir-3 { display: grid; grid-template-columns: 2fr 2fr 1.5fr; gap: 12px; }
 
+    /* Vade secici butonlari */
+    .vade-secici { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .vade-btn {
+      padding: 12px; border: 2px solid #e8d4ce; border-radius: 10px;
+      background: white; cursor: pointer; transition: all 0.2s;
+      font-family: inherit; text-align: center;
+    }
+    .vade-btn:hover { border-color: #a13128; background: #fff5f3; }
+    .vade-btn.secili {
+      background: linear-gradient(135deg, #a13128, #7a231a);
+      border-color: #7a231a; color: white;
+    }
+    .vade-baslik { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+    .vade-aciklama { font-size: 11px; opacity: 0.75; }
+
     .kart-marka-bilgi {
       margin-top: 6px; padding: 8px 10px; background: #fff5f3; border-radius: 6px;
       font-size: 11px; color: #a13128; display: none;
@@ -108,6 +123,7 @@
 
     @media (max-width: 520px) {
       .form-satir-3 { grid-template-columns: 1fr 1fr; }
+      .vade-secici { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -175,6 +191,20 @@
             <div class="form-grup">
               <label for="cvv">CVC / CVV</label>
               <input type="text" id="cvv" name="cvv" required inputmode="numeric" autocomplete="cc-csc" maxlength="4" placeholder="000" />
+            </div>
+          </div>
+
+          <div class="form-grup">
+            <label>Vade Farkı</label>
+            <div class="vade-secici">
+              <button type="button" class="vade-btn" data-vade="firma" id="vade-btn-firma">
+                <div class="vade-baslik">Firmadan Kesilsin</div>
+                <div class="vade-aciklama">Tutar sabit kalır</div>
+              </button>
+              <button type="button" class="vade-btn" data-vade="musteri" id="vade-btn-musteri">
+                <div class="vade-baslik">Müşteriden Kesilsin</div>
+                <div class="vade-aciklama">Tutara eklenir</div>
+              </button>
             </div>
           </div>
 
@@ -265,6 +295,32 @@
 
     taksitSelectEl.addEventListener('change', function() {
       tutarGuncelle();
+    });
+
+    // Vade butonlari
+    var vadeBtnFirma = document.getElementById('vade-btn-firma');
+    var vadeBtnMusteri = document.getElementById('vade-btn-musteri');
+
+    function vadeButonGuncelle() {
+      if (VADE_KARSILAYAN_FIRMA) {
+        vadeBtnFirma.classList.add('secili');
+        vadeBtnMusteri.classList.remove('secili');
+      } else {
+        vadeBtnMusteri.classList.add('secili');
+        vadeBtnFirma.classList.remove('secili');
+      }
+    }
+
+    vadeBtnFirma.addEventListener('click', function() {
+      VADE_KARSILAYAN_FIRMA = true;
+      vadeButonGuncelle();
+      taksitSeceneklerGuncelle();
+    });
+
+    vadeBtnMusteri.addEventListener('click', function() {
+      VADE_KARSILAYAN_FIRMA = false;
+      vadeButonGuncelle();
+      taksitSeceneklerGuncelle();
     });
 
     function binSorgu(bin) {
@@ -446,6 +502,7 @@
             TAKSIT_ORANLARI = d.data.taksitOranlari || {};
             VADE_KARSILAYAN_FIRMA = d.data.vadeKarsilayanFirma !== false;
           }
+          vadeButonGuncelle();
           taksitSeceneklerGuncelle();
           yukleniyorEl.style.display = 'none';
           icerikEl.style.display = 'block';
@@ -494,7 +551,9 @@
           expiryYear: expiryYear,
           cvv: cvv,
           installmentCount: installmentCount,
-          musteriNotu: musteriNotu
+          musteriNotu: musteriNotu,
+          vadeKarsilayanFirma: VADE_KARSILAYAN_FIRMA,
+          secilenMarka: SECILEN_MARKA || null
         })
       })
       .then(function(r) { return r.json(); })
