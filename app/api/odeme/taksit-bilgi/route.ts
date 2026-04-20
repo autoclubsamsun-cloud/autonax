@@ -29,7 +29,7 @@ export async function GET() {
     let taksitOranlari: Record<string, Record<string, number>> = {};
     let vadeKarsilayanFirma = true;
 
-    rows.forEach((r: { anahtar: string; deger: unknown }) => {
+    rows.forEach((r: any) => {
       if (r.anahtar === 'taksit_oranlari' && r.deger) {
         taksitOranlari = r.deger as Record<string, Record<string, number>>;
       }
