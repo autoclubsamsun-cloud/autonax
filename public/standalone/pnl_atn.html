@@ -3083,7 +3083,7 @@ function payTROdemeBaslat(idx){
       +'<button onclick="payTROdemeLinkiOlustur('+idx+','+kln+')" style="width:100%;padding:12px;background:#FF6600;color:#fff;border:none;border-radius:10px;font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:2px;cursor:pointer">💳 ODEME LINKI OLUSTUR</button>'
       +'<div style="height:8px"></div>'
       +'<button onclick="payTRDirektOdemeAc('+idx+','+kln+')" style="width:100%;padding:12px;background:#1A1A1A;color:#fff;border:none;border-radius:10px;font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:2px;cursor:pointer">💳 DIREKT ODEME AL</button>'
-      +'<div style="font-size:10px;color:var(--ink4);text-align:center;margin-top:10px">Link olusturulduktan sonra musteriye WhatsApp ile gonderilir</div>'
+      +'<div style="font-size:10px;color:var(--ink4);text-align:center;margin-top:10px">Link: musteriye WhatsApp ile gonderilir | Direkt: yeni sekmede kart ekrani acilir</div>'
     +'</div>';
 }
 
@@ -3092,155 +3092,40 @@ function payTRDirektOdemeAc(idx,tutar){
   var ovl=document.getElementById('online-odeme-ovl');
   if(!ovl) return;
 
-  ovl.querySelector('div').innerHTML=
-    '<div style="background:var(--ink);padding:14px 18px;display:flex;align-items:center;justify-content:space-between">'
-    +'<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#fff">DIREKT ODEME</div>'
-    +'<div onclick="document.getElementById(&quot;online-odeme-ovl&quot;).remove()" style="cursor:pointer;color:#888;font-size:24px">&times;</div>'
-    +'</div>'
-    +'<div style="padding:16px;max-height:75vh;overflow-y:auto" id="ptr-direct-wrap">'
-      +'<div style="background:var(--bg);border-radius:10px;padding:10px 14px;text-align:center;margin-bottom:14px">'
-        +'<div style="font-size:11px;color:var(--ink4)">Odenecek Tutar</div>'
-        +'<div style="font-family:Bebas Neue,sans-serif;font-size:26px;color:var(--r)">'+tutar.toLocaleString("tr-TR")+' TL</div>'
-      +'</div>'
-      +'<div id="ptr-d-hata" style="display:none;background:#ffe8e8;border:1px solid #d32;color:#a00;padding:10px;border-radius:6px;margin-bottom:10px;font-size:12px"></div>'
-
-      +'<div style="margin-bottom:8px"><label style="font-size:10px;color:var(--ink4);font-weight:700;text-transform:uppercase;letter-spacing:1px">Ad Soyad</label>'
-        +'<input type="text" id="ptr-d-adsoyad" value="'+(r.musteriAdi||'')+'" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;margin-top:4px;box-sizing:border-box"></div>'
-      +'<div style="margin-bottom:8px"><label style="font-size:10px;color:var(--ink4);font-weight:700;text-transform:uppercase;letter-spacing:1px">Telefon</label>'
-        +'<input type="tel" id="ptr-d-tel" value="'+(r.musteriTel||'')+'" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;margin-top:4px;box-sizing:border-box"></div>'
-      +'<div style="margin-bottom:12px"><label style="font-size:10px;color:var(--ink4);font-weight:700;text-transform:uppercase;letter-spacing:1px">E-posta</label>'
-        +'<input type="email" id="ptr-d-email" value="'+(r.musteriEmail||'musteri@autonax.com.tr')+'" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;margin-top:4px;box-sizing:border-box"></div>'
-
-      +'<div style="height:1px;background:var(--bd);margin:10px 0 14px"></div>'
-      +'<div style="font-size:12px;color:var(--ink);font-weight:700;margin-bottom:10px">KART BILGILERI</div>'
-
-      +'<div style="margin-bottom:8px"><label style="font-size:10px;color:var(--ink4);font-weight:700;text-transform:uppercase;letter-spacing:1px">Kart Uzerindeki Isim</label>'
-        +'<input type="text" id="ptr-d-ccowner" placeholder="JOHN DOE" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;margin-top:4px;box-sizing:border-box"></div>'
-      +'<div style="margin-bottom:8px"><label style="font-size:10px;color:var(--ink4);font-weight:700;text-transform:uppercase;letter-spacing:1px">Kart Numarasi</label>'
-        +'<input type="text" id="ptr-d-cardnum" placeholder="0000 0000 0000 0000" maxlength="23" inputmode="numeric" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;margin-top:4px;box-sizing:border-box"></div>'
-      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">'
-        +'<div><label style="font-size:10px;color:var(--ink4);font-weight:700;text-transform:uppercase;letter-spacing:1px">Ay</label>'
-          +'<input type="text" id="ptr-d-expmonth" placeholder="12" maxlength="2" inputmode="numeric" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;margin-top:4px;box-sizing:border-box"></div>'
-        +'<div><label style="font-size:10px;color:var(--ink4);font-weight:700;text-transform:uppercase;letter-spacing:1px">Yil</label>'
-          +'<input type="text" id="ptr-d-expyear" placeholder="26" maxlength="2" inputmode="numeric" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;margin-top:4px;box-sizing:border-box"></div>'
-        +'<div><label style="font-size:10px;color:var(--ink4);font-weight:700;text-transform:uppercase;letter-spacing:1px">CVV</label>'
-          +'<input type="text" id="ptr-d-cvv" placeholder="000" maxlength="4" inputmode="numeric" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;margin-top:4px;box-sizing:border-box"></div>'
-      +'</div>'
-      +'<div style="margin-bottom:12px"><label style="font-size:10px;color:var(--ink4);font-weight:700;text-transform:uppercase;letter-spacing:1px">Taksit</label>'
-        +'<select id="ptr-d-taksit" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;margin-top:4px;box-sizing:border-box">'
-          +'<option value="0">Tek Cekim</option>'
-          +'<option value="2">2 Taksit</option><option value="3">3 Taksit</option>'
-          +'<option value="4">4 Taksit</option><option value="5">5 Taksit</option>'
-          +'<option value="6">6 Taksit</option><option value="9">9 Taksit</option>'
-          +'<option value="12">12 Taksit</option>'
-        +'</select></div>'
-
-      +'<button id="ptr-d-btn" onclick="payTRDirektOdemeGonder('+idx+','+tutar+')" style="width:100%;padding:13px;background:linear-gradient(135deg,#a13128,#7a231a);color:#fff;border:none;border-radius:10px;font-family:Bebas Neue,sans-serif;font-size:15px;letter-spacing:2px;cursor:pointer">💳 ODEME YAP</button>'
-      +'<div style="font-size:10px;color:var(--ink4);text-align:center;margin-top:10px">Kart bilgileri PayTR e SSL ile iletilir. 3D Secure devrede.</div>'
+  // Yukleniyor ekrani
+  var wrap=document.getElementById('ptr-form-wrap');
+  if(wrap){
+    wrap.innerHTML='<div style="padding:30px;text-align:center">'
+      +'<div style="width:40px;height:40px;border:3px solid var(--bd);border-top-color:var(--r);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 14px"></div>'
+      +'<div style="font-size:13px;color:var(--ink4)">Odeme ekrani aciliyor...</div>'
     +'</div>';
+  }
 
-  // Kart no formatla
-  var cn=document.getElementById('ptr-d-cardnum');
-  if(cn) cn.addEventListener('input',function(e){
-    var v=e.target.value.replace(/\s/g,'');
-    if(v.length>16) v=v.substring(0,16);
-    e.target.value=v.replace(/(.{4})/g,'$1 ').trim();
-  });
-  // Rakam only
-  ['ptr-d-expmonth','ptr-d-expyear','ptr-d-cvv','ptr-d-tel'].forEach(function(id){
-    var el=document.getElementById(id);
-    if(el) el.addEventListener('input',function(e){e.target.value=e.target.value.replace(/\D/g,'');});
-  });
-}
-
-function payTRDirektOdemeGonder(idx,tutar){
-  var r=RANDEVULAR[idx]; if(!r){toast('Randevu bulunamadi','red');return;}
-
-  var adSoyad=document.getElementById('ptr-d-adsoyad').value.trim();
-  var tel=document.getElementById('ptr-d-tel').value.trim();
-  var email=document.getElementById('ptr-d-email').value.trim();
-  var ccOwner=document.getElementById('ptr-d-ccowner').value.trim();
-  var cardNumber=document.getElementById('ptr-d-cardnum').value.replace(/\s/g,'');
-  var expiryMonth=document.getElementById('ptr-d-expmonth').value;
-  var expiryYear=document.getElementById('ptr-d-expyear').value;
-  var cvv=document.getElementById('ptr-d-cvv').value;
-  var installmentCount=parseInt(document.getElementById('ptr-d-taksit').value)||0;
-
-  var hataEl=document.getElementById('ptr-d-hata');
-  function hataGoster(m){ if(hataEl){hataEl.textContent=m;hataEl.style.display='block';} }
-  hataEl.style.display='none';
-
-  if(!adSoyad){hataGoster('Ad Soyad gerekli');return;}
-  if(!tel || tel.length<10){hataGoster('Telefon gerekli');return;}
-  if(!email || email.indexOf('@')<0){hataGoster('Gecerli email gerekli');return;}
-  if(!ccOwner){hataGoster('Kart uzerindeki isim gerekli');return;}
-  if(cardNumber.length<13 || cardNumber.length>19){hataGoster('Kart numarasi gecersiz');return;}
-  if(!expiryMonth || !expiryYear){hataGoster('Son kullanma tarihi gerekli');return;}
-  if(cvv.length<3){hataGoster('CVV gecersiz');return;}
-
-  var btn=document.getElementById('ptr-d-btn');
-  if(btn){btn.disabled=true;btn.innerHTML='⏳ ISLENIYOR...';}
-
-  fetch('/api/odeme/paytr/direct',{
+  // Link uret
+  fetch('/api/odeme/link-olustur',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
-      adSoyad: adSoyad,
-      telefon: tel,
-      email: email,
-      adres: 'Autonax Musteri',
-      sepet: [{ ad: (r.hizmet||'Autonax Hizmeti')+' - '+(r.plaka||''), fiyat: tutar, adet: 1 }],
-      ccOwner: ccOwner,
-      cardNumber: cardNumber,
-      expiryMonth: expiryMonth,
-      expiryYear: expiryYear,
-      cvv: cvv,
-      installmentCount: installmentCount
+      musteriAdi: r.musteriAdi || 'Musteri',
+      musteriTelefon: r.musteriTel || '05000000000',
+      musteriEmail: r.musteriEmail || 'musteri@autonax.com.tr',
+      tutar: tutar,
+      aciklama: (r.hizmet||'Autonax Hizmeti')+' - '+(r.plaka||'')
     })
   }).then(function(r){return r.json();}).then(function(d){
     if(!d.success){
-      hataGoster(d.error || 'Odeme baslatilmadi');
-      if(btn){btn.disabled=false;btn.innerHTML='💳 ODEME YAP';}
+      toast('Link olusturulamadi: '+(d.error||'Bilinmeyen hata'),'red');
+      document.getElementById('online-odeme-ovl').remove();
       return;
     }
-    // 3DS HTML var — yeni pencerede ac
-    if(d.data && d.data.html3ds){
-      var w=window.open('','paytr3ds','width=600,height=700');
-      if(!w){
-        hataGoster('Pop-up engellendi. Lutfen bu site icin pop-up izni verin.');
-        if(btn){btn.disabled=false;btn.innerHTML='💳 ODEME YAP';}
-        return;
-      }
-      w.document.open();
-      w.document.write(d.data.html3ds);
-      w.document.close();
-      // Pop-up kapaninca sayfayi yenile
-      var chk=setInterval(function(){
-        if(w.closed){
-          clearInterval(chk);
-          // Randevuyu yeniden yukle
-          if(typeof randevulariYukle==='function') randevulariYukle();
-          toast('3D Secure islemi tamamlandi. Durum kontrol edin.','blue');
-          document.getElementById('online-odeme-ovl').remove();
-        }
-      },1000);
-      // Bu pencereyi bilgi ekranina cevir
-      document.getElementById('ptr-direct-wrap').innerHTML=
-        '<div style="padding:30px;text-align:center">'
-        +'<div style="font-size:36px;margin-bottom:12px">🔐</div>'
-        +'<div style="font-size:14px;color:var(--ink);font-weight:700;margin-bottom:8px">3D SECURE EKRANI ACILDI</div>'
-        +'<div style="font-size:12px;color:var(--ink4);line-height:1.5">Yeni acilan pencerede musterinin telefonuna gelen SMS sifresini girin.<br>Islem bitince pencereyi kapatin.</div>'
-        +'</div>';
-    } else if(d.data && d.data.redirectUrl){
-      // Sync success
-      window.location.href=d.data.redirectUrl;
-    } else {
-      hataGoster('Beklenmeyen yanit');
-      if(btn){btn.disabled=false;btn.innerHTML='💳 ODEME YAP';}
-    }
+    // Popup kapat
+    document.getElementById('online-odeme-ovl').remove();
+    // Yeni sekmede ac
+    window.open(d.data.odemeUrl,'_blank');
+    toast('Odeme ekrani yeni sekmede acildi','green');
   }).catch(function(err){
-    hataGoster('Baglanti hatasi: '+err.message);
-    if(btn){btn.disabled=false;btn.innerHTML='💳 ODEME YAP';}
+    toast('Baglanti hatasi: '+err.message,'red');
+    document.getElementById('online-odeme-ovl').remove();
   });
 }
 
