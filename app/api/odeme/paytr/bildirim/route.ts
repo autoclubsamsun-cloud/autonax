@@ -1,7 +1,7 @@
 /**
- * POST /api/odeme/paytr/bildirim - v2
+ * POST /api/odeme/paytr/bildirim - v3
  *
- * Değişiklik: payTRConfigOku artık async
+ * v2'den fark: Basarili odeme geldiginde borc-store'daki kayit guncellenir
  */
 
 import { NextRequest } from 'next/server';
@@ -10,6 +10,7 @@ import {
   odemeIslendiMi,
   odemeIslendiOlarakIsaretle,
 } from '@/lib/odeme/siparis-store';
+import { borcDurumGuncelle } from '@/lib/odeme/borc-store';
 
 export async function POST(req: NextRequest) {
   try {
@@ -41,10 +42,8 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Config async oku
     const config = await payTRConfigOku();
 
-    // Hash doğrula
     const dogru = bildirimHashDogrula(config, {
       merchant_oid: merchantOid,
       status: status as 'success' | 'failed',
@@ -62,7 +61,6 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Idempotency
     if (odemeIslendiMi(merchantOid)) {
       console.log('[PayTR Bildirim] Zaten islendi:', merchantOid);
       return new Response('OK', {
@@ -77,8 +75,23 @@ export async function POST(req: NextRequest) {
         tutar: totalAmount,
         taksit: installmentCount,
       });
+
       odemeIslendiOlarakIsaretle(merchantOid, 'ODENDI');
-      // TODO: Ürün stok, fatura, email vs. buradan tetiklenecek
+
+      // YENI: Borc kaydini guncelle
+      const odemeYontemi = paymentType === 'card' ? 'Kredi Karti' : paymentType || 'Kredi Karti';
+      const taksit = installmentCount ? parseInt(installmentCount, 10) : 1;
+      const borc = borcDurumGuncelle(merchantOid, 'ODENDI', {
+        odemeYontemi,
+        taksit: isNaN(taksit) ? 1 : taksit,
+      });
+
+      if (borc) {
+        console.log('[PayTR Bildirim] Borc guncellendi:', borc.kod);
+        // TODO Sprint 3: Otomatik fatura kesimi (EDM), email bildirim, vs.
+      } else {
+        console.log('[PayTR Bildirim] Borc bulunamadi (manuel odeme?):', merchantOid);
+      }
     } else {
       console.log('[PayTR Bildirim] ✗ BASARISIZ ODEME:', {
         merchantOid,
@@ -86,6 +99,7 @@ export async function POST(req: NextRequest) {
         hataMesaji: failedReasonMsg,
       });
       odemeIslendiOlarakIsaretle(merchantOid, 'HATALI');
+      // Borc BEKLEMEDE'de kalir, musteri tekrar deneyebilir
     }
 
     return new Response('OK', {
@@ -95,7 +109,6 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('[PayTR Bildirim] EXCEPTION:', msg);
-    // Hata olsa bile OK dön — PayTR spam etmesin
     return new Response('OK', {
       status: 200,
       headers: { 'Content-Type': 'text/plain' },

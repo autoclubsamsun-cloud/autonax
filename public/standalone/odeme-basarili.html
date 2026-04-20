@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Ödeme Başarılı · Autonax</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --r:#b01c2e; --ink:#1a1a1a; --ink4:#888;
+    --bg:#f5f5f0; --bg2:#fff; --bd:#e5e5e0; --green:#16a34a;
+  }
+  body{
+    font-family:'Outfit',sans-serif; background:var(--bg);
+    color:var(--ink); min-height:100vh; display:flex;
+    align-items:center; justify-content:center; padding:20px;
+  }
+  .card{
+    background:var(--bg2); border-radius:20px;
+    box-shadow:0 10px 40px rgba(0,0,0,.08);
+    max-width:440px; width:100%; padding:40px 30px; text-align:center;
+  }
+  .logo{
+    font-family:'Bebas Neue',sans-serif; font-size:26px;
+    letter-spacing:4px; color:var(--r); margin-bottom:30px;
+  }
+  .check-wrap{
+    width:90px; height:90px; background:var(--green);
+    border-radius:50%; display:flex; align-items:center;
+    justify-content:center; margin:0 auto 20px;
+    animation:pop .5s ease-out;
+  }
+  .check{
+    width:44px; height:44px; stroke:#fff;
+    stroke-width:3.5; fill:none;
+    animation:draw .7s ease-in-out;
+  }
+  @keyframes pop{
+    0%{transform:scale(0)}70%{transform:scale(1.1)}100%{transform:scale(1)}
+  }
+  @keyframes draw{
+    0%{stroke-dasharray:100;stroke-dashoffset:100}
+    100%{stroke-dasharray:100;stroke-dashoffset:0}
+  }
+
+  h1{
+    font-family:'Bebas Neue',sans-serif; font-size:32px;
+    letter-spacing:2px; color:var(--green); margin-bottom:12px;
+  }
+  .msg{font-size:14px;color:var(--ink4);line-height:1.6;margin-bottom:24px}
+
+  .detay{
+    background:var(--bg); border-radius:10px;
+    padding:16px; margin-bottom:24px; text-align:left;
+  }
+  .detay-row{
+    display:flex; justify-content:space-between;
+    padding:6px 0; font-size:13px;
+  }
+  .detay-lbl{color:var(--ink4)}
+  .detay-val{color:var(--ink);font-weight:600}
+
+  .btn{
+    display:inline-block; padding:12px 28px;
+    background:var(--r); color:#fff; border:none;
+    border-radius:10px; font-family:'Bebas Neue',sans-serif;
+    font-size:14px; letter-spacing:2px; text-decoration:none;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <div class="logo">AUTONAX</div>
+
+  <div class="check-wrap">
+    <svg class="check" viewBox="0 0 24 24">
+      <polyline points="5 13 10 18 19 8"/>
+    </svg>
+  </div>
+
+  <h1>Ödeme Başarılı</h1>
+  <p class="msg">
+    Ödemeniz başarıyla alındı. Size özel hizmetiniz için hazırlanıyoruz.
+    Ödeme detayları e-posta adresinize gönderilecektir.
+  </p>
+
+  <div class="detay" id="detay" style="display:none">
+    <div class="detay-row">
+      <div class="detay-lbl">Sipariş No</div>
+      <div class="detay-val" id="d-siparis">—</div>
+    </div>
+    <div class="detay-row">
+      <div class="detay-lbl">Tarih</div>
+      <div class="detay-val" id="d-tarih">—</div>
+    </div>
+  </div>
+
+  <a href="/" class="btn">Ana Sayfa</a>
+
+</div>
+
+<script>
+  // URL'den oid parametresini al
+  var params = new URLSearchParams(window.location.search);
+  var oid = params.get('oid');
+
+  if(oid){
+    document.getElementById('d-siparis').textContent = oid;
+    document.getElementById('d-tarih').textContent = new Date().toLocaleString('tr-TR');
+    document.getElementById('detay').style.display = '';
+  }
+</script>
+
+</body>
+</html>

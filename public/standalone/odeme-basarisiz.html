@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Ödeme Başarısız · Autonax</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --r:#b01c2e; --ink:#1a1a1a; --ink4:#888;
+    --bg:#f5f5f0; --bg2:#fff; --bd:#e5e5e0; --orange:#ea580c;
+  }
+  body{
+    font-family:'Outfit',sans-serif; background:var(--bg);
+    color:var(--ink); min-height:100vh; display:flex;
+    align-items:center; justify-content:center; padding:20px;
+  }
+  .card{
+    background:var(--bg2); border-radius:20px;
+    box-shadow:0 10px 40px rgba(0,0,0,.08);
+    max-width:440px; width:100%; padding:40px 30px; text-align:center;
+  }
+  .logo{
+    font-family:'Bebas Neue',sans-serif; font-size:26px;
+    letter-spacing:4px; color:var(--r); margin-bottom:30px;
+  }
+  .icon-wrap{
+    width:90px; height:90px; background:var(--orange);
+    border-radius:50%; display:flex; align-items:center;
+    justify-content:center; margin:0 auto 20px;
+    font-size:54px; color:#fff;
+  }
+
+  h1{
+    font-family:'Bebas Neue',sans-serif; font-size:32px;
+    letter-spacing:2px; color:var(--orange); margin-bottom:12px;
+  }
+  .msg{font-size:14px;color:var(--ink4);line-height:1.6;margin-bottom:20px}
+
+  .info-box{
+    background:#fff7ed; border:1px solid #fed7aa; border-radius:10px;
+    padding:14px; margin-bottom:24px; text-align:left; font-size:12px; color:#9a3412;
+  }
+
+  .btn{
+    display:inline-block; padding:12px 28px;
+    background:var(--r); color:#fff; border:none;
+    border-radius:10px; font-family:'Bebas Neue',sans-serif;
+    font-size:14px; letter-spacing:2px; text-decoration:none;
+    margin:4px;
+  }
+  .btn-ghost{
+    background:transparent; color:var(--ink4);
+    border:1px solid var(--bd);
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <div class="logo">AUTONAX</div>
+
+  <div class="icon-wrap">!</div>
+
+  <h1>Ödeme Tamamlanamadı</h1>
+  <p class="msg">
+    Ödemeniz başarısız oldu veya siz tarafından iptal edildi.
+    Paranız hesabınızdan çekilmedi.
+  </p>
+
+  <div class="info-box">
+    <strong>Olası nedenler:</strong><br>
+    · Kart bilgileri hatalı girildi<br>
+    · Bankanız işlemi reddetti<br>
+    · 3D Secure şifresi yanlış veya süresi doldu<br>
+    · İşlem iptal edildi
+  </div>
+
+  <p class="msg">
+    Ödeme linkiniz hâlâ geçerli — tekrar deneyebilirsiniz.
+  </p>
+
+  <a href="javascript:history.back()" class="btn">Tekrar Dene</a>
+  <a href="/" class="btn btn-ghost">Ana Sayfa</a>
+
+</div>
+
+</body>
+</html>

@@ -34,6 +34,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
   bottom:-80px;right:-80px;animation:glw 6s ease-in-out infinite alternate-reverse;pointer-events:none;
 }
 @keyframes glw{0%{transform:scale(1)}100%{transform:scale(1.3)}}
+@keyframes spin{to{transform:rotate(360deg)}}
 .login-card{
   position:relative;z-index:2;
   width:100%;max-width:380px;
@@ -3047,31 +3048,145 @@ function onlineOdemeAc(idx){
 }
 
 function gatewayBaslat(isim,idx){
+  if(isim==='PayTR'){ return payTROdemeBaslat(idx); }
+  if(isim==='Iyzico'){ return iyzicoOdemeBaslat(idx); }
+}
+
+function payTROdemeBaslat(idx){
+  var r=RANDEVULAR[idx]; if(!r){toast('Randevu bulunamadi','red');return;}
+  var kln=Math.max(0,r.tutar-(r.odenenToplam||0));
+  if(kln<=0){toast('Kalan tutar yok','orange');return;}
+
+  var ovl=document.getElementById('online-odeme-ovl');
+  if(!ovl) return;
+
+  // Form ekrani
+  ovl.querySelector('div').innerHTML=
+    '<div style="background:var(--ink);padding:14px 18px;display:flex;align-items:center;justify-content:space-between">'
+    +'<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#fff">PAYTR ODEME</div>'
+    +'<div onclick="document.getElementById(&quot;online-odeme-ovl&quot;).remove()" style="cursor:pointer;color:#888;font-size:24px">&times;</div>'
+    +'</div>'
+    +'<div style="padding:18px" id="ptr-form-wrap">'
+      +'<div style="background:var(--bg);border-radius:10px;padding:10px 14px;text-align:center;margin-bottom:14px">'
+        +'<div style="font-size:11px;color:var(--ink4)">Odenecek Tutar</div>'
+        +'<div style="font-family:Bebas Neue,sans-serif;font-size:26px;color:var(--r)">'+kln.toLocaleString("tr-TR")+' TL</div>'
+      +'</div>'
+      +'<div style="font-size:11px;color:var(--ink4);margin-bottom:12px">Musteri bilgilerini kontrol edip odemeyi olusturun:</div>'
+      +'<div style="margin-bottom:8px"><label style="font-size:10px;color:var(--ink4);font-weight:700;text-transform:uppercase;letter-spacing:1px">Ad Soyad</label>'
+        +'<input type="text" id="ptr-adsoyad" value="'+(r.musteriAdi||'')+'" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;margin-top:4px;box-sizing:border-box"></div>'
+      +'<div style="margin-bottom:8px"><label style="font-size:10px;color:var(--ink4);font-weight:700;text-transform:uppercase;letter-spacing:1px">Telefon</label>'
+        +'<input type="tel" id="ptr-tel" value="'+(r.musteriTel||'')+'" placeholder="05XX XXX XX XX" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;margin-top:4px;box-sizing:border-box"></div>'
+      +'<div style="margin-bottom:8px"><label style="font-size:10px;color:var(--ink4);font-weight:700;text-transform:uppercase;letter-spacing:1px">E-posta</label>'
+        +'<input type="email" id="ptr-email" value="'+(r.musteriEmail||'')+'" placeholder="ornek@mail.com" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;margin-top:4px;box-sizing:border-box"></div>'
+      +'<div style="margin-bottom:14px"><label style="font-size:10px;color:var(--ink4);font-weight:700;text-transform:uppercase;letter-spacing:1px">Hizmet Aciklamasi</label>'
+        +'<input type="text" id="ptr-aciklama" value="'+((r.hizmet||'Hizmet')+' - '+(r.plaka||''))+'" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;margin-top:4px;box-sizing:border-box"></div>'
+      +'<button onclick="payTROdemeLinkiOlustur('+idx+','+kln+')" style="width:100%;padding:12px;background:#FF6600;color:#fff;border:none;border-radius:10px;font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:2px;cursor:pointer">💳 ODEME LINKI OLUSTUR</button>'
+      +'<div style="font-size:10px;color:var(--ink4);text-align:center;margin-top:10px">Link olusturulduktan sonra musteriye WhatsApp ile gonderilir</div>'
+    +'</div>';
+}
+
+function payTROdemeLinkiOlustur(idx,tutar){
+  var ad=document.getElementById('ptr-adsoyad').value.trim();
+  var tel=document.getElementById('ptr-tel').value.trim();
+  var email=document.getElementById('ptr-email').value.trim();
+  var aciklama=document.getElementById('ptr-aciklama').value.trim();
+
+  if(!ad || ad.length<2){toast('Ad Soyad gerekli','red');return;}
+  if(!tel || tel.replace(/\D/g,'').length<10){toast('Gecerli telefon gerekli','red');return;}
+  if(!email || email.indexOf('@')<0){toast('Gecerli e-posta gerekli','red');return;}
+  if(!aciklama){toast('Aciklama gerekli','red');return;}
+
+  var wrap=document.getElementById('ptr-form-wrap');
+  if(wrap){
+    wrap.innerHTML='<div style="padding:30px;text-align:center">'
+      +'<div style="width:40px;height:40px;border:3px solid var(--bd);border-top-color:var(--r);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 14px"></div>'
+      +'<div style="font-size:13px;color:var(--ink4)">Odeme linki olusturuluyor...</div>'
+    +'</div>';
+  }
+
+  var r=RANDEVULAR[idx];
+  fetch('/api/odeme/link-olustur',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    credentials:'same-origin',
+    body:JSON.stringify({
+      musteriAdi:ad, musteriTelefon:tel, musteriEmail:email,
+      tutar:tutar, aciklama:aciklama,
+      randevuId:(r?String(idx):undefined), gecerlilikSaat:24
+    })
+  })
+  .then(function(res){return res.json();})
+  .then(function(j){
+    if(!j.success || !j.data){
+      payTRHataGoster(j.error||'Bilinmeyen hata');
+      return;
+    }
+    payTRLinkGosterSonuc(j.data, ad);
+  })
+  .catch(function(err){
+    payTRHataGoster('Baglanti hatasi: '+err.message);
+  });
+}
+
+function payTRHataGoster(mesaj){
+  var wrap=document.getElementById('ptr-form-wrap');
+  if(wrap){
+    wrap.innerHTML='<div style="padding:20px;text-align:center">'
+      +'<div style="font-size:36px;margin-bottom:10px">⚠️</div>'
+      +'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;color:var(--r);margin-bottom:8px">HATA</div>'
+      +'<div style="font-size:12px;color:var(--ink4);margin-bottom:14px;line-height:1.5">'+mesaj+'</div>'
+      +'<button onclick="document.getElementById(&quot;online-odeme-ovl&quot;).remove()" style="padding:10px 22px;background:var(--ink);color:#fff;border:none;border-radius:8px;font-family:Bebas Neue,sans-serif;font-size:12px;cursor:pointer">KAPAT</button>'
+    +'</div>';
+  }
+}
+
+function payTRLinkGosterSonuc(data, ad){
+  var wrap=document.getElementById('ptr-form-wrap');
+  if(!wrap) return;
+  wrap.innerHTML='<div style="text-align:center">'
+    +'<div style="font-size:36px;margin-bottom:8px">✅</div>'
+    +'<div style="font-family:Bebas Neue,sans-serif;font-size:18px;color:var(--green);margin-bottom:4px">LINK OLUSTURULDU</div>'
+    +'<div style="font-size:11px;color:var(--ink4);margin-bottom:14px">24 saat icinde odenmeli</div>'
+
+    +'<div style="background:var(--bg);border-radius:10px;padding:10px;margin-bottom:12px;word-break:break-all;font-size:11px;color:var(--ink3);font-family:monospace">'
+      +data.odemeUrl
+    +'</div>'
+
+    +'<button onclick="payTRLinkKopyala(&quot;'+data.odemeUrl.replace(/"/g,'&quot;')+'&quot;)" style="width:100%;padding:10px;background:#fff;color:var(--ink);border:1.5px solid var(--bd);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px">📋 LINKI KOPYALA</button>'
+
+    +'<a href="'+data.whatsappUrl+'" target="_blank" rel="noopener" onclick="setTimeout(function(){document.getElementById(\'online-odeme-ovl\').remove();},500)" style="display:block;width:100%;padding:12px;background:#25D366;color:#fff;border:none;border-radius:10px;font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:2px;cursor:pointer;text-decoration:none;text-align:center;box-sizing:border-box;margin-bottom:8px">💬 WHATSAPP ILE GONDER</a>'
+
+    +'<button onclick="document.getElementById(&quot;online-odeme-ovl&quot;).remove()" style="padding:8px 18px;background:transparent;color:var(--ink4);border:1px solid var(--bd);border-radius:8px;font-size:11px;cursor:pointer">KAPAT</button>'
+  +'</div>';
+}
+
+function payTRLinkKopyala(url){
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(url).then(function(){
+      toast('Link kopyalandi!','green');
+    });
+  } else {
+    var t=document.createElement('textarea');t.value=url;document.body.appendChild(t);t.select();
+    try{document.execCommand('copy');toast('Link kopyalandi!','green');}catch(e){}
+    document.body.removeChild(t);
+  }
+}
+
+function iyzicoOdemeBaslat(idx){
   var ovl=document.getElementById('online-odeme-ovl');
   if(ovl){
     ovl.querySelector('div').innerHTML='<div style="padding:40px;text-align:center">'
-      +'<div style="font-size:48px;margin-bottom:12px">🔄</div>'
-      +'<div style="font-family:Bebas Neue,sans-serif;font-size:18px;color:var(--ink);margin-bottom:8px">'+isim.toUpperCase()+' ODEME</div>'
-      +'<div style="font-size:12px;color:var(--ink4);margin-bottom:16px">Backend entegrasyonu aktif olduğunda '+isim+' odeme formu burada acilacak.</div>'
-      +'<div style="background:var(--bg);border-radius:8px;padding:12px;font-size:11px;color:var(--ink4);text-align:left;margin-bottom:14px">'
-        +'Entegrasyon gereksinimleri:<br>'+isim+' API anahtarlari (Ayarlar sekmesi)<br>Backend endpoint gerekli'
-      +'</div>'
+      +'<div style="font-size:48px;margin-bottom:12px">⏳</div>'
+      +'<div style="font-family:Bebas Neue,sans-serif;font-size:18px;color:var(--ink);margin-bottom:8px">IYZICO HENUZ AKTIF DEGIL</div>'
+      +'<div style="font-size:12px;color:var(--ink4);margin-bottom:16px">Iyzico entegrasyonu Sprint 3 icin planlanmistir. Lutfen PayTR kullanin.</div>'
       +'<button onclick="document.getElementById(&quot;online-odeme-ovl&quot;).remove()" style="padding:10px 24px;background:var(--r);color:#fff;border:none;border-radius:8px;font-family:Bebas Neue,sans-serif;font-size:13px;cursor:pointer">Kapat</button>'
     +'</div>';
   }
 }
 
 function odemeLinkGonder(idx){
-  var r=RANDEVULAR[idx]; if(!r) return;
-  var kln=Math.max(0,r.tutar-(r.odenenToplam||0));
-  var link='https://autonax.com/odeme?id='+idx+'&tutar='+kln;
-  if(navigator.clipboard){
-    navigator.clipboard.writeText(link).then(function(){
-      toast('Odeme linki kopyalandi! WhatsApp veya SMS ile gonderin.','green');
-    });
-  }
-  var ovl=document.getElementById('online-odeme-ovl');
-  if(ovl) ovl.remove();
+  // Direkt PayTR odeme linki olusturma akisini baslat
+  payTROdemeBaslat(idx);
 }
 
 var EDM_AYAR=(function(){try{var r=localStorage.getItem('autonax_edm_v1');if(r)return JSON.parse(r);}catch(e){console.error('Autonax:',e)}return{aktif:false,testMod:true,kullaniciAdi:'',sifre:'',vknTckn:'',gondericEtiketi:'',faturaTipi:'EARSIV',faturaSeri:'AUT',kdvOrani:20,notSablonu:'Autonax Hizmet Faturasi',otomatikFatura:false,xsltEarsiv:{isim:'',icerik:'',boyut:0},xsltEfatura:{isim:'',icerik:'',boyut:0}};})();
