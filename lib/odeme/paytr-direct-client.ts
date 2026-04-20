@@ -15,7 +15,7 @@
  */
 
 import crypto from 'crypto';
-import { odemeAyarlariOku } from './ayarlar-okuyucu';
+import { odemeAyariOku } from './ayarlar-okuyucu';
 
 // ─────────────────────────────────────────────────────────────────────────
 // PayTR Direkt API endpoint
@@ -120,7 +120,7 @@ function tutariKurusaCevir(tutarTL: number): number {
 // ─────────────────────────────────────────────────────────────────────────
 
 export async function payTRAktifMi(): Promise<boolean> {
-  const ayar = await odemeAyarlariOku();
+  const ayar = await odemeAyariOku();
   if (!ayar) return false;
   return !!ayar.paytrAktif;
 }
@@ -132,7 +132,7 @@ export async function payTRAktifMi(): Promise<boolean> {
 export async function directOdemeBaslat(
   istek: DirectOdemeIstek
 ): Promise<DirectOdemeYanit> {
-  const ayar = await odemeAyarlariOku();
+  const ayar = await odemeAyariOku();
 
   if (!ayar || !ayar.paytrAktif) {
     return {
@@ -302,7 +302,7 @@ export async function bildirimHashDogrula(params: {
   totalAmount: string;
   hash: string;
 }): Promise<boolean> {
-  const ayar = await odemeAyarlariOku();
+  const ayar = await odemeAyariOku();
   if (!ayar || !ayar.paytrMerchantKey || !ayar.paytrMerchantSalt) {
     return false;
   }
