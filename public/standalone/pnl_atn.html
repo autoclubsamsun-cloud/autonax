@@ -7421,42 +7421,60 @@ function veriSifirla(){
   var onay2=confirm('SON UYARI: '+sayi+' randevu ve tüm ödeme kayıtları KALICI silinecek. Emin misiniz?');
   if(!onay2){toast('İptal edildi','red');return;}
 
-  // Bellekte sıfırla
-  RANDEVULAR.length=0;
-  if(typeof MUSTERILER!=='undefined' && Array.isArray(MUSTERILER)){MUSTERILER.length=0;}
-  try{ storageKaydet(); }catch(e){}
+  toast('Siliniyor, lutfen bekleyin...','green');
 
-  // localStorage temizle (tüm randevu/müşteri keylerini)
-  try{
-    ['autonax_randevular','autonax_musteriler','autonax_odemeler','autonax_urunler_v1'].forEach(function(k){
-      localStorage.removeItem(k);
-    });
-  }catch(e){}
-
-  // DB'de randevuları sil - POST ile bos array gönder (upsert mantığı)
-  // Alternatif: her birini DELETE et
+  // 1) DB'deki TÜM randevuları çek
   fetch('/api/randevular',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
     var eskiler=d.data||d.randevular||[];
+
     if(!eskiler.length){
-      toast('✅ Zaten boş. Sayfa yenilenecek...','green');
+      // DB zaten bos - sadece bellek ve localStorage'i temizle
+      RANDEVULAR.length=0;
+      try{
+        localStorage.removeItem('autonax_randevular_v1');
+        localStorage.removeItem(AUTONAX_STORAGE_KEY);
+      }catch(e){}
+      toast('✅ DB ve bellek temiz. Sayfa yenileniyor...','green');
       setTimeout(function(){location.reload();},1000);
       return;
     }
-    toast(eskiler.length+' kayıt DB\'den siliniyor...','green');
-    var sildi=0,hata=0;
-    eskiler.forEach(function(r){
-      fetch('/api/randevular/'+r.id,{method:'DELETE',credentials:'same-origin'})
-        .then(function(res){return res.ok?sildi++:hata++;})
-        .catch(function(){hata++;})
-        .finally(function(){
-          if(sildi+hata===eskiler.length){
-            toast('✅ '+sildi+' silindi'+(hata?' ('+hata+' hata)':'')+'. Sayfa yenilenecek...','green');
-            setTimeout(function(){location.reload();},1500);
+
+    // 2) Her birini DELETE ile sil - hepsinin Promise'ini bekle
+    var silmeler=eskiler.map(function(r){
+      return fetch('/api/randevular?id='+encodeURIComponent(r.id),{
+        method:'DELETE',
+        credentials:'same-origin'
+      }).then(function(res){return res.ok;}).catch(function(){return false;});
+    });
+
+    Promise.all(silmeler).then(function(sonuclar){
+      var basarili=sonuclar.filter(function(x){return x;}).length;
+      var basarisiz=sonuclar.length-basarili;
+
+      // 3) Bellek ve localStorage temizle
+      RANDEVULAR.length=0;
+      try{
+        localStorage.removeItem('autonax_randevular_v1');
+        localStorage.removeItem(AUTONAX_STORAGE_KEY);
+        // Diger olasi keyler
+        Object.keys(localStorage).forEach(function(k){
+          if(k.indexOf('randev')>=0 || k.indexOf('musteri')>=0 || k.indexOf('odeme')>=0){
+            localStorage.removeItem(k);
           }
         });
+      }catch(e){}
+
+      // 4) DB'deki borçları da sil (opsiyonel endpoint)
+      fetch('/api/odeme/borclar/sifirla',{method:'POST',credentials:'same-origin'}).catch(function(){});
+
+      toast('✅ '+basarili+' silindi'+(basarisiz?' ('+basarisiz+' hata)':'')+'. Sayfa yenileniyor...','green');
+      setTimeout(function(){location.reload();},1500);
     });
   }).catch(function(err){
-    toast('⚠️ Bellek sıfırlandı ama DB\'ye ulaşılamadı. Sayfa yenile.','red');
+    console.error('Sifirla hatasi:',err);
+    toast('⚠️ DB\'ye ulaşılamadı. Bellek temizlendi, sayfa yenile.','red');
+    RANDEVULAR.length=0;
+    try{ localStorage.removeItem('autonax_randevular_v1'); }catch(e){}
     setTimeout(function(){location.reload();},2000);
   });
 }
