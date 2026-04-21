@@ -580,8 +580,12 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
   /* İçerik seçilebilir kalsın */
   p,td,h1,h2,h3,input,textarea,label{-webkit-user-select:auto;user-select:auto}
 
-  /* Hamburger menü - alt tab ile birlikte kullan (ayarlar gibi fazla sayfalar için) */
-  .hd-menu-btn{display:flex !important}
+  /* Hamburger gizle - alt tab bar'da zaten Menü var */
+  .hd-menu-btn{display:none !important}
+
+  /* Logo sola yaslansın - header padding azalsın */
+  .header{padding:0 10px !important;gap:8px !important}
+  .hd-logo{margin-left:4px !important}
 
   /* Modal'lar - native app full-screen feel */
   [id$="-ovl"],[data-modal]{
