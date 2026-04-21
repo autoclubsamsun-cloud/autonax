@@ -396,9 +396,60 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 
   /* Randevu filtre barı — mobilde daha kompakt */
   #rdv-filtre-bar select{font-size:10px;padding:4px 6px}
+
+  /* ═══ SPRINT 7.2 + 8 MOBİL REVİZESİ (desktop'a dokunulmaz) ═══ */
+
+  /* Header - kullanıcı adı + rol badge mobilde göster */
+  /* Not: Yukarıdaki .hd-aname display:none kuralına override */
+  #header-user{display:block !important;font-size:11px !important;color:var(--ink) !important;font-weight:700 !important;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #header-rol{display:block !important;font-size:8px !important;padding:1px 5px !important;line-height:1.2}
+  #header-badge{display:none !important}  /* mobilde yer kaplamasın, rol badge yeter */
+  .hd-admin{gap:6px !important}
+  .hd-avatar,#header-avatar{width:26px !important;height:26px !important;font-size:11px !important;flex-shrink:0}
+  .hd-logout{padding:4px 8px !important;font-size:10px !important;flex-shrink:0}
+
+  /* Randevular üst bar (Fatura Kes / Ödeme Al / Taksit / Detay) - 2x2 grid */
+  #rdv-islem-bar{
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:6px !important;
+    padding:10px !important;
+  }
+  #rdv-islem-bar > div:first-child{display:none !important}  /* "İşlemler:" etiketi mobilde gizle */
+  #rdv-secili-bilgi{grid-column:1 / -1 !important;flex:none !important;font-size:11px !important;text-align:left;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:4px}
+  #rdv-islem-bar button{
+    padding:9px 6px !important;
+    font-size:11px !important;
+    width:100% !important;
+    text-align:center !important;
+  }
+
+  /* Yeni Fatura formu - TC/VKN sorgu satırı alt alta + buton normal */
+  #fatura-yeni-ovl > div{max-width:100% !important;width:100% !important;border-radius:16px 16px 0 0 !important;margin:0 !important;position:fixed !important;bottom:0 !important;left:0 !important;right:0 !important;max-height:92vh !important}
+  #fatura-yeni-ovl{align-items:flex-end !important;padding:0 !important}
+  /* TC/VKN satırı: input ve buton alt alta gelsin (dar ekran için) */
+  #fatura-yeni-ovl #fat-vkn + button,
+  #fatura-yeni-ovl #fat-sorgu-btn{padding:9px 10px !important;font-size:11px !important}
+  /* Bireysel/Kurumsal butonları mobilde küçült */
+  #fatura-yeni-ovl #fat-tip-birey,#fatura-yeni-ovl #fat-tip-kurum{font-size:11px !important;padding:8px 4px !important;letter-spacing:0 !important}
+
+  /* Bağımsız Ödeme popup mobil */
+  #bodeme-ovl > div{max-width:100% !important;width:100% !important;border-radius:16px 16px 0 0 !important;margin:0 !important;position:fixed !important;bottom:0 !important;left:0 !important;right:0 !important;max-height:92vh !important}
+  #bodeme-ovl{align-items:flex-end !important;padding:0 !important}
+
+  /* Sabitle butonu kompakt */
+  #btn-filtre-sabitle{padding:4px 8px !important;font-size:10px !important}
+
+  /* Fatura listesi mobilde min-width korunur (zaten yatay scroll) */
+  #fat-tbody .ab{padding:3px 6px !important;font-size:9px !important}
+
+  /* Personel form mobil spacing */
+  #per-kaydet-btn,#per-sil-btn{font-size:11px !important;padding:8px 10px !important}
 }
 
+/* ═══ 380PX VE ALTI - EKSTRA DAR EKRANLAR ═══ */
 @media(max-width:400px){
+  /* Mevcut kurallar aşağıda */
   .g4{grid-template-columns:1fr}
   .ph-title{font-size:18px}
   .sk-val{font-size:18px}
@@ -784,7 +835,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
         <div class="ph-sub">Tüm randevuları görüntüleyin, onaylayın veya iptal edin.</div>
       </div>
       
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding:12px 14px;background:var(--w);border:1.5px solid var(--bd);border-radius:12px;align-items:center">
+      <div id="rdv-islem-bar" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding:12px 14px;background:var(--w);border:1.5px solid var(--bd);border-radius:12px;align-items:center">
         <div style="font-size:11px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.5px">İşlemler:</div>
         <div id="rdv-secili-bilgi" style="font-size:12px;color:var(--ink4);flex:1">Hızlı işlem için butonları kullanın · Randevu seçerek de işlem yapabilirsiniz</div>
         <button id="btn-hf" onclick="faturaKesBagimsiz()" style="padding:7px 14px;border:1.5px solid #1a6b3c;border-radius:7px;background:rgba(26,107,60,.06);color:#1a6b3c;font-size:11px;font-weight:700;cursor:pointer">🧾 Fatura Kes</button>
