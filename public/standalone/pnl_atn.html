@@ -1924,7 +1924,8 @@ function doRdvListele(){
   });
   var lbl=document.getElementById('rdv-sonuc');if(lbl)lbl.textContent=liste.length+' randevu';
   if(!liste.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:20px;color:#999">Sonuç bulunamadı</td></tr>';return;}
-  tbody.innerHTML=liste.map(function(r,i){
+  tbody.innerHTML=liste.map(function(r,_i){
+    var i=RANDEVULAR.indexOf(r);  // BUG FIX: filtre sonrasi yanlis indeks degil, orijinal RANDEVULAR indeksi kullan
     var s=rdvRenkStyle(r);
     var tutarStr='₺'+r.tutar.toLocaleString('tr-TR');
     var onlineRow=r.onlineOdeme?'<span style="font-size:9px;background:rgba(37,99,235,.1);color:#2563EB;border:1px solid rgba(37,99,235,.2);border-radius:4px;padding:1px 5px;font-weight:700;margin-left:4px">ONLINE</span>':'';
@@ -1940,7 +1941,7 @@ function doRdvListele(){
     } else {
       odemeTag='<span class="tag bekl" style="cursor:pointer" onclick="rdvOdemeAl('+i+')">💳 Ödeme Al</span>';
     }
-    var origIdx=RANDEVULAR.indexOf(r);return '<tr style="background:'+s.bg+';border-left:'+s.border+';transition:.2s;cursor:pointer" data-rdv-idx="'+origIdx+'" onclick="rdvSatirSec('+origIdx+')">' 
+    return '<tr style="background:'+s.bg+';border-left:'+s.border+';transition:.2s;cursor:pointer" data-rdv-idx="'+i+'" onclick="rdvSatirSec('+i+')">'
       +'<td><b>'+r.tarih+'</b><br><small>'+r.saat+'</small></td>'
       +'<td><b>'+r.musteri+'</b>'+onlineRow+'<br><small style="color:var(--ink4)">'+r.tel+'</small></td>'
       +'<td><span class="tbl-plaka">'+r.plaka+'</span>'+(r.arac&&r.arac!=='—'?'<br><small>'+r.arac+'</small>':'')+'</td>'
