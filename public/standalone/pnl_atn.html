@@ -7,7 +7,22 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#B01C2E">
-<title>Admin Panel — Autonax</title>
+<title>Autonax - Yönetim Paneli</title>
+
+<!-- ═══ FAVICON TAM SETİ (PWA uyumlu) ═══ -->
+<!-- Modern browserlar SVG favicon destekler (vektörel, her boyutta net) -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%231a1a1a'/%3E%3Crect x='8' y='8' width='496' height='496' rx='88' fill='none' stroke='%23B01C2E' stroke-width='16'/%3E%3Cpath d='M256 80 L420 432 L350 432 L316 356 L196 356 L162 432 L92 432 Z M224 288 L288 288 L256 216 Z' fill='%23B01C2E'/%3E%3C/svg%3E">
+<!-- Fallback: PNG favicon (eski browserlar için) -->
+<link rel="icon" type="image/png" sizes="32x32" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%231a1a1a'/%3E%3Crect x='8' y='8' width='496' height='496' rx='88' fill='none' stroke='%23B01C2E' stroke-width='16'/%3E%3Cpath d='M256 80 L420 432 L350 432 L316 356 L196 356 L162 432 L92 432 Z M224 288 L288 288 L256 216 Z' fill='%23B01C2E'/%3E%3C/svg%3E">
+<!-- iOS ana ekran ikonu (180x180) -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%231a1a1a'/%3E%3Crect x='8' y='8' width='496' height='496' rx='88' fill='none' stroke='%23B01C2E' stroke-width='16'/%3E%3Cpath d='M256 80 L420 432 L350 432 L316 356 L196 356 L162 432 L92 432 Z M224 288 L288 288 L256 216 Z' fill='%23B01C2E'/%3E%3C/svg%3E">
+<!-- Windows start menü -->
+<meta name="msapplication-TileColor" content="#1a1a1a">
+<meta name="msapplication-TileImage" content="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%231a1a1a'/%3E%3Cpath d='M256 80 L420 432 L350 432 L316 356 L196 356 L162 432 L92 432 Z M224 288 L288 288 L256 216 Z' fill='%23B01C2E'/%3E%3C/svg%3E">
+<!-- PWA manifest (inline, dosya gerekmez) -->
+<link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Autonax%20Y%C3%B6netim%20Paneli%22%2C%22short_name%22%3A%22Autonax%22%2C%22theme_color%22%3A%22%23B01C2E%22%2C%22background_color%22%3A%22%231a1a1a%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22start_url%22%3A%22%2Fstandalone%2Fpnl_atn.html%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2527http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2527%2520viewBox%253D%25270%25200%2520512%2520512%2527%253E%253Crect%2520width%253D%2527512%2527%2520height%253D%2527512%2527%2520rx%253D%252796%2527%2520fill%253D%2527%25231a1a1a%2527%252F%253E%253Cpath%2520d%253D%2527M256%252080%2520L420%2520432%2520L350%2520432%2520L316%2520356%2520L196%2520356%2520L162%2520432%2520L92%2520432%2520Z%2520M224%2520288%2520L288%2520288%2520L256%2520216%2520Z%2527%2520fill%253D%2527%2523B01C2E%2527%252F%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+<!-- iOS Safari "Ana Ekrana Ekle" başlığı -->
+<meta name="apple-mobile-web-app-title" content="Autonax">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
