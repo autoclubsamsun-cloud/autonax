@@ -528,7 +528,9 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
   }
 
   /* FAB - Floating Action Button (her sayfa için) */
-  .fab{
+  .fab{display:none !important}
+  .fab.show{
+    display:flex !important;
     position:fixed !important;
     right:16px;
     bottom:calc(76px + env(safe-area-inset-bottom));
@@ -540,12 +542,12 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
     box-shadow:0 6px 18px rgba(176,28,46,.45);
     cursor:pointer;
     z-index:340;
-    display:flex;align-items:center;justify-content:center;
+    align-items:center;justify-content:center;
     font-size:26px;font-weight:300;
     transition:.2s;
   }
-  .fab:active{transform:scale(.9)}
-  .fab:hover{box-shadow:0 8px 22px rgba(176,28,46,.55)}
+  .fab.show:active{transform:scale(.9)}
+  .fab.show:hover{box-shadow:0 8px 22px rgba(176,28,46,.55)}
 
   /* Toast üstten slide - native bildirim gibi */
   #toast{
@@ -584,7 +586,83 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
   [id$="-ovl"],[data-modal]{
     padding-top:env(safe-area-inset-top) !important;
   }
+
+  /* ═══════════════════════════════════════════════════════════ */
+  /* ═══ SPRINT 10.2 - KART LİSTELERİ + FAB                   ═══ */
+  /* ═══════════════════════════════════════════════════════════ */
+
+  /* Mobilde tablo container'ı gizle, kart listesi görünür */
+  .tbl-wrap.has-mobile-cards{display:none !important}
+  .mobile-card-list{display:block !important}
+
+  /* Kart stili - native app item gibi */
+  .mcard{
+    background:#fff;
+    border:1px solid var(--bd);
+    border-radius:12px;
+    padding:12px 14px;
+    margin-bottom:8px;
+    box-shadow:0 1px 2px rgba(0,0,0,.03);
+    transition:.15s;
+    position:relative;
+    cursor:pointer;
+  }
+  .mcard:active{transform:scale(.98);box-shadow:0 4px 12px rgba(0,0,0,.08)}
+  .mcard-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px}
+  .mcard-plaka{
+    display:inline-block;
+    font-family:'Bebas Neue',sans-serif;
+    letter-spacing:2px;
+    background:linear-gradient(to bottom,#f8f8f8,#e8e8e8);
+    border:1.5px solid #ccc;border-top-color:#ddd;border-bottom-color:#aaa;
+    color:#111;
+    padding:3px 10px;
+    border-radius:4px;
+    font-size:13px;
+    box-shadow:inset 0 -1px 0 rgba(0,0,0,.1);
+  }
+  .mcard-status{font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;letter-spacing:.3px}
+  .mcard-musteri{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:2px}
+  .mcard-meta{font-size:11px;color:var(--ink4);line-height:1.4}
+  .mcard-meta b{color:var(--ink);font-weight:700}
+  .mcard-foot{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--bd)}
+  .mcard-tutar{font-size:16px;font-weight:800;color:var(--r);font-family:'Bebas Neue',sans-serif;letter-spacing:1px}
+  .mcard-aksiyonlar{display:flex;gap:4px;flex-wrap:wrap}
+  .mcard-btn{
+    padding:5px 10px;
+    border:1.5px solid var(--bd);
+    border-radius:6px;
+    background:#fff;
+    font-size:11px;font-weight:600;
+    cursor:pointer;
+    transition:.15s;
+    font-family:Outfit,sans-serif;
+  }
+  .mcard-btn:active{transform:scale(.92)}
+  .mcard-btn.primary{border-color:var(--r);color:var(--r);background:rgba(176,28,46,.04)}
+  .mcard-btn.success{border-color:#16a34a;color:#16a34a;background:rgba(22,163,74,.04)}
+  .mcard-btn.warn{border-color:#d97706;color:#d97706;background:rgba(217,119,6,.04)}
+  .mcard-btn.info{border-color:#2563EB;color:#2563EB;background:rgba(37,99,235,.04)}
+
+  /* Kart içi tag badge'leri */
+  .mcard-tag{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;display:inline-block}
+  .mcard-tag.bekl{background:rgba(217,119,6,.12);color:#d97706}
+  .mcard-tag.onay{background:rgba(22,163,74,.12);color:#16a34a}
+  .mcard-tag.tamam{background:rgba(22,163,74,.15);color:#16a34a}
+  .mcard-tag.iptal{background:rgba(220,38,38,.12);color:#dc2626}
+  .mcard-tag.online{background:rgba(37,99,235,.12);color:#2563EB}
+
+  /* Boş durum */
+  .mcard-bos{
+    text-align:center;padding:40px 20px;color:#999;
+    background:#fafafa;border-radius:12px;border:1.5px dashed var(--bd);
+  }
+  .mcard-bos-ikon{font-size:36px;margin-bottom:8px}
+  .mcard-bos-text{font-size:13px;font-weight:600}
 }
+
+/* Mobil kart listesi - desktop'ta gizli (varsayılan) */
+.mobile-card-list{display:none}
 
 /* ═══ 380PX VE ALTI - EKSTRA DAR EKRANLAR ═══ */
 @media(max-width:400px){
@@ -803,6 +881,9 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
     <button class="hd-logout" onclick="doCikis()">Çıkış</button>
   </div>
 </div>
+
+<!-- ══ MOBİL FAB (Floating Action Button) - sayfa-bazlı aksiyon ══ -->
+<button id="mobile-fab" class="fab" onclick="fabTikla()" title="Yeni kayıt">+</button>
 
 <!-- ══ MOBİL ALT TAB BAR (sadece mobilde görünür) ══ -->
 <nav id="mobile-tab-bar">
@@ -1096,10 +1177,11 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
           </div>
         </div>
         <div class="kb" style="padding:0">
-          <div class="tbl-wrap"><table class="tbl" id="rdv-tablo">
+          <div class="tbl-wrap has-mobile-cards"><table class="tbl" id="rdv-tablo">
             <thead><tr><th>Tarih</th><th>Müşteri</th><th>Plaka/Araç</th><th>Hizmet</th><th>Tutar</th><th>Durum</th><th>Ödeme</th><th>İşlem</th></tr></thead>
             <tbody id="rdv-tbody"></tbody>
           </table></div>
+          <div class="mobile-card-list" id="rdv-mobile-kartlar"></div>
         </div>
       </div>
     </div>
@@ -1169,12 +1251,13 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
           </div>
         </div>
         <div class="kb" style="padding:0">
-          <div class="tbl-wrap">
+          <div class="tbl-wrap has-mobile-cards">
             <table class="tbl">
               <thead><tr><th>Müşteri</th><th>Telefon</th><th>Araçlar</th><th>Randevu</th><th>Son Hizmet</th><th>Toplam</th><th>Durum</th><th>İşlem</th></tr></thead>
               <tbody id="mst-tbody"><tr><td colspan="8" style="text-align:center;padding:20px;color:#999">Yükleniyor...</td></tr></tbody>
             </table>
           </div>
+          <div class="mobile-card-list" id="mst-mobile-kartlar"></div>
         </div>
       </div>
     </div>
@@ -1436,10 +1519,11 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
           </div>
         </div>
         <div class="kb" style="padding:0">
-          <div class="tbl-wrap"><table class="tbl" id="odeme-tablo">
+          <div class="tbl-wrap has-mobile-cards"><table class="tbl" id="odeme-tablo">
             <thead><tr><th>Tarih</th><th>Müşteri</th><th>Plaka</th><th>Hizmet</th><th>Toplam</th><th>Ödenen</th><th>Kalan</th><th>Yöntem</th><th>Durum</th><th>İşlem</th></tr></thead>
             <tbody id="odeme-tbody"></tbody>
           </table></div>
+          <div class="mobile-card-list" id="odeme-mobile-kartlar"></div>
         </div>
       </div>
     </div>
@@ -1468,7 +1552,8 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
           </div>
         </div>
         <div class="kb" style="padding:0">
-          <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Fatura No</th><th>Tarih</th><th>Müşteri</th><th>Tip</th><th>Tutar</th><th>KDV</th><th>Toplam</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="fat-tbody"></tbody></table></div>
+          <div class="tbl-wrap has-mobile-cards"><table class="tbl"><thead><tr><th>Fatura No</th><th>Tarih</th><th>Müşteri</th><th>Tip</th><th>Tutar</th><th>KDV</th><th>Toplam</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="fat-tbody"></tbody></table></div>
+          <div class="mobile-card-list" id="fat-mobile-kartlar"></div>
         </div>
       </div>
     </div>
@@ -2096,6 +2181,47 @@ function doPg(id){
   },100);
   // Sprint 10: Mobile tab bar aktif güncelle
   if(typeof mobileTabBarAktif==='function') mobileTabBarAktif(id);
+  // Sprint 10.2: FAB sayfa bazlı güncelle
+  if(typeof fabGuncelle==='function') fabGuncelle(id);
+}
+
+/** Sayfa bazlı FAB göster/gizle */
+function fabGuncelle(pgId){
+  var fab=document.getElementById('mobile-fab');
+  if(!fab) return;
+  var fabHaritasi={
+    'randevular':{goster:true,baslik:'Yeni Randevu',ikon:'+'},
+    'musteriler':{goster:true,baslik:'Yeni Müşteri',ikon:'+'},
+    'faturalar':{goster:true,baslik:'Yeni Fatura',ikon:'+'},
+    'odemeler':{goster:true,baslik:'Yeni Ödeme',ikon:'$'}
+  };
+  var ayar=fabHaritasi[pgId];
+  if(ayar && ayar.goster){
+    fab.classList.add('show');
+    fab.title=ayar.baslik;
+    fab.textContent=ayar.ikon;
+    fab.setAttribute('data-pg',pgId);
+  } else {
+    fab.classList.remove('show');
+  }
+}
+
+/** FAB tıklanınca sayfa bazlı aksiyon */
+function fabTikla(){
+  var fab=document.getElementById('mobile-fab');
+  var pg=fab ? fab.getAttribute('data-pg') : '';
+  if(pg==='randevular'){
+    // Randevu alanına scroll (Yeni Randevu Ekle formu zaten sayfada)
+    var form=document.getElementById('rdv-musteri');
+    if(form){ form.scrollIntoView({behavior:'smooth',block:'center'}); setTimeout(function(){form.focus();},400); }
+  } else if(pg==='musteriler'){
+    if(typeof mstYeniAc==='function') mstYeniAc();
+    else toast('Yeni müşteri butonu bulunamadı','red');
+  } else if(pg==='faturalar'){
+    if(typeof faturaYeniAc==='function') faturaYeniAc();
+  } else if(pg==='odemeler'){
+    if(typeof odemeAlBagimsiz==='function') odemeAlBagimsiz();
+  }
 }
 
 /** Sprint 10 - Mobile alt tab bar doldur (role göre) */
@@ -2233,10 +2359,66 @@ function doRdvListele(){
         )
       +'</td></tr>';
   }).join('');
+
+  // ═══ SPRINT 10.2 - Mobil kart listesi ═══
+  rdvMobilKartlariRender(liste);
 }
 
+/** Randevu mobil kart listesi render */
+function rdvMobilKartlariRender(liste){
+  var el=document.getElementById('rdv-mobile-kartlar');
+  if(!el) return;
+  if(!liste||!liste.length){
+    el.innerHTML='<div class="mcard-bos"><div class="mcard-bos-ikon">📅</div><div class="mcard-bos-text">Sonuç bulunamadı</div></div>';
+    return;
+  }
+  el.innerHTML=liste.map(function(r){
+    var i=RANDEVULAR.indexOf(r);
+    var s=rdvRenkStyle(r);
+    var kalan=(r.tutar||0)-(r.odenenToplam||0);
 
-/* ════════════ DASHBOARD DB ENTEGRASYONU ════════════ */
+    // Ödeme durumu
+    var odemeBadge, odemeAksiyon='';
+    if(r.onlineOdeme && kalan<=0){
+      odemeBadge='<span class="mcard-tag online">🌐 Online Ödendi</span>';
+    } else if(kalan<=0){
+      odemeBadge='<span class="mcard-tag onay">✓ Ödendi</span>';
+    } else if(r.odenenToplam>0){
+      odemeBadge='<span class="mcard-tag bekl">💳 Kısmi · Kalan ₺'+kalan.toLocaleString('tr-TR')+'</span>';
+    } else {
+      odemeBadge='<span class="mcard-tag bekl">💳 Ödeme Bekliyor</span>';
+    }
+
+    // Aksiyon butonları
+    var aksiyonlar='<button class="mcard-btn info" onclick="event.stopPropagation();rdvDetay('+i+')">Detay</button>';
+    aksiyonlar+='<button class="mcard-btn info" onclick="event.stopPropagation();rdvDuzenle('+i+')">Düzenle</button>';
+    if(kalan>0){
+      aksiyonlar+='<button class="mcard-btn warn" onclick="event.stopPropagation();rdvOdemeAl('+i+')">Ödeme Al</button>';
+    } else {
+      aksiyonlar+='<button class="mcard-btn success" onclick="event.stopPropagation();odemeDekontGoster('+i+')">Dekont</button>';
+    }
+    aksiyonlar+='<button class="mcard-btn success" onclick="event.stopPropagation();rdvFaturaKes('+i+')">Fatura</button>';
+
+    return '<div class="mcard" onclick="rdvDetay('+i+')">'
+      +'<div class="mcard-top">'
+        +'<span class="mcard-plaka">'+r.plaka+'</span>'
+        +'<span class="mcard-status" style="background:'+s.bg+';color:'+(s.tag==='onay'?'#16a34a':s.tag==='bekl'?'#d97706':s.tag==='iptal'?'#dc2626':'#666')+'">'+s.txt+'</span>'
+      +'</div>'
+      +'<div class="mcard-musteri">'+r.musteri+'</div>'
+      +'<div class="mcard-meta">'
+        +'📅 <b>'+r.tarih+'</b> · '+r.saat
+        +(r.tel?' · 📞 '+r.tel:'')
+        +'<br>🔧 '+r.hizmet
+        +(r.arac&&r.arac!=='—'?' · 🚗 '+r.arac:'')
+      +'</div>'
+      +'<div style="margin-top:6px">'+odemeBadge+'</div>'
+      +'<div class="mcard-foot">'
+        +'<div class="mcard-tutar">₺'+(r.tutar||0).toLocaleString('tr-TR')+'</div>'
+        +'<div class="mcard-aksiyonlar">'+aksiyonlar+'</div>'
+      +'</div>'
+    +'</div>';
+  }).join('');
+}
 function dashboardGuncelle(){ dashboardYukle(); return; /* Artık dashboardYukle kullanılıyor */
   Promise.all([
     fetch('/api/randevular',{credentials:'same-origin'}).then(function(r){return r.json();}),
@@ -4299,6 +4481,66 @@ function faturaListeYukle(){
         +(f.durum==='GONDERILDI' || f.durum==='KESILDI'?'<button class="ab ab-r" style="font-size:10px" onclick="faturaIptal('+i+')">✕ İptal</button>':'')
       +'</td></tr>';
   }).join('');
+
+  // ═══ SPRINT 10.2 - Fatura mobil kart listesi ═══
+  faturaMobilKartlariRender(liste);
+}
+
+/** Fatura mobil kart listesi render */
+function faturaMobilKartlariRender(liste){
+  var el=document.getElementById('fat-mobile-kartlar');
+  if(!el) return;
+  if(!liste||!liste.length){
+    el.innerHTML='<div class="mcard-bos"><div class="mcard-bos-ikon">🧾</div><div class="mcard-bos-text">Fatura bulunamadı</div></div>';
+    return;
+  }
+  el.innerHTML=liste.map(function(f){
+    var i=FATURALAR.indexOf(f);
+
+    // Durum
+    var durEtiket=f.durum||'—', durClass='bekl';
+    if(f.durum==='KESILIYOR'){durEtiket='⏳ Gönderiliyor';durClass='bekl';}
+    else if(f.durum==='GONDERILDI'){durEtiket=f.edmTestMod?'🧪 TEST':'✅ Gönderildi';durClass=f.edmTestMod?'online':'onay';}
+    else if(f.durum==='ONAYLANDI'){durEtiket='✓ Onaylandı';durClass='tamam';}
+    else if(f.durum==='HATA'){durEtiket='⚠️ Hata';durClass='iptal';}
+    else if(f.durum==='IPTAL'){durEtiket='✕ İptal';durClass='iptal';}
+    else if(f.durum==='KESILDI'){durEtiket='Kesildi';durClass='bekl';}
+
+    var tipRenk=f.faturaTipi==='EFATURA'?'#2563EB':'#16a34a';
+    var tipEtiket=f.faturaTipi==='EFATURA'?'e-Fatura':'e-Arşiv';
+    var musteriEtiketi=f.musteriTip==='kurumsal'?'🏢':'👤';
+
+    // Aksiyonlar
+    var aksiyonlar='<button class="mcard-btn info" onclick="event.stopPropagation();faturaPDFGoster('+i+')">👁 Göster</button>';
+    if(f.durum==='HATA'){
+      aksiyonlar+='<button class="mcard-btn warn" onclick="event.stopPropagation();faturaYenidenGonder('+i+')">↻ Tekrar Gönder</button>';
+    }
+    if(f.durum==='GONDERILDI' || f.durum==='KESILDI'){
+      aksiyonlar+='<button class="mcard-btn" style="border-color:var(--r);color:var(--r)" onclick="event.stopPropagation();faturaIptal('+i+')">✕ İptal</button>';
+    }
+
+    return '<div class="mcard" onclick="faturaPDFGoster('+i+')">'
+      +'<div class="mcard-top">'
+        +'<span style="font-family:monospace;font-size:12px;font-weight:700;color:var(--ink)">'+f.faturaNo+'</span>'
+        +'<span class="mcard-tag '+durClass+'">'+durEtiket+'</span>'
+      +'</div>'
+      +'<div class="mcard-musteri">'+musteriEtiketi+' '+f.musteri+'</div>'
+      +'<div class="mcard-meta">'
+        +'📅 <b>'+f.tarih+'</b>'
+        +(f.vknTckn?' · <span style="font-family:monospace">'+f.vknTckn+'</span>':'')
+        +'<br><span style="background:'+tipRenk+'15;color:'+tipRenk+';padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">'+tipEtiket+'</span>'
+        +(f.hizmet?' · '+f.hizmet:'')
+      +'</div>'
+      +(f.edmEttn?'<div class="mcard-meta" style="margin-top:4px;font-size:10px;font-family:monospace">ETTN: '+f.edmEttn+'</div>':'')
+      +'<div class="mcard-foot">'
+        +'<div>'
+          +'<div style="font-size:10px;color:var(--ink4)">KDV Dahil</div>'
+          +'<div class="mcard-tutar">₺'+(f.toplamTutar||0).toLocaleString('tr-TR')+'</div>'
+        +'</div>'
+        +'<div class="mcard-aksiyonlar">'+aksiyonlar+'</div>'
+      +'</div>'
+    +'</div>';
+  }).join('');
 }
 
 function faturaFiltreTemizle(){['fat-arama','fat-tip','fat-durum'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});faturaListeYukle();}
@@ -4868,6 +5110,53 @@ function odemeListeYukle(){
         +(s.odenen>0?'<button class="ab ab-n" style="font-size:10px" onclick="odemeDekontGoster('+s.ri+')">🧾 Dekont</button>':'')
       +'</td>'
     +'</tr>';
+  }).join('');
+
+  // ═══ SPRINT 10.2 - Ödeme mobil kart listesi ═══
+  odemeMobilKartlariRender(satirlar);
+}
+
+/** Ödeme mobil kart listesi */
+function odemeMobilKartlariRender(satirlar){
+  var el=document.getElementById('odeme-mobile-kartlar');
+  if(!el) return;
+  if(!satirlar||!satirlar.length){
+    el.innerHTML='<div class="mcard-bos"><div class="mcard-bos-ikon">💳</div><div class="mcard-bos-text">Ödeme bulunamadı</div></div>';
+    return;
+  }
+  el.innerHTML=satirlar.map(function(s){
+    var r=s.r;
+    var yonIkon=s.sonYontem.indexOf('Nakit')>-1?'💵':s.sonYontem.indexOf('Havale')>-1?'🏦':s.sonYontem.indexOf('Taksit')>-1?'📋':s.sonYontem.indexOf('Kart')>-1?'💳':s.sonYontem.indexOf('Online')>-1?'🌐':'—';
+    var durClass=s.kalan<=0?'tamam':s.odenen>0?'bekl':'iptal';
+    var durText=s.kalan<=0?'✓ Ödendi':s.odenen>0?'💳 Kısmi':'⏳ Bekliyor';
+
+    var aksiyonlar='<button class="mcard-btn info" onclick="event.stopPropagation();odemeDetayGoster('+s.ri+')">📄 Detay</button>';
+    if(s.kalan>0) aksiyonlar+='<button class="mcard-btn warn" onclick="event.stopPropagation();rdvHariciOdeme('+s.ri+')">💳 Ödeme Al</button>';
+    if(s.odenen>0) aksiyonlar+='<button class="mcard-btn success" onclick="event.stopPropagation();odemeDekontGoster('+s.ri+')">🧾 Dekont</button>';
+
+    return '<div class="mcard" onclick="odemeDetayGoster('+s.ri+')">'
+      +'<div class="mcard-top">'
+        +'<span class="mcard-plaka">'+r.plaka+'</span>'
+        +'<span class="mcard-tag '+durClass+'">'+durText+'</span>'
+      +'</div>'
+      +'<div class="mcard-musteri">'+r.musteri+'</div>'
+      +'<div class="mcard-meta">'
+        +'📅 <b>'+r.tarih+'</b> · '+r.saat
+        +'<br>🔧 '+(r.hizmet||'').substring(0,40)+((r.hizmet||'').length>40?'...':'')
+        +'<br>'+yonIkon+' '+s.sonYontem
+      +'</div>'
+      +'<div class="mcard-foot">'
+        +'<div>'
+          +'<div style="font-size:10px;color:var(--ink4)">Toplam / Ödenen / Kalan</div>'
+          +'<div style="font-size:12px;line-height:1.4">'
+            +'<b>₺'+s.tutar.toLocaleString('tr-TR')+'</b>'
+            +' / <span style="color:#16a34a;font-weight:700">₺'+s.odenen.toLocaleString('tr-TR')+'</span>'
+            +' / <span style="color:'+(s.kalan>0?'#dc2626':'#16a34a')+';font-weight:700">'+(s.kalan>0?'₺'+s.kalan.toLocaleString('tr-TR'):'✓')+'</span>'
+          +'</div>'
+        +'</div>'
+      +'</div>'
+      +'<div class="mcard-aksiyonlar" style="margin-top:8px">'+aksiyonlar+'</div>'
+    +'</div>';
   }).join('');
 }
 
@@ -6229,6 +6518,42 @@ function mstListele(){
       +'</tr>';
   });
   tbody.innerHTML=rows.join('');
+
+  // ═══ SPRINT 10.2 - Müşteri mobil kart listesi ═══
+  mstMobilKartlariRender(liste);
+}
+
+/** Müşteri mobil kart listesi */
+function mstMobilKartlariRender(liste){
+  var el=document.getElementById('mst-mobile-kartlar');
+  if(!el) return;
+  if(!liste||!liste.length){
+    el.innerHTML='<div class="mcard-bos"><div class="mcard-bos-ikon">👥</div><div class="mcard-bos-text">Müşteri bulunamadı</div></div>';
+    return;
+  }
+  el.innerHTML=liste.map(function(m,idx){
+    var plakalar=(m.araclar||[]).slice(0,2).map(function(p){return '<span class="mcard-plaka" style="font-size:10px;padding:2px 6px">'+p+'</span>';}).join(' ');
+    var plakaEkstra=(m.araclar||[]).length>2?' <span style="font-size:10px;color:var(--ink4)">+'+((m.araclar||[]).length-2)+' daha</span>':'';
+
+    return '<div class="mcard" onclick="mstDetayAc('+idx+')">'
+      +'<div class="mcard-top">'
+        +'<div style="display:flex;align-items:center;gap:6px">'
+          +'<span style="width:30px;height:30px;border-radius:50%;background:var(--r);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-family:Bebas Neue,sans-serif;font-size:13px">'+(m.isim||'?').slice(0,1).toUpperCase()+'</span>'
+          +'<div>'
+            +'<div class="mcard-musteri" style="margin:0">'+m.isim+'</div>'
+            +'<div style="font-size:11px;color:var(--ink4)">'+(m.tel||'')+'</div>'
+          +'</div>'
+        +'</div>'
+        +'<span class="mcard-tag tamam">'+m.rdvSayisi+' randevu</span>'
+      +'</div>'
+      +(plakalar?'<div style="margin-top:8px">'+plakalar+plakaEkstra+'</div>':'')
+      +(m.sonHizmet?'<div class="mcard-meta" style="margin-top:6px">Son: <b>'+m.sonTarih+'</b> · '+m.sonHizmet.slice(0,40)+'</div>':'')
+      +'<div class="mcard-foot">'
+        +'<div class="mcard-tutar">₺'+(m.toplamTutar||0).toLocaleString('tr-TR')+'</div>'
+        +'<button class="mcard-btn info" onclick="event.stopPropagation();mstDetayAc('+idx+')">Detay</button>'
+      +'</div>'
+    +'</div>';
+  }).join('');
 }
 
 // Secili musteri listesi (filtre ve siralama sonrasi)
