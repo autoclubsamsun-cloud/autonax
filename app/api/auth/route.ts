@@ -134,6 +134,15 @@ export async function POST(req: NextRequest) {
           kullanici_adi TEXT,
           kayit_tarihi TIMESTAMPTZ DEFAULT NOW()
         )`;
+        // Var olan tablo icin eksik kolonlari ekle (migrate)
+        await sql`ALTER TABLE personel ADD COLUMN IF NOT EXISTS email TEXT`;
+        await sql`ALTER TABLE personel ADD COLUMN IF NOT EXISTS tel TEXT`;
+        await sql`ALTER TABLE personel ADD COLUMN IF NOT EXISTS sifre TEXT`;
+        await sql`ALTER TABLE personel ADD COLUMN IF NOT EXISTS rol TEXT DEFAULT 'teknisyen'`;
+        await sql`ALTER TABLE personel ADD COLUMN IF NOT EXISTS aktif BOOLEAN DEFAULT TRUE`;
+        await sql`ALTER TABLE personel ADD COLUMN IF NOT EXISTS yetkiler JSONB DEFAULT '{}'::jsonb`;
+        await sql`ALTER TABLE personel ADD COLUMN IF NOT EXISTS kullanici_adi TEXT`;
+        await sql`ALTER TABLE personel ADD COLUMN IF NOT EXISTS kayit_tarihi TIMESTAMPTZ DEFAULT NOW()`;
 
         // Username olarak 'kullanici_adi' (yoksa 'email' veya 'ad') kabul ediyoruz
         const personelRows = await sql`

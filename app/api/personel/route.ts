@@ -35,11 +35,16 @@ async function ensureDB() {
     kullanici_adi TEXT,
     kayit_tarihi TIMESTAMPTZ DEFAULT NOW()
   )`;
-  // kullanici_adi kolonu yoksa ekle (var olan tabloyu migrate et)
+  // Var olan tablo icin eksik kolonlari ekle (migrate)
   try {
-    await sql`ALTER TABLE personel ADD COLUMN IF NOT EXISTS kullanici_adi TEXT`;
-    await sql`ALTER TABLE personel ADD COLUMN IF NOT EXISTS yetkiler JSONB DEFAULT '{}'::jsonb`;
+    await sql`ALTER TABLE personel ADD COLUMN IF NOT EXISTS email TEXT`;
+    await sql`ALTER TABLE personel ADD COLUMN IF NOT EXISTS tel TEXT`;
+    await sql`ALTER TABLE personel ADD COLUMN IF NOT EXISTS sifre TEXT`;
+    await sql`ALTER TABLE personel ADD COLUMN IF NOT EXISTS rol TEXT DEFAULT 'teknisyen'`;
     await sql`ALTER TABLE personel ADD COLUMN IF NOT EXISTS aktif BOOLEAN DEFAULT TRUE`;
+    await sql`ALTER TABLE personel ADD COLUMN IF NOT EXISTS yetkiler JSONB DEFAULT '{}'::jsonb`;
+    await sql`ALTER TABLE personel ADD COLUMN IF NOT EXISTS kullanici_adi TEXT`;
+    await sql`ALTER TABLE personel ADD COLUMN IF NOT EXISTS kayit_tarihi TIMESTAMPTZ DEFAULT NOW()`;
   } catch (e) {
     console.error('[personel] migrate hata:', e);
   }
