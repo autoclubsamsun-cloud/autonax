@@ -597,20 +597,16 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
         <span></span><span></span><span></span>
       </button>
       <div class="hd-logo">AUTONAX<small>Admin Paneli</small></div>
-  <div class="hd-badge">⚡ YÖNETİCİ</div>
+  <div class="hd-badge" id="header-badge">⚡ YÖNETİCİ</div>
   <div class="hd-space"></div>
   <div class="hd-time" id="hd-time"></div>
   <div class="hd-admin">
-    <div class="hd-avatar">A</div>
-    <div class="hd-aname">Admin</div>
-    <button class="hd-logout" onclick="(function(){
-  if(confirm('Çıkış yapmak istiyor musunuz?')){
-    document.getElementById('login-ovl').style.cssText='display:flex;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:20px;background:#0a0a0a';
-    document.getElementById('main-header').style.display='none';
-    document.getElementById('main-layout').style.display='none';
-    document.getElementById('l-pass').value='';
-  }
-})()" >Çıkış</button>
+    <div class="hd-avatar" id="header-avatar">A</div>
+    <div style="display:flex;flex-direction:column;line-height:1.2;margin-right:8px">
+      <div class="hd-aname" id="header-user" style="font-size:13px;font-weight:700">Admin</div>
+      <div id="header-rol" style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;background:rgba(176,28,46,.1);color:#B01C2E;letter-spacing:.5px;align-self:flex-start;margin-top:2px">SÜPER ADMİN</div>
+    </div>
+    <button class="hd-logout" onclick="doCikis()">Çıkış</button>
   </div>
 </div>
 
@@ -621,20 +617,20 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
   <div class="sidebar" id="sidebar">
     <div class="sb-sec">
       <div class="sb-label">Genel</div>
-      <div class="sn on" onclick="doPg('dashboard')">
+      <div class="sn on" data-yetki="dashboard" onclick="doPg('dashboard')">
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         Dashboard
       </div>
-      <div class="sn" onclick="doPg('randevular')">
+      <div class="sn" data-yetki="randevu" onclick="doPg('randevular')">
         <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         Randevular
         <span class="sn-badge" id="rdv-badge">3</span>
       </div>
-      <div class="sn" onclick="doPg('musteriler')">
+      <div class="sn" data-yetki="randevu" onclick="doPg('musteriler')">
         <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Müşteriler
       </div>
-      <div class="sn" onclick="doPg('hizmetler')">
+      <div class="sn" data-yetki="rapor" onclick="doPg('hizmetler')">
         <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         Hizmet Geçmişi
       </div>
@@ -642,39 +638,39 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
     <div class="sb-sep"></div>
     <div class="sb-sec">
       <div class="sb-label">Yönetim</div>
-      <div class="sn" onclick="doPg('fiyatlar')">
+      <div class="sn" data-yetki="fiyat" onclick="doPg('fiyatlar')">
         <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         Fiyat Yönetimi
       </div>
-      <div class="sn" onclick="doPg('raporlar')">
+      <div class="sn" data-yetki="rapor" onclick="doPg('raporlar')">
         <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         Raporlar
       </div>
-      <div class="sn" onclick="doPg('odemeler')">
+      <div class="sn" data-yetki="odeme" onclick="doPg('odemeler')">
         <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
         Ödemeler
       </div>
-      <div class="sn" onclick="doPg('faturalar')">
+      <div class="sn" data-yetki="fatura" onclick="doPg('faturalar')">
         <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         Faturalar
       </div>
-      <div class="sn" onclick="doPg('bayiler')">
+      <div class="sn" data-yetki="bayi" onclick="doPg('bayiler')">
         <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         Bayiler
       </div>
-      <div class="sn" onclick="doPg('ayarlar')">
+      <div class="sn" data-yetki="ayarlar" onclick="doPg('ayarlar')">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         Ayarlar
       </div>
     </div>
     <div class="sb-sep"></div>
     <div class="sb-sec" style="padding-bottom:16px">
-      <div class="sb-label">Siteler</div>
-      <div class="sn" onclick="window.open('/')">
+      <div class="sb-label" data-yetki-bol="siteler">Siteler</div>
+      <div class="sn" data-yetki="siteler" onclick="window.open('/')">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         Ana Site
       </div>
-      <div class="sn" onclick="window.open('/hesabim')">
+      <div class="sn" data-yetki="siteler" onclick="window.open('/hesabim')">
         <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         Müşteri Paneli
       </div>
@@ -1524,6 +1520,174 @@ function kullaniciBilgiAyarla(d){
   ADM_U = d.username || 'admin';
   // Konsola yazdır (Sprint 7.1 test için)
   console.log('[AUTH] Giriş yapan:', CURRENT_USER);
+  // Yetki bazlı UI güncelle (Sprint 7.2)
+  setTimeout(yetkiUygula, 100);
+}
+
+/** CURRENT_USER'a göre menü ve içerikleri gizle/göster */
+function yetkiUygula(){
+  var admin = kullaniciAdmin();
+
+  // 1) Sidebar menülerini yetki'ye göre gizle/göster
+  var menuler = document.querySelectorAll('.sn[data-yetki]');
+  menuler.forEach(function(el){
+    var yetki = el.getAttribute('data-yetki');
+    // Siteler: sadece admin
+    if(yetki === 'siteler'){
+      el.style.display = admin ? '' : 'none';
+      return;
+    }
+    // Diğer yetkiler (dashboard dahil)
+    if(admin || yetkiVar(yetki)){
+      el.style.display = '';
+    } else {
+      el.style.display = 'none';
+    }
+  });
+
+  // 1b) Bos bolum basliklarini gizle
+  document.querySelectorAll('.sb-sec').forEach(function(sec){
+    var links=sec.querySelectorAll('.sn');
+    var gorunur=0;
+    links.forEach(function(l){ if(l.style.display!=='none') gorunur++; });
+    sec.style.display = gorunur>0 ? '' : 'none';
+  });
+
+  // 2) Siteler bölüm etiketini gizle (admin olmayan için)
+  var sitelerBaslik = document.querySelector('[data-yetki-bol="siteler"]');
+  if(sitelerBaslik){
+    sitelerBaslik.style.display = admin ? '' : 'none';
+  }
+
+  // 3) Kullanıcı adını header'da göster
+  var userEl = document.getElementById('header-user');
+  if(userEl && CURRENT_USER.adSoyad){
+    userEl.textContent = CURRENT_USER.adSoyad;
+  }
+
+  // 4) Avatar harfi
+  var avatarEl = document.getElementById('header-avatar');
+  if(avatarEl && CURRENT_USER.adSoyad){
+    avatarEl.textContent = (CURRENT_USER.adSoyad||'K').slice(0,1).toUpperCase();
+  }
+
+  // 5) Role göre renk/etiket gösterimi (alt kısım badge)
+  var rolBadgeEl = document.getElementById('header-rol');
+  if(rolBadgeEl){
+    var rolTanim = (typeof ROL_TANIMLAR !== 'undefined' && ROL_TANIMLAR[CURRENT_USER.rol]) || {etiket:CURRENT_USER.rol||'?',renk:'#888',bg:'#eee'};
+    rolBadgeEl.textContent = (rolTanim.etiket||'').toUpperCase();
+    rolBadgeEl.style.color = rolTanim.renk;
+    rolBadgeEl.style.background = rolTanim.bg;
+  }
+
+  // 6) ⚡ Header badge - role göre metin
+  var headerBadge = document.getElementById('header-badge');
+  if(headerBadge){
+    var rolTanim2 = (typeof ROL_TANIMLAR !== 'undefined' && ROL_TANIMLAR[CURRENT_USER.rol]) || {etiket:'Kullanıcı'};
+    if(admin){
+      headerBadge.textContent = '⚡ YÖNETİCİ';
+    } else {
+      headerBadge.textContent = '👤 '+(rolTanim2.etiket||'Personel').toUpperCase();
+    }
+  }
+
+  // 7) Giriş yapan admin değilse → ilk erişilebilir sayfaya yönlendir (sadece aktif sayfa yetkisiz ise)
+  if(!admin){
+    var aktifPg = document.querySelector('.pg.on');
+    if(aktifPg){
+      var aktifId = aktifPg.id.replace('pg-','');
+      var aktifYetki = sayfaYetkiKey(aktifId);
+      if(aktifYetki && !yetkiVar(aktifYetki)){
+        var hedef = roleGoreAnaSayfa();
+        if(hedef && typeof doPg === 'function') doPg(hedef);
+      }
+    }
+  }
+
+  // 8) Randevu sayfası — salt okunur ise butonları gizle (saha personeli)
+  yetkiUygulaRandevular();
+
+  // 9) Ödeme yönetimi sayfası — 4 kutu gizle (muhasebe için)
+  yetkiUygulaOdemeler();
+}
+
+/** Bir sayfa id'sine karsilik gelen yetki key'i */
+function sayfaYetkiKey(pgId){
+  var map={
+    'dashboard':'dashboard',
+    'randevular':'randevu',
+    'musteriler':'randevu',
+    'hizmetler':'rapor',
+    'fiyatlar':'fiyat',
+    'raporlar':'rapor',
+    'odemeler':'odeme',
+    'faturalar':'fatura',
+    'bayiler':'bayi',
+    'ayarlar':'ayarlar'
+  };
+  return map[pgId]||null;
+}
+
+/** Kullanicinin rolune gore acilis sayfasi */
+function roleGoreAnaSayfa(){
+  if(!CURRENT_USER || !CURRENT_USER.rol) return 'dashboard';
+  // Admin / super_admin -> dashboard
+  if(CURRENT_USER.rol==='super_admin' || CURRENT_USER.rol==='admin') return 'dashboard';
+  // Muhasebe -> odemeler
+  if(CURRENT_USER.rol==='muhasebe') return yetkiVar('odeme') ? 'odemeler' : 'randevular';
+  // Saha / teknisyen -> randevular
+  if(CURRENT_USER.rol==='saha' || CURRENT_USER.rol==='teknisyen') return 'randevular';
+  // Resepsiyonist -> randevular
+  if(CURRENT_USER.rol==='resepsiyonist') return 'randevular';
+  // Fallback: ilk yetkili sayfa
+  if(yetkiVar('dashboard')) return 'dashboard';
+  if(yetkiVar('randevu')) return 'randevular';
+  if(yetkiVar('odeme')) return 'odemeler';
+  return 'randevular';
+}
+
+/** Randevular sayfasında yetkiye göre buton gizleme */
+function yetkiUygulaRandevular(){
+  // Saha rolü → sadece Detay görsün, diğer butonlar gizli
+  var saltOkur = !kullaniciAdmin() && CURRENT_USER.rol === 'saha';
+  var style = document.getElementById('style-yetki-rdv');
+  if(!style){
+    style = document.createElement('style');
+    style.id = 'style-yetki-rdv';
+    document.head.appendChild(style);
+  }
+  if(saltOkur){
+    style.innerHTML = ''
+      // Randevu tablosunda Detay dışındaki butonları gizle
+      + '#rdv-tablo button[onclick*="rdvDuzenle"], '
+      + '#rdv-tablo button[onclick*="rdvFaturaKes"], '
+      + '#rdv-tablo button[onclick*="rdvHariciOdeme"], '
+      + '#rdv-tablo button[onclick*="rdvIslemYap"], '
+      + '#rdv-tablo button[onclick*="odemeDekontGoster"]'
+      + '{ display: none !important; }'
+      // "Yeni Randevu" butonu gizli
+      + '#rdv-yeni-btn, button[onclick*="rdvYeniAc"]{ display:none !important; }'
+      // Tablolardaki ödeme tag'ı da tıklanamasın
+      + '#rdv-tablo .tag.bekl[onclick*="rdvOdemeAl"]{ pointer-events:none; opacity:.5; }';
+  } else {
+    style.innerHTML = '';
+  }
+}
+
+/** Ödemeler sayfasında muhasebe için üstteki 4 KPI kutusunu gizle */
+function yetkiUygulaOdemeler(){
+  var muhasebe = !kullaniciAdmin() && CURRENT_USER.rol === 'muhasebe';
+  var style = document.getElementById('style-yetki-odeme');
+  if(!style){
+    style = document.createElement('style');
+    style.id = 'style-yetki-odeme';
+    document.head.appendChild(style);
+  }
+  if(muhasebe){
+    style.innerHTML = '#pg-odemeler #odeme-kpiler { display:none !important; }';
+  } else {
+    style.innerHTML = '';
+  }
 }
 
 function panelAc(){
@@ -1532,6 +1696,15 @@ function panelAc(){
   document.getElementById('main-layout').style.display='flex';
   doInit();
   dbSyncYukle();
+  // Yetki bazlı UI güncelle (Sprint 7.2)
+  setTimeout(function(){
+    yetkiUygula();
+    // Role göre açılış sayfası
+    if(typeof roleGoreAnaSayfa==='function'){
+      var hedef=roleGoreAnaSayfa();
+      if(hedef && typeof doPg==='function') doPg(hedef);
+    }
+  }, 150);
 }
 
 function doLogin(){
@@ -1673,6 +1846,18 @@ async function dashboardYukle() {
 }
 
 function doPg(id){
+  // Sprint 7.2: Yetki kontrolü - admin olmayan yetkisiz sayfaya erişemesin
+  if(typeof CURRENT_USER!=='undefined' && CURRENT_USER.rol && !kullaniciAdmin()){
+    var gerekliYetki={
+      'randevular':'randevu','musteriler':'randevu','hizmetler':'rapor',
+      'fiyatlar':'fiyat','raporlar':'rapor','odemeler':'odeme',
+      'faturalar':'fatura','bayiler':'bayi','ayarlar':'ayarlar'
+    }[id];
+    if(gerekliYetki && !yetkiVar(gerekliYetki)){
+      if(typeof toast==='function') toast('Bu sayfaya erişim yetkiniz yok','red');
+      return;
+    }
+  }
   sidebarKapat();
   document.querySelectorAll('.pg').forEach(function(el){el.classList.remove('on');});
   var el=document.getElementById('pg-'+id);if(el)el.classList.add('on');
@@ -1689,6 +1874,11 @@ function doPg(id){
   var found=[].filter.call(document.querySelectorAll('.sn'),function(s){return(s.getAttribute('onclick')||'').indexOf("'"+id+"'")>-1;});
   if(found[0])found[0].classList.add('on');
   window.scrollTo(0,0);
+  // Sprint 7.2: Her sayfa açıldığında yetkiye göre buton gizle (özellikle dinamik render'dan sonra)
+  setTimeout(function(){
+    if(typeof yetkiUygulaRandevular==='function') yetkiUygulaRandevular();
+    if(typeof yetkiUygulaOdemeler==='function') yetkiUygulaOdemeler();
+  },100);
 }
 
 /* ══ SAAT ══ */
@@ -4426,14 +4616,16 @@ var ROL_TANIMLAR={
   'resepsiyonist':{etiket:'Resepsiyonist',renk:'#16a34a',bg:'rgba(22,163,74,.1)',aciklama:'Randevu ve musteri'}
 };
 var YETKI_TANIMLAR=[
-  {key:'randevu',lbl:'Randevu Yonetimi',ikon:'📅'},
-  {key:'odeme',  lbl:'Odeme Al / Taksit',ikon:'💳'},
-  {key:'fatura', lbl:'Fatura Kes (EDM)', ikon:'🧾'},
-  {key:'fiyat',  lbl:'Fiyat Yonetimi',   ikon:'💰'},
-  {key:'rapor',  lbl:'Raporlar',          ikon:'📊'},
-  {key:'bayi',   lbl:'Bayi Yonetimi',    ikon:'🏪'},
-  {key:'ayarlar',lbl:'Sistem Ayarlari',  ikon:'⚙️'},
-  {key:'personel',lbl:'Personel Yonetimi',ikon:'👥'}
+  {key:'dashboard',lbl:'Dashboard',       ikon:'📊'},
+  {key:'randevu',  lbl:'Randevu Yonetimi',ikon:'📅'},
+  {key:'odeme',    lbl:'Odeme Al / Taksit',ikon:'💳'},
+  {key:'fatura',   lbl:'Fatura Kes (EDM)',ikon:'🧾'},
+  {key:'fiyat',    lbl:'Fiyat Yonetimi',  ikon:'💰'},
+  {key:'rapor',    lbl:'Raporlar',        ikon:'📈'},
+  {key:'bayi',     lbl:'Bayi Yonetimi',   ikon:'🏪'},
+  {key:'ayarlar',  lbl:'Sistem Ayarlari', ikon:'⚙️'},
+  {key:'personel', lbl:'Personel Yonetimi',ikon:'👥'},
+  {key:'siteler',  lbl:'Siteler',         ikon:'🌐'}
 ];
 function personelKaydet(){
   try{localStorage.setItem('autonax_personel_v1',JSON.stringify(PERSONEL));}catch(e){console.error('Autonax:',e)}
@@ -4527,12 +4719,12 @@ function personelModalAc(i){
     +'</label>';
   }).join('');
   var SABL={
-    saha: {randevu:true,odeme:false,fatura:false,fiyat:false,rapor:false,bayi:false,ayarlar:false,personel:false},
-    tekn: {randevu:true,odeme:false,fatura:false,fiyat:false,rapor:false,bayi:false,ayarlar:false,personel:false},
-    resep:{randevu:true,odeme:true,fatura:false,fiyat:false,rapor:false,bayi:false,ayarlar:false,personel:false},
-    muh:  {randevu:true,odeme:true,fatura:true,fiyat:true,rapor:true,bayi:false,ayarlar:false,personel:false},
-    admin:{randevu:true,odeme:true,fatura:true,fiyat:true,rapor:true,bayi:true,ayarlar:true,personel:false},
-    tam:  {randevu:true,odeme:true,fatura:true,fiyat:true,rapor:true,bayi:true,ayarlar:true,personel:true}
+    saha: {dashboard:false,randevu:true, odeme:false,fatura:false,fiyat:false,rapor:false,bayi:false,ayarlar:false,personel:false,siteler:false},
+    tekn: {dashboard:false,randevu:true, odeme:false,fatura:false,fiyat:false,rapor:false,bayi:false,ayarlar:false,personel:false,siteler:false},
+    resep:{dashboard:true, randevu:true, odeme:true, fatura:false,fiyat:false,rapor:false,bayi:false,ayarlar:false,personel:false,siteler:true},
+    muh:  {dashboard:true, randevu:true, odeme:true, fatura:true, fiyat:true, rapor:true, bayi:false,ayarlar:false,personel:false,siteler:true},
+    admin:{dashboard:true, randevu:true, odeme:true, fatura:true, fiyat:true, rapor:true, bayi:true, ayarlar:true, personel:false,siteler:true},
+    tam:  {dashboard:true, randevu:true, odeme:true, fatura:true, fiyat:true, rapor:true, bayi:true, ayarlar:true, personel:true, siteler:true}
   };
   ovl.innerHTML='<div style="background:#fff;border-radius:16px;width:100%;max-width:500px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.25);max-height:90vh;display:flex;flex-direction:column">'
     +'<div style="background:var(--ink);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">'
