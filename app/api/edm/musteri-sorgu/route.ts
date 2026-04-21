@@ -35,10 +35,13 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) as MusteriSorguIstegi;
 
     if (!body.kullaniciAdi || !body.sifre) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'EDM kullanıcı bilgileri eksik' },
-        { status: 400 }
-      );
+      // Test modunda credentials zorunlu degil
+      if (!body.testMod) {
+        return NextResponse.json<ApiResponse>(
+          { success: false, error: 'EDM kullanıcı bilgileri eksik' },
+          { status: 400 }
+        );
+      }
     }
     if (!body.no) {
       return NextResponse.json<ApiResponse>(
@@ -46,6 +49,52 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // ═══ TEST MODU SİMÜLASYONU ═══
+    // Credentials yoksa veya testMod=true ise sahte başarılı yanıt dön
+    const simulasyon = !!body.testMod || !body.kullaniciAdi || !body.sifre;
+
+    if (simulasyon) {
+      // Bireysel TC simulasyonu
+      if (body.tip === 'bireysel') {
+        return NextResponse.json<ApiResponse<MusteriSorguYaniti>>({
+          success: true,
+          data: {
+            bulundu: false,
+            mesaj:
+              '[TEST MODU] Bireysel müşteriler için EDM sorgu servisi yoktur — alanları manuel doldurun.',
+          },
+        });
+      }
+
+      // Kurumsal VKN simulasyonu
+      // VKN son hanesi tekse -> mükellef BULUNDU (e-Fatura)
+      // VKN son hanesi çiftse -> BULUNAMADI (e-Arşiv)
+      const sonHane = parseInt(body.no.charAt(body.no.length - 1)) || 0;
+      if (sonHane % 2 === 1) {
+        // Mukellef bulundu simulasyonu
+        return NextResponse.json<ApiResponse<MusteriSorguYaniti>>({
+          success: true,
+          data: {
+            bulundu: true,
+            unvan: '[TEST] ÖRNEK ŞİRKET LTD. ŞTİ.',
+            etiket: 'urn:mail:defaultpk@ornekfirma.com.tr',
+            mesaj: '[TEST MODU] Müşteri e-fatura mükellefi olarak bulundu (simülasyon)',
+          },
+        });
+      } else {
+        return NextResponse.json<ApiResponse<MusteriSorguYaniti>>({
+          success: true,
+          data: {
+            bulundu: false,
+            mesaj:
+              '[TEST MODU] Bu VKN mükellef listesinde bulunamadı — e-Arşiv olarak kesilecek (simülasyon)',
+          },
+        });
+      }
+    }
+
+    // ═══ GERÇEK EDM ÇAĞRISI ═══
 
     // Bireysel (TC) için EDM'de servis yok
     if (body.tip === 'bireysel') {
@@ -70,19 +119,9 @@ export async function POST(req: NextRequest) {
         </INPUT>
       </con:checkGIBUserRequest>`;
 
-    // b64: prefix'li şifreyi çöz
-    let gercekSifre = body.sifre;
-    if (gercekSifre.startsWith('b64:')) {
-      try {
-        gercekSifre = Buffer.from(gercekSifre.slice(4), 'base64').toString('utf-8');
-      } catch {
-        // Decode başarısızsa olduğu gibi kullan
-      }
-    }
-
     const sonuc = await soapCagri('checkGIBUser', soapBody, {
       kullaniciAdi: body.kullaniciAdi,
-      sifre: gercekSifre,
+      sifre: body.sifre,
       testMod: !!body.testMod,
     });
 
