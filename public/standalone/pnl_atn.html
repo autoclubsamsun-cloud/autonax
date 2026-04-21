@@ -4437,10 +4437,30 @@ var YETKI_TANIMLAR=[
 ];
 function personelKaydet(){
   try{localStorage.setItem('autonax_personel_v1',JSON.stringify(PERSONEL));}catch(e){console.error('Autonax:',e)}
-  // DB'ye sync et
-  PERSONEL.forEach(function(p){
-    fetch('/api/personel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p),credentials:'same-origin'}).catch(function(){});
-  });
+}
+
+// Tek personeli DB'ye kaydet (POST)
+function personelDBKaydet(p){
+  return fetch('/api/personel',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    credentials:'same-origin',
+    body:JSON.stringify(p)
+  }).then(function(r){return r.json();});
+}
+
+// DB'den personel listesini yeniden yukle
+function personelDBYukle(){
+  return fetch('/api/personel',{credentials:'same-origin'})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.success && d.data){
+        PERSONEL.length=0;
+        d.data.forEach(function(p){PERSONEL.push(p);});
+        try{localStorage.setItem('autonax_personel_v1',JSON.stringify(PERSONEL));}catch(e){}
+      }
+    })
+    .catch(function(){});
 }
 
 function personelListesiRender(){
@@ -4572,12 +4592,34 @@ function personelModalAc(i){
     p.aktif=document.getElementById('per-aktif').checked;
     if(!p.yetkiler)p.yetkiler={};
     ovl.querySelectorAll('.per-yk').forEach(function(inp){p.yetkiler[inp.getAttribute('data-key')]=inp.checked;});
-    if(yeni)PERSONEL.push(p);else PERSONEL[i]=p;
-    personelKaydet();
-    // DB'ye kaydet
-    fetch('/api/personel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p),credentials:'same-origin'}).catch(function(){});
-    ovl.remove();personelListesiRender();
-    toast(yeni?'Personel eklendi':'Personel guncellendi','green');
+
+    // DB'ye kaydet - SONUCU BEKLE
+    var btn=document.getElementById('per-kaydet-btn');
+    btn.disabled=true; btn.textContent='KAYDEDILIYOR...';
+
+    personelDBKaydet(p).then(function(d){
+      if(d.success && d.data){
+        // Sifre DB'den gelmez (guvenlik), onu manuel koruyoruz
+        var sifreBackup = p.sifre;
+        // DB'den donen kaydi PERSONEL'e yansit
+        if(yeni){
+          PERSONEL.push(Object.assign({},d.data,{sifre:sifreBackup}));
+        } else {
+          PERSONEL[i]=Object.assign({},d.data,{sifre:sifreBackup});
+        }
+        personelKaydet();
+        ovl.remove();
+        // Tekrardan DB'den cek ki en guncel liste gorunsun
+        personelDBYukle().then(function(){ personelListesiRender(); });
+        toast(yeni?'Personel eklendi':'Personel guncellendi','green');
+      } else {
+        btn.disabled=false; btn.textContent='KAYDET';
+        toast('Kayit hatasi: '+(d.error||'bilinmeyen'),'red');
+      }
+    }).catch(function(err){
+      btn.disabled=false; btn.textContent='KAYDET';
+      toast('Baglanti hatasi: '+err.message,'red');
+    });
   });
 }
 
@@ -4588,7 +4630,15 @@ function adminSekmesiYukle(){
   if(uEl) uEl.value=ADM_U;
   // Kayıtlı email varsa doldur
   try{ var ae=localStorage.getItem('autonax_adm_email'); if(ae&&eEl) eEl.value=ae; }catch(e){console.error('Autonax:',e)}
-  setTimeout(function(){personelListesiRender();rolListesiRender();},50);
+  // Personeli DB'den tazele
+  if(typeof personelDBYukle==='function'){
+    personelDBYukle().then(function(){
+      personelListesiRender();
+      rolListesiRender();
+    });
+  } else {
+    setTimeout(function(){personelListesiRender();rolListesiRender();},50);
+  }
 }
 
 function adminBilgiKaydet(){
@@ -5682,9 +5732,14 @@ function dbSyncYukle(){
   fetch('/api/bayiler',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
     if(d.success&&d.data) BAYILER=d.data;
   }).catch(function(){});
-  // Personeli DB'den çek
+  // Personeli DB'den çek - referans koru
   fetch('/api/personel',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
-    if(d.success&&d.data) PERSONEL=d.data;
+    if(d.success&&d.data){
+      PERSONEL.length=0;
+      d.data.forEach(function(p){PERSONEL.push(p);});
+      try{localStorage.setItem('autonax_personel_v1',JSON.stringify(PERSONEL));}catch(e){}
+      if(typeof personelListesiRender==='function') personelListesiRender();
+    }
   }).catch(function(){});
 }
 
