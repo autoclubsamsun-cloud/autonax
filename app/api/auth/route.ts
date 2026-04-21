@@ -8,16 +8,20 @@ const TOKEN_COOKIE = 'autonax_token';
 const TOKEN_EXPIRY_HOURS = 8;
 
 interface TokenPayload {
-  sub: string;   // username
-  iat: number;   // issued at (epoch saniye)
-  exp: number;   // expires at (epoch saniye)
+  sub: string;         // username
+  rol: string;         // 'super_admin' | 'admin' | 'muhasebe' | 'teknisyen' | 'resepsiyonist' | 'saha'
+  kaynak: string;      // 'admin' | 'personel'
+  iat: number;         // issued at (epoch saniye)
+  exp: number;         // expires at (epoch saniye)
 }
 
 /** Basit JWT token oluştur (ek paket gerekmez) */
-function createToken(username: string): string {
+function createToken(username: string, rol: string, kaynak: string): string {
   const now = Math.floor(Date.now() / 1000);
   const payload: TokenPayload = {
     sub: username,
+    rol,
+    kaynak,
     iat: now,
     exp: now + TOKEN_EXPIRY_HOURS * 3600,
   };
@@ -96,13 +100,79 @@ export async function POST(req: NextRequest) {
 
     // ── LOGIN: şifreyi doğrula → JWT cookie set ────────────────────
     if (action === 'login') {
+      // 1) Önce admin credentials kontrolü
       const creds = await getCredentials();
       if (username === creds.username && password === creds.password) {
-        const token = createToken(username);
-        const res = NextResponse.json({ success: true, username: creds.username });
+        const token = createToken(username, 'super_admin', 'admin');
+        const res = NextResponse.json({
+          success: true,
+          username: creds.username,
+          rol: 'super_admin',
+          kaynak: 'admin',
+          adSoyad: 'Yönetici',
+          yetkiler: {
+            randevu: true, odeme: true, fatura: true, fiyat: true,
+            rapor: true, bayi: true, ayarlar: true, personel: true
+          }
+        });
         setTokenCookie(res, token);
         return res;
       }
+
+      // 2) Personel tablosunda ara
+      try {
+        // personel tablosu yoksa hata vermesin
+        await sql`CREATE TABLE IF NOT EXISTS personel (
+          id TEXT PRIMARY KEY,
+          ad TEXT NOT NULL,
+          email TEXT,
+          tel TEXT,
+          sifre TEXT,
+          rol TEXT NOT NULL DEFAULT 'teknisyen',
+          aktif BOOLEAN DEFAULT TRUE,
+          yetkiler JSONB DEFAULT '{}'::jsonb,
+          kullanici_adi TEXT,
+          kayit_tarihi TIMESTAMPTZ DEFAULT NOW()
+        )`;
+
+        // Username olarak 'kullanici_adi' (yoksa 'email' veya 'ad') kabul ediyoruz
+        const personelRows = await sql`
+          SELECT id, ad, email, rol, aktif, yetkiler, sifre, kullanici_adi
+          FROM personel
+          WHERE aktif = TRUE
+            AND (
+              LOWER(kullanici_adi) = LOWER(${username})
+              OR LOWER(email) = LOWER(${username})
+            )
+            AND sifre = ${password}
+          LIMIT 1
+        `;
+
+        if (personelRows.length > 0) {
+          const p = personelRows[0] as {
+            id: string; ad: string; email: string; rol: string;
+            aktif: boolean; yetkiler: Record<string, boolean>;
+            sifre: string; kullanici_adi: string;
+          };
+          const token = createToken(p.kullanici_adi || p.email || username, p.rol || 'teknisyen', 'personel');
+          const res = NextResponse.json({
+            success: true,
+            username: p.kullanici_adi || p.email || username,
+            rol: p.rol || 'teknisyen',
+            kaynak: 'personel',
+            adSoyad: p.ad,
+            personelId: p.id,
+            yetkiler: p.yetkiler || {}
+          });
+          setTokenCookie(res, token);
+          return res;
+        }
+      } catch (personelErr) {
+        console.error('[AUTH] Personel tablo hatası:', personelErr);
+        // Hata olsa bile admin kontrolüne düşmüş, admin de tutmadıysa 401 dönsün
+      }
+
+      // 3) Hiçbiri eşleşmediyse
       return NextResponse.json(
         { success: false, error: 'Hatalı giriş' },
         { status: 401 }
@@ -128,20 +198,85 @@ export async function POST(req: NextRequest) {
         clearTokenCookie(res);
         return res;
       }
-      return NextResponse.json({
-        success: true,
-        authenticated: true,
-        username: payload.sub,
-      });
+
+      // Admin tokenleri için basit yanıt
+      if (payload.kaynak === 'admin' || !payload.kaynak) {
+        return NextResponse.json({
+          success: true,
+          authenticated: true,
+          username: payload.sub,
+          rol: payload.rol || 'super_admin',
+          kaynak: 'admin',
+          adSoyad: 'Yönetici',
+          yetkiler: {
+            randevu: true, odeme: true, fatura: true, fiyat: true,
+            rapor: true, bayi: true, ayarlar: true, personel: true
+          }
+        });
+      }
+
+      // Personel tokenleri için DB'den güncel bilgi çek
+      try {
+        const personelRows = await sql`
+          SELECT id, ad, email, rol, aktif, yetkiler, kullanici_adi
+          FROM personel
+          WHERE aktif = TRUE
+            AND (
+              LOWER(kullanici_adi) = LOWER(${payload.sub})
+              OR LOWER(email) = LOWER(${payload.sub})
+            )
+          LIMIT 1
+        `;
+        if (personelRows.length === 0) {
+          // Personel pasif edilmişse veya silinmişse oturumu kapat
+          const res = NextResponse.json({ success: false, authenticated: false, reason: 'personel_inactive' });
+          clearTokenCookie(res);
+          return res;
+        }
+        const p = personelRows[0] as {
+          id: string; ad: string; email: string; rol: string;
+          aktif: boolean; yetkiler: Record<string, boolean>;
+          kullanici_adi: string;
+        };
+        return NextResponse.json({
+          success: true,
+          authenticated: true,
+          username: p.kullanici_adi || p.email || payload.sub,
+          rol: p.rol || payload.rol,
+          kaynak: 'personel',
+          adSoyad: p.ad,
+          personelId: p.id,
+          yetkiler: p.yetkiler || {}
+        });
+      } catch (e) {
+        console.error('[AUTH] check_session personel hatası:', e);
+        // Fallback - token bilgisiyle dön
+        return NextResponse.json({
+          success: true,
+          authenticated: true,
+          username: payload.sub,
+          rol: payload.rol,
+          kaynak: payload.kaynak,
+          yetkiler: {}
+        });
+      }
     }
 
-    // ── UPDATE CREDENTIALS (auth gerekli) ──────────────────────────
+    // ── UPDATE CREDENTIALS (auth gerekli - SADECE ADMIN) ──────────
     if (action === 'update') {
       const token = req.cookies.get(TOKEN_COOKIE)?.value;
-      if (!token || !verifyToken(token)) {
+      if (!token) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz' }, { status: 401 });
+      }
+      const payload = verifyToken(token);
+      if (!payload) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz' }, { status: 401 });
+      }
+      // Sadece admin kaynaklı token'lar admin şifresini değiştirebilir
+      if (payload.kaynak !== 'admin') {
         return NextResponse.json(
-          { success: false, error: 'Yetkisiz' },
-          { status: 401 }
+          { success: false, error: 'Yalnızca yöneticiler yapabilir' },
+          { status: 403 }
         );
       }
       await sql`INSERT INTO site_ayarlar (anahtar,deger)
@@ -181,5 +316,10 @@ export async function GET(req: NextRequest) {
   if (!payload) {
     return NextResponse.json({ authenticated: false }, { status: 401 });
   }
-  return NextResponse.json({ authenticated: true, username: payload.sub });
+  return NextResponse.json({
+    authenticated: true,
+    username: payload.sub,
+    rol: payload.rol || 'super_admin',
+    kaynak: payload.kaynak || 'admin'
+  });
 }

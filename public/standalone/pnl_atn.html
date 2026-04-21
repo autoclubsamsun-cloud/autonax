@@ -1489,6 +1489,43 @@ var FIYAT_DATA=[
 /* ══ AUTH (Cookie-Based Session) ══ */
 var ADM_U='admin'; // Sadece UI gösterimi için — şifre ASLA client'ta tutulmaz
 
+// ═══ KULLANICI VE YETKİ STATE ═══
+var CURRENT_USER={
+  username: '',
+  rol: '',              // 'super_admin' | 'admin' | 'muhasebe' | 'teknisyen' | 'resepsiyonist' | 'saha'
+  kaynak: '',           // 'admin' | 'personel'
+  adSoyad: '',
+  personelId: null,
+  yetkiler: {}
+};
+
+/** Kullanıcının belirli bir yetkisi var mı? */
+function yetkiVar(key){
+  if(!CURRENT_USER || !CURRENT_USER.rol) return false;
+  // super_admin / admin tüm yetkilere sahip
+  if(CURRENT_USER.rol==='super_admin' || CURRENT_USER.kaynak==='admin') return true;
+  if(!CURRENT_USER.yetkiler) return false;
+  return CURRENT_USER.yetkiler[key]===true;
+}
+
+/** Kullanıcı admin mi? (super_admin veya admin kaynak) */
+function kullaniciAdmin(){
+  return CURRENT_USER && (CURRENT_USER.rol==='super_admin' || CURRENT_USER.kaynak==='admin');
+}
+
+/** Yanıttan CURRENT_USER'ı doldur */
+function kullaniciBilgiAyarla(d){
+  CURRENT_USER.username = d.username || '';
+  CURRENT_USER.rol = d.rol || 'super_admin';
+  CURRENT_USER.kaynak = d.kaynak || 'admin';
+  CURRENT_USER.adSoyad = d.adSoyad || d.username || 'Kullanıcı';
+  CURRENT_USER.personelId = d.personelId || null;
+  CURRENT_USER.yetkiler = d.yetkiler || {};
+  ADM_U = d.username || 'admin';
+  // Konsola yazdır (Sprint 7.1 test için)
+  console.log('[AUTH] Giriş yapan:', CURRENT_USER);
+}
+
 function panelAc(){
   document.getElementById('login-ovl').style.display='none';
   document.getElementById('main-header').style.display='flex';
@@ -1507,7 +1544,7 @@ function doLogin(){
   .then(function(r){return r.json();})
   .then(function(d){
     if(d.success){
-      ADM_U=d.username||u;
+      kullaniciBilgiAyarla(d);
       panelAc();
     } else {
       err.style.display='block';
@@ -4383,7 +4420,8 @@ return[];
 var ROL_TANIMLAR={
   'super_admin':{etiket:'Super Admin',renk:'#B01C2E',bg:'rgba(176,28,46,.1)',aciklama:'Tum yetkilere sahip'},
   'admin':      {etiket:'Admin',renk:'#7c3aed',bg:'rgba(124,58,237,.1)',aciklama:'Cogu yetkiye sahip'},
-  'muhasebe':   {etiket:'Muhasebe',renk:'#2563EB',bg:'rgba(37,99,235,.1)',aciklama:'Odeme ve fatura yetkisi'},
+  'muhasebe':   {etiket:'Muhasebe',renk:'#2563EB',bg:'rgba(37,99,235,.1)',aciklama:'Odeme, fatura, randevu'},
+  'saha':       {etiket:'Saha Personeli',renk:'#059669',bg:'rgba(5,150,105,.1)',aciklama:'Sadece randevu goruntuleme'},
   'teknisyen':  {etiket:'Teknisyen',renk:'#d97706',bg:'rgba(217,119,6,.1)',aciklama:'Sadece randevu'},
   'resepsiyonist':{etiket:'Resepsiyonist',renk:'#16a34a',bg:'rgba(22,163,74,.1)',aciklama:'Randevu ve musteri'}
 };
@@ -4413,7 +4451,7 @@ function personelListesiRender(){
       var rol=ROL_TANIMLAR[p.rol]||{etiket:p.rol,renk:'#666',bg:'rgba(0,0,0,.06)'};
       var aktifY=YETKI_TANIMLAR.filter(function(y){return p.yetkiler&&p.yetkiler[y.key];});
       return '<tr>'
-        +'<td><div style="font-weight:700;font-size:13px">'+p.ad+'</div></td>'
+        +'<td><div style="font-weight:700;font-size:13px">'+p.ad+'</div>'+((p.kullaniciAdi||p.kullanici_adi)?'<div style="font-size:10px;color:var(--ink4);font-family:monospace">@'+(p.kullaniciAdi||p.kullanici_adi)+'</div>':'')+'</td>'
         +'<td><span style="padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;background:'+rol.bg+';color:'+rol.renk+'">'+rol.etiket+'</span></td>'
         +'<td><div style="font-size:11px">'+p.email+'</div><div style="font-size:10px;color:var(--ink4)">'+p.tel+'</div></td>'
         +'<td><div style="display:flex;flex-wrap:wrap;gap:3px">'+aktifY.map(function(y){return '<span title="'+y.lbl+'" style="font-size:14px">'+y.ikon+'</span>';}).join('')+'</div></td>'
@@ -4469,9 +4507,10 @@ function personelModalAc(i){
     +'</label>';
   }).join('');
   var SABL={
+    saha: {randevu:true,odeme:false,fatura:false,fiyat:false,rapor:false,bayi:false,ayarlar:false,personel:false},
     tekn: {randevu:true,odeme:false,fatura:false,fiyat:false,rapor:false,bayi:false,ayarlar:false,personel:false},
     resep:{randevu:true,odeme:true,fatura:false,fiyat:false,rapor:false,bayi:false,ayarlar:false,personel:false},
-    muh:  {randevu:true,odeme:true,fatura:true,fiyat:false,rapor:true,bayi:false,ayarlar:false,personel:false},
+    muh:  {randevu:true,odeme:true,fatura:true,fiyat:true,rapor:true,bayi:false,ayarlar:false,personel:false},
     admin:{randevu:true,odeme:true,fatura:true,fiyat:true,rapor:true,bayi:true,ayarlar:true,personel:false},
     tam:  {randevu:true,odeme:true,fatura:true,fiyat:true,rapor:true,bayi:true,ayarlar:true,personel:true}
   };
@@ -4483,14 +4522,16 @@ function personelModalAc(i){
     +'<div style="overflow-y:auto;flex:1;padding:16px">'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
         +'<div style="grid-column:1/-1"><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Ad Soyad</div><input id="per-ad" value="'+p.ad+'" style="'+IS+'"></div>'
-        +'<div><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">E-posta</div><input id="per-email" value="'+p.email+'" style="'+IS+'"></div>'
+        +'<div><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Kullanıcı Adı (giriş için)</div><input id="per-kuladi" value="'+(p.kullaniciAdi||p.kullanici_adi||'')+'" placeholder="ornek.ahmet" style="'+IS+'"></div>'
+        +'<div><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Şifre</div><input type="text" id="per-sifre" value="'+(p.sifre||'')+'" style="'+IS+'"></div>'
+        +'<div><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">E-posta (opsiyonel)</div><input id="per-email" value="'+p.email+'" style="'+IS+'"></div>'
         +'<div><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Telefon</div><input id="per-tel" value="'+p.tel+'" style="'+IS+'"></div>'
-        +'<div><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Sifre</div><input type="password" id="per-sifre" value="'+p.sifre+'" style="'+IS+'"></div>'
         +'<div><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Rol</div><select id="per-rol" style="'+IS+'">'+rolOpts+'</select></div>'
         +'<div style="display:flex;align-items:center;padding-top:20px"><label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" id="per-aktif"'+(p.aktif?' checked':'')+' style="width:16px;height:16px;accent-color:var(--r)"> Aktif</label></div>'
       +'</div>'
       +'<div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:6px">Hizli Rol Sablonu</div>'
       +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">'
+        +'<button data-sab="saha" style="padding:5px 10px;border:1.5px solid #059669;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;background:rgba(5,150,105,.08);color:#059669">Saha (Salt Oku)</button>'
         +'<button data-sab="tekn" style="padding:5px 10px;border:1.5px solid #d97706;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;background:rgba(217,119,6,.08);color:#d97706">Teknisyen</button>'
         +'<button data-sab="resep" style="padding:5px 10px;border:1.5px solid #16a34a;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;background:rgba(22,163,74,.08);color:#16a34a">Resepsiyonist</button>'
         +'<button data-sab="muh" style="padding:5px 10px;border:1.5px solid #2563EB;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;background:rgba(37,99,235,.08);color:#2563EB">Muhasebe</button>'
@@ -4519,7 +4560,14 @@ function personelModalAc(i){
     if(!ad){toast('Ad Soyad zorunlu!','red');return;}
     p.ad=ad;p.email=document.getElementById('per-email').value.trim();
     p.tel=document.getElementById('per-tel').value.trim();
+    var kuladi=document.getElementById('per-kuladi').value.trim().toLowerCase();
+    if(kuladi){
+      p.kullaniciAdi=kuladi;
+      p.kullanici_adi=kuladi; // backend snake_case
+    }
     var s=document.getElementById('per-sifre').value.trim();if(s)p.sifre=s;
+    if(!p.kullaniciAdi && !p.email){toast('Giriş için kullanıcı adı veya e-posta gerekli','red');return;}
+    if(!p.sifre){toast('Şifre zorunlu!','red');return;}
     p.rol=document.getElementById('per-rol').value;
     p.aktif=document.getElementById('per-aktif').checked;
     if(!p.yetkiler)p.yetkiler={};
@@ -4599,7 +4647,7 @@ window.onload=function(){
   .then(function(r){return r.json();})
   .then(function(d){
     if(d.success&&d.authenticated){
-      ADM_U=d.username||'admin';
+      kullaniciBilgiAyarla(d);
       if(loginOvl) loginOvl.style.display='none';
       if(mainHeader) mainHeader.style.display='flex';
       if(mainLayout) mainLayout.style.display='flex';
