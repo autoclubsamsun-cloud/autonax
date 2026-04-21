@@ -4796,17 +4796,133 @@ function odemeAlBagimsiz(){
           +'<div><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Plaka</div><input id="bo-plaka" style="'+IS+'" placeholder="55ABC123" oninput="this.value=this.value.toUpperCase()"></div>'
           +'<div style="grid-column:1/-1"><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Açıklama</div><input id="bo-aciklama" style="'+IS+'" placeholder="Ör: PPF Kaplama / Avans / Kapora"></div>'
           +'<div><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Tutar (₺) *</div><input type="number" id="bo-tutar" style="'+IS+'" placeholder="5000" min="1"></div>'
-          +'<div><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Ödeme Yöntemi *</div><select id="bo-yontem" style="'+IS+'"><option value="Nakit">💵 Nakit</option><option value="Kredi Kartı">💳 Kredi Kartı</option><option value="Havale">🏦 Havale/EFT</option><option value="PayTR">🌐 PayTR Online</option></select></div>'
+          +'<div><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Ödeme Yöntemi *</div><select id="bo-yontem" onchange="bagimsizOdemeYontemDegisti()" style="'+IS+'"><option value="Nakit">💵 Nakit</option><option value="Kredi Kartı">💳 Kredi Kartı</option><option value="Havale">🏦 Havale/EFT</option><option value="PayTR">🌐 PayTR Online</option></select></div>'
           +'<div style="grid-column:1/-1"><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Not (Opsiyonel)</div><input id="bo-not" style="'+IS+'" placeholder="Ek not..."></div>'
         +'</div>'
       +'</div>'
       +'<div style="padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--bd)">'
         +'<button onclick="document.getElementById(\'bodeme-ovl\').remove()" style="flex:1;padding:10px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;cursor:pointer">İptal</button>'
-        +'<button onclick="bagimsizOdemeKaydet()" style="flex:2;padding:10px;border:none;border-radius:8px;background:#d97706;color:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer">💵 ÖDEMEYİ KAYDET</button>'
+        +'<button id="bo-kaydet-btn" onclick="bagimsizOdemeKaydet()" style="flex:2;padding:10px;border:none;border-radius:8px;background:#d97706;color:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer">💵 ÖDEMEYİ KAYDET</button>'
       +'</div>'
     +'</div>';
   document.body.appendChild(ovl);
   setTimeout(function(){var el=document.getElementById('bo-ad');if(el)el.focus();},100);
+}
+
+/** Ödeme yöntemi değişince - PayTR seçiliyse buton "Direkt Ödeme Al" olur */
+function bagimsizOdemeYontemDegisti(){
+  var yontem=(document.getElementById('bo-yontem')||{}).value||'Nakit';
+  var btn=document.getElementById('bo-kaydet-btn');
+  if(!btn) return;
+  if(yontem==='PayTR'){
+    btn.style.background='#1A1A1A';
+    btn.style.color='#fff';
+    btn.innerHTML='💳 DIREKT ÖDEME AL';
+    btn.setAttribute('onclick','bagimsizPayTRDirektOde()');
+  } else {
+    btn.style.background='#d97706';
+    btn.style.color='#fff';
+    btn.innerHTML='💵 ÖDEMEYİ KAYDET';
+    btn.setAttribute('onclick','bagimsizOdemeKaydet()');
+  }
+}
+
+/** PayTR seçiliyse - Direkt Öde akışı */
+function bagimsizPayTRDirektOde(){
+  var ad=(document.getElementById('bo-ad')||{}).value.trim();
+  var tel=(document.getElementById('bo-tel')||{}).value.trim();
+  var plaka=(document.getElementById('bo-plaka')||{}).value.trim();
+  var aciklama=(document.getElementById('bo-aciklama')||{}).value.trim() || 'Bağımsız Ödeme';
+  var tutar=parseFloat((document.getElementById('bo-tutar')||{}).value)||0;
+
+  if(!ad){toast('Müşteri adı zorunlu','red');return;}
+  if(tutar<=0){toast('Geçerli bir tutar girin','red');return;}
+
+  // Telefon kontrolu (min 10 hane)
+  var telTemiz=tel.replace(/\D/g,'');
+  if(telTemiz.length<10){
+    toast('PayTR için geçerli telefon gerekli (min 10 hane)','red');
+    return;
+  }
+
+  // Onbe bos sekme ac (popup engelleme icin)
+  var yeniSekme=window.open('about:blank','_blank');
+  if(!yeniSekme){
+    toast('Pop-up engellenmis. Tarayici ayarlarindan izin verin.','red');
+    return;
+  }
+  yeniSekme.document.write('<html><head><title>Odeme Hazirlaniyor...</title></head><body style="font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#fff5f3"><div style="text-align:center"><div style="width:40px;height:40px;border:3px solid #f9d2c8;border-top-color:#a13128;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px"></div><div style="color:#a13128;font-weight:600">Odeme ekrani hazirlaniyor...</div><style>@keyframes spin{to{transform:rotate(360deg)}}</style></div></body></html>');
+
+  // Once sanal randevu olustur (callback guncelleme icin)
+  var sanalRdvId='BAGIMSIZ-PAYTR-'+Date.now().toString(36);
+  var sanalRdv={
+    id: sanalRdvId,
+    tarih: new Date().toLocaleDateString('tr-TR'),
+    saat: new Date().toTimeString().slice(0,5),
+    musteri: ad,
+    musteriAdi: ad,
+    tel: telTemiz,
+    musteriTel: telTemiz,
+    plaka: plaka,
+    arac: '',
+    hizmet: aciklama,
+    tutar: tutar,
+    odenenToplam: 0, // Henuz odenmedi, callback odeyecek
+    durum: 'onay',
+    odendi: false,
+    islem: true,
+    onlineOdeme: false,
+    faturaNo: '',
+    faturaDurum: 'Bekliyor',
+    bagimsiz: true,
+    notlar: 'Bagimsiz PayTR odeme bekleniyor',
+    odemeGecmisi: []
+  };
+
+  RANDEVULAR.push(sanalRdv);
+  try{ storageKaydet(); }catch(e){}
+
+  // DB'ye kaydet + link olustur + sekmeye yonlendir
+  fetch('/api/randevular',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    credentials:'same-origin',
+    body:JSON.stringify(sanalRdv)
+  }).catch(function(){});
+
+  toast('Odeme ekrani aciliyor...','green');
+
+  fetch('/api/odeme/link-olustur',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    credentials:'same-origin',
+    body:JSON.stringify({
+      musteriAdi: ad,
+      musteriTelefon: telTemiz,
+      musteriEmail: 'musteri@autonax.com.tr',
+      tutar: tutar,
+      aciklama: aciklama + ' - ' + (plaka||''),
+      randevuId: sanalRdvId
+    })
+  }).then(function(r){return r.json();}).then(function(d){
+    if(!d.success){
+      toast('Link olusturulamadi: '+(d.error||'Bilinmeyen hata'),'red');
+      if(yeniSekme && !yeniSekme.closed) yeniSekme.close();
+      return;
+    }
+    if(yeniSekme && !yeniSekme.closed){
+      yeniSekme.location.href=d.data.odemeUrl;
+    } else {
+      window.open(d.data.odemeUrl,'_blank');
+    }
+    var ovl=document.getElementById('bodeme-ovl');
+    if(ovl) ovl.remove();
+    toast('Odeme ekrani yeni sekmede acildi','green');
+    doRdvListele();
+  }).catch(function(err){
+    toast('Baglanti hatasi: '+err.message,'red');
+    if(yeniSekme && !yeniSekme.closed) yeniSekme.close();
+  });
 }
 
 function bagimsizOdemeKaydet(){
