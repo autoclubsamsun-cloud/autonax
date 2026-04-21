@@ -3501,13 +3501,44 @@ function rdvDuzenle(idx){
   var IS='width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box';
   var LB='font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px';
 
+  // ═══ ÖDEME GEÇMİŞİ ═══
+  var odemeHist=r.odemeGecmisi||[];
+  var toplamOdenen=(r.odenenToplam||0);
+  var mevcutTutar=r.tutar||0;
+  var mevcutKalan=Math.max(0, mevcutTutar-toplamOdenen);
+
+  var odemeListesi='';
+  if(odemeHist.length===0){
+    odemeListesi='<div style="padding:12px;background:#fafafa;border:1.5px dashed var(--bd);border-radius:8px;text-align:center;color:var(--ink4);font-size:12px">Henüz ödeme alınmamış</div>';
+  } else {
+    odemeListesi='<div style="border:1.5px solid var(--bd);border-radius:8px;overflow:hidden">';
+    odemeHist.forEach(function(o, oi){
+      var yonIkon=(o.yontem||'').indexOf('Nakit')>-1?'💵':(o.yontem||'').indexOf('Havale')>-1?'🏦':(o.yontem||'').indexOf('Taksit')>-1?'📋':(o.yontem||'').indexOf('Kart')>-1?'💳':(o.yontem||'').indexOf('Online')>-1?'🌐':'💰';
+      odemeListesi+='<div style="display:flex;align-items:center;gap:10px;padding:10px 12px'+(oi<odemeHist.length-1?';border-bottom:1px solid var(--bd)':'')+'">'
+        +'<div style="font-size:18px">'+yonIkon+'</div>'
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:13px;font-weight:700;color:var(--ink)">₺'+(o.tutar||0).toLocaleString('tr-TR')+'</div>'
+          +'<div style="font-size:10px;color:var(--ink4)">'+(o.tarih||'—')+' · '+(o.yontem||'—')+(o.not?' · '+o.not:'')+'</div>'
+        +'</div>'
+        +'<button onclick="odemeIadeEt('+idx+','+oi+')" title="Bu ödemeyi iade et" style="width:30px;height:30px;border:1.5px solid #fecaca;background:#fff;color:#dc2626;border-radius:7px;cursor:pointer;font-size:14px;flex-shrink:0">🗑</button>'
+      +'</div>';
+    });
+    odemeListesi+='</div>';
+  }
+
+  // Tümünü iade butonu
+  var tumuIadeBtn = odemeHist.length>0
+    ? '<button onclick="odemeTumunuIadeEt('+idx+')" style="width:100%;margin-top:8px;padding:10px;border:1.5px solid #dc2626;background:rgba(220,38,38,.06);color:#dc2626;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;letter-spacing:.5px">🔄 TÜM ÖDEMELERİ İADE ET (₺'+toplamOdenen.toLocaleString('tr-TR')+')</button>'
+    : '';
+
   ovl.innerHTML=
-    '<div style="background:#fff;border-radius:16px;width:100%;max-width:540px;box-shadow:0 24px 64px rgba(0,0,0,.2);overflow:hidden">'
-      +'<div style="background:var(--ink);padding:16px 20px;display:flex;align-items:center;justify-content:space-between">'
+    '<div style="background:#fff;border-radius:16px;width:100%;max-width:560px;box-shadow:0 24px 64px rgba(0,0,0,.2);overflow:hidden;max-height:95vh;display:flex;flex-direction:column">'
+      +'<div style="background:var(--ink);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">'
         +'<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#fff">RANDEVU DÜZENLE</div>'
         +'<div onclick="document.getElementById(&quot;rdv-duzenle-ovl&quot;).remove()" style="cursor:pointer;color:#888;font-size:24px;line-height:1">&times;</div>'
       +'</div>'
-      +'<div style="padding:20px">'
+      +'<div style="padding:20px;overflow-y:auto;flex:1">'
+        // ─── Temel bilgiler ───
         +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'
           +'<div><div style="'+LB+'">Müşteri Adı</div><input id="dz-musteri" type="text" value="'+r.musteri+'" style="'+IS+'"></div>'
           +'<div><div style="'+LB+'">Telefon</div><input id="dz-tel" type="text" value="'+r.tel+'" style="'+IS+'"></div>'
@@ -3516,18 +3547,140 @@ function rdvDuzenle(idx){
           +'<div><div style="'+LB+'">Tarih</div><input id="dz-tarih" type="date" value="'+tInp+'" style="'+IS+'"></div>'
           +'<div><div style="'+LB+'">Saat</div><select id="dz-saat" style="'+IS+'">'+saatOpts+'</select></div>'
           +'<div style="grid-column:1/-1"><div style="'+LB+'">Hizmet</div><select id="dz-hizmet" onchange="dzHizmetDegisti()" style="'+IS+'">'+hOpts+'</select></div>'
-          +'<div><div style="'+LB+'">Fiyat (₺)</div><input id="dz-fiyat" type="number" value="'+r.tutar+'" style="'+IS+';font-weight:700;color:var(--r)"></div>'
-          +'<div><div style="'+LB+'">Durum</div><select id="dz-durum" style="'+IS+'">'
+        +'</div>'
+
+        // ─── Fiyat + İndirim ───
+        +'<div style="margin-bottom:16px;padding:14px;background:#fff8f5;border:1.5px solid #fed7b5;border-radius:10px">'
+          +'<div style="font-size:11px;font-weight:700;color:#a13128;letter-spacing:1px;margin-bottom:10px">💰 FİYAT & İNDİRİM</div>'
+          +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+            +'<div><div style="'+LB+'">Hizmet Tutarı (₺)</div><input id="dz-fiyat" type="number" value="'+mevcutTutar+'" oninput="dzNetHesapla()" style="'+IS+'"></div>'
+            +'<div><div style="'+LB+'">İndirim TL</div><input id="dz-indirim-tl" type="number" value="'+(r.indirim||0)+'" min="0" oninput="dzIndirimTL()" style="'+IS+'"></div>'
+            +'<div><div style="'+LB+'">İndirim %</div><input id="dz-indirim-pct" type="number" placeholder="0" min="0" max="100" oninput="dzIndirimPct()" style="'+IS+'"></div>'
+            +'<div><div style="'+LB+'">Net Tutar (₺)</div><input id="dz-net" type="number" readonly style="'+IS+';background:#f8f8f8;font-weight:700;color:var(--r);font-size:15px"></div>'
+          +'</div>'
+          +'<div style="font-size:11px;color:var(--ink4);line-height:1.5">'
+            +'Net Tutar = Hizmet Tutarı − İndirim. Ödeme aldıysanız kalan tutar buna göre hesaplanır.'
+          +'</div>'
+        +'</div>'
+
+        // ─── Ödeme Geçmişi ───
+        +'<div style="margin-bottom:16px">'
+          +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+            +'<div style="font-size:11px;font-weight:700;color:var(--ink);letter-spacing:1px">💳 ÖDEME GEÇMİŞİ ('+odemeHist.length+')</div>'
+            +'<div style="font-size:12px;color:var(--ink4)">Ödenen: <b style="color:#16a34a">₺'+toplamOdenen.toLocaleString('tr-TR')+'</b> / Kalan: <b style="color:'+(mevcutKalan>0?'#dc2626':'#16a34a')+'">₺'+mevcutKalan.toLocaleString('tr-TR')+'</b></div>'
+          +'</div>'
+          +odemeListesi
+          +tumuIadeBtn
+        +'</div>'
+
+        // ─── Durum ───
+        +'<div style="margin-bottom:16px">'
+          +'<div style="'+LB+'">Durum</div>'
+          +'<select id="dz-durum" style="'+IS+'">'
             +'<option value="bekl"'+(r.durum==='bekl'?' selected':'')+'>Bekliyor</option>'
             +'<option value="onay"'+(r.durum==='onay'?' selected':'')+'>Onaylı</option>'
-          +'</select></div>'
-        +'</div>'
-        +'<div style="display:flex;gap:8px">'
-          +'<button onclick="document.getElementById(&quot;rdv-duzenle-ovl&quot;).remove()" style="flex:1;padding:10px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer">İptal</button>'
-          +'<button onclick="rdvKaydet('+idx+')" style="flex:2;padding:10px;border:none;border-radius:8px;background:var(--r);color:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer">Kaydet</button>'
+          +'</select>'
         +'</div>'
       +'</div>'
+      // ─── Butonlar ───
+      +'<div style="padding:14px 20px;border-top:1.5px solid var(--bd);display:flex;gap:8px;flex-shrink:0">'
+        +'<button onclick="document.getElementById(&quot;rdv-duzenle-ovl&quot;).remove()" style="flex:1;padding:11px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer">İPTAL</button>'
+        +'<button onclick="rdvKaydet('+idx+')" style="flex:2;padding:11px;border:none;border-radius:8px;background:var(--r);color:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer;box-shadow:0 3px 10px rgba(176,28,46,.3)">💾 KAYDET</button>'
+      +'</div>'
     +'</div>';
+
+  // İlk net hesap
+  setTimeout(dzNetHesapla, 50);
+}
+
+/** Düzenle - net tutar hesapla (fiyat - indirim) */
+function dzNetHesapla(){
+  var fiyat=parseFloat((document.getElementById('dz-fiyat')||{value:0}).value)||0;
+  var ind=parseFloat((document.getElementById('dz-indirim-tl')||{value:0}).value)||0;
+  var net=Math.max(0, fiyat-ind);
+  var netEl=document.getElementById('dz-net');
+  if(netEl) netEl.value=net;
+}
+
+/** İndirim TL değiştiğinde - % alanını güncelle + net hesapla */
+function dzIndirimTL(){
+  var fiyat=parseFloat((document.getElementById('dz-fiyat')||{value:0}).value)||0;
+  var ind=parseFloat((document.getElementById('dz-indirim-tl')||{value:0}).value)||0;
+  if(fiyat>0){
+    var pct=Math.round((ind/fiyat)*100);
+    var pctEl=document.getElementById('dz-indirim-pct');
+    if(pctEl) pctEl.value=pct||'';
+  }
+  dzNetHesapla();
+}
+
+/** İndirim % değiştiğinde - TL'yi güncelle + net hesapla */
+function dzIndirimPct(){
+  var fiyat=parseFloat((document.getElementById('dz-fiyat')||{value:0}).value)||0;
+  var pct=parseFloat((document.getElementById('dz-indirim-pct')||{value:0}).value)||0;
+  var ind=Math.round(fiyat*pct/100);
+  var tlEl=document.getElementById('dz-indirim-tl');
+  if(tlEl) tlEl.value=ind||0;
+  dzNetHesapla();
+}
+
+/** Ödemeyi iade et - tek kayıt */
+function odemeIadeEt(rdvIdx, odemeIdx){
+  var r=RANDEVULAR[rdvIdx]; if(!r||!r.odemeGecmisi||!r.odemeGecmisi[odemeIdx]) return;
+  var o=r.odemeGecmisi[odemeIdx];
+  var onay=confirm('⚠️ ÖDEME İADE ONAYI\n\n'
+    +'Tutar: ₺'+(o.tutar||0).toLocaleString('tr-TR')+'\n'
+    +'Yöntem: '+(o.yontem||'—')+'\n'
+    +'Tarih: '+(o.tarih||'—')+'\n\n'
+    +'Bu ödeme kaydı silinecek ve tutarı ödenen toplamdan düşürülecek.\n\nDevam etmek istiyor musunuz?');
+  if(!onay) return;
+
+  // Ödeme geçmişinden kaldır
+  r.odemeGecmisi.splice(odemeIdx, 1);
+  // Toplam ödeneni yeniden hesapla
+  r.odenenToplam=r.odemeGecmisi.reduce(function(s,o){return s+(parseFloat(o.tutar)||0);}, 0);
+  // Tam ödenmiş mi?
+  r.odendi=(r.odenenToplam>=(r.tutar||0) && (r.tutar||0)>0);
+  // Online ödeme de iade edildiyse
+  if(r.odenenToplam<=0) r.onlineOdeme=false;
+
+  storageKaydet();
+  if(typeof dbRandevuKaydet==='function') dbRandevuKaydet(r);
+
+  // Modal'ı yeniden render et + liste güncelle
+  rdvDuzenle(rdvIdx);
+  doRdvListele();
+  if(typeof odemeListeYukle==='function') odemeListeYukle();
+  toast('✓ Ödeme iade edildi','green');
+  if(typeof hapticMedium==='function') hapticMedium();
+}
+
+/** Tüm ödemeleri iade et */
+function odemeTumunuIadeEt(rdvIdx){
+  var r=RANDEVULAR[rdvIdx]; if(!r) return;
+  var toplam=r.odenenToplam||0;
+  var sayi=(r.odemeGecmisi||[]).length;
+  if(sayi===0 || toplam<=0){ toast('İade edilecek ödeme yok','orange'); return; }
+
+  var onay=confirm('⚠️ TÜM ÖDEMELERİ İADE ET\n\n'
+    +'Toplam: ₺'+toplam.toLocaleString('tr-TR')+'\n'
+    +'Ödeme sayısı: '+sayi+'\n\n'
+    +'Tüm ödeme kayıtları silinecek ve randevu ödenmemiş duruma dönecek.\n\nEmin misiniz?');
+  if(!onay) return;
+
+  r.odemeGecmisi=[];
+  r.odenenToplam=0;
+  r.odendi=false;
+  r.onlineOdeme=false;
+
+  storageKaydet();
+  if(typeof dbRandevuKaydet==='function') dbRandevuKaydet(r);
+
+  rdvDuzenle(rdvIdx);
+  doRdvListele();
+  if(typeof odemeListeYukle==='function') odemeListeYukle();
+  toast('✓ Tüm ödemeler iade edildi','green');
+  if(typeof hapticMedium==='function') hapticMedium();
 }
 
 function dzHizmetDegisti(){
@@ -3550,6 +3703,9 @@ function rdvKaydet(idx){
   var hizmetIsim=r.hizmet;
   if(hizmetSel){var opt=hizmetSel.options[hizmetSel.selectedIndex];hizmetIsim=opt.getAttribute('data-isim')||opt.textContent.split(' — ')[0];}
   var fiyat=parseFloat((g('dz-fiyat')||{value:r.tutar}).value)||r.tutar;
+  var indirim=parseFloat((g('dz-indirim-tl')||{value:0}).value)||0;
+  var netTutar=Math.max(0, fiyat-indirim);
+
   r.musteri=musteri;
   r.tel=(g('dz-tel')||{value:r.tel}).value.trim()||r.tel;
   r.plaka=(g('dz-plaka')||{value:r.plaka}).value.trim().replace(/ /g,'').toUpperCase()||r.plaka;
@@ -3557,17 +3713,23 @@ function rdvKaydet(idx){
   r.tarih=tarihStr;
   r.saat=(g('dz-saat')||{value:r.saat}).value||r.saat;
   r.hizmet=hizmetIsim;
-  r.tutar=fiyat;
+  r.tutar=netTutar;   // Net tutar kaydedilir
+  r.indirim=indirim;  // İndirim ayrıca saklanır
   r.durum=(g('dz-durum')||{value:r.durum}).value||r.durum;
-  if((r.odenenToplam||0)>=fiyat){r.odendi=true;}else{r.odendi=false;}
+  // Tam ödenmiş mi?
+  if((r.odenenToplam||0)>=netTutar && netTutar>0){r.odendi=true;}else{r.odendi=false;}
+
   storageKaydet();
   if(typeof dbRandevuKaydet==='function') dbRandevuKaydet(r);
   document.getElementById('rdv-duzenle-ovl').remove();
   doRdvListele();
-  var toast=document.createElement('div');
-  toast.style.cssText='position:fixed;bottom:24px;right:24px;background:var(--r);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.2);animation:fadeIn .3s';
-  toast.textContent='✅ '+r.musteri+' randevusu güncellendi';
-  document.body.appendChild(toast);setTimeout(function(){toast.remove();},3000);
+  if(typeof odemeListeYukle==='function') odemeListeYukle();
+  if(typeof doTakvim==='function') doTakvim();
+
+  var t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:24px;right:24px;background:var(--r);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.2);animation:fadeIn .3s';
+  t.textContent='✅ '+r.musteri+' randevusu güncellendi'+(indirim>0?' (₺'+indirim.toLocaleString('tr-TR')+' indirim)':'');
+  document.body.appendChild(t);setTimeout(function(){t.remove();},3000);
 }
 
 
@@ -8021,10 +8183,15 @@ function dbSyncYukle(){
         if(RANDEVULAR.length>0 && typeof dbSyncToDB==='function') dbSyncToDB();
       }
       if(typeof doRdvListele==='function') doRdvListele();
+      if(typeof doTakvim==='function') doTakvim();
+      if(typeof bugununRandevulariGoster==='function') bugununRandevulariGoster();
     }
   }).catch(function(){
     // Offline - localStorage'dan yükle
     try{ var r=localStorage.getItem('autonax_randevular_v1'); if(r) RANDEVULAR=JSON.parse(r); }catch(e){console.error('Autonax:',e)}
+    // Takvimi ve listeyi localStorage sonrası da güncelle
+    if(typeof doTakvim==='function') doTakvim();
+    if(typeof doRdvListele==='function') doRdvListele();
   });
   // Bayileri DB'den çek
   fetch('/api/bayiler',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
