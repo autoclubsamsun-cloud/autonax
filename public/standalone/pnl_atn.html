@@ -891,6 +891,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
               <button class="ab ab-g" style="font-size:10px;white-space:nowrap" onclick="doDurumFiltre('onay')">Onaylı</button>
               <button class="ab ab-g" id="btn-bugun" style="font-size:10px;white-space:nowrap" onclick="bugununRandevulariGoster()">📅 Bugün</button>
               <button class="ab ab-r" id="btn-borc" style="font-size:10px;white-space:nowrap" onclick="doBorcluFiltre()">💰 Borcu Kalanlar</button>
+              <button class="ab ab-n" id="btn-filtre-sabitle" style="font-size:10px;white-space:nowrap;border:1.5px solid #2563EB;color:#2563EB" onclick="filtreSabitleToggle()">📌 Sabitle</button>
               <button class="ab ab-n" style="font-size:10px;white-space:nowrap" onclick="doSifirla()">✕ Sıfırla</button>
             </div>
           </div>
@@ -1862,6 +1863,13 @@ function doPg(id){
   document.querySelectorAll('.pg').forEach(function(el){el.classList.remove('on');});
   var el=document.getElementById('pg-'+id);if(el)el.classList.add('on');
   if(id==='dashboard')setTimeout(dashboardYukle,50);
+  if(id==='randevular'){
+    setTimeout(function(){
+      // Sabitlenmis filtreyi yukle (varsa)
+      if(typeof filtreSabitleYukle==='function') filtreSabitleYukle();
+      doRdvListele();
+    },50);
+  }
   if(id==='musteriler')setTimeout(mstListele,50);
   if(id==='hizmetler')setTimeout(hgListele,50);
   if(id==='fiyatlar'){setTimeout(fiyatSayfasiYukle,50);}
@@ -2130,8 +2138,76 @@ function doSifirla(){
   if(btn){btn.style.background='';btn.style.color='';}
   var btnB=document.getElementById('btn-bugun');
   if(btnB){btnB.style.background='';btnB.style.color='';}
+  // Sabitlenmis filtreyi de kaldir
+  try{ localStorage.removeItem('autonax_rdv_filtre_sabit'); }catch(e){}
+  filtreSabitleGoster(false);
   doRdvListele();
 }
+
+/** Filtre sabitleme - ON/OFF toggle */
+function filtreSabitleToggle(){
+  var mevcut=null;
+  try{ mevcut=localStorage.getItem('autonax_rdv_filtre_sabit'); }catch(e){}
+  if(mevcut){
+    // Sabitli -> kaldır
+    try{ localStorage.removeItem('autonax_rdv_filtre_sabit'); }catch(e){}
+    filtreSabitleGoster(false);
+    toast('Filtre sabiti kaldırıldı','green');
+  } else {
+    // Kaydet
+    var snapshot={
+      durum: _rdvDurum,
+      borclu: _borcluFiltre,
+      ay: (document.getElementById('filtre-ay')||{}).value || '',
+      gun: (document.getElementById('filtre-gun')||{}).value || '',
+      arama: (document.getElementById('filtre-arama')||{}).value || '',
+      kayitTarihi: new Date().toISOString()
+    };
+    try{ localStorage.setItem('autonax_rdv_filtre_sabit', JSON.stringify(snapshot)); }catch(e){}
+    filtreSabitleGoster(true);
+    toast('✓ Filtre sabitlendi (sayfa yenilense de kalır)','green');
+  }
+}
+
+/** Sabitle butonunun görünümünü güncelle */
+function filtreSabitleGoster(aktif){
+  var btn=document.getElementById('btn-filtre-sabitle');
+  if(!btn) return;
+  if(aktif){
+    btn.style.background='#2563EB';
+    btn.style.color='#fff';
+    btn.style.borderColor='#2563EB';
+    btn.textContent='📌 Sabitli';
+  } else {
+    btn.style.background='';
+    btn.style.color='#2563EB';
+    btn.style.borderColor='#2563EB';
+    btn.textContent='📌 Sabitle';
+  }
+}
+
+/** Sabitlenmis filtreyi yükle ve uygula */
+function filtreSabitleYukle(){
+  var raw=null;
+  try{ raw=localStorage.getItem('autonax_rdv_filtre_sabit'); }catch(e){}
+  if(!raw) return;
+  try{
+    var s=JSON.parse(raw);
+    _rdvDurum=s.durum||'hepsi';
+    _borcluFiltre=!!s.borclu;
+    var ayEl=document.getElementById('filtre-ay'); if(ayEl) ayEl.value=s.ay||'';
+    var gunEl=document.getElementById('filtre-gun'); if(gunEl) gunEl.value=s.gun||'';
+    var araEl=document.getElementById('filtre-arama'); if(araEl) araEl.value=s.arama||'';
+    // Borclu butonu gorunumu
+    var btnB=document.getElementById('btn-borc');
+    if(btnB){
+      if(_borcluFiltre){btnB.style.background='var(--r)';btnB.style.color='#fff';}
+      else{btnB.style.background='';btnB.style.color='';}
+    }
+    filtreSabitleGoster(true);
+  }catch(e){ console.error('[filtre-sabit]',e); }
+}
+
 function rdvIslemYap(btn){
   var row=btn.closest('tr');
   row.style.background='rgba(22,163,74,.07)';row.style.borderLeft='3px solid #16A34A';
