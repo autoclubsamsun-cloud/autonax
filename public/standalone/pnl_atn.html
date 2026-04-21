@@ -785,12 +785,12 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
       </div>
       
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding:12px 14px;background:var(--w);border:1.5px solid var(--bd);border-radius:12px;align-items:center">
-        <div style="font-size:11px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.5px">Seçili Randevu:</div>
-        <div id="rdv-secili-bilgi" style="font-size:12px;color:var(--ink4);flex:1">Tabloda bir satıra tıklayın</div>
-        <button id="btn-hf" style="padding:7px 14px;border:1.5px solid #1a6b3c;border-radius:7px;background:rgba(26,107,60,.06);color:#1a6b3c;font-size:11px;font-weight:700;cursor:pointer;opacity:.4;pointer-events:none">🧾 Fatura Kes</button>
-        <button id="btn-ho" style="padding:7px 14px;border:1.5px solid #d97706;border-radius:7px;background:rgba(217,119,6,.06);color:#d97706;font-size:11px;font-weight:700;cursor:pointer;opacity:.4;pointer-events:none">💵 Ödeme Al</button>
-        <button id="btn-ht" style="padding:7px 14px;border:1.5px solid var(--r);border-radius:7px;background:rgba(176,28,46,.06);color:var(--r);font-size:11px;font-weight:700;cursor:pointer;opacity:.4;pointer-events:none">💳 Taksit</button>
-        <button id="btn-hd" style="padding:7px 14px;border:1.5px solid #2563EB;border-radius:7px;background:rgba(37,99,235,.06);color:#2563EB;font-size:11px;font-weight:700;cursor:pointer;opacity:.4;pointer-events:none">📋 Detay</button>
+        <div style="font-size:11px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.5px">İşlemler:</div>
+        <div id="rdv-secili-bilgi" style="font-size:12px;color:var(--ink4);flex:1">Hızlı işlem için butonları kullanın · Randevu seçerek de işlem yapabilirsiniz</div>
+        <button id="btn-hf" onclick="faturaKesBagimsiz()" style="padding:7px 14px;border:1.5px solid #1a6b3c;border-radius:7px;background:rgba(26,107,60,.06);color:#1a6b3c;font-size:11px;font-weight:700;cursor:pointer">🧾 Fatura Kes</button>
+        <button id="btn-ho" onclick="odemeAlBagimsiz()" style="padding:7px 14px;border:1.5px solid #d97706;border-radius:7px;background:rgba(217,119,6,.06);color:#d97706;font-size:11px;font-weight:700;cursor:pointer">💵 Ödeme Al</button>
+        <button id="btn-ht" style="padding:7px 14px;border:1.5px solid var(--r);border-radius:7px;background:rgba(176,28,46,.06);color:var(--r);font-size:11px;font-weight:700;cursor:pointer;opacity:.4;pointer-events:none" title="Önce randevu seçin">💳 Taksit</button>
+        <button id="btn-hd" style="padding:7px 14px;border:1.5px solid #2563EB;border-radius:7px;background:rgba(37,99,235,.06);color:#2563EB;font-size:11px;font-weight:700;cursor:pointer;opacity:.4;pointer-events:none" title="Önce randevu seçin">📋 Detay</button>
       </div>
 <div class="g2">
         <!-- Takvim -->
@@ -4646,7 +4646,7 @@ function rdvSatirSec(gercekIdx){
 
   // Bilgi güncelle
   var bilgi=document.getElementById('rdv-secili-bilgi');
-  if(bilgi) bilgi.innerHTML='<b>'+r.musteri+'</b> · '+r.plaka
+  if(bilgi) bilgi.innerHTML='Seçili: <b>'+r.musteri+'</b> · '+r.plaka
     +' · <span style="color:var(--r);font-weight:700">₺'+r.tutar.toLocaleString('tr-TR')+'</span>'
     +(kalan>0?' · <span style="color:#d97706">Kalan: ₺'+kalan.toLocaleString('tr-TR')+'</span>':'<span style="color:#16a34a;font-weight:700"> ✓ Ödendi</span>');
 
@@ -4657,10 +4657,10 @@ function rdvSatirSec(gercekIdx){
     tr.style.borderRadius='4px';
   });
 
-  // Butonları aktif et
-  ['btn-hf','btn-ho','btn-ht','btn-hd'].forEach(function(id){
+  // Taksit ve Detay butonlarını aktif et (Fatura Kes / Ödeme Al zaten bağımsız)
+  ['btn-ht','btn-hd'].forEach(function(id){
     var btn=document.getElementById(id);
-    if(btn){btn.style.opacity='1';btn.style.pointerEvents='auto';}
+    if(btn){btn.style.opacity='1';btn.style.pointerEvents='auto';btn.title='';}
   });
 
   // Listener'ları her seferinde yeniden bağla (eski idx'i sil)
@@ -4673,10 +4673,203 @@ function rdvSatirSec(gercekIdx){
     yeni.style.pointerEvents='auto';
     yeni.addEventListener('click',fn);
   }
-  rebind('btn-hf',function(){rdvFaturaKes(gercekIdx);});
-  rebind('btn-ho',function(){rdvHariciOdeme(gercekIdx);});
   rebind('btn-ht',function(){taksitAc(gercekIdx);});
   rebind('btn-hd',function(){rdvDetay(gercekIdx);});
+}
+
+// ═══ BAĞIMSIZ İŞLEMLER (randevudan bağımsız) ═══
+
+/** Bağımsız fatura kesme - randevusuz, manuel giriş */
+function faturaKesBagimsiz(){
+  var ovl=document.createElement('div');
+  ovl.id='bfatura-ovl';
+  ovl.style.cssText='position:fixed;inset:0;z-index:990;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto';
+  ovl.onclick=function(e){if(e.target===ovl)ovl.remove();};
+  var IS='width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box';
+  ovl.innerHTML=''
+    +'<div style="background:#fff;border-radius:16px;width:100%;max-width:500px;max-height:90vh;overflow:auto;box-shadow:0 24px 64px rgba(0,0,0,.25)">'
+      +'<div style="background:var(--ink);padding:14px 18px;display:flex;align-items:center;justify-content:space-between">'
+        +'<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#fff">🧾 BAĞIMSIZ FATURA KES</div>'
+        +'<div onclick="document.getElementById(\'bfatura-ovl\').remove()" style="cursor:pointer;color:#888;font-size:26px">&times;</div>'
+      +'</div>'
+      +'<div style="padding:16px">'
+        +'<div style="font-size:11px;color:var(--ink4);margin-bottom:12px;padding:8px 10px;background:var(--bg);border-radius:6px">💡 Randevusuz fatura kesiyorsunuz. Müşteri bilgilerini manuel girin.</div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+          +'<div style="grid-column:1/-1"><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Müşteri Adı *</div><input id="bf-ad" style="'+IS+'" placeholder="Ad Soyad"></div>'
+          +'<div><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Telefon</div><input id="bf-tel" style="'+IS+'" placeholder="05..."></div>'
+          +'<div><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Plaka</div><input id="bf-plaka" style="'+IS+'" placeholder="55ABC123" oninput="this.value=this.value.toUpperCase()"></div>'
+          +'<div style="grid-column:1/-1"><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Hizmet / Ürün *</div><input id="bf-hizmet" style="'+IS+'" placeholder="Ör: PPF Kaplama"></div>'
+          +'<div><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Tutar (₺) *</div><input type="number" id="bf-tutar" style="'+IS+'" placeholder="50000" min="1"></div>'
+          +'<div><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">KDV</div><select id="bf-kdv" style="'+IS+'"><option value="20">%20 KDV (dahil)</option><option value="0">KDV yok</option></select></div>'
+        +'</div>'
+      +'</div>'
+      +'<div style="padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--bd)">'
+        +'<button onclick="document.getElementById(\'bfatura-ovl\').remove()" style="flex:1;padding:10px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;cursor:pointer">İptal</button>'
+        +'<button onclick="bagimsizFaturaKaydet()" style="flex:2;padding:10px;border:none;border-radius:8px;background:#1a6b3c;color:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer">🧾 FATURA OLUŞTUR</button>'
+      +'</div>'
+    +'</div>';
+  document.body.appendChild(ovl);
+  setTimeout(function(){var el=document.getElementById('bf-ad');if(el)el.focus();},100);
+}
+
+function bagimsizFaturaKaydet(){
+  var ad=(document.getElementById('bf-ad')||{}).value.trim();
+  var tel=(document.getElementById('bf-tel')||{}).value.trim();
+  var plaka=(document.getElementById('bf-plaka')||{}).value.trim();
+  var hizmet=(document.getElementById('bf-hizmet')||{}).value.trim();
+  var tutar=parseFloat((document.getElementById('bf-tutar')||{}).value)||0;
+  var kdv=(document.getElementById('bf-kdv')||{}).value||'20';
+
+  if(!ad){toast('Müşteri adı zorunlu','red');return;}
+  if(!hizmet){toast('Hizmet/ürün adı zorunlu','red');return;}
+  if(tutar<=0){toast('Geçerli bir tutar girin','red');return;}
+
+  // Sanal randevu olustur - fatura kesmek icin lazim
+  var sanalRdv={
+    id: 'BAGIMSIZ-'+Date.now().toString(36),
+    tarih: new Date().toLocaleDateString('tr-TR'),
+    saat: new Date().toTimeString().slice(0,5),
+    musteri: ad,
+    musteriAdi: ad,
+    tel: tel,
+    musteriTel: tel,
+    plaka: plaka,
+    arac: '',
+    hizmet: hizmet,
+    tutar: tutar,
+    odenenToplam: tutar, // Tamami odenmis kabul
+    durum: 'onay',
+    odendi: true,
+    islem: true,
+    onlineOdeme: false,
+    faturaNo: '',
+    faturaDurum: 'Bekliyor',
+    bagimsiz: true,
+    notlar: 'Bagimsiz fatura - randevusuz',
+    odemeGecmisi: [{
+      tarih: new Date().toISOString(),
+      yontem: 'Nakit',
+      miktar: tutar,
+      tutar: tutar,
+      not: 'Bagimsiz fatura islemi'
+    }]
+  };
+
+  // RANDEVULAR'a ekle (fatura akisi randevudan cekiyor)
+  RANDEVULAR.push(sanalRdv);
+  try{ storageKaydet(); }catch(e){}
+
+  // DB'ye kaydet
+  fetch('/api/randevular',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    credentials:'same-origin',
+    body:JSON.stringify(sanalRdv)
+  }).catch(function(){});
+
+  document.getElementById('bfatura-ovl').remove();
+
+  // Fatura kesme fonksiyonunu çağır (mevcut sistem)
+  var idx=RANDEVULAR.length-1;
+  toast('✓ Kayit olusturuldu, fatura kesiliyor...','green');
+  setTimeout(function(){ rdvFaturaKes(idx); },500);
+}
+
+/** Bağımsız ödeme alma - randevusuz, manuel giriş */
+function odemeAlBagimsiz(){
+  var ovl=document.createElement('div');
+  ovl.id='bodeme-ovl';
+  ovl.style.cssText='position:fixed;inset:0;z-index:990;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto';
+  ovl.onclick=function(e){if(e.target===ovl)ovl.remove();};
+  var IS='width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box';
+  ovl.innerHTML=''
+    +'<div style="background:#fff;border-radius:16px;width:100%;max-width:500px;max-height:90vh;overflow:auto;box-shadow:0 24px 64px rgba(0,0,0,.25)">'
+      +'<div style="background:var(--ink);padding:14px 18px;display:flex;align-items:center;justify-content:space-between">'
+        +'<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#fff">💵 BAĞIMSIZ ÖDEME AL</div>'
+        +'<div onclick="document.getElementById(\'bodeme-ovl\').remove()" style="cursor:pointer;color:#888;font-size:26px">&times;</div>'
+      +'</div>'
+      +'<div style="padding:16px">'
+        +'<div style="font-size:11px;color:var(--ink4);margin-bottom:12px;padding:8px 10px;background:var(--bg);border-radius:6px">💡 Randevusuz ödeme alıyorsunuz. Kayıt Ödemeler listesine eklenecek.</div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+          +'<div style="grid-column:1/-1"><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Müşteri Adı *</div><input id="bo-ad" style="'+IS+'" placeholder="Ad Soyad"></div>'
+          +'<div><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Telefon</div><input id="bo-tel" style="'+IS+'" placeholder="05..."></div>'
+          +'<div><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Plaka</div><input id="bo-plaka" style="'+IS+'" placeholder="55ABC123" oninput="this.value=this.value.toUpperCase()"></div>'
+          +'<div style="grid-column:1/-1"><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Açıklama</div><input id="bo-aciklama" style="'+IS+'" placeholder="Ör: PPF Kaplama / Avans / Kapora"></div>'
+          +'<div><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Tutar (₺) *</div><input type="number" id="bo-tutar" style="'+IS+'" placeholder="5000" min="1"></div>'
+          +'<div><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Ödeme Yöntemi *</div><select id="bo-yontem" style="'+IS+'"><option value="Nakit">💵 Nakit</option><option value="Kredi Kartı">💳 Kredi Kartı</option><option value="Havale">🏦 Havale/EFT</option><option value="PayTR">🌐 PayTR Online</option></select></div>'
+          +'<div style="grid-column:1/-1"><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px">Not (Opsiyonel)</div><input id="bo-not" style="'+IS+'" placeholder="Ek not..."></div>'
+        +'</div>'
+      +'</div>'
+      +'<div style="padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--bd)">'
+        +'<button onclick="document.getElementById(\'bodeme-ovl\').remove()" style="flex:1;padding:10px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;cursor:pointer">İptal</button>'
+        +'<button onclick="bagimsizOdemeKaydet()" style="flex:2;padding:10px;border:none;border-radius:8px;background:#d97706;color:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer">💵 ÖDEMEYİ KAYDET</button>'
+      +'</div>'
+    +'</div>';
+  document.body.appendChild(ovl);
+  setTimeout(function(){var el=document.getElementById('bo-ad');if(el)el.focus();},100);
+}
+
+function bagimsizOdemeKaydet(){
+  var ad=(document.getElementById('bo-ad')||{}).value.trim();
+  var tel=(document.getElementById('bo-tel')||{}).value.trim();
+  var plaka=(document.getElementById('bo-plaka')||{}).value.trim();
+  var aciklama=(document.getElementById('bo-aciklama')||{}).value.trim() || 'Bağımsız Ödeme';
+  var tutar=parseFloat((document.getElementById('bo-tutar')||{}).value)||0;
+  var yontem=(document.getElementById('bo-yontem')||{}).value||'Nakit';
+  var not=(document.getElementById('bo-not')||{}).value.trim();
+
+  if(!ad){toast('Müşteri adı zorunlu','red');return;}
+  if(tutar<=0){toast('Geçerli bir tutar girin','red');return;}
+
+  // Bagimsiz odeme icin bir sanal randevu olustur (ki Odemeler sayfasinda gorunsun)
+  var sanalRdv={
+    id: 'BAGIMSIZ-ODM-'+Date.now().toString(36),
+    tarih: new Date().toLocaleDateString('tr-TR'),
+    saat: new Date().toTimeString().slice(0,5),
+    musteri: ad,
+    musteriAdi: ad,
+    tel: tel,
+    musteriTel: tel,
+    plaka: plaka,
+    arac: '',
+    hizmet: aciklama,
+    tutar: tutar,
+    odenenToplam: tutar,
+    durum: 'onay',
+    odendi: true,
+    islem: true,
+    onlineOdeme: yontem==='PayTR',
+    faturaNo: '',
+    faturaDurum: 'Bekliyor',
+    bagimsiz: true,
+    notlar: 'Bagimsiz odeme - randevusuz',
+    odemeGecmisi: [{
+      tarih: new Date().toISOString(),
+      yontem: yontem,
+      miktar: tutar,
+      tutar: tutar,
+      not: not || 'Bagimsiz tahsilat'
+    }]
+  };
+
+  RANDEVULAR.push(sanalRdv);
+  try{ storageKaydet(); }catch(e){}
+
+  // DB'ye kaydet
+  fetch('/api/randevular',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    credentials:'same-origin',
+    body:JSON.stringify(sanalRdv)
+  }).then(function(r){return r.json();}).then(function(){
+    toast('✅ Ödeme kaydedildi: '+ad+' · ₺'+tutar.toLocaleString('tr-TR'),'green');
+    document.getElementById('bodeme-ovl').remove();
+    doRdvListele();
+  }).catch(function(){
+    toast('⚠️ Bellek kaydedildi, DB hatasi olabilir','red');
+    document.getElementById('bodeme-ovl').remove();
+    doRdvListele();
+  });
 }
 
 
