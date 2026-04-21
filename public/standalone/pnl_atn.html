@@ -457,6 +457,15 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
   #bodeme-ovl > div{max-width:100% !important;width:100% !important;border-radius:16px 16px 0 0 !important;margin:0 !important;position:fixed !important;bottom:0 !important;left:0 !important;right:0 !important;max-height:92vh !important}
   #bodeme-ovl{align-items:flex-end !important;padding:0 !important}
 
+  /* Yeni Randevu modal (takvim boş gün) - bottom sheet */
+  #yeni-rdv-ovl > div{max-width:100% !important;width:100% !important;border-radius:16px 16px 0 0 !important;margin:0 !important;position:fixed !important;bottom:0 !important;left:0 !important;right:0 !important;max-height:92vh !important}
+  #yeni-rdv-ovl{align-items:flex-end !important;padding:0 !important}
+
+  /* Takvim başlığı - ay gezintisi mobilde kompakt */
+  #cal-baslik{font-size:14px !important}
+  [onclick="takvimOncekiAy()"],[onclick="takvimSonrakiAy()"]{width:28px !important;height:28px !important;font-size:14px !important}
+  [onclick="takvimBugune()"]{padding:5px 8px !important;font-size:10px !important}
+
   /* Sabitle butonu kompakt */
   #btn-filtre-sabitle{padding:4px 8px !important;font-size:10px !important}
 
@@ -1231,7 +1240,14 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 <div class="g2">
         <!-- Takvim -->
         <div class="k">
-          <div class="kh"><div class="kt">Nisan 2026</div></div>
+          <div class="kh">
+            <div style="display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap">
+              <button onclick="takvimOncekiAy()" style="width:32px;height:32px;border:1.5px solid var(--bd);background:#fff;border-radius:7px;cursor:pointer;font-size:16px;font-weight:700;color:var(--ink);display:flex;align-items:center;justify-content:center;transition:.15s" title="Önceki ay">‹</button>
+              <div class="kt" id="cal-baslik" style="flex:1;min-width:0;text-align:center">Nisan 2026</div>
+              <button onclick="takvimSonrakiAy()" style="width:32px;height:32px;border:1.5px solid var(--bd);background:#fff;border-radius:7px;cursor:pointer;font-size:16px;font-weight:700;color:var(--ink);display:flex;align-items:center;justify-content:center;transition:.15s" title="Sonraki ay">›</button>
+              <button onclick="takvimBugune()" style="padding:6px 12px;border:1.5px solid var(--r);background:rgba(176,28,46,.06);color:var(--r);border-radius:7px;cursor:pointer;font-size:11px;font-weight:700;transition:.15s" title="Bugüne dön">📅 Bugün</button>
+            </div>
+          </div>
           <div class="kb">
             <div class="cal-grid" style="margin-bottom:8px">
               <div class="cal-head">Pzt</div><div class="cal-head">Sal</div><div class="cal-head">Çar</div>
@@ -2499,17 +2515,6 @@ function mobileTabBarAktif(pgId){
 }
 
 /* ══ SAAT ══ */
-function takvimGunTikla(gun){
-  doPg('randevular');
-  setTimeout(dashboardYukle,100);
-  var now=new Date();
-  var ay=(now.getMonth()+1).toString().padStart(2,'0');
-  var g=gun.toString().padStart(2,'0');
-  var aE=document.getElementById('filtre-ay');if(aE)aE.value=ay;
-  var gE=document.getElementById('filtre-gun');if(gE)gE.value=g;
-  _rdvDurum='hepsi';_borcluFiltre=false;
-  doRdvListele();
-}
 function rdvRenkStyle(r){
   var now=new Date();
   var nowMs=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
@@ -3048,24 +3053,354 @@ function doSaat(){
 }
 
 /* ══ TAKVİM ══ */
+// Sprint 11 - takvim state
+var _takvimAy = null; // 0-11
+var _takvimYil = null;
+
 function doTakvim(){
   var el=document.getElementById('cal-grid');if(!el)return;
-  var now=new Date(),yil=now.getFullYear(),ay=now.getMonth();
+
+  // İlk kez veya reset: bugünün ayını göster
+  if(_takvimAy===null || _takvimYil===null){
+    var now=new Date();
+    _takvimAy=now.getMonth();
+    _takvimYil=now.getFullYear();
+  }
+
+  var yil=_takvimYil, ay=_takvimAy;
+  var now=new Date();
+  var bugunAyMi = (yil===now.getFullYear() && ay===now.getMonth());
+
+  // Başlık güncelle
+  var aylar=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  var baslikEl=document.getElementById('cal-baslik');
+  if(baslikEl) baslikEl.textContent=aylar[ay]+' '+yil;
+
+  // Önceki/Sonraki ay buton limit durumu (2024-01 ↔ 2027-12)
+  var oncekiBtn=document.querySelector('[onclick="takvimOncekiAy()"]');
+  var sonrakiBtn=document.querySelector('[onclick="takvimSonrakiAy()"]');
+  if(oncekiBtn){
+    var enEski = (yil===2024 && ay===0);
+    oncekiBtn.disabled=enEski;
+    oncekiBtn.style.opacity=enEski?'.35':'1';
+    oncekiBtn.style.cursor=enEski?'not-allowed':'pointer';
+  }
+  if(sonrakiBtn){
+    var enSon = (yil===2027 && ay===11);
+    sonrakiBtn.disabled=enSon;
+    sonrakiBtn.style.opacity=enSon?'.35':'1';
+    sonrakiBtn.style.cursor=enSon?'not-allowed':'pointer';
+  }
+
   var ilk=new Date(yil,ay,1).getDay(),offset=ilk===0?6:ilk-1;
   var son=new Date(yil,ay+1,0).getDate();
   var html='';
   for(var i=0;i<offset;i++) html+='<div class="cal-day bos"></div>';
   for(var d=1;d<=son;d++){
-    var t=d===now.getDate();
+    var t=(bugunAyMi && d===now.getDate());
     var tarihStr=d.toString().padStart(2,'0')+'.'+(ay+1).toString().padStart(2,'0')+'.'+yil;
     var oz=gunKapasiteOzet(tarihStr);
     var n=oz.A+oz.B+oz.C+oz.E; // toplam randevu
     // Renk: kırmızı=tam dolu, turuncu=dolmak üzere, yeşil=müsait
     var renk=oz.tamDolu?'rdv-kirmizi':n>0?'rdv-turuncu':'';
     var badge=n>0?'<span style="position:absolute;top:1px;right:1px;font-size:8px;background:'+(oz.tamDolu?'#dc2626':'#d97706')+';color:#fff;border-radius:3px;padding:0 3px;line-height:13px;font-weight:700">'+n+'</span>':'';
-    html+='<div class="cal-day'+(t?' today':'')+' '+renk+'" style="position:relative;cursor:'+(n>0?'pointer':'default')+'" onclick="takvimGunTikla('+d+')">'+d+badge+'</div>';
+    html+='<div class="cal-day'+(t?' today':'')+' '+renk+'" style="position:relative;cursor:pointer" onclick="takvimGunTikla('+d+')" title="'+tarihStr+(n>0?' · '+n+' randevu':' · Yeni randevu ekle')+'">'+d+badge+'</div>';
   }
   el.innerHTML=html;
+}
+
+/** Önceki ay (limit: 2024-01) */
+function takvimOncekiAy(){
+  if(_takvimAy===null){ doTakvim(); return; }
+  if(_takvimYil===2024 && _takvimAy===0) return;
+  _takvimAy--;
+  if(_takvimAy<0){ _takvimAy=11; _takvimYil--; }
+  doTakvim();
+}
+
+/** Sonraki ay (limit: 2027-12) */
+function takvimSonrakiAy(){
+  if(_takvimAy===null){ doTakvim(); return; }
+  if(_takvimYil===2027 && _takvimAy===11) return;
+  _takvimAy++;
+  if(_takvimAy>11){ _takvimAy=0; _takvimYil++; }
+  doTakvim();
+}
+
+/** Bugüne dön */
+function takvimBugune(){
+  var now=new Date();
+  _takvimAy=now.getMonth();
+  _takvimYil=now.getFullYear();
+  doTakvim();
+}
+
+/** Gün tıklama - dolu gün scroll+filter, boş gün modal */
+function takvimGunTikla(d){
+  if(_takvimAy===null){
+    var now=new Date();
+    _takvimAy=now.getMonth();
+    _takvimYil=now.getFullYear();
+  }
+  var yil=_takvimYil, ay=_takvimAy+1;
+  var tarihStr=String(d).padStart(2,'0')+'.'+String(ay).padStart(2,'0')+'.'+yil;
+
+  // Bu tarihte randevu var mı?
+  var bugunRdv=RANDEVULAR.filter(function(r){ return r.tarih===tarihStr; });
+
+  if(bugunRdv.length>0){
+    // DOLU GÜN → filtre + smooth scroll + flash
+    // Filtreleri ayarla
+    var ayEl=document.getElementById('filtre-ay');
+    var gunEl=document.getElementById('filtre-gun');
+    if(ayEl) ayEl.value=String(ay).padStart(2,'0');
+    if(gunEl) gunEl.value=String(d).padStart(2,'0');
+    _rdvDurum='hepsi';
+    doRdvListele();
+
+    // Scroll to tablo - smooth
+    setTimeout(function(){
+      var hedef=document.getElementById('rdv-tablo') || document.getElementById('rdv-mobile-kartlar');
+      if(hedef){
+        hedef.scrollIntoView({behavior:'smooth', block:'start'});
+        // Flash - 1 saniye kırmızı vurgu
+        var wrap=hedef.closest('.k') || hedef.parentElement;
+        if(wrap){
+          wrap.style.transition='box-shadow .3s';
+          wrap.style.boxShadow='0 0 0 3px rgba(176,28,46,.35)';
+          setTimeout(function(){ wrap.style.boxShadow=''; }, 1000);
+        }
+      }
+    }, 100);
+    if(typeof hapticLight==='function') hapticLight();
+  } else {
+    // BOŞ GÜN → Yeni randevu modal
+    yeniRandevuModal(tarihStr);
+  }
+}
+
+/** Yeni Randevu Modal - tarih presetli */
+function yeniRandevuModal(tarihStr){
+  var parca=tarihStr.split('.');
+  var gun=parca[0], ay=parca[1], yil=parca[2];
+  var aylar=['','Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  var gunAdlari=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+  var tarihObj=new Date(parseInt(yil),parseInt(ay)-1,parseInt(gun));
+  var gunAdi=gunAdlari[tarihObj.getDay()];
+  var baslikText=parseInt(gun)+' '+aylar[parseInt(ay)]+' '+yil+' '+gunAdi;
+
+  var eski=document.getElementById('yeni-rdv-ovl');
+  if(eski) eski.remove();
+
+  var ovl=document.createElement('div');
+  ovl.id='yeni-rdv-ovl';
+  ovl.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px';
+
+  // Hizmet seçenekleri (mevcut FIYATLAR varsa)
+  var hizmetOpsiyonlar='<option value="">Hizmet seçin</option>';
+  try {
+    if(typeof FIYATLAR!=='undefined' && FIYATLAR && FIYATLAR.length){
+      hizmetOpsiyonlar+=FIYATLAR.map(function(f){
+        return '<option value="'+f.hizmet+'" data-tutar="'+(f.tutar||0)+'">'+f.hizmet+(f.tutar?' (₺'+f.tutar.toLocaleString('tr-TR')+')':'')+'</option>';
+      }).join('');
+    } else {
+      hizmetOpsiyonlar+='<option value="PPF Kaplama">PPF Kaplama</option>'
+        +'<option value="Seramik Kaplama">Seramik Kaplama</option>'
+        +'<option value="Cam Filmi">Cam Filmi</option>'
+        +'<option value="Detailing">Detailing</option>'
+        +'<option value="Diğer">Diğer</option>';
+    }
+  } catch(e){
+    hizmetOpsiyonlar+='<option value="Diğer">Diğer</option>';
+  }
+
+  ovl.innerHTML='<div style="background:#fff;border-radius:14px;max-width:440px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">'
+    +'<div style="padding:18px 20px;border-bottom:1.5px solid var(--bd);display:flex;justify-content:space-between;align-items:flex-start;gap:10px">'
+      +'<div>'
+        +'<div style="font-size:11px;color:var(--r);font-weight:700;letter-spacing:1.5px">YENİ RANDEVU</div>'
+        +'<div style="font-size:17px;font-weight:700;color:var(--ink);margin-top:2px">'+baslikText+'</div>'
+      +'</div>'
+      +'<button onclick="document.getElementById(\'yeni-rdv-ovl\').remove()" style="width:30px;height:30px;border:none;background:#f0f0f0;border-radius:50%;cursor:pointer;font-size:17px;color:#666;flex-shrink:0">×</button>'
+    +'</div>'
+    +'<div style="padding:18px 20px;display:flex;flex-direction:column;gap:12px">'
+      +'<div>'
+        +'<label style="font-size:11px;color:var(--ink4);font-weight:700;letter-spacing:.5px;margin-bottom:4px;display:block">MÜŞTERİ ADI *</label>'
+        +'<input id="yrdv-musteri" type="text" placeholder="Ad Soyad" autocomplete="off" style="width:100%;padding:10px 12px;border:1.5px solid var(--bd);border-radius:7px;font-size:14px;font-family:inherit">'
+        +'<div id="yrdv-musteri-oner" style="display:none;background:#fff;border:1.5px solid var(--bd);border-top:none;border-radius:0 0 7px 7px;max-height:150px;overflow:auto"></div>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+        +'<div>'
+          +'<label style="font-size:11px;color:var(--ink4);font-weight:700;letter-spacing:.5px;margin-bottom:4px;display:block">TELEFON</label>'
+          +'<input id="yrdv-tel" type="tel" placeholder="05__ ___ __ __" style="width:100%;padding:10px 12px;border:1.5px solid var(--bd);border-radius:7px;font-size:14px;font-family:inherit">'
+        +'</div>'
+        +'<div>'
+          +'<label style="font-size:11px;color:var(--ink4);font-weight:700;letter-spacing:.5px;margin-bottom:4px;display:block">PLAKA *</label>'
+          +'<input id="yrdv-plaka" type="text" placeholder="34ABC123" style="width:100%;padding:10px 12px;border:1.5px solid var(--bd);border-radius:7px;font-size:14px;font-family:inherit;text-transform:uppercase">'
+        +'</div>'
+      +'</div>'
+      +'<div>'
+        +'<label style="font-size:11px;color:var(--ink4);font-weight:700;letter-spacing:.5px;margin-bottom:4px;display:block">ARAÇ</label>'
+        +'<input id="yrdv-arac" type="text" placeholder="Marka Model (örn: Audi A4)" style="width:100%;padding:10px 12px;border:1.5px solid var(--bd);border-radius:7px;font-size:14px;font-family:inherit">'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+        +'<div>'
+          +'<label style="font-size:11px;color:var(--ink4);font-weight:700;letter-spacing:.5px;margin-bottom:4px;display:block">SAAT *</label>'
+          +'<select id="yrdv-saat" style="width:100%;padding:10px 12px;border:1.5px solid var(--bd);border-radius:7px;font-size:14px;font-family:inherit;background:#fff">'
+            +['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00'].map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('')
+          +'</select>'
+        +'</div>'
+        +'<div>'
+          +'<label style="font-size:11px;color:var(--ink4);font-weight:700;letter-spacing:.5px;margin-bottom:4px;display:block">HİZMET *</label>'
+          +'<select id="yrdv-hizmet" onchange="yrdvHizmetDegisti()" style="width:100%;padding:10px 12px;border:1.5px solid var(--bd);border-radius:7px;font-size:14px;font-family:inherit;background:#fff">'
+            +hizmetOpsiyonlar
+          +'</select>'
+        +'</div>'
+      +'</div>'
+      +'<div>'
+        +'<label style="font-size:11px;color:var(--ink4);font-weight:700;letter-spacing:.5px;margin-bottom:4px;display:block">TUTAR (₺) *</label>'
+        +'<input id="yrdv-tutar" type="number" placeholder="0" min="0" style="width:100%;padding:10px 12px;border:1.5px solid var(--bd);border-radius:7px;font-size:14px;font-family:inherit">'
+      +'</div>'
+      +'<input type="hidden" id="yrdv-tarih" value="'+tarihStr+'">'
+    +'</div>'
+    +'<div style="padding:14px 20px 18px;border-top:1.5px solid var(--bd);display:flex;gap:10px;justify-content:flex-end">'
+      +'<button onclick="document.getElementById(\'yeni-rdv-ovl\').remove()" style="padding:10px 18px;border:1.5px solid var(--bd);background:#fff;border-radius:7px;cursor:pointer;font-weight:600;color:var(--ink4)">İptal</button>'
+      +'<button onclick="yrdvKaydet()" style="padding:10px 22px;border:none;background:var(--r);color:#fff;border-radius:7px;cursor:pointer;font-weight:700;box-shadow:0 3px 10px rgba(176,28,46,.3)">💾 KAYDET</button>'
+    +'</div>'
+  +'</div>';
+  document.body.appendChild(ovl);
+
+  // Müşteri autocomplete
+  var mstInput=document.getElementById('yrdv-musteri');
+  if(mstInput){
+    mstInput.addEventListener('input', yrdvMusteriAutocomplete);
+    mstInput.focus();
+  }
+
+  // Backdrop tıkla → kapat
+  ovl.addEventListener('click', function(e){
+    if(e.target===ovl) ovl.remove();
+  });
+
+  if(typeof hapticLight==='function') hapticLight();
+}
+
+/** Hizmet değişince tutarı otomatik doldur */
+function yrdvHizmetDegisti(){
+  var sec=document.getElementById('yrdv-hizmet');
+  var tutarEl=document.getElementById('yrdv-tutar');
+  if(!sec||!tutarEl) return;
+  var opt=sec.options[sec.selectedIndex];
+  if(opt){
+    var t=opt.getAttribute('data-tutar');
+    if(t && !tutarEl.value) tutarEl.value=t;
+  }
+}
+
+/** Müşteri autocomplete - mevcut randevulardan öner */
+function yrdvMusteriAutocomplete(e){
+  var q=e.target.value.toLowerCase().trim();
+  var sug=document.getElementById('yrdv-musteri-oner');
+  if(!sug) return;
+  if(q.length<2){ sug.style.display='none'; sug.innerHTML=''; return; }
+
+  // Benzersiz müşteri listesi
+  var seen={};
+  var list=[];
+  RANDEVULAR.forEach(function(r){
+    if(!r.musteri) return;
+    var key=r.musteri.toLowerCase();
+    if(seen[key]) return;
+    if(key.indexOf(q)===-1) return;
+    seen[key]=true;
+    list.push({musteri:r.musteri, tel:r.tel||'', plaka:r.plaka||'', arac:r.arac||''});
+  });
+
+  if(!list.length){ sug.style.display='none'; return; }
+
+  sug.innerHTML=list.slice(0,5).map(function(m,idx){
+    return '<div onclick="yrdvMusteriSec('+idx+')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #f0f0f0;font-size:13px" onmouseover="this.style.background=\'#f8f8f8\'" onmouseout="this.style.background=\'\'" data-idx="'+idx+'">'
+      +'<div style="font-weight:700;color:var(--ink)">'+m.musteri+'</div>'
+      +'<div style="font-size:11px;color:var(--ink4)">'+m.tel+(m.plaka?' · '+m.plaka:'')+'</div>'
+    +'</div>';
+  }).join('');
+  sug.style.display='block';
+  window._yrdvOnerListesi=list;
+}
+
+/** Öneriden müşteri seç */
+function yrdvMusteriSec(idx){
+  var list=window._yrdvOnerListesi||[];
+  var m=list[idx]; if(!m) return;
+  var el=function(id){return document.getElementById(id);};
+  if(el('yrdv-musteri')) el('yrdv-musteri').value=m.musteri;
+  if(el('yrdv-tel')) el('yrdv-tel').value=m.tel;
+  if(el('yrdv-plaka')) el('yrdv-plaka').value=m.plaka;
+  if(el('yrdv-arac')) el('yrdv-arac').value=m.arac;
+  var sug=el('yrdv-musteri-oner');
+  if(sug){ sug.style.display='none'; sug.innerHTML=''; }
+}
+
+/** Yeni randevuyu kaydet */
+function yrdvKaydet(){
+  var el=function(id){return document.getElementById(id);};
+  var musteri=el('yrdv-musteri')?el('yrdv-musteri').value.trim():'';
+  var tel=el('yrdv-tel')?el('yrdv-tel').value.trim():'';
+  var plaka=el('yrdv-plaka')?el('yrdv-plaka').value.trim().toUpperCase().replace(/\s/g,''):'';
+  var arac=el('yrdv-arac')?el('yrdv-arac').value.trim():'—';
+  var saat=el('yrdv-saat')?el('yrdv-saat').value:'09:00';
+  var hizmet=el('yrdv-hizmet')?el('yrdv-hizmet').value:'';
+  var tutar=el('yrdv-tutar')?parseFloat(el('yrdv-tutar').value)||0:0;
+  var tarih=el('yrdv-tarih')?el('yrdv-tarih').value:'';
+
+  // Validasyon
+  if(!musteri){ toast('Müşteri adı gerekli','red'); el('yrdv-musteri').focus(); return; }
+  if(!plaka){ toast('Plaka gerekli','red'); el('yrdv-plaka').focus(); return; }
+  if(!hizmet){ toast('Hizmet seçin','red'); el('yrdv-hizmet').focus(); return; }
+  if(tutar<=0){ toast('Tutar geçerli olmalı','red'); el('yrdv-tutar').focus(); return; }
+
+  // Yeni randevu objesi
+  var yeni={
+    id: 'rdv_'+Date.now(),
+    tarih: tarih,
+    saat: saat,
+    musteri: musteri,
+    tel: tel,
+    plaka: plaka,
+    arac: arac||'—',
+    hizmet: hizmet,
+    tutar: tutar,
+    odenenToplam: 0,
+    durum: 'bekliyor',
+    odendi: false,
+    islem: '',
+    onlineOdeme: false,
+    odemeGecmisi: []
+  };
+
+  RANDEVULAR.push(yeni);
+  if(typeof storageKaydet==='function') storageKaydet();
+
+  // DB sync
+  if(typeof dbRandevuKaydet==='function'){
+    dbRandevuKaydet(yeni).then(function(){
+      toast('✓ Randevu kaydedildi','green');
+    }).catch(function(err){
+      console.error('DB sync hata',err);
+      toast('⚠ Lokal kaydedildi, sunucu hatası','orange');
+    });
+  } else {
+    toast('✓ Randevu kaydedildi','green');
+  }
+
+  // Takvim + Randevu listesi güncelle
+  if(typeof doTakvim==='function') doTakvim();
+  if(typeof doRdvListele==='function') doRdvListele();
+
+  // Modal kapat
+  var ovl=document.getElementById('yeni-rdv-ovl');
+  if(ovl) ovl.remove();
+
+  if(typeof hapticMedium==='function') hapticMedium();
 }
 function doDurumFiltre(d){
   _rdvDurum=d;
