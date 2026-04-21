@@ -1079,7 +1079,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
         Randevular
         <span class="sn-badge" id="rdv-badge">3</span>
       </div>
-      <div class="sn" data-yetki="randevu" onclick="doPg('musteriler')">
+      <div class="sn" data-yetki="randevu" data-saha-gizli="1" onclick="doPg('musteriler')">
         <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Müşteriler
       </div>
@@ -1361,7 +1361,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
         </div>
         <div class="kb" style="padding:0">
           <div class="tbl-wrap has-mobile-cards"><table class="tbl" id="rdv-tablo">
-            <thead><tr><th>Tarih</th><th>Müşteri</th><th>Plaka/Araç</th><th>Hizmet</th><th>Tutar</th><th>Durum</th><th>Ödeme</th><th>İşlem</th></tr></thead>
+            <thead><tr><th>Tarih</th><th>Müşteri</th><th>Plaka/Araç</th><th>Hizmet</th><th data-col="tutar">Tutar</th><th>Durum</th><th data-col="odeme">Ödeme</th><th data-col="islem">İşlem</th></tr></thead>
             <tbody id="rdv-tbody"></tbody>
           </table></div>
           <div class="mobile-card-list" id="rdv-mobile-kartlar"></div>
@@ -1995,14 +1995,21 @@ function kullaniciBilgiAyarla(d){
 /** CURRENT_USER'a göre menü ve içerikleri gizle/göster */
 function yetkiUygula(){
   var admin = kullaniciAdmin();
+  var saha = !admin && CURRENT_USER && CURRENT_USER.rol === 'saha';
 
   // 1) Sidebar menülerini yetki'ye göre gizle/göster
   var menuler = document.querySelectorAll('.sn[data-yetki]');
   menuler.forEach(function(el){
     var yetki = el.getAttribute('data-yetki');
+    var sahaGizli = el.getAttribute('data-saha-gizli') === '1';
     // Siteler: sadece admin
     if(yetki === 'siteler'){
       el.style.display = admin ? '' : 'none';
+      return;
+    }
+    // Saha personeli icin ozel gizli menuler (ornek: Musteriler)
+    if(saha && sahaGizli){
+      el.style.display = 'none';
       return;
     }
     // Diğer yetkiler (dashboard dahil)
@@ -2124,7 +2131,7 @@ function roleGoreAnaSayfa(){
 
 /** Randevular sayfasında yetkiye göre buton gizleme */
 function yetkiUygulaRandevular(){
-  // Saha rolü → sadece Detay görsün, diğer butonlar gizli
+  // Saha rolü → sadece takvim + randevu listesi (tutar/ödeme/fatura hepsi gizli)
   var saltOkur = !kullaniciAdmin() && CURRENT_USER.rol === 'saha';
   var style = document.getElementById('style-yetki-rdv');
   if(!style){
@@ -2134,17 +2141,53 @@ function yetkiUygulaRandevular(){
   }
   if(saltOkur){
     style.innerHTML = ''
-      // Randevu tablosunda Detay dışındaki butonları gizle
+      // === SAHA PERSONELI: Yonetim islem butonlarini tamamen gizle ===
+      // Ust islem bari (Fatura Kes / Odeme Al / Taksit / Detay)
+      + '#rdv-islem-bar{ display:none !important; }'
+      // "Yeni Randevu Ekle" formunu tamamen gizle
+      + '#pg-randevular .k:has(> .kh .kt):not(:has(#cal-baslik)){ }'
+      // Yeni Randevu Ekle karti (ikinci kart icinde "Yeni Randevu Ekle" yazan)
+      // Daha guvenli: form-grid icerenleri gizle (takvim form-grid kullanmaz)
+      + '#pg-randevular .k:has(.form-grid){ display:none !important; }'
+      // Grid'i tek sutuna zorla - takvim tam genislige yayilsin
+      + '#pg-randevular .g2{ grid-template-columns: 1fr !important; }'
+      // Randevu tablosunda islem butonlarini gizle
       + '#rdv-tablo button[onclick*="rdvDuzenle"], '
       + '#rdv-tablo button[onclick*="rdvFaturaKes"], '
       + '#rdv-tablo button[onclick*="rdvHariciOdeme"], '
       + '#rdv-tablo button[onclick*="rdvIslemYap"], '
-      + '#rdv-tablo button[onclick*="odemeDekontGoster"]'
+      + '#rdv-tablo button[onclick*="odemeDekontGoster"], '
+      + '#rdv-tablo button[onclick*="rdvOdemeAl"], '
+      + '#rdv-tablo button[onclick*="rdvIade"]'
       + '{ display: none !important; }'
       // "Yeni Randevu" butonu gizli
       + '#rdv-yeni-btn, button[onclick*="rdvYeniAc"]{ display:none !important; }'
-      // Tablolardaki ödeme tag'ı da tıklanamasın
-      + '#rdv-tablo .tag.bekl[onclick*="rdvOdemeAl"]{ pointer-events:none; opacity:.5; }';
+      // Tutar ile ilgili sutunlari gizle - data-col="tutar" class veya id
+      + '#rdv-tablo th[data-col="tutar"], #rdv-tablo td[data-col="tutar"], '
+      + '#rdv-tablo th[data-col="odeme"], #rdv-tablo td[data-col="odeme"], '
+      + '#rdv-tablo th[data-col="fatura"], #rdv-tablo td[data-col="fatura"], '
+      + '#rdv-tablo th[data-col="islem"], #rdv-tablo td[data-col="islem"]'
+      + '{ display: none !important; }'
+      // Odeme tag (odendi/bekliyor) disable
+      + '#rdv-tablo .tag.bekl[onclick*="rdvOdemeAl"], '
+      + '#rdv-tablo .tag.bekl[onclick*="rdvHariciOdeme"]'
+      + '{ pointer-events:none; opacity:.5; }'
+      // Mobil kartlarda tutar alanlari gizle
+      + '.mcard-tutar, .mcard-odeme, .mcard-islem, .mcard-swipe-actions{ display:none !important; }'
+      // Swipe aksiyonlari (Duzenle / Odeme Al)
+      + '.mcard-swipe-btn{ display:none !important; }'
+      // FAB (Yeni Randevu) gizli
+      + '.fab.show, #mobile-fab{ display:none !important; }'
+      // === RANDEVU DETAY MODALI: Saha icin tutar/odeme/fatura bolumleri gizli ===
+      // Modal icinde tutar/fiyat bolumlerini gizle (data-saha-gizli class ile)
+      + '.saha-gizli{ display:none !important; }'
+      // Detay modalindaki Fatura Kes / Odeme Al / Taksit / Iade butonlari
+      + '.rdv-detay-ovl button[onclick*="faturaKes"], '
+      + '.rdv-detay-ovl button[onclick*="OdemeAl"], '
+      + '.rdv-detay-ovl button[onclick*="Taksit"], '
+      + '.rdv-detay-ovl button[onclick*="Iade"]'
+      + '{ display: none !important; }'
+      ;
   } else {
     style.innerHTML = '';
   }
@@ -2379,6 +2422,11 @@ function doPg(id){
   }
   // Sprint 7.2: Yetki kontrolü - admin olmayan yetkisiz sayfaya erişemesin
   if(typeof CURRENT_USER!=='undefined' && CURRENT_USER.rol && !kullaniciAdmin()){
+    // Saha personeli icin ekstra kisitlama - sadece randevular sayfasi
+    if(CURRENT_USER.rol === 'saha' && id !== 'randevular'){
+      if(typeof toast==='function') toast('Bu sayfaya erişim yetkiniz yok','red');
+      return;
+    }
     var gerekliYetki={
       'randevular':'randevu','musteriler':'randevu','hizmetler':'rapor',
       'fiyatlar':'fiyat','raporlar':'rapor','odemeler':'odeme',
@@ -2583,10 +2631,10 @@ function doRdvListele(){
       +'<td><b>'+r.musteri+'</b>'+onlineRow+'<br><small style="color:var(--ink4)">'+r.tel+'</small></td>'
       +'<td><span class="tbl-plaka">'+r.plaka+'</span>'+(r.arac&&r.arac!=='—'?'<br><small>'+r.arac+'</small>':'')+'</td>'
       +'<td>'+r.hizmet+'</td>'
-      +'<td class="tbl-fiyat">'+tutarStr+'</td>'
+      +'<td class="tbl-fiyat" data-col="tutar">'+tutarStr+'</td>'
       +'<td><span class="tag '+s.tag+'">'+s.txt+'</span></td>'
-      +'<td>'+odemeTag+'</td>'
-      +'<td style="display:flex;gap:5px;flex-wrap:wrap">'
+      +'<td data-col="odeme">'+odemeTag+'</td>'
+      +'<td data-col="islem" style="display:flex;gap:5px;flex-wrap:wrap">'
         +(s.ekBtn?'<button class="ab ab-g" onclick="rdvIslemYap(this)">Tamamla</button>':'')
         +'<button class="ab ab-n" onclick="rdvDetay('+i+')">Detay</button>'
         +'<button style="padding:5px 8px;border:1.5px solid #2563EB;border-radius:6px;background:transparent;color:#2563EB;font-size:11px;font-weight:600;cursor:pointer" onclick="rdvDuzenle('+i+')">✏️ Düzenle</button>'
@@ -3831,7 +3879,7 @@ function rdvDetay(idx){
     var kln=Math.max(0,r.tutar-r.odenenToplam);
     var gecmisHtml='';
     if(r.odemeGecmisi.length){
-      gecmisHtml='<div style="margin-bottom:12px">'
+      gecmisHtml='<div class="saha-gizli" style="margin-bottom:12px">'
         +'<div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Ödeme Geçmişi</div>';
       var topOdenen=0;
       r.odemeGecmisi.forEach(function(o){
@@ -3851,7 +3899,7 @@ function rdvDetay(idx){
 
     var odemeFormHtml='';
     if(kln>0){
-      odemeFormHtml='<div style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:12px">'
+      odemeFormHtml='<div class="saha-gizli" style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:12px">'
         +'<div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Ödeme Al</div>'
         // ─── 1. YONTEM satiri ───
         +'<div style="display:flex;gap:8px;margin-bottom:8px">'
@@ -3904,7 +3952,7 @@ function rdvDetay(idx){
         +'</div>'
       +'</div>';
     } else {
-      odemeFormHtml='<div style="background:rgba(22,163,74,.06);border:1.5px solid rgba(22,163,74,.2);border-radius:10px;padding:12px;margin-bottom:12px;text-align:center">'
+      odemeFormHtml='<div class="saha-gizli" style="background:rgba(22,163,74,.06);border:1.5px solid rgba(22,163,74,.2);border-radius:10px;padding:12px;margin-bottom:12px;text-align:center">'
         +'<div style="font-size:22px">✅</div>'
         +'<div style="font-size:13px;font-weight:700;color:var(--green);margin-top:4px">Borç Tamamı Ödendi</div>'
         +'</div>';
@@ -3930,7 +3978,7 @@ function rdvDetay(idx){
           +'<div style="background:var(--bg);border-radius:8px;padding:8px 12px"><div style="font-size:9px;color:var(--ink4);font-weight:700;text-transform:uppercase;margin-bottom:2px">Hizmet</div><div style="font-size:12px;font-weight:700">'+r.hizmet+'</div></div>'
         +'</div>'
         // Borç özeti
-        +'<div style="background:'+borcBg+';border:1.5px solid '+borcBorder+';border-radius:10px;padding:12px;margin-bottom:12px">'
+        +'<div class="saha-gizli" style="background:'+borcBg+';border:1.5px solid '+borcBorder+';border-radius:10px;padding:12px;margin-bottom:12px">'
           +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">'
             +'<div><div style="font-size:9px;color:var(--ink4);font-weight:700;text-transform:uppercase;margin-bottom:2px">Toplam Borç</div><div style="font-family:Bebas Neue,sans-serif;font-size:18px;color:var(--ink)">₺'+r.tutar.toLocaleString('tr-TR')+'</div></div>'
             +'<div><div style="font-size:9px;color:var(--ink4);font-weight:700;text-transform:uppercase;margin-bottom:2px">Ödenen</div><div style="font-family:Bebas Neue,sans-serif;font-size:18px;color:var(--green)">₺'+r.odenenToplam.toLocaleString('tr-TR')+'</div></div>'
