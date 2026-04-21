@@ -2,8 +2,19 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Hesabım — Autonax Premium Araç Koruma</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#B01C2E">
+<title>Autonax - Hesabım</title>
+
+<!-- ═══ FAVICON TAM SETİ (PWA uyumlu - Admin panel ile aynı) ═══ -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%231a1a1a'/%3E%3Crect x='8' y='8' width='496' height='496' rx='88' fill='none' stroke='%23B01C2E' stroke-width='16'/%3E%3Cpath d='M256 80 L420 432 L350 432 L316 356 L196 356 L162 432 L92 432 Z M224 288 L288 288 L256 216 Z' fill='%23B01C2E'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%231a1a1a'/%3E%3Crect x='8' y='8' width='496' height='496' rx='88' fill='none' stroke='%23B01C2E' stroke-width='16'/%3E%3Cpath d='M256 80 L420 432 L350 432 L316 356 L196 356 L162 432 L92 432 Z M224 288 L288 288 L256 216 Z' fill='%23B01C2E'/%3E%3C/svg%3E">
+<meta name="msapplication-TileColor" content="#1a1a1a">
+<meta name="apple-mobile-web-app-title" content="Autonax">
+
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ── RESET & ROOT ── */
@@ -389,12 +400,167 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
   .header{padding:0 14px}
   .header-username,.header-usersub{display:none}
   .stat-val{font-size:24px}
+
+  /* ═══════════════════════════════════════════════════════════ */
+  /* ═══ NATIVE MOBILE APP SHELL                              ═══ */
+  /* ═══════════════════════════════════════════════════════════ */
+
+  /* iOS safe-area desteği (çentikli ekranlar) */
+  .header{
+    padding-top:env(safe-area-inset-top) !important;
+    height:calc(var(--header-h) + env(safe-area-inset-top)) !important;
+    box-sizing:border-box !important;
+    align-items:center !important;
+  }
+  .layout{padding-top:calc(var(--header-h) + env(safe-area-inset-top)) !important}
+  .sidebar{top:calc(var(--header-h) + env(safe-area-inset-top)) !important}
+  .main{padding-bottom:calc(86px + env(safe-area-inset-bottom)) !important}
+
+  /* Alt tab bar - safe-area bottom + native görünüm */
+  .mbnav{
+    height:calc(56px + env(safe-area-inset-bottom));
+    padding-bottom:env(safe-area-inset-bottom);
+    background:var(--ink) !important;
+    border-top:2px solid var(--r) !important;
+    box-shadow:0 -4px 12px rgba(0,0,0,.18);
+  }
+  .mbi{
+    color:#888 !important;
+    position:relative;
+    transition:.15s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .mbi.on{color:var(--r) !important}
+  .mbi.on::before{
+    content:'';
+    position:absolute;
+    top:0;left:20%;right:20%;
+    height:3px;
+    background:var(--r);
+    border-radius:0 0 3px 3px;
+  }
+  .mbi:active{transform:scale(.92)}
+  .mbi span{font-size:10px !important;letter-spacing:.3px !important}
+
+  /* Header - logo kompakt, hamburger yok (alt tab bar'da menü var) */
+  .hbg-mob{display:none !important}
+  .header-back{display:none !important}
+  .header{padding:0 10px !important;gap:8px !important}
+  .header-logo{font-size:20px !important;letter-spacing:3px !important;line-height:1.05 !important}
+  .header-logo small{font-size:9px !important;letter-spacing:2px !important;margin-top:1px !important}
+  .header-avatar{width:28px !important;height:28px !important;font-size:12px !important;flex-shrink:0}
+  .header-notif{flex-shrink:0}
+
+  /* Tap highlight kaldır (gri flash olmasın) */
+  *{-webkit-tap-highlight-color:transparent}
+  button,a,.sn,.tab,.mbi{-webkit-tap-highlight-color:transparent}
+
+  /* Active state - butona basınca hafif scale (app feedback) */
+  button:active,.tab:active,.sn:active,.sidebar-bottom-btn:active{
+    transform:scale(.96);
+    transition:transform .08s ease-out;
+  }
+  button,.tab,.sn{transition:transform .15s ease}
+
+  /* Sayfa geçişleri - fade + slide */
+  [id^="pg-"]{
+    animation:pgSlideH .25s ease-out;
+  }
+  @keyframes pgSlideH{
+    from{opacity:0;transform:translateX(12px)}
+    to{opacity:1;transform:translateX(0)}
+  }
+
+  /* iOS zoom önleme - input focus'ta 16px */
+  input:focus,textarea:focus,select:focus{
+    font-size:16px !important;
+  }
+
+  /* Native scroll - momentum */
+  .main,body,.sidebar{-webkit-overflow-scrolling:touch}
+
+  /* Text selection disable - UI elementlerde */
+  .mbi,.tab,.sn,.header-avatar,.kart-title,.sidebar-bottom-btn{
+    -webkit-user-select:none;user-select:none;
+  }
+  /* İçerik seçilebilir */
+  p,td,h1,h2,h3,input,textarea,label,.stat-val,.stat-label{-webkit-user-select:auto;user-select:auto}
+
+  /* FAB (Floating Action Button) - default gizli, .show ile görünür */
+  .fab{display:none !important}
+  .fab.show{
+    display:flex !important;
+    position:fixed !important;
+    right:16px;
+    bottom:calc(76px + env(safe-area-inset-bottom));
+    width:54px;height:54px;
+    border-radius:50%;
+    background:var(--r);
+    color:#fff;
+    border:none;
+    box-shadow:0 6px 18px rgba(176,28,46,.45);
+    cursor:pointer;
+    z-index:340;
+    align-items:center;justify-content:center;
+    font-size:26px;font-weight:300;
+    transition:.2s;
+  }
+  .fab.show:active{transform:scale(.9)}
+
+  /* Modal - bottom sheet (alttan kayar) - Login hariç */
+  .pm-ovl,.ovl,[id$="-ovl"]:not(#login-ovl),[id^="sifre-"]{
+    align-items:flex-end !important;
+    padding:0 !important;
+  }
+  .pm-ovl > div,.ovl > div,[id$="-ovl"]:not(#login-ovl) > div{
+    max-width:100% !important;
+    width:100% !important;
+    border-radius:20px 20px 0 0 !important;
+    margin:0 !important;
+    position:fixed !important;
+    bottom:0 !important;
+    left:0 !important;
+    right:0 !important;
+    max-height:92vh !important;
+    animation:modalSlideUpH .32s cubic-bezier(.2,.8,.2,1) !important;
+  }
+
+  /* Login ekranı - mobilde merkezlendirilmiş ve safe-area aware */
+  #login-ovl{
+    padding:20px !important;
+    padding-top:calc(env(safe-area-inset-top) + 20px) !important;
+    padding-bottom:calc(env(safe-area-inset-bottom) + 20px) !important;
+    align-items:center !important;
+  }
+  #login-ovl > div{
+    width:100% !important;
+    max-width:100% !important;
+  }
+  @keyframes modalSlideUpH{
+    from{transform:translateY(100%);opacity:.5}
+    to{transform:translateY(0);opacity:1}
+  }
+
+  /* Page title mobilde kompakt */
+  .page-title{font-size:24px !important;letter-spacing:1.5px !important}
+  .page-eyebrow{font-size:10px !important;letter-spacing:1.5px !important}
+  .page-sub{font-size:12px !important}
 }
+
 @media(max-width:420px){
   .main{padding:12px 12px 76px}
   .garanti-row{flex-wrap:wrap}
   .gpill{min-width:calc(50% - 4px)}
+
+  /* Extra küçük cihazlarda daha kompakt */
+  .header-logo{font-size:17px !important;letter-spacing:2px !important}
+  .header-logo small{font-size:8px !important}
+  .page-title{font-size:20px !important}
+  .mbi span{font-size:9px !important}
 }
+
+/* FAB desktop'ta görünmez - varsayılan */
+.fab{display:none}
 </style>
 <script>window.onerror=function(msg,url,line,col,err){console.error("Autonax Global Error:",msg,"at",url+":"+line+":"+col);return false;};</script>
 </head>
@@ -934,13 +1100,16 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 <!-- MOBİL BOTTOM NAV -->
 <div class="mbnav">
   <div class="mbnav-in">
-    <div class="mbi on" onclick="goster('dashboard')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Panel</span></div>
-    <div class="mbi" onclick="goster('garajim')"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/></svg><span>Garajım</span></div>
-    <div class="mbi" onclick="goster('randevular')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Randevu</span></div>
-    <div class="mbi" onclick="goster('belgeler')"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>Belgeler</span></div>
-    <div class="mbi" onclick="goster('profil')"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profil</span></div>
+    <div class="mbi on" data-tab="dashboard" onclick="goster('dashboard')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Panel</span></div>
+    <div class="mbi" data-tab="garajim" onclick="goster('garajim')"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/></svg><span>Garajım</span></div>
+    <div class="mbi" data-tab="randevular" onclick="goster('randevular')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Randevu</span></div>
+    <div class="mbi" data-tab="odemelerim" onclick="goster('odemelerim')"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><span>Ödeme</span></div>
+    <div class="mbi" data-tab="__menu__" onclick="sidebarToggle()"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg><span>Menü</span></div>
   </div>
 </div>
+
+<!-- MOBİL FAB (Floating Action Button) -->
+<button id="mobile-fab" class="fab" onclick="fabTiklaH()" title="Yeni kayıt">+</button>
 
 <script>
 /* ════════════════════════════════════════════════════
@@ -1032,13 +1201,65 @@ function goster(id){
   document.querySelectorAll('.mbi').forEach(el=>el.classList.remove('on'));
   const sn = [...document.querySelectorAll('.sn')].find(el=>el.getAttribute('onclick')?.includes("'"+id+"'"));
   if(sn) sn.classList.add('on');
-  const mbi = [...document.querySelectorAll('.mbi')].find(el=>el.getAttribute('onclick')?.includes("'"+id+"'"));
+  // Alt tab bar - data-tab ile eşleşen tab'ı aktif yap
+  const mbi = document.querySelector('.mbi[data-tab="'+id+'"]');
   if(mbi) mbi.classList.add('on');
   if(window.innerWidth<=767) document.getElementById('sidebar').classList.remove('open');
   window.scrollTo({top:0,behavior:'smooth'});
 
   // Tab'a ozel yukleme
   if(id==='odemelerim') odemelerimYukle();
+
+  // FAB sayfa bazlı güncelle
+  if(typeof fabGuncelleH==='function') fabGuncelleH(id);
+  // Haptic feedback
+  if(typeof hapticLightH==='function') hapticLightH();
+}
+
+/* ═══ SPRINT H - MOBILE NATIVE APP HELPERS ═══ */
+
+/** Hafif titreşim - Android'de çalışır, iOS'ta sessiz */
+function hapticLightH(){
+  try { if(navigator.vibrate) navigator.vibrate(10); }catch(e){}
+}
+function hapticMediumH(){
+  try { if(navigator.vibrate) navigator.vibrate(25); }catch(e){}
+}
+
+/** Sayfa bazlı FAB göster/gizle */
+function fabGuncelleH(pgId){
+  var fab=document.getElementById('mobile-fab');
+  if(!fab) return;
+  var fabHaritasi={
+    'randevular':{goster:true,baslik:'Yeni Randevu',ikon:'+'},
+    'garajim':{goster:true,baslik:'Yeni Araç Ekle',ikon:'+'}
+  };
+  var ayar=fabHaritasi[pgId];
+  if(ayar && ayar.goster){
+    fab.classList.add('show');
+    fab.title=ayar.baslik;
+    fab.textContent=ayar.ikon;
+    fab.setAttribute('data-pg',pgId);
+  } else {
+    fab.classList.remove('show');
+  }
+}
+
+/** FAB tıklanınca sayfa bazlı aksiyon */
+function fabTiklaH(){
+  var fab=document.getElementById('mobile-fab');
+  var pg=fab ? fab.getAttribute('data-pg') : '';
+  if(pg==='randevular'){
+    // Randevular sayfasında "Yeni Randevu Al" butonunu bul
+    var yeniBtn=document.querySelector('#pg-randevular button[onclick*="yeniRandevuAc"],#pg-randevular a[href*="iletisim"],#pg-randevular .btn-primary');
+    if(yeniBtn){ yeniBtn.click(); }
+    else { window.location.href='/iletisim'; }
+  } else if(pg==='garajim'){
+    // Garajım sayfasında "Araç Ekle" butonunu bul
+    var aracBtn=document.querySelector('#pg-garajim button[onclick*="aracEkle"],#pg-garajim .btn-primary,#pg-garajim button.btn-r');
+    if(aracBtn){ aracBtn.click(); }
+  }
+  if(typeof hapticMediumH==='function') hapticMediumH();
 }
 
 /* ══ ÖDEMELERİM ══ */
