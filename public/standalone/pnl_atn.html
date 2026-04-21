@@ -1180,12 +1180,15 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
       <div class="k">
         <div class="kh"><div class="kt">Son Hizmetler</div><span class="km" onclick="doPg('hizmetler')">Tümü →</span></div>
         <div class="kb" style="padding:0">
-          <table class="tbl">
-            <thead><tr><th>Müşteri</th><th>Araç</th><th>Hizmet</th><th>Tarih</th><th>Tutar</th><th>Durum</th><th>İşlem</th></tr></thead>
-            <tbody>
-              <tr><td colspan="7" style="text-align:center;padding:20px;color:var(--ink4);font-size:13px;">Henüz hizmet kaydı yok</td></tr>
+          <div class="tbl-wrap has-mobile-cards">
+            <table class="tbl">
+              <thead><tr><th>Müşteri</th><th>Araç</th><th>Hizmet</th><th>Tarih</th><th>Tutar</th><th>Durum</th><th>İşlem</th></tr></thead>
+              <tbody id="dash-son-hiz-tbody">
+                <tr><td colspan="7" style="text-align:center;padding:20px;color:var(--ink4);font-size:13px;">Henüz hizmet kaydı yok</td></tr>
               </tbody>
-          </table>
+            </table>
+          </div>
+          <div class="mobile-card-list" id="dash-son-hiz-mobile"></div>
         </div>
       </div>
     </div>
@@ -2253,21 +2256,72 @@ async function dashboardYukle() {
       return '<div class="chart-bar-row"><div class="chart-bar-label">'+h[0]+'</div><div class="chart-bar-track"><div class="chart-bar-fill" style="width:'+Math.round(h[1]/maxS*100)+'%"></div></div><div class="chart-bar-val">× '+h[1]+'</div></div>';
     }).join('');
 
-    // Son hizmetler
-    var tbody=document.querySelector('#pg-dashboard .tbl tbody');
-    if(tbody&&randevular.length) tbody.innerHTML=randevular.slice(0,5).map(function(r){
-      var s=typeof rdvRenkStyle==='function'?rdvRenkStyle(r):{txt:'Bekliyor'};
-      var renk=r.durum==='onay'||r.islem?'#16a34a':'#d97706';
-      return '<tr class="dash-rdv-row" style="cursor:pointer">'
-        +'<td><div style="font-weight:600;font-size:12px">'+(r.musteri||'—')+'</div><div style="font-size:10px;color:var(--ink4)">'+(r.tel||'')+'</div></td>'
-        +'<td style="font-size:11px">'+(r.arac||r.plaka||'—')+'</td>'
-        +'<td style="font-size:11px">'+(r.hizmet||'—').slice(0,25)+'</td>'
-        +'<td style="font-size:11px">'+(r.tarih||'')+' '+(r.saat||'')+'</td>'
-        +'<td style="font-size:11px;font-weight:700">₺'+(r.tutar||0).toLocaleString('tr-TR')+'</td>'
-        +'<td><span style="font-size:10px;background:'+renk+'22;color:'+renk+';padding:2px 8px;border-radius:10px">'+(s.txt||'Bekliyor')+'</span></td>'
-        +'<td><button class="dash-detay-btn" style="font-size:10px;padding:3px 8px;border:1.5px solid var(--bd);border-radius:6px;background:#fff;cursor:pointer">Detay</button></td>'
-      +'</tr>';
-    }).join('');
+    // Son hizmetler - yeniden eskiye sırala (tarih+saat)
+    var sirali=randevular.slice().sort(function(a,b){
+      // tarih "DD.MM.YYYY" formatında
+      function toDate(r){
+        var p=(r.tarih||'').split('.');
+        if(p.length!==3) return 0;
+        var saat=(r.saat||'00:00').split(':');
+        return new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]), parseInt(saat[0])||0, parseInt(saat[1])||0).getTime();
+      }
+      return toDate(b)-toDate(a);  // yeniye göre
+    });
+    var son5=sirali.slice(0,5);
+
+    var tbody=document.getElementById('dash-son-hiz-tbody');
+    if(tbody){
+      if(son5.length===0){
+        tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--ink4);font-size:13px;">Henüz hizmet kaydı yok</td></tr>';
+      } else {
+        tbody.innerHTML=son5.map(function(r){
+          var s=typeof rdvRenkStyle==='function'?rdvRenkStyle(r):{txt:'Bekliyor'};
+          var renk=r.durum==='onay'||r.islem?'#16a34a':'#d97706';
+          return '<tr class="dash-rdv-row" style="cursor:pointer">'
+            +'<td><div style="font-weight:600;font-size:12px">'+(r.musteri||'—')+'</div><div style="font-size:10px;color:var(--ink4)">'+(r.tel||'')+'</div></td>'
+            +'<td style="font-size:11px">'+(r.arac||r.plaka||'—')+'</td>'
+            +'<td style="font-size:11px">'+(r.hizmet||'—').slice(0,25)+'</td>'
+            +'<td style="font-size:11px">'+(r.tarih||'')+' '+(r.saat||'')+'</td>'
+            +'<td style="font-size:11px;font-weight:700">₺'+(r.tutar||0).toLocaleString('tr-TR')+'</td>'
+            +'<td><span style="font-size:10px;background:'+renk+'22;color:'+renk+';padding:2px 8px;border-radius:10px">'+(s.txt||'Bekliyor')+'</span></td>'
+            +'<td><button class="dash-detay-btn" style="font-size:10px;padding:3px 8px;border:1.5px solid var(--bd);border-radius:6px;background:#fff;cursor:pointer">Detay</button></td>'
+          +'</tr>';
+        }).join('');
+      }
+    }
+
+    // Son Hizmetler mobile kart listesi
+    var dashMobile=document.getElementById('dash-son-hiz-mobile');
+    if(dashMobile){
+      if(son5.length===0){
+        dashMobile.innerHTML='<div class="mcard-bos"><div class="mcard-bos-ikon">📋</div><div class="mcard-bos-text">Henüz hizmet kaydı yok</div></div>';
+      } else {
+        dashMobile.innerHTML=son5.map(function(r){
+          var s=typeof rdvRenkStyle==='function'?rdvRenkStyle(r):{txt:'Bekliyor',tag:'bekl'};
+          var origIdx=RANDEVULAR.indexOf(r);
+          if(origIdx<0) origIdx=0;  // fallback
+          var renk=r.durum==='onay'||r.islem?'#16a34a':r.durum==='iptal'?'#dc2626':'#d97706';
+          var kalan=(r.tutar||0)-(r.odenenToplam||0);
+          return '<div class="mcard" onclick="rdvDetay('+origIdx+')">'
+            +'<div class="mcard-top">'
+              +'<span class="mcard-plaka">'+(r.plaka||'—')+'</span>'
+              +'<span class="mcard-status" style="background:'+renk+'22;color:'+renk+'">'+(s.txt||'Bekliyor')+'</span>'
+            +'</div>'
+            +'<div class="mcard-musteri">'+(r.musteri||'—')+'</div>'
+            +'<div class="mcard-meta">'
+              +'📅 <b>'+(r.tarih||'—')+'</b>'+(r.saat?' · '+r.saat:'')
+              +(r.hizmet?'<br>🔧 '+r.hizmet.slice(0,40):'')
+            +'</div>'
+            +'<div class="mcard-foot">'
+              +'<div class="mcard-tutar">₺'+(r.tutar||0).toLocaleString('tr-TR')+'</div>'
+              +(kalan>0
+                ?'<span class="mcard-tag bekl">💳 Kalan: ₺'+kalan.toLocaleString('tr-TR')+'</span>'
+                :'<span class="mcard-tag onay">✓ Ödendi</span>')
+            +'</div>'
+          +'</div>';
+        }).join('');
+      }
+    }
 
   } catch(e){ console.error('Dashboard hata:',e.message); }
 }
@@ -2852,29 +2906,95 @@ function dashboardGuncelle(){ dashboardYukle(); return; /* Artık dashboardYukle
       if(bugunRdv.length===0){
         liste.innerHTML='<div style="text-align:center;padding:24px;color:var(--ink4);font-size:13px;">Bugün için randevu yok</div>';
       } else {
-        liste.innerHTML='<table class="tbl"><thead><tr><th>Müşteri</th><th>Araç</th><th>Hizmet</th><th>Saat</th><th>Tutar</th><th>Durum</th></tr></thead><tbody>'
+        // Desktop: tablo, Mobile: kart - ikisini de render et, CSS ile toggle
+        var tabloHtml='<div class="tbl-wrap has-mobile-cards"><table class="tbl"><thead><tr><th>Müşteri</th><th>Araç</th><th>Hizmet</th><th>Saat</th><th>Tutar</th><th>Durum</th></tr></thead><tbody>'
           +bugunRdv.map(function(r){
             var dur=r.durum||'bekliyor';
             var c=dur==='onaylandi'?'#1a6b3c':dur==='iptal'?'#dc2626':'#d97706';
             var bg=dur==='onaylandi'?'rgba(26,107,60,.1)':dur==='iptal'?'rgba(220,38,38,.1)':'rgba(217,119,6,.1)';
             return '<tr><td>'+(r.musteri||r.isim||'-')+'</td><td>'+(r.arac||'-')+'</td><td>'+(r.hizmet||'-')+'</td><td>'+(r.saat||'-')+'</td><td>₺'+(r.tutar?Number(r.tutar).toLocaleString('tr-TR'):'0')+'</td><td><span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:'+bg+';color:'+c+'">'+dur+'</span></td></tr>';
-          }).join('')+'</tbody></table>';
+          }).join('')+'</tbody></table></div>';
+
+        var mobilHtml='<div class="mobile-card-list" style="padding:12px">'
+          +bugunRdv.map(function(r){
+            var dur=r.durum||'bekliyor';
+            var durClass=dur==='onaylandi'?'onay':dur==='iptal'?'iptal':'bekl';
+            var durText=dur==='onaylandi'?'✓ Tamam':dur==='iptal'?'✕ İptal':'⏳ Bekliyor';
+            var tutar=r.tutar?Number(r.tutar).toLocaleString('tr-TR'):'0';
+            return '<div class="mcard" onclick="doPg(\'randevular\')">'
+              +'<div class="mcard-top">'
+                +(r.plaka?'<span class="mcard-plaka">'+r.plaka+'</span>':'<span style="font-weight:700">'+(r.arac||'—')+'</span>')
+                +'<span class="mcard-tag '+durClass+'">'+durText+'</span>'
+              +'</div>'
+              +'<div class="mcard-musteri">'+(r.musteri||r.isim||'-')+'</div>'
+              +'<div class="mcard-meta">🕐 <b>'+(r.saat||'-')+'</b> · 🔧 '+(r.hizmet||'-')+'</div>'
+              +'<div class="mcard-foot"><div class="mcard-tutar">₺'+tutar+'</div></div>'
+            +'</div>';
+          }).join('')
+        +'</div>';
+
+        liste.innerHTML=tabloHtml+mobilHtml;
       }
     }
 
     // ── Son Hizmetler ──
     var tbody=document.getElementById('dash-son-hiz-tbody');
+    // Yeniden eskiye sırala (tarih+saat desc)
+    var sonHizmetler=rdvlar.slice().sort(function(a,b){
+      // Tarih 'dd.mm.yyyy' -> timestamp
+      function parse(d,s){
+        if(!d) return 0;
+        var p=d.split('.');
+        if(p.length!==3) return 0;
+        var iso=p[2]+'-'+p[1]+'-'+p[0]+'T'+(s||'00:00')+':00';
+        var t=new Date(iso).getTime();
+        return isNaN(t)?0:t;
+      }
+      return parse(b.tarih,b.saat)-parse(a.tarih,a.saat);
+    }).slice(0,5);
+
     if(tbody){
-      if(rdvlar.length===0){
+      if(sonHizmetler.length===0){
         tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--ink4);font-size:13px;">Henüz kayıt yok</td></tr>';
       } else {
-        tbody.innerHTML=rdvlar.slice(0,5).map(function(r){
+        tbody.innerHTML=sonHizmetler.map(function(r){
           var dur=r.durum||'bekliyor';
           var c=dur==='onaylandi'?'#1a6b3c':dur==='iptal'?'#dc2626':'#d97706';
           var bg=dur==='onaylandi'?'rgba(26,107,60,.1)':dur==='iptal'?'rgba(220,38,38,.1)':'rgba(217,119,6,.1)';
           var tutar=r.tutar?Number(r.tutar).toLocaleString('tr-TR'):'0';
           return '<tr><td>'+(r.musteri||r.isim||'-')+'</td><td>'+(r.arac||'-')+'</td><td>'+(r.hizmet||'-')+'</td><td>'+(r.tarih||'-')+'</td><td>₺'+tutar+'</td><td><span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:'+bg+';color:'+c+'">'+dur+'</span></td><td></td></tr>';
+        }).join('');
+      }
+    }
 
+    // Mobile kart render
+    var mobil=document.getElementById('dash-son-hiz-mobile');
+    if(mobil){
+      if(sonHizmetler.length===0){
+        mobil.innerHTML='<div class="mcard-bos"><div class="mcard-bos-ikon">📋</div><div class="mcard-bos-text">Henüz hizmet kaydı yok</div></div>';
+      } else {
+        mobil.innerHTML=sonHizmetler.map(function(r){
+          var dur=r.durum||'bekliyor';
+          var durClass=dur==='onaylandi'?'onay':dur==='iptal'?'iptal':'bekl';
+          var durText=dur==='onaylandi'?'✓ Tamamlandı':dur==='iptal'?'✕ İptal':'⏳ Bekliyor';
+          var tutar=r.tutar?Number(r.tutar).toLocaleString('tr-TR'):'0';
+          // Plaka varsa plaka, yoksa sadece araç
+          var plakaHtml=r.plaka?'<span class="mcard-plaka">'+r.plaka+'</span>':'';
+          return '<div class="mcard" onclick="doPg(\'hizmetler\')">'
+            +'<div class="mcard-top">'
+              +(plakaHtml||'<span style="font-weight:700;color:var(--ink)">'+(r.arac||'—')+'</span>')
+              +'<span class="mcard-tag '+durClass+'">'+durText+'</span>'
+            +'</div>'
+            +'<div class="mcard-musteri">'+(r.musteri||r.isim||'-')+'</div>'
+            +'<div class="mcard-meta">'
+              +'📅 <b>'+(r.tarih||'-')+'</b>'+(r.saat?' · '+r.saat:'')
+              +'<br>🔧 '+(r.hizmet||'-')
+              +(r.arac && plakaHtml?' · 🚗 '+r.arac:'')
+            +'</div>'
+            +'<div class="mcard-foot">'
+              +'<div class="mcard-tutar">₺'+tutar+'</div>'
+            +'</div>'
+          +'</div>';
         }).join('');
       }
     }
