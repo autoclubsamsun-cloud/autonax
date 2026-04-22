@@ -158,6 +158,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 
 /* ══ GRID ══ */
 .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px}
 .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
 .g21{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:20px}
@@ -320,7 +321,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 /* ══ RESPONSIVE ══ */
 .hd-menu-btn{display:none;align-items:center;justify-content:center;width:36px;height:36px;background:none;border:none;cursor:pointer;flex-direction:column;gap:5px;padding:4px}
 .hd-menu-btn span{display:block;width:22px;height:2px;background:var(--ink);border-radius:2px;transition:.3s}
-@media(max-width:1200px){.g4{grid-template-columns:repeat(2,1fr)}.fiyat-row{grid-template-columns:100px 1fr 1fr 1fr}}
+@media(max-width:1200px){.g4{grid-template-columns:repeat(2,1fr)}.g5{grid-template-columns:repeat(3,1fr)}.fiyat-row{grid-template-columns:100px 1fr 1fr 1fr}}
 @media(max-width:900px){
   :root{--sidebar:0px}
   .sidebar{transform:translateX(-220px);transition:.3s;width:220px;z-index:400;position:fixed;top:0;height:100vh;overflow-y:auto}
@@ -397,6 +398,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 
   /* Dashboard kart grid */
   .g4{grid-template-columns:1fr 1fr}
+  .g5{grid-template-columns:1fr 1fr}
 
   /* Bayi/personel listesi */
   .bayi-kart,.musteri-kart{padding:12px}
@@ -1663,7 +1665,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
       </div>
 
       <!-- KPI Kartları -->
-      <div class="g4" id="odeme-kpiler" style="margin-bottom:16px"></div>
+      <div class="g5" id="odeme-kpiler" style="margin-bottom:16px"></div>
 
       <!-- Filtre -->
       <div class="k" style="margin-bottom:0">
@@ -1703,7 +1705,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
         </div>
         <div class="kb" style="padding:0">
           <div class="tbl-wrap has-mobile-cards"><table class="tbl" id="odeme-tablo">
-            <thead><tr><th>Tarih</th><th>Müşteri</th><th>Plaka</th><th>Hizmet</th><th>Toplam</th><th>Ödenen</th><th>Kalan</th><th>Yöntem</th><th>Durum</th><th>İşlem</th></tr></thead>
+            <thead><tr><th>Tarih</th><th>Müşteri</th><th>Plaka</th><th>Hizmet</th><th>Toplam</th><th>Ödenen</th><th>Kalan</th><th>Yöntem</th><th>Komisyon</th><th>Durum</th><th>İşlem</th></tr></thead>
             <tbody id="odeme-tbody"></tbody>
           </table></div>
           <div class="mobile-card-list" id="odeme-mobile-kartlar"></div>
@@ -4805,6 +4807,47 @@ function taksitHesapla(tutar,ay,pct,firmaNin){
   return {aylik:Math.round(toplam/ay),toplam:Math.round(toplam),vf:Math.round(toplam-tutar)};
 }
 
+/* ════════════ KOMİSYON HESAPLAMA ════════════
+ * Bir odemeGecmisi kaydından (ör: {yontem:'Kredi Karti Taksit', miktar:54000,
+ * not:'Maximum - 3 taksit - Vade farkı firmadan'}) firmanın karşıladığı
+ * komisyon tutarını hesaplar. Sadece vade farkı firmadan kesilen kredi kartı
+ * ödemelerinde komisyon döner; diğerlerinde 0.
+ */
+function odemeKomisyonHesapla(og){
+  if(!og||!og.yontem) return 0;
+  var yontem=(og.yontem||'').toLowerCase();
+  // Sadece kart ile yapılan ödemeler
+  if(yontem.indexOf('kart')<0 && yontem.indexOf('taksit')<0 && yontem.indexOf('paytr')<0 && yontem.indexOf('iyzico')<0) return 0;
+  var not=(og.not||'').toLowerCase();
+  // "Vade farkı firmadan" veya "firma karşılar" geçiyorsa firma karşılamış
+  var firmaKarsiladi = not.indexOf('firmadan')>-1 || not.indexOf('firma karşıl')>-1 || not.indexOf('firma karsil')>-1;
+  if(!firmaKarsiladi) return 0;
+  // Banka ve taksit sayısını not'tan parse et — format: "Banka - N taksit - ..."
+  // Örnek: "Maximum - 3 taksit - Vade farkı firmadan"
+  var banka=null, ay=1;
+  var bankalar=Object.keys(TAKSIT_ORANLARI||{});
+  for(var i=0;i<bankalar.length;i++){
+    if(not.indexOf(bankalar[i].toLowerCase())>-1){ banka=bankalar[i]; break; }
+  }
+  var taksitMatch=(og.not||'').match(/(\d+)\s*taksit/i);
+  if(taksitMatch) ay=parseInt(taksitMatch[1])||1;
+  // Tek çekim olsa bile oran olabilir (1 taksit = tek çekim)
+  if(!banka) return 0;
+  var oranlar=TAKSIT_ORANLARI[banka]||{};
+  var oran=oranlar[ay]||oranlar['1']||0;
+  if(!oran) return 0;
+  // Firma karşıladığı için: komisyon = miktar * oran/100 (miktardan kesilir)
+  return Math.round((og.miktar||0)*(oran/100));
+}
+
+/* Bir randevunun toplam firma komisyon giderini döner */
+function randevuKomisyonHesapla(r){
+  if(!r||!r.odemeGecmisi||!r.odemeGecmisi.length) return 0;
+  var top=0;
+  r.odemeGecmisi.forEach(function(og){ top+=odemeKomisyonHesapla(og); });
+  return top;
+}
+
 function taksitAc(idx){
   var r=RANDEVULAR[idx]; if(!r) return;
   var kln=Math.max(0,r.tutar-(r.odenenToplam||0));
@@ -6055,18 +6098,25 @@ function odemeSayfasiYukle(){
 
 function odemeKPIGuncelle(){
   var el=document.getElementById('odeme-kpiler'); if(!el) return;
-  var topTutar=0,topOdenen=0,topKalan=0,tamSay=0,kismiSay=0,beklSay=0,topOdSay=0;
+  var topTutar=0,topOdenen=0,topKalan=0,tamSay=0,kismiSay=0,beklSay=0,topOdSay=0,topKomisyon=0;
   RANDEVULAR.forEach(function(r){
     var tutar=r.tutar||0; var odenen=r.odenenToplam||0; var kalan=Math.max(0,tutar-odenen);
     topTutar+=tutar; topOdenen+=odenen; topKalan+=kalan;
     if(r.odemeGecmisi&&r.odemeGecmisi.length) topOdSay+=r.odemeGecmisi.length;
+    topKomisyon+=randevuKomisyonHesapla(r);
     if(kalan<=0&&tutar>0) tamSay++;
     else if(odenen>0) kismiSay++;
     else if(tutar>0) beklSay++;
   });
+  var netOdenen=topOdenen-topKomisyon;
   el.innerHTML='<div class="sk"><div class="sk-val" style="color:var(--r)">₺'+topTutar.toLocaleString('tr-TR')+'</div><div class="sk-lbl">Toplam Tutar</div></div>'
-    +'<div class="sk"><div class="sk-val" style="color:#16a34a">₺'+topOdenen.toLocaleString('tr-TR')+'</div><div class="sk-lbl">Toplam Ödenen</div></div>'
+    +'<div class="sk"><div class="sk-val" style="color:#16a34a">₺'+topOdenen.toLocaleString('tr-TR')+'</div><div class="sk-lbl">Toplam Ödenen</div>'
+      +(topKomisyon>0?'<div style="font-size:10px;color:#16a34a;margin-top:4px;padding-top:4px;border-top:1px dashed #d1d5db;font-weight:600">Net: ₺'+netOdenen.toLocaleString('tr-TR')+'</div>':'')
+    +'</div>'
     +'<div class="sk"><div class="sk-val" style="color:#d97706">₺'+topKalan.toLocaleString('tr-TR')+'</div><div class="sk-lbl">Kalan Borç</div></div>'
+    +'<div class="sk"><div class="sk-val" style="color:#b45309">₺'+topKomisyon.toLocaleString('tr-TR')+'</div><div class="sk-lbl">Komisyon Gideri</div>'
+      +'<div style="font-size:9px;color:var(--ink4);margin-top:3px">Firma karşıladığı vade farkı</div>'
+    +'</div>'
     +'<div class="sk"><div class="sk-val">'+topOdSay+'</div><div class="sk-lbl">Ödeme İşlemi</div></div>';
 }
 
@@ -6109,11 +6159,13 @@ function odemeListeYukle(){
     else if(durumTip==='kismi'){durumHTML='⏳ Kısmi';durumRenk='#d97706';}
     else {durumHTML='❌ Ödenmemiş';durumRenk='#dc2626';}
 
-    satirlar.push({r:r,ri:ri,tutar:tutar,odenen:odenen,kalan:kalan,durumTip:durumTip,durumHTML:durumHTML,durumRenk:durumRenk,sonYontem:sonYontem});
+    var komisyon=randevuKomisyonHesapla(r);
+
+    satirlar.push({r:r,ri:ri,tutar:tutar,odenen:odenen,kalan:kalan,komisyon:komisyon,durumTip:durumTip,durumHTML:durumHTML,durumRenk:durumRenk,sonYontem:sonYontem});
   });
 
   if(!satirlar.length){
-    tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:#999">Ödeme kaydı bulunamadı</td></tr>';
+    tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:20px;color:#999">Ödeme kaydı bulunamadı</td></tr>';
     return;
   }
 
@@ -6129,6 +6181,7 @@ function odemeListeYukle(){
       +'<td style="color:#16a34a;font-weight:700">₺'+s.odenen.toLocaleString('tr-TR')+'</td>'
       +'<td style="color:'+(s.kalan>0?'#dc2626':'#16a34a')+';font-weight:700">'+(s.kalan>0?'₺'+s.kalan.toLocaleString('tr-TR'):'✓')+'</td>'
       +'<td><span style="font-size:11px">'+yonIkon+' '+s.sonYontem+'</span></td>'
+      +'<td style="font-size:11px">'+(s.komisyon>0?'<span style="color:#b45309;font-weight:700">₺'+s.komisyon.toLocaleString('tr-TR')+'</span><br><small style="color:var(--ink4);font-size:9px">firma karşıladı</small>':'<span style="color:#9ca3af">—</span>')+'</td>'
       +'<td><span style="font-size:11px;background:'+s.durumRenk+'15;color:'+s.durumRenk+';padding:3px 8px;border-radius:10px;font-weight:600;white-space:nowrap">'+s.durumHTML+'</span></td>'
       +'<td style="display:flex;gap:4px;flex-wrap:wrap">'
         +(s.kalan>0?'<button class="ab ab-r" style="font-size:10px" onclick="rdvHariciOdeme('+s.ri+')">💳 Ödeme Al</button>':'')
@@ -6174,6 +6227,7 @@ function odemeMobilKartlariRender(satirlar){
           +'📅 <b>'+r.tarih+'</b> · '+r.saat
           +'<br>🔧 '+(r.hizmet||'').substring(0,40)+((r.hizmet||'').length>40?'...':'')
           +'<br>'+yonIkon+' '+s.sonYontem
+          +(s.komisyon>0?'<br><span style="color:#b45309">💰 Firma komisyonu: <b>₺'+s.komisyon.toLocaleString('tr-TR')+'</b></span>':'')
         +'</div>'
         +'<div class="mcard-foot">'
           +'<div>'
@@ -6209,19 +6263,24 @@ function odemeDetayGoster(idx){
   if(r.odemeGecmisi&&r.odemeGecmisi.length){
     gecmisHTML=r.odemeGecmisi.map(function(og,i){
       var ikon=og.yontem.indexOf('Nakit')>-1?'💵':og.yontem.indexOf('Havale')>-1?'🏦':og.yontem.indexOf('Taksit')>-1?'📋':'💳';
+      var kom=odemeKomisyonHesapla(og);
       return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bg)">'
         +'<div style="font-size:18px;flex-shrink:0">'+ikon+'</div>'
         +'<div style="flex:1;min-width:0">'
           +'<div style="font-size:12px;font-weight:700">'+og.yontem+'</div>'
           +(og.not?'<div style="font-size:10px;color:var(--ink4)">'+og.not+'</div>':'')
+          +(kom>0?'<div style="font-size:10px;color:#b45309;margin-top:2px">💰 Firma komisyonu: <b>₺'+kom.toLocaleString('tr-TR')+'</b></div>':'')
         +'</div>'
         +'<div style="text-align:right;flex-shrink:0">'
           +'<div style="font-family:Bebas Neue,sans-serif;font-size:15px;color:#16a34a">+₺'+og.miktar.toLocaleString('tr-TR')+'</div>'
+          +(kom>0?'<div style="font-size:9px;color:#b45309">Net: ₺'+(og.miktar-kom).toLocaleString('tr-TR')+'</div>':'')
           +'<div style="font-size:10px;color:var(--ink4)">'+og.tarih+'</div>'
         +'</div>'
       +'</div>';
     }).join('');
   }
+
+  var toplamKom=randevuKomisyonHesapla(r);
 
   var ovl=document.createElement('div');
   ovl.style.cssText='position:fixed;inset:0;z-index:980;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto';
@@ -6242,6 +6301,10 @@ function odemeDetayGoster(idx){
         +'<span style="color:#16a34a;font-weight:700">Ödenen: ₺'+odenen.toLocaleString('tr-TR')+'</span>'
         +'<span style="color:'+(kalan>0?'var(--r)':'#16a34a')+';font-weight:700">'+(kalan>0?'Kalan: ₺'+kalan.toLocaleString('tr-TR'):'✓ Tamamlandı')+'</span>'
       +'</div>'
+      +(toplamKom>0?'<div style="display:flex;justify-content:space-between;font-size:11px;margin-top:6px;padding-top:6px;border-top:1px dashed var(--bd)">'
+        +'<span style="color:#b45309;font-weight:700">💰 Toplam Komisyon: ₺'+toplamKom.toLocaleString('tr-TR')+'</span>'
+        +'<span style="color:var(--ink);font-weight:700">Net: ₺'+(odenen-toplamKom).toLocaleString('tr-TR')+'</span>'
+      +'</div>':'')
     +'</div>'
     +'<div style="overflow-y:auto;flex:1;padding:14px 16px">'
       +'<div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:8px">Ödeme Geçmişi ('+((r.odemeGecmisi||[]).length)+' kayıt)</div>'
