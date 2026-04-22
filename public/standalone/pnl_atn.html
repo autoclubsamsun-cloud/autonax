@@ -1462,6 +1462,14 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
         <div class="kh" style="flex-wrap:wrap;gap:8px">
           <div class="kt" id="hg-baslik">Hizmet Geçmişi</div>
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-left:auto">
+            <select id="hg-ay" onchange="HG_AY_ELLE_DEGISTI=true;hgListele()"
+              style="border:1.5px solid var(--bd);border-radius:7px;padding:5px 8px;font-size:11px;font-family:Outfit,sans-serif;outline:none;color:var(--ink3)">
+              <option value="">Tüm Aylar</option>
+              <option value="01">Ocak</option><option value="02">Şubat</option><option value="03">Mart</option>
+              <option value="04">Nisan</option><option value="05">Mayıs</option><option value="06">Haziran</option>
+              <option value="07">Temmuz</option><option value="08">Ağustos</option><option value="09">Eylül</option>
+              <option value="10">Ekim</option><option value="11">Kasım</option><option value="12">Aralık</option>
+            </select>
             <select id="hg-kategori" onchange="hgListele()"
               style="border:1.5px solid var(--bd);border-radius:7px;padding:5px 8px;font-size:11px;font-family:Outfit,sans-serif;outline:none;color:var(--ink3)">
               <option value="">Tüm Kategoriler</option>
@@ -1482,6 +1490,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
               <input type="text" id="hg-arama" placeholder="Müşteri, plaka, hizmet..." oninput="hgListele()"
                 style="padding:6px 10px 6px 28px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;font-family:Outfit,sans-serif;outline:none;width:180px">
             </div>
+            <button id="hg-sirala-btn" type="button" onclick="hgSiralamaDegistir()" title="Tarihe göre sıralama" style="border:1.5px solid var(--bd);border-radius:7px;padding:5px 10px;font-size:11px;font-family:Outfit,sans-serif;outline:none;background:#fff;color:var(--ink3);cursor:pointer;white-space:nowrap;font-weight:600">📅 Yeni → Eski</button>
             <button class="ab ab-n" style="font-size:10px" onclick="hgSifirla()">✕ Sıfırla</button>
           </div>
         </div>
@@ -1679,7 +1688,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
           </div>
           <div style="width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch">
             <div style="display:flex;gap:5px;align-items:center;min-width:max-content;flex-wrap:nowrap">
-              <select id="odeme-ay" onchange="odemeListeYukle()" style="border:1.5px solid var(--bd);border-radius:7px;padding:5px 8px;font-size:11px;font-family:Outfit,sans-serif;outline:none;color:var(--ink3)">
+              <select id="odeme-ay" onchange="ODEME_AY_ELLE_DEGISTI=true;odemeListeYukle()" style="border:1.5px solid var(--bd);border-radius:7px;padding:5px 8px;font-size:11px;font-family:Outfit,sans-serif;outline:none;color:var(--ink3)">
                 <option value="">Tüm Aylar</option>
                 <option value="01">Ocak</option><option value="02">Şubat</option><option value="03">Mart</option>
                 <option value="04">Nisan</option><option value="05">Mayıs</option><option value="06">Haziran</option>
@@ -1699,6 +1708,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
                 <option value="kismi">⏳ Kısmi Ödeme</option>
                 <option value="bekl">❌ Ödenmemiş</option>
               </select>
+              <button id="odeme-sirala-btn" type="button" onclick="odemeSiralamaDegistir()" title="Tarihe göre sıralama" style="border:1.5px solid var(--bd);border-radius:7px;padding:5px 10px;font-size:11px;font-family:Outfit,sans-serif;outline:none;background:#fff;color:var(--ink3);cursor:pointer;white-space:nowrap;font-weight:600">📅 Yeni → Eski</button>
               <button class="ab ab-n" style="font-size:10px;white-space:nowrap" onclick="odemeFiltreTemizle()">✕ Sıfırla</button>
             </div>
           </div>
@@ -2442,6 +2452,8 @@ function doPg(id){
   sidebarKapat();
   document.querySelectorAll('.pg').forEach(function(el){el.classList.remove('on');});
   var el=document.getElementById('pg-'+id);if(el)el.classList.add('on');
+  // Son aktif sayfayı localStorage'a kaydet — F5/yenileme sonrası aynı sayfa açılsın
+  try{ localStorage.setItem('autonax_son_sayfa', id); }catch(e){}
   if(id==='dashboard')setTimeout(dashboardYukle,50);
   if(id==='randevular'){
     setTimeout(function(){
@@ -6147,9 +6159,54 @@ function rdvFaturaKes(idx){
 }
 
 /* ══ ÖDEME YÖNETİMİ SAYFASI ══ */
+// Sıralama yönü: 'desc' = yeniden eskiye (default), 'asc' = eskiden yeniye
+var ODEME_SIRA_YONU='desc';
+// Kullanıcı ay filtresini elle değiştirdi mi (default davranışı bozulmasın diye)
+var ODEME_AY_ELLE_DEGISTI=false;
+
 function odemeSayfasiYukle(){
+  // İlk açılışta default olarak mevcut ayı seç (kullanıcı elle değiştirmediyse)
+  var aySel=document.getElementById('odeme-ay');
+  if(aySel && !ODEME_AY_ELLE_DEGISTI){
+    var bugun=new Date();
+    var mevcutAy=(bugun.getMonth()+1).toString().padStart(2,'0');
+    aySel.value=mevcutAy;
+  }
+  odemeSiralamaBtnGuncelle();
   odemeKPIGuncelle();
   odemeListeYukle();
+}
+
+function odemeSiralamaBtnGuncelle(){
+  var btn=document.getElementById('odeme-sirala-btn');
+  if(!btn) return;
+  if(ODEME_SIRA_YONU==='desc'){
+    btn.textContent='📅 Yeni → Eski';
+    btn.style.background='#fff';
+    btn.style.color='var(--ink3)';
+  } else {
+    btn.textContent='📅 Eski → Yeni';
+    btn.style.background='var(--r)';
+    btn.style.color='#fff';
+    btn.style.borderColor='var(--r)';
+  }
+}
+
+function odemeSiralamaDegistir(){
+  ODEME_SIRA_YONU = (ODEME_SIRA_YONU==='desc') ? 'asc' : 'desc';
+  odemeSiralamaBtnGuncelle();
+  odemeListeYukle();
+}
+
+// Tarih + saat string'ini karşılaştırılabilir sayıya çevir
+// "22.04.2026" + "09:00" → 202604220900
+function odemeTarihKey(tarihStr, saatStr){
+  var t=(tarihStr||'').split('.');
+  var gun=(t[0]||'01').padStart(2,'0');
+  var ay=(t[1]||'01').padStart(2,'0');
+  var yil=(t[2]||'2000');
+  var s=(saatStr||'00:00').replace(':','').padStart(4,'0');
+  return parseInt(yil+ay+gun+s)||0;
 }
 
 function odemeKPIGuncelle(){
@@ -6218,6 +6275,13 @@ function odemeListeYukle(){
     var komisyon=randevuKomisyonHesapla(r);
 
     satirlar.push({r:r,ri:ri,tutar:tutar,odenen:odenen,kalan:kalan,komisyon:komisyon,durumTip:durumTip,durumHTML:durumHTML,durumRenk:durumRenk,sonYontem:sonYontem});
+  });
+
+  // Tarih + saate göre sırala (default: yeniden eskiye)
+  satirlar.sort(function(a,b){
+    var ka=odemeTarihKey(a.r.tarih,a.r.saat);
+    var kb=odemeTarihKey(b.r.tarih,b.r.saat);
+    return ODEME_SIRA_YONU==='desc' ? (kb-ka) : (ka-kb);
   });
 
   if(!satirlar.length){
@@ -6307,7 +6371,11 @@ function odemeFiltreTemizle(){
   ['odeme-arama','odeme-ay','odeme-yontem','odeme-durum'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value='';
   });
-  odemeListeYukle();
+  // Elle değişiklik flag'ini sıfırla → mevcut ay default'u tekrar gelsin
+  ODEME_AY_ELLE_DEGISTI=false;
+  // Sıralamayı da default'a çek
+  ODEME_SIRA_YONU='desc';
+  odemeSayfasiYukle();
 }
 
 function odemeDetayGoster(idx){
@@ -7294,7 +7362,16 @@ window.onload=function(){
       if(mainLayout) mainLayout.style.display='flex';
       doInit();
       dbSyncYukle();
-      setTimeout(dashboardYukle, 100);
+      // Son aktif sayfayı geri yükle — yoksa dashboard'a git
+      setTimeout(function(){
+        var sonSayfa=null;
+        try{ sonSayfa=localStorage.getItem('autonax_son_sayfa'); }catch(e){}
+        if(sonSayfa && sonSayfa!=='dashboard' && document.getElementById('pg-'+sonSayfa) && typeof go==='function'){
+          go(sonSayfa);
+        } else {
+          dashboardYukle();
+        }
+      }, 100);
     } else {
       // Oturum yok — login göster
       if(loginOvl) loginOvl.style.cssText='display:flex;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:20px;background:#0a0a0a';
@@ -7821,7 +7898,44 @@ function mstDetayRandevulariGoster(isim){
 
 
 /* HİZMET GEÇMİŞİ */
+// Sıralama yönü: 'desc' = yeniden eskiye (default), 'asc' = eskiden yeniye
+var HG_SIRA_YONU='desc';
+// Kullanıcı ay filtresini elle değiştirdi mi
+var HG_AY_ELLE_DEGISTI=false;
+
+function hgSiralamaBtnGuncelle(){
+  var btn=document.getElementById('hg-sirala-btn');
+  if(!btn) return;
+  if(HG_SIRA_YONU==='desc'){
+    btn.textContent='📅 Yeni → Eski';
+    btn.style.background='#fff';
+    btn.style.color='var(--ink3)';
+    btn.style.borderColor='var(--bd)';
+  } else {
+    btn.textContent='📅 Eski → Yeni';
+    btn.style.background='var(--r)';
+    btn.style.color='#fff';
+    btn.style.borderColor='var(--r)';
+  }
+}
+
+function hgSiralamaDegistir(){
+  HG_SIRA_YONU = (HG_SIRA_YONU==='desc') ? 'asc' : 'desc';
+  hgSiralamaBtnGuncelle();
+  hgListele();
+}
+
 function hgListele(){
+  // İlk açılışta default olarak mevcut ay
+  var aySel=document.getElementById('hg-ay');
+  if(aySel && !HG_AY_ELLE_DEGISTI && aySel.value===''){
+    var bugun=new Date();
+    var mevcutAy=(bugun.getMonth()+1).toString().padStart(2,'0');
+    aySel.value=mevcutAy;
+  }
+  hgSiralamaBtnGuncelle();
+
+  var ay=(aySel||{value:''}).value;
   var kat=(document.getElementById('hg-kategori')||{value:''}).value;
   var dur=(document.getElementById('hg-durum')||{value:''}).value;
   var q=(document.getElementById('hg-arama')||{value:''}).value.toLowerCase().trim();
@@ -7849,6 +7963,10 @@ function hgListele(){
   });
 
   // Filtrele
+  if(ay) liste=liste.filter(function(h){
+    var parts=(h.tarih||'').split('.');
+    return (parts[1]||'')===ay;
+  });
   if(kat) liste=liste.filter(function(h){return h.kat===kat;});
   if(dur) liste=liste.filter(function(h){return h.durum===dur;});
   if(q)   liste=liste.filter(function(h){
@@ -7857,8 +7975,12 @@ function hgListele(){
       ||h.hizmet.toLowerCase().indexOf(q)>-1;
   });
 
-  // Tarihe göre sırala (yeni → eski)
-  liste.sort(function(a,b){return b.tarih.split('.').reverse().join('').localeCompare(a.tarih.split('.').reverse().join(''));});
+  // Tarih + saate göre sırala
+  liste.sort(function(a,b){
+    var ka=odemeTarihKey(a.tarih,a.saat);
+    var kb=odemeTarihKey(b.tarih,b.saat);
+    return HG_SIRA_YONU==='desc' ? (kb-ka) : (ka-kb);
+  });
 
   // Başlık
   var bas=document.getElementById('hg-baslik');
@@ -7936,8 +8058,10 @@ function hgListele(){
 }
 
 function hgSifirla(){
-  var ids=['hg-kategori','hg-durum','hg-arama'];
+  var ids=['hg-kategori','hg-durum','hg-arama','hg-ay'];
   ids.forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  HG_AY_ELLE_DEGISTI=false;
+  HG_SIRA_YONU='desc';
   hgListele();
 }
 
