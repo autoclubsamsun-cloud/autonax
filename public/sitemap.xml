@@ -1,18 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/0.9">
-
-  <!-- ANA SAYFA -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://www.autonax.com.tr/</loc>
     <lastmod>2026-04-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <image:image>
-      <image:loc>https://www.autonax.com.tr/uploads/logo/og-image.jpg</image:loc>
-      <image:title>Autonax Karadeniz'in En Buyuk Arac Kaplama Tesisi</image:title>
-      <image:caption>Samsun merkezli premium PPF kaplama merkezi Autoclub Samsun Merkez</image:caption>
-    </image:image>
   </url>
-
 </urlset>
