@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       DİNAMİK MARKA RENDER (EN BAŞTA ÇALIŞIR)
+       URL'den marka kodunu okur (togg-ppf-kaplama.html → "togg"),
+       Öncelik sırası:
+         1. /markalar.json (canlı sitedeki yayınlanan veri) ← production
+         2. localStorage.autonax_markalar_v1 ← panel çalıştırıldıysa
+         3. Default Togg içeriği ← fallback
+       Sayfa tamamen render olduktan sonra tüm yerleri günceller.
+  ══════════════════════════════════════════════════════════════════ -->
+  <script>
+  (function(){
+    // 1. URL'den marka kodunu çıkar
+    var path = window.location.pathname;
+    var m = path.match(/\/([a-z0-9-]+)-ppf-kaplama\.html?$/i);
+    var MARKA_KOD = m ? m[1] : 'togg'; // fallback: togg
+    window.__AUTONAX_MARKA_KOD = MARKA_KOD;
+    window.__AUTONAX_MARKA = null;
+    window.__AUTONAX_MARKA_KAYNAK = 'default';
+
+    // Early meta update fonksiyonu (marka yüklenince çağrılır)
+    window.__autonaxEarlyMeta = function(marka){
+      if(!marka) return;
+      try {
+        if(marka.seoTitle) document.title = marka.seoTitle;
+        var ensureMeta = function(sel, attr, val){
+          if(!val) return;
+          var el = document.querySelector(sel);
+          if(el) el.setAttribute(attr, val);
+        };
+        ensureMeta('meta[name="description"]','content',marka.seoDesc);
+        ensureMeta('meta[name="keywords"]','content',marka.seoKeywords);
+        ensureMeta('meta[property="og:title"]','content',marka.seoTitle);
+        ensureMeta('meta[property="og:description"]','content',marka.seoDesc);
+        ensureMeta('meta[name="twitter:title"]','content',marka.seoTitle);
+        ensureMeta('meta[name="twitter:description"]','content',marka.seoDesc);
+        var canonicalEl = document.querySelector('link[rel="canonical"]');
+        if(canonicalEl) canonicalEl.setAttribute('href', 'https://www.autonax.com.tr/'+MARKA_KOD+'-ppf-kaplama.html');
+      } catch(e){}
+    };
+
+    // 2. Önce localStorage'a bak (hızlı başlangıç - önbellek)
+    try {
+      var raw = localStorage.getItem('autonax_markalar_v1');
+      if(raw){
+        var depo = JSON.parse(raw);
+        if(depo && depo[MARKA_KOD]){
+          window.__AUTONAX_MARKA = depo[MARKA_KOD];
+          window.__AUTONAX_MARKA_KAYNAK = 'localStorage';
+          window.__autonaxEarlyMeta(depo[MARKA_KOD]);
+        }
+      }
+    } catch(e){}
+
+    // 3. Asıl kaynak: canlı markalar.json (panel'den yayınlanmış)
+    // Sayfa render olurken arka planda fetch, varsa override eder
+    fetch('/markalar.json?t='+Date.now(), { cache:'no-store' })
+      .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+      .then(function(data){
+        if(!data || !data.markalar || !data.markalar[MARKA_KOD]) return;
+        var jsonMarka = data.markalar[MARKA_KOD];
+        // Sadece localStorage'dakinden yeni ise override et
+        var mevcut = window.__AUTONAX_MARKA;
+        if(!mevcut || (jsonMarka.guncelleme && jsonMarka.guncelleme > (mevcut.guncelleme||''))){
+          window.__AUTONAX_MARKA = jsonMarka;
+          window.__AUTONAX_MARKA_KAYNAK = 'markalar.json';
+          window.__autonaxEarlyMeta(jsonMarka);
+          // Re-render et (DOMContentLoaded çoktan geçmiş olabilir)
+          if(typeof window.__autonaxRender === 'function'){
+            window.__autonaxRender();
+          }
+        }
+      })
+      .catch(function(){
+        // markalar.json yok → localStorage yedekte kalır (fallback)
+      });
+  })();
+  </script>
+
+  <!-- ══ SAYFA ÖZGÜ SEO (Default - panel verisi varsa JS ile override edilir) ══ -->
+  <title>Togg PPF Kaplama Samsun | Autonax - Karadeniz'in En Büyük Araç Kaplama Tesisi</title>
+  <meta name="description" content="Togg T10X ve T10F için premium PPF kaplama. Samsun merkezli Autonax'ta 10 yıl garantili TPU PPF. Karadeniz'in ilk ve tek Togg özel kaplama paketi. Randevu: 0850 305 20 55">
+  <meta name="keywords" content="togg ppf kaplama, togg ppf samsun, togg t10x ppf, togg t10f ppf, togg kaplama, togg boya koruma, togg ppf fiyatları, samsun togg kaplama, yerli araç ppf, elektrikli araç ppf samsun, autoclub samsun">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="googlebot" content="index, follow">
+  <meta http-equiv="content-language" content="tr">
+  <meta name="geo.region" content="TR-55">
+  <meta name="geo.placename" content="Samsun">
+  <meta name="geo.position" content="41.2797;36.3361">
+  <meta name="ICBM" content="41.2797, 36.3361">
+  <link rel="canonical" href="https://www.autonax.com.tr/togg-ppf-kaplama.html">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Togg PPF Kaplama Samsun | Autonax">
+  <meta property="og:description" content="Togg T10X & T10F için premium PPF kaplama. 10 yıl garantili TPU, self-healing özelliği. Samsun-Karadeniz bölgesinde Togg'a özel paket.">
+  <meta property="og:image" content="https://www.autonax.com.tr/uploads/logo/og-image.jpg">
+  <meta property="og:type" content="service">
+  <meta property="og:url" content="https://www.autonax.com.tr/togg-ppf-kaplama.html">
+  <meta property="og:locale" content="tr_TR">
+  <meta property="og:site_name" content="Autonax | Autoclub Samsun Merkez">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Togg PPF Kaplama Samsun | Autonax">
+  <meta name="twitter:description" content="Togg için premium PPF kaplama - Samsun merkezli, 10 yıl garantili">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/uploads/logo/favicon.png">
+  <link rel="shortcut icon" type="image/png" href="/uploads/logo/favicon.png">
+  <link rel="apple-touch-icon" href="/uploads/logo/favicon.png">
+
+  <!-- Fontlar - ana site ile aynı -->
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- ══ SCHEMA.ORG (Togg spesifik Service + BreadcrumbList + FAQ) ══ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "@id": "https://www.autonax.com.tr/togg-ppf-kaplama.html#service",
+    "name": "Togg PPF Kaplama",
+    "alternateName": ["Togg T10X PPF", "Togg T10F PPF", "Togg Araç Kaplama"],
+    "description": "Türkiye'nin yerli otomobili Togg T10X ve T10F için premium TPU PPF (Paint Protection Film) kaplama hizmeti. 10 yıl garantili, self-healing özellikli, taş vuruğu ve çiziklere karşı tam koruma.",
+    "provider": {
+      "@type": "LocalBusiness",
+      "name": "Autonax",
+      "alternateName": "Autoclub Samsun Merkez",
+      "telephone": "+908503052055",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Kuzeyyıldızı Mah. 100. Yıl Bulvarı No:16/A",
+        "addressLocality": "Canik",
+        "addressRegion": "Samsun",
+        "addressCountry": "TR"
+      }
+    },
+    "areaServed": [
+      { "@type": "City", "name": "Samsun" },
+      { "@type": "City", "name": "Ordu" },
+      { "@type": "City", "name": "Giresun" },
+      { "@type": "City", "name": "Amasya" },
+      { "@type": "City", "name": "Sinop" },
+      { "@type": "City", "name": "Trabzon" }
+    ],
+    "serviceType": "PPF Kaplama",
+    "category": "Araç Koruma",
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "Togg PPF Paketleri",
+      "itemListElement": [
+        { "@type": "Offer", "name": "Togg Komple PPF Kaplama", "description": "Aracın tüm boyalı yüzeyi PPF ile kaplanır, 10 yıl garanti" },
+        { "@type": "Offer", "name": "Togg Ön 3'lü PPF", "description": "Kaput, ön çamurluklar, ön tampon ve aynalar için PPF" },
+        { "@type": "Offer", "name": "Togg Kaput PPF", "description": "Sadece kaput ve ön tampon için PPF" }
+      ]
+    }
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Ana Sayfa", "item": "https://www.autonax.com.tr/" },
+      { "@type": "ListItem", "position": 2, "name": "PPF Kaplama", "item": "https://www.autonax.com.tr/" },
+      { "@type": "ListItem", "position": 3, "name": "Togg PPF Kaplama", "item": "https://www.autonax.com.tr/togg-ppf-kaplama.html" }
+    ]
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Togg aracıma PPF kaplama yaptırmam gerekli mi?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Togg Türkiye'nin yerli otomobili olduğu için değer kaybını azaltmak ve orijinal boya yüzeyini korumak çok önemlidir. PPF kaplama taş vuruklarına, çiziklere, böcek ve kuş asiti gibi zararlılara karşı aracınızı korur. Özellikle Karadeniz iklimi yağmur ve tuzlu havası için ideal koruma sağlar." }
+      },
+      {
+        "@type": "Question",
+        "name": "Togg PPF kaplama kaç yıl dayanır?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Autonax'ta kullandığımız premium TPU PPF filmleri 10 yıl garantili olup, doğru bakım ile çok daha uzun süre performans gösterir. Self-healing (kendi kendine iyileşme) özelliği sayesinde küçük çizikler ısı ile geri düzelir." }
+      },
+      {
+        "@type": "Question",
+        "name": "Togg için hangi PPF paketini seçmeliyim?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Bütçenize ve kullanım şeklinize göre 3 paketimiz var: Komple PPF (tüm araç, maksimum koruma), Ön 3'lü PPF (en çok darbe alan bölgeler - en popüler seçim), Kaput PPF (ekonomik başlangıç paketi). Aracınızı görüp size özel öneri yapabiliriz." }
+      },
+      {
+        "@type": "Question",
+        "name": "Togg PPF kaplama fiyatları nedir?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Togg PPF fiyatları modele (T10X / T10F), seçilen pakete ve PPF film kalitesine göre değişir. Detaylı fiyat için 0850 305 20 55 telefonumuzdan veya WhatsApp'tan bizi arayabilirsiniz. Aynı gün ücretsiz keşif ve fiyat teklifi veriyoruz." }
+      },
+      {
+        "@type": "Question",
+        "name": "Togg PPF kaplama ne kadar sürer?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Komple PPF kaplama yaklaşık 3-5 gün sürer. Ön 3'lü paket 2 gün, kaput PPF ise 1 günde tamamlanır. Aracınız kaplama sürecinde tesisimizde güvende kalır, isterseniz günlük kullanım için geçici araç imkanı sunuyoruz." }
+      },
+      {
+        "@type": "Question",
+        "name": "Ordu, Giresun, Amasya'dan gelen Togg sahipleri için hizmetiniz var mı?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Evet, Karadeniz'in en büyük araç kaplama tesisi olarak Samsun merkezimizde tüm Karadeniz bölgesinden Togg sahiplerine hizmet veriyoruz. Ordu, Giresun, Amasya, Sinop, Trabzon, Tokat ve Kastamonu'dan gelen değerli müşterilerimiz için özel programlar mevcuttur." }
+      }
+    ]
+  }
+  </script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --r:#B01C2E;--rd:#8A1522;
+  --ink:#0D0D0D;--ink2:#1A1A1A;--ink3:#444;--ink4:#777;--ink5:#C0C0C0;
+  --bg:#F2F2F2;--w:#fff;--bd:#E0E0E0;
+  --g:#1a6b3c;
+}
+html,body{overflow-x:hidden;width:100%;scroll-behavior:smooth}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+a{text-decoration:none;color:inherit}
+img{max-width:100%;height:auto;display:block}
+.wrap{max-width:1280px;margin:0 auto;padding:0 24px}
+@media(max-width:768px){.wrap{padding:0 16px}}
+
+/* ══ TOPBAR ══ */
+.topbar{background:var(--ink2);color:#999;font-size:12px;padding:8px 0}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.topbar a{color:#ddd;display:inline-flex;align-items:center;gap:6px;transition:color .2s}
+.topbar a:hover{color:#fff}
+.topbar-info{display:flex;gap:16px;flex-wrap:wrap}
+@media(max-width:768px){.topbar{font-size:10px}.topbar-info{gap:10px}}
+
+/* ══ HEADER ══ */
+.header{background:#fff;border-bottom:1px solid var(--bd);padding:14px 0;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.header .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:6px;color:var(--r);text-decoration:none;line-height:1}
+.logo:hover{color:var(--rd)}
+.breadcrumb{font-size:12px;color:var(--ink4);letter-spacing:.5px;text-transform:uppercase}
+.breadcrumb a{color:var(--ink4);transition:color .2s}
+.breadcrumb a:hover{color:var(--r)}
+.breadcrumb-sep{margin:0 8px;color:var(--ink5)}
+.header-cta{display:flex;gap:10px;align-items:center}
+.header-btn{padding:10px 18px;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;cursor:pointer;transition:all .2s;border:none;white-space:nowrap}
+.header-btn.primary{background:var(--r);color:#fff}
+.header-btn.primary:hover{background:var(--rd);transform:translateY(-1px)}
+.header-btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+.header-btn.ghost:hover{background:var(--ink);color:#fff}
+@media(max-width:768px){.breadcrumb{display:none}.header-btn.ghost{display:none}.logo{font-size:24px;letter-spacing:4px}}
+
+/* ══ HERO ══ */
+.togg-hero{position:relative;background:linear-gradient(135deg,#0D0D0D 0%,#1A1A1A 70%,#2a0a0f 100%);color:#fff;padding:64px 0 80px;overflow:hidden}
+.togg-hero::before{content:"";position:absolute;top:-40%;right:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(176,28,46,.3) 0%,transparent 70%);pointer-events:none}
+.togg-hero::after{content:"";position:absolute;bottom:-30%;left:-20%;width:500px;height:500px;background:radial-gradient(circle,rgba(176,28,46,.15) 0%,transparent 70%);pointer-events:none}
+.togg-hero .wrap{position:relative;z-index:1;display:grid;grid-template-columns:1.2fr 1fr;gap:40px;align-items:center}
+.togg-hero-l h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,6vw,68px);letter-spacing:2px;line-height:.95;margin-bottom:16px}
+.togg-hero-l h1 em{font-style:normal;color:var(--r);display:block;font-size:clamp(48px,7vw,82px)}
+.togg-hero-tag{display:inline-flex;align-items:center;gap:8px;background:rgba(176,28,46,.15);border:1px solid rgba(176,28,46,.4);color:#ff8090;padding:6px 14px;border-radius:20px;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:700;margin-bottom:20px}
+.togg-hero-sub{font-size:17px;line-height:1.6;color:#ccc;margin-bottom:28px;max-width:540px}
+.togg-hero-sub b{color:#fff}
+.togg-hero-btns{display:flex;gap:12px;flex-wrap:wrap}
+.hero-cta{padding:14px 28px;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;cursor:pointer;transition:all .25s;border:none;display:inline-flex;align-items:center;gap:8px;text-decoration:none}
+.hero-cta.primary{background:var(--r);color:#fff}
+.hero-cta.primary:hover{background:var(--rd);transform:translateY(-2px);box-shadow:0 8px 24px rgba(176,28,46,.4)}
+.hero-cta.wa{background:#25D366;color:#fff}
+.hero-cta.wa:hover{background:#1eb954;transform:translateY(-2px)}
+.togg-hero-r{position:relative}
+.togg-visual{aspect-ratio:4/3;background:linear-gradient(135deg,#1a1a1a,#0a0a0a);border-radius:20px;border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.togg-visual::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 20px,rgba(255,255,255,.02) 20px,rgba(255,255,255,.02) 21px);pointer-events:none}
+.togg-visual img{width:100%;height:100%;object-fit:cover;border-radius:20px}
+.togg-placeholder{text-align:center;padding:30px}
+.togg-placeholder .p-icon{font-size:80px;margin-bottom:12px;opacity:.3}
+.togg-placeholder .p-text{font-size:12px;color:#666;letter-spacing:1px;text-transform:uppercase}
+.togg-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:28px}
+.togg-stat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px 14px;text-align:center}
+.togg-stat-n{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--r);line-height:1}
+.togg-stat-l{font-size:10px;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin-top:4px}
+@media(max-width:900px){.togg-hero{padding:40px 0 56px}.togg-hero .wrap{grid-template-columns:1fr;gap:32px}.togg-hero-r{order:-1}}
+
+/* ══ BÖLÜM BAŞLIKLARI ══ */
+.sec{padding:72px 0}
+.sec-head{text-align:center;margin-bottom:48px}
+.sec-tag{display:inline-block;color:var(--r);font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:700;margin-bottom:10px}
+.sec-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(30px,4.5vw,48px);letter-spacing:2px;line-height:1;margin-bottom:12px}
+.sec-sub{color:var(--ink4);max-width:620px;margin:0 auto;font-size:15px}
+@media(max-width:768px){.sec{padding:48px 0}.sec-head{margin-bottom:32px}}
+
+/* ══ NEDEN TOGG PPF ══ */
+.neden-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.neden-card{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:28px 24px;transition:all .25s;position:relative;overflow:hidden}
+.neden-card::before{content:"";position:absolute;top:0;left:0;width:4px;height:0;background:var(--r);transition:height .3s}
+.neden-card:hover{transform:translateY(-4px);border-color:var(--r);box-shadow:0 12px 32px rgba(0,0,0,.08)}
+.neden-card:hover::before{height:100%}
+.neden-icon{width:52px;height:52px;background:rgba(176,28,46,.08);color:var(--r);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:16px}
+.neden-t{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;margin-bottom:8px}
+.neden-d{color:var(--ink4);font-size:14px;line-height:1.6}
+
+/* ══ FİYAT PAKETLERİ ══ */
+.paket-sec{background:#fff}
+.paket-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.paket{background:#fff;border:2px solid var(--bd);border-radius:16px;padding:32px 26px;position:relative;transition:all .25s}
+.paket:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,.08)}
+.paket.featured{border-color:var(--r);background:linear-gradient(180deg,#fff 0%,#fff5f6 100%)}
+.paket.featured::before{content:"EN POPÜLER";position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--r);color:#fff;padding:4px 16px;border-radius:20px;font-size:10px;letter-spacing:1.5px;font-weight:700}
+.paket-name{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1.5px;margin-bottom:6px}
+.paket-desc{color:var(--ink4);font-size:13px;margin-bottom:18px;min-height:40px}
+.paket-price{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--r);line-height:1;margin-bottom:4px}
+.paket-price-note{font-size:11px;color:var(--ink4);margin-bottom:20px;text-transform:uppercase;letter-spacing:.5px}
+.paket-list{list-style:none;margin-bottom:24px;padding:0}
+.paket-list li{padding:7px 0;font-size:13px;color:var(--ink2);display:flex;align-items:flex-start;gap:8px}
+.paket-list li::before{content:"✓";color:var(--g);font-weight:700;flex-shrink:0;margin-top:1px}
+.paket-btn{width:100%;padding:12px;background:var(--ink);color:#fff;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;cursor:pointer;transition:all .2s}
+.paket-btn:hover{background:var(--r)}
+.paket.featured .paket-btn{background:var(--r)}
+.paket.featured .paket-btn:hover{background:var(--rd)}
+@media(max-width:900px){.paket-grid{grid-template-columns:1fr;gap:20px;max-width:420px;margin:0 auto}}
+
+/* ══ GALERİ ══ */
+.galeri-sec{background:var(--bg)}
+.galeri-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.galeri-item{aspect-ratio:1;background:linear-gradient(135deg,#1a1a1a,#2a2a2a);border-radius:12px;overflow:hidden;position:relative;cursor:pointer;transition:transform .25s}
+.galeri-item:hover{transform:scale(1.02)}
+.galeri-item img{width:100%;height:100%;object-fit:cover}
+.galeri-ph{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#555;text-align:center;padding:20px}
+.galeri-ph .i{font-size:36px;opacity:.4;margin-bottom:6px}
+.galeri-ph .t{font-size:11px;letter-spacing:1px;text-transform:uppercase}
+.galeri-ig{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:28px;padding:16px 24px;background:#fff;border:1px solid var(--bd);border-radius:12px;color:var(--ink);transition:all .2s}
+.galeri-ig:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+.galeri-ig b{font-weight:700}
+@media(max-width:768px){.galeri-grid{grid-template-columns:repeat(2,1fr);gap:8px}}
+
+/* ══ YORUM ══ */
+.yorum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.yorum{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:28px;position:relative}
+.yorum::before{content:"\201C";position:absolute;top:8px;right:16px;font-size:80px;color:var(--r);opacity:.1;line-height:1;font-family:serif}
+.yorum-text{font-size:14px;line-height:1.7;color:var(--ink2);margin-bottom:20px;font-style:italic}
+.yorum-meta{display:flex;align-items:center;gap:12px;padding-top:16px;border-top:1px solid var(--bd)}
+.yorum-avatar{width:44px;height:44px;background:linear-gradient(135deg,var(--r),var(--rd));color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px}
+.yorum-info{flex:1}
+.yorum-name{font-weight:600;font-size:14px;color:var(--ink)}
+.yorum-sub{font-size:11px;color:var(--ink4);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.yorum-star{color:#f59e0b;font-size:13px;display:flex;gap:2px;margin-bottom:8px}
+.yorum-star .ic-fill{width:16px;height:16px}
+
+/* ══ SSS ══ */
+.sss-sec{background:#fff}
+.sss-list{max-width:820px;margin:0 auto}
+.sss-item{border:1px solid var(--bd);border-radius:12px;margin-bottom:10px;overflow:hidden;transition:all .2s}
+.sss-item[open]{border-color:var(--r);box-shadow:0 8px 24px rgba(176,28,46,.08)}
+.sss-q{padding:18px 22px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:15px;color:var(--ink);list-style:none;gap:16px}
+.sss-q::-webkit-details-marker{display:none}
+.sss-q::after{content:"+";font-size:24px;color:var(--r);font-weight:400;transition:transform .25s;flex-shrink:0;width:24px;text-align:center}
+.sss-item[open] .sss-q::after{content:"−"}
+.sss-a{padding:0 22px 20px;color:var(--ink4);font-size:14px;line-height:1.7}
+
+/* ══ CTA BAŞLIK ══ */
+.cta-sec{background:linear-gradient(135deg,var(--ink) 0%,#2a0a0f 100%);color:#fff;text-align:center;padding:80px 0;position:relative;overflow:hidden}
+.cta-sec::before{content:"";position:absolute;top:-50%;left:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(176,28,46,.2) 0%,transparent 70%);pointer-events:none}
+.cta-sec .wrap{position:relative;z-index:1}
+.cta-sec h2{font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,5vw,56px);letter-spacing:2px;line-height:1;margin-bottom:16px}
+.cta-sec h2 em{font-style:normal;color:var(--r)}
+.cta-sec p{color:#ccc;max-width:540px;margin:0 auto 32px;font-size:16px}
+.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+/* ══ RANDEVU FORM ══ */
+.randevu-sec{background:var(--bg)}
+.randevu-kutu{background:#fff;border-radius:20px;padding:48px;box-shadow:0 20px 60px rgba(0,0,0,.08);max-width:640px;margin:0 auto}
+.rf-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.rf-field{display:flex;flex-direction:column}
+.rf-field.full{grid-column:1/-1}
+.rf-lbl{font-size:11px;color:var(--ink4);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600}
+.rf-inp{width:100%;padding:12px 14px;border:1.5px solid var(--bd);border-radius:8px;font-family:'Outfit',sans-serif;font-size:14px;outline:none;transition:border-color .2s;background:#fff}
+.rf-inp:focus{border-color:var(--r)}
+.rf-submit{width:100%;padding:15px;background:var(--r);color:#fff;border:none;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;transition:all .2s;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:10px}
+.rf-submit:hover{background:var(--rd);transform:translateY(-1px);box-shadow:0 10px 28px rgba(176,28,46,.3)}
+.rf-note{text-align:center;font-size:11px;color:var(--ink4);margin-top:12px}
+@media(max-width:600px){.randevu-kutu{padding:32px 24px}.rf-row{grid-template-columns:1fr}}
+
+/* ══ FOOTER ══ */
+.footer{background:var(--ink);color:#999;padding:40px 0 20px;font-size:13px}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px;margin-bottom:28px}
+.footer-logo{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:5px;color:var(--r);margin-bottom:12px;display:inline-block}
+.footer p{max-width:380px;line-height:1.7;margin-bottom:14px}
+.footer-h{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:#fff;margin-bottom:14px;text-transform:uppercase}
+.footer-list{list-style:none}
+.footer-list li{margin-bottom:8px}
+.footer-list a{color:#999;transition:color .2s}
+.footer-list a:hover{color:var(--r)}
+.footer-bot{border-top:1px solid #222;padding-top:20px;text-align:center;font-size:11px;color:#666;letter-spacing:.5px}
+@media(max-width:768px){.footer-grid{grid-template-columns:1fr;gap:24px}}
+
+/* ══ STICKY WA ══ */
+.wa-sticky{position:fixed;bottom:20px;right:20px;background:#25D366;color:#fff;padding:14px 20px;border-radius:60px;display:flex;align-items:center;gap:10px;box-shadow:0 10px 30px rgba(37,211,102,.4);z-index:99;font-weight:600;font-size:14px;transition:all .25s;animation:wapulse 2s infinite}
+.wa-sticky:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(37,211,102,.5)}
+.wa-sticky svg{width:22px;height:22px;fill:#fff}
+@keyframes wapulse{0%,100%{box-shadow:0 10px 30px rgba(37,211,102,.4)}50%{box-shadow:0 10px 30px rgba(37,211,102,.6),0 0 0 10px rgba(37,211,102,.1)}}
+@media(max-width:600px){.wa-sticky span{display:none}.wa-sticky{padding:14px;border-radius:50%}}
+
+/* ══ SVG ICON STILLERI ══ */
+.ic{width:1.2em;height:1.2em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;vertical-align:middle}
+.ic-fill{width:1.2em;height:1.2em;fill:currentColor;flex-shrink:0;vertical-align:middle}
+.topbar .ic,.topbar .ic-fill{width:14px;height:14px}
+.hero-cta .ic,.hero-cta .ic-fill{width:18px;height:18px;stroke-width:2.2}
+.header-btn .ic{width:16px;height:16px}
+.neden-icon svg{width:28px;height:28px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sec-tag .ic{width:12px;height:12px;margin-right:4px;vertical-align:-1px}
+.footer-list .ic{width:14px;height:14px;margin-right:6px;vertical-align:-2px;opacity:.7}
+.togg-hero-tag .ic-fill{width:14px;height:14px;margin-right:2px}
+.paket-list .ic{width:14px;height:14px;stroke:var(--g);stroke-width:3;margin-top:2px}
+.rf-submit .ic,.paket-btn .ic{width:16px;height:16px}
+.rf-note .ic{width:12px;height:12px;margin-right:4px;vertical-align:-1px}
+</style>
+</head>
+<body>
+
+<!-- ══ SVG ICON SPRITE (TEKRARI ÖNLEMEK IÇIN) ══ -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <!-- Telefon -->
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
+  <!-- Mail -->
+  <symbol id="i-mail" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></symbol>
+  <!-- WhatsApp (filled) -->
+  <symbol id="i-whatsapp" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></symbol>
+  <!-- Instagram -->
+  <symbol id="i-instagram" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></symbol>
+  <!-- Clock -->
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+  <!-- Pin/Location -->
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <!-- Package -->
+  <symbol id="i-package" viewBox="0 0 24 24"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></symbol>
+  <!-- Shield (Koruma) -->
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+  <!-- Sparkles (Self-healing) -->
+  <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M5 17l.8 2.4L8 20l-2.2.6L5 23l-.8-2.4L2 20l2.2-.6z"/><path d="M19 3l.5 1.5L21 5l-1.5.5L19 7l-.5-1.5L17 5l1.5-.5z"/></symbol>
+  <!-- Sun (UV) -->
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></symbol>
+  <!-- Diamond (Değer) -->
+  <symbol id="i-diamond" viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 13L2 9z"/><path d="M11 3 8 9l4 13 4-13-3-6"/><path d="M2 9h20"/></symbol>
+  <!-- Droplet (Hidrofobik) -->
+  <symbol id="i-droplet" viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></symbol>
+  <!-- Lock (Garanti) -->
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <!-- Car -->
+  <symbol id="i-car" viewBox="0 0 24 24"><path d="M5 17h14M5 17a2 2 0 0 1-2-2v-3l2-5h14l2 5v3a2 2 0 0 1-2 2M5 17v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-2m6 0v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-2"/><circle cx="7.5" cy="13.5" r="1.5" fill="currentColor" stroke="none"/><circle cx="16.5" cy="13.5" r="1.5" fill="currentColor" stroke="none"/></symbol>
+  <!-- Camera -->
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></symbol>
+  <!-- Check -->
+  <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+  <!-- Star -->
+  <symbol id="i-star" viewBox="0 0 24 24"><polygon fill="currentColor" stroke="none" points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></symbol>
+  <!-- Flame (Hot/Featured) -->
+  <symbol id="i-flame" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></symbol>
+  <!-- Send/Paper plane -->
+  <symbol id="i-send" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></symbol>
+  <!-- Chat bubble -->
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></symbol>
+  <!-- Shield with check (güven) -->
+  <symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></symbol>
+</svg>
+
+<!-- ══ TOPBAR ══ -->
+<div class="topbar">
+  <div class="wrap">
+    <div class="topbar-info">
+      <a href="tel:+908503052055"><svg class="ic"><use href="#i-phone"/></svg> 0850 305 20 55</a>
+      <a href="https://wa.me/905457277172"><svg class="ic-fill" style="color:#25D366"><use href="#i-whatsapp"/></svg> WhatsApp: 0545 727 71 72</a>
+    </div>
+    <div>
+      <a href="https://www.instagram.com/autoclubsamsunmerkez/" target="_blank"><svg class="ic"><use href="#i-instagram"/></svg> @autoclubsamsunmerkez</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══ HEADER ══ -->
+<header class="header">
+  <div class="wrap">
+    <a href="/" class="logo">AUTONAX</a>
+    <nav class="breadcrumb">
+      <a href="/">Ana Sayfa</a>
+      <span class="breadcrumb-sep">›</span>
+      <a href="/">PPF Kaplama</a>
+      <span class="breadcrumb-sep">›</span>
+      <strong style="color:var(--ink)">Togg PPF Kaplama</strong>
+    </nav>
+    <div class="header-cta">
+      <a href="#randevu" class="header-btn ghost">Randevu</a>
+      <a href="tel:+908503052055" class="header-btn primary">Hemen Ara</a>
+    </div>
+  </div>
+</header>
+
+<!-- ══ HERO ══ -->
+<section class="togg-hero">
+  <div class="wrap">
+    <div class="togg-hero-l">
+      <span class="togg-hero-tag"><svg class="ic-fill"><use href="#i-flame"/></svg> Samsun - Karadeniz'in İlk Togg Özel PPF Merkezi</span>
+      <h1>TOGG İÇİN<em>PPF KAPLAMA</em></h1>
+      <p class="togg-hero-sub">
+        Türkiye'nin yerli otomobilini <b>10 yıl garantili premium TPU PPF</b> ile koruyun.
+        Self-healing özellikli, taş vuruğu ve çiziklere karşı tam koruma.
+        <b>Karadeniz'in en büyük araç kaplama tesisinde</b> Togg T10X ve T10F'ye özel paketler.
+      </p>
+      <div class="togg-hero-btns">
+        <a href="#paketler" class="hero-cta primary"><svg class="ic"><use href="#i-package"/></svg> FİYAT PAKETLERİ</a>
+        <a href="https://wa.me/905457277172?text=Merhaba%2C%20Togg%20arac%C4%B1m%20i%C3%A7in%20PPF%20kaplama%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum" class="hero-cta wa" target="_blank"><svg class="ic-fill"><use href="#i-whatsapp"/></svg> WHATSAPP</a>
+      </div>
+      <div class="togg-stats">
+        <div class="togg-stat"><div class="togg-stat-n">10</div><div class="togg-stat-l">Yıl Garanti</div></div>
+        <div class="togg-stat"><div class="togg-stat-n">17K+</div><div class="togg-stat-l">Takipçi</div></div>
+        <div class="togg-stat"><div class="togg-stat-n">200µ</div><div class="togg-stat-l">TPU Film</div></div>
+      </div>
+    </div>
+    <div class="togg-hero-r">
+      <div class="togg-visual">
+        <!-- BURAYA ANA FOTOGRAF GELECEK (detaylı talimat altta) -->
+        <div class="togg-placeholder">
+          <svg class="ic" style="width:72px;height:72px;opacity:.25;margin-bottom:12px"><use href="#i-car"/></svg>
+          <div class="p-text">BURAYA TOGG FOTOĞRAFI EKLE</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ NEDEN TOGG PPF ══ -->
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-tag">Neden PPF Kaplama?</div>
+      <h2 class="sec-title">Togg'unuzu İlk Günkü Gibi Koruyun</h2>
+      <p class="sec-sub">Yerli otomobilinizin değerini en iyi şekilde koruyan premium çözüm: TPU PPF kaplama</p>
+    </div>
+    <div class="neden-grid">
+      <div class="neden-card">
+        <div class="neden-icon"><svg><use href="#i-shield"/></svg></div>
+        <div class="neden-t">Taş Vuruğu Koruması</div>
+        <div class="neden-d">Karadeniz yollarında sık karşılaşılan taş vuruğu hasarını %100 önler.</div>
+      </div>
+      <div class="neden-card">
+        <div class="neden-icon"><svg><use href="#i-sparkles"/></svg></div>
+        <div class="neden-t">Self-Healing (Kendini İyileştirme)</div>
+        <div class="neden-d">Küçük çizikler ısıyla birlikte kendi kendine kaybolur. Güneş ışığı bile iyileştirir.</div>
+      </div>
+      <div class="neden-card">
+        <div class="neden-icon"><svg><use href="#i-sun"/></svg></div>
+        <div class="neden-t">UV Işınlarından Koruma</div>
+        <div class="neden-d">Boya solmasını engeller. Togg'unuzun orijinal rengi yıllarca aynı kalır.</div>
+      </div>
+      <div class="neden-card">
+        <div class="neden-icon"><svg><use href="#i-diamond"/></svg></div>
+        <div class="neden-t">İkinci El Değer Koruma</div>
+        <div class="neden-d">Orijinal boyayı korur, aracınızın satış değerini %10-15 yüksek tutar.</div>
+      </div>
+      <div class="neden-card">
+        <div class="neden-icon"><svg><use href="#i-droplet"/></svg></div>
+        <div class="neden-t">Hidrofobik Yüzey</div>
+        <div class="neden-d">Su kaydırma özelliği sayesinde yıkama kolaylığı, kir tutmaz.</div>
+      </div>
+      <div class="neden-card">
+        <div class="neden-icon"><svg><use href="#i-lock"/></svg></div>
+        <div class="neden-t">10 Yıl Garanti</div>
+        <div class="neden-d">Yazılı garanti belgesi ile Autonax'tan tam güvence. Samsun merkezli servis.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FİYAT PAKETLERİ ══ -->
+<section class="sec paket-sec" id="paketler">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-tag">Fiyat Paketleri</div>
+      <h2 class="sec-title">Togg'a Özel PPF Paketleri</h2>
+      <p class="sec-sub">Bütçenize ve korumaya ihtiyacı olan bölgelere göre 3 farklı paket</p>
+    </div>
+    <div class="paket-grid">
+
+      <div class="paket">
+        <div class="paket-name">KAPUT PPF</div>
+        <div class="paket-desc">Ekonomik başlangıç paketi - en çok darbe alan bölge</div>
+        <div class="paket-price">FİYAT SOR</div>
+        <div class="paket-price-note">KDV Dahil · 10 yıl garanti</div>
+        <ul class="paket-list">
+          <li>Kaput (tam)</li>
+          <li>Ön tampon</li>
+          <li>Farlar</li>
+          <li>1 gün teslim</li>
+          <li>10 yıl garantili TPU film</li>
+          <li>Self-healing özellik</li>
+        </ul>
+        <a href="https://wa.me/905457277172?text=Togg%20i%C3%A7in%20Kaput%20PPF%20fiyat%C4%B1%20%C3%B6%C4%9Frenmek%20istiyorum" class="paket-btn" style="display:block;text-align:center;text-decoration:none">FİYAT AL</a>
+      </div>
+
+      <div class="paket featured">
+        <div class="paket-name">ÖN 3'LÜ PPF</div>
+        <div class="paket-desc">En çok tercih edilen - optimum koruma/fiyat dengesi</div>
+        <div class="paket-price">FİYAT SOR</div>
+        <div class="paket-price-note">KDV Dahil · 10 yıl garanti</div>
+        <ul class="paket-list">
+          <li>Kaput (tam)</li>
+          <li>Ön çamurluklar</li>
+          <li>Ön tampon + farlar</li>
+          <li>Yan aynalar</li>
+          <li>2 gün teslim</li>
+          <li>Premium 200µ TPU film</li>
+          <li>Sertifikalı garanti belgesi</li>
+        </ul>
+        <a href="https://wa.me/905457277172?text=Togg%20i%C3%A7in%20%C3%96n%203%27l%C3%BC%20PPF%20fiyat%C4%B1%20%C3%B6%C4%9Frenmek%20istiyorum" class="paket-btn" style="display:block;text-align:center;text-decoration:none">FİYAT AL</a>
+      </div>
+
+      <div class="paket">
+        <div class="paket-name">KOMPLE PPF</div>
+        <div class="paket-desc">Maksimum koruma - aracın tüm boyalı yüzeyi</div>
+        <div class="paket-price">FİYAT SOR</div>
+        <div class="paket-price-note">KDV Dahil · 10 yıl garanti</div>
+        <ul class="paket-list">
+          <li>Aracın TÜM boyalı yüzeyi</li>
+          <li>Kaput + çamurluklar + kapılar</li>
+          <li>Tamponlar + bagaj</li>
+          <li>Farlar + aynalar</li>
+          <li>3-5 gün teslim</li>
+          <li>En üst kalite 200µ+ TPU</li>
+          <li>Ömür boyu değer koruma</li>
+        </ul>
+        <a href="https://wa.me/905457277172?text=Togg%20i%C3%A7in%20Komple%20PPF%20fiyat%C4%B1%20%C3%B6%C4%9Frenmek%20istiyorum" class="paket-btn" style="display:block;text-align:center;text-decoration:none">FİYAT AL</a>
+      </div>
+
+    </div>
+    <p style="text-align:center;color:var(--ink4);font-size:13px;margin-top:32px">
+      <svg class="ic" style="width:14px;height:14px;vertical-align:-2px;color:var(--r)"><use href="#i-sparkles"/></svg>
+      Fiyat modele göre değişir. <b>T10X</b> ve <b>T10F</b> için özel teklifler alın.
+    </p>
+  </div>
+</section>
+
+<!-- ══ GALERİ ══ -->
+<section class="sec galeri-sec">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-tag">Galeri</div>
+      <h2 class="sec-title">Togg Çalışmalarımız</h2>
+      <p class="sec-sub">Karadeniz bölgesinden Togg sahiplerinin bize emanet ettiği araçlar</p>
+    </div>
+    <div class="galeri-grid">
+      <div class="galeri-item"><div class="galeri-ph"><svg class="ic" style="width:38px;height:38px;opacity:.3;margin-bottom:6px"><use href="#i-car"/></svg><div class="t">Togg T10X · Samsun</div></div></div>
+      <div class="galeri-item"><div class="galeri-ph"><svg class="ic" style="width:38px;height:38px;opacity:.3;margin-bottom:6px"><use href="#i-car"/></svg><div class="t">Togg T10X · Ordu</div></div></div>
+      <div class="galeri-item"><div class="galeri-ph"><svg class="ic" style="width:38px;height:38px;opacity:.3;margin-bottom:6px"><use href="#i-car"/></svg><div class="t">Togg T10F</div></div></div>
+      <div class="galeri-item"><div class="galeri-ph"><svg class="ic" style="width:38px;height:38px;opacity:.3;margin-bottom:6px"><use href="#i-camera"/></svg><div class="t">Öncesi / Sonrası</div></div></div>
+      <div class="galeri-item"><div class="galeri-ph"><svg class="ic" style="width:38px;height:38px;opacity:.3;margin-bottom:6px"><use href="#i-camera"/></svg><div class="t">PPF Uygulama Süreci</div></div></div>
+      <div class="galeri-item"><div class="galeri-ph"><svg class="ic" style="width:38px;height:38px;opacity:.3;margin-bottom:6px"><use href="#i-camera"/></svg><div class="t">Detay Çekimi</div></div></div>
+    </div>
+    <a href="https://www.instagram.com/autoclubsamsunmerkez/" target="_blank" class="galeri-ig">
+      <svg class="ic" style="width:20px;height:20px"><use href="#i-instagram"/></svg>
+      <span>Daha fazla çalışma için Instagram'dan takip edin: <b>@autoclubsamsunmerkez</b> (17.700+ takipçi)</span>
+    </a>
+  </div>
+</section>
+
+<!-- ══ YORUMLAR ══ -->
+<section class="sec" id="yorumlar">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-tag">Müşteri Yorumları</div>
+      <h2 class="sec-title">Togg Sahipleri Ne Diyor?</h2>
+    </div>
+    <div class="yorum-grid">
+
+      <div class="yorum">
+        <div class="yorum-star"><svg class="ic-fill"><use href="#i-star"/></svg><svg class="ic-fill"><use href="#i-star"/></svg><svg class="ic-fill"><use href="#i-star"/></svg><svg class="ic-fill"><use href="#i-star"/></svg><svg class="ic-fill"><use href="#i-star"/></svg></div>
+        <div class="yorum-text">"Togg T10X'ime Autonax'ta komple PPF yaptırdım. 6 ay oldu, aracım sıfır gün gibi duruyor. Karadeniz'in taş yolunda bile tek çizik almadım. Tavsiye ederim."</div>
+        <div class="yorum-meta">
+          <div class="yorum-avatar">MY</div>
+          <div class="yorum-info">
+            <div class="yorum-name">Mehmet Y.</div>
+            <div class="yorum-sub">Togg T10X · Samsun</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="yorum">
+        <div class="yorum-star"><svg class="ic-fill"><use href="#i-star"/></svg><svg class="ic-fill"><use href="#i-star"/></svg><svg class="ic-fill"><use href="#i-star"/></svg><svg class="ic-fill"><use href="#i-star"/></svg><svg class="ic-fill"><use href="#i-star"/></svg></div>
+        <div class="yorum-text">"Ordu'dan Samsun'a geldim sadece Autonax için. Ekip çok profesyonel, iş tertemiz. Togg'um ilk günkü gibi parlıyor, PPF'i hissedilmiyor bile."</div>
+        <div class="yorum-meta">
+          <div class="yorum-avatar">AK</div>
+          <div class="yorum-info">
+            <div class="yorum-name">Ahmet K.</div>
+            <div class="yorum-sub">Togg T10X · Ordu</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="yorum">
+        <div class="yorum-star"><svg class="ic-fill"><use href="#i-star"/></svg><svg class="ic-fill"><use href="#i-star"/></svg><svg class="ic-fill"><use href="#i-star"/></svg><svg class="ic-fill"><use href="#i-star"/></svg><svg class="ic-fill"><use href="#i-star"/></svg></div>
+        <div class="yorum-text">"Instagram'dan buldum, çok memnun kaldım. Ön 3'lü paket yaptırdım, fiyat-performans muhteşem. Aynı gün tesliminde söz tutuldu."</div>
+        <div class="yorum-meta">
+          <div class="yorum-avatar">EÖ</div>
+          <div class="yorum-info">
+            <div class="yorum-name">Emre Ö.</div>
+            <div class="yorum-sub">Togg T10X · Giresun</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══ SSS ══ -->
+<section class="sec sss-sec">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-tag">Sık Sorulan Sorular</div>
+      <h2 class="sec-title">Togg PPF Hakkında Her Şey</h2>
+    </div>
+    <div class="sss-list">
+
+      <details class="sss-item">
+        <summary class="sss-q">Togg aracıma PPF kaplama yaptırmam gerekli mi?</summary>
+        <div class="sss-a">Togg Türkiye'nin yerli otomobili olduğu için değer kaybını azaltmak ve orijinal boya yüzeyini korumak çok önemlidir. PPF kaplama taş vuruklarına, çiziklere, böcek ve kuş asidi gibi zararlılara karşı aracınızı korur. Özellikle Karadeniz iklimi yağmur ve tuzlu havası için ideal koruma sağlar.</div>
+      </details>
+
+      <details class="sss-item">
+        <summary class="sss-q">Togg PPF kaplama kaç yıl dayanır?</summary>
+        <div class="sss-a">Autonax'ta kullandığımız premium TPU PPF filmleri 10 yıl garantili olup, doğru bakım ile çok daha uzun süre performans gösterir. Self-healing (kendi kendine iyileşme) özelliği sayesinde küçük çizikler ısı ile geri düzelir.</div>
+      </details>
+
+      <details class="sss-item">
+        <summary class="sss-q">Togg için hangi PPF paketini seçmeliyim?</summary>
+        <div class="sss-a">Bütçenize ve kullanım şeklinize göre 3 paketimiz var: <b>Komple PPF</b> (tüm araç, maksimum koruma), <b>Ön 3'lü PPF</b> (en çok darbe alan bölgeler - en popüler seçim), <b>Kaput PPF</b> (ekonomik başlangıç paketi). Aracınızı görüp size özel öneri yapabiliriz.</div>
+      </details>
+
+      <details class="sss-item">
+        <summary class="sss-q">Togg PPF kaplama fiyatları nedir?</summary>
+        <div class="sss-a">Togg PPF fiyatları modele (T10X / T10F), seçilen pakete ve PPF film kalitesine göre değişir. Detaylı fiyat için <a href="tel:+908503052055" style="color:var(--r);font-weight:600">0850 305 20 55</a> telefonumuzdan veya <a href="https://wa.me/905457277172" target="_blank" style="color:var(--r);font-weight:600">WhatsApp'tan</a> bizi arayabilirsiniz. Aynı gün ücretsiz keşif ve fiyat teklifi veriyoruz.</div>
+      </details>
+
+      <details class="sss-item">
+        <summary class="sss-q">Togg PPF kaplama ne kadar sürer?</summary>
+        <div class="sss-a">Komple PPF kaplama yaklaşık 3-5 gün sürer. Ön 3'lü paket 2 gün, kaput PPF ise 1 günde tamamlanır. Aracınız kaplama sürecinde tesisimizde güvende kalır.</div>
+      </details>
+
+      <details class="sss-item">
+        <summary class="sss-q">Ordu, Giresun, Amasya'dan gelen Togg sahipleri için hizmetiniz var mı?</summary>
+        <div class="sss-a">Evet, <b>Karadeniz'in en büyük araç kaplama tesisi</b> olarak Samsun merkezimizde tüm Karadeniz bölgesinden Togg sahiplerine hizmet veriyoruz. Ordu, Giresun, Amasya, Sinop, Trabzon, Tokat ve Kastamonu'dan gelen değerli müşterilerimiz için özel programlar mevcuttur.</div>
+      </details>
+
+      <details class="sss-item">
+        <summary class="sss-q">PPF aracın orijinalliğine zarar verir mi?</summary>
+        <div class="sss-a">Hayır. PPF şeffaf bir film olup orijinal boyaya zarar vermez. Sökme işleminde de boyada hiçbir iz bırakmaz. Aksine PPF olan bir araç sıfır kilometre gibi koruma altındadır.</div>
+      </details>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══ RANDEVU FORM ══ -->
+<section class="sec randevu-sec" id="randevu">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-tag">Randevu</div>
+      <h2 class="sec-title">Togg'unuz İçin Ücretsiz Keşif</h2>
+      <p class="sec-sub">Bilgilerinizi bırakın, 24 saat içinde size özel fiyat teklifi sunalım</p>
+    </div>
+    <form class="randevu-kutu" onsubmit="event.preventDefault();faturaRandevuGonder(this)">
+      <div class="rf-row">
+        <div class="rf-field">
+          <label class="rf-lbl">Ad Soyad *</label>
+          <input type="text" name="ad" class="rf-inp" required placeholder="Adınız">
+        </div>
+        <div class="rf-field">
+          <label class="rf-lbl">Telefon *</label>
+          <input type="tel" name="tel" class="rf-inp" required placeholder="0555 123 45 67">
+        </div>
+      </div>
+      <div class="rf-row">
+        <div class="rf-field">
+          <label class="rf-lbl">Togg Modeli</label>
+          <select name="model" class="rf-inp">
+            <option value="T10X">Togg T10X</option>
+            <option value="T10F">Togg T10F</option>
+          </select>
+        </div>
+        <div class="rf-field">
+          <label class="rf-lbl">PPF Paketi</label>
+          <select name="paket" class="rf-inp">
+            <option value="komple">Komple PPF</option>
+            <option value="on-uclu" selected>Ön 3'lü PPF</option>
+            <option value="kaput">Kaput PPF</option>
+            <option value="bilmiyorum">Önerinizi istiyorum</option>
+          </select>
+        </div>
+      </div>
+      <div class="rf-row">
+        <div class="rf-field full">
+          <label class="rf-lbl">Şehriniz</label>
+          <input type="text" name="sehir" class="rf-inp" placeholder="Samsun, Ordu, Giresun...">
+        </div>
+      </div>
+      <div class="rf-row">
+        <div class="rf-field full">
+          <label class="rf-lbl">Not (opsiyonel)</label>
+          <input type="text" name="not" class="rf-inp" placeholder="Özel istekleriniz...">
+        </div>
+      </div>
+      <button type="submit" class="rf-submit">
+        <svg class="ic-fill" style="width:18px;height:18px"><use href="#i-send"/></svg>
+        RANDEVU OLUŞTUR
+      </button>
+      <p class="rf-note">
+        <svg class="ic"><use href="#i-lock"/></svg>
+        Bilgileriniz gizli tutulur, 3. kişilerle paylaşılmaz
+      </p>
+    </form>
+  </div>
+</section>
+
+<!-- ══ CTA ══ -->
+<section class="cta-sec">
+  <div class="wrap">
+    <h2>Togg'unuzu Koruma<em>Zamanı Geldi</em></h2>
+    <p>Karadeniz'in en büyük araç kaplama tesisinde Togg'unuza özel hazırlanmış premium PPF paketleri ile tanışın</p>
+    <div class="cta-btns">
+      <a href="tel:+908503052055" class="hero-cta primary"><svg class="ic"><use href="#i-phone"/></svg> HEMEN ARA: 0850 305 20 55</a>
+      <a href="https://wa.me/905457277172?text=Togg%20i%C3%A7in%20PPF%20bilgi%20almak%20istiyorum" class="hero-cta wa" target="_blank"><svg class="ic-fill"><use href="#i-whatsapp"/></svg> WHATSAPP'TAN YAZ</a>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FOOTER ══ -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <a href="/" class="footer-logo">AUTONAX</a>
+        <p>Karadeniz'in en büyük araç kaplama tesisi. Samsun merkezli premium PPF kaplama, seramik kaplama ve detaylı temizlik hizmetleri. 8 ile hizmet veriyoruz.</p>
+        <p style="color:#666;font-size:12px"><svg class="ic"><use href="#i-pin"/></svg> Kuzeyyıldızı Mah. 100.Yıl Blv. No:16/A Canik/Samsun</p>
+      </div>
+      <div>
+        <div class="footer-h">Hizmetler</div>
+        <ul class="footer-list">
+          <li><a href="/togg-ppf-kaplama.html">Togg PPF Kaplama</a></li>
+          <li><a href="/">BYD PPF Kaplama</a></li>
+          <li><a href="/">Chery PPF Kaplama</a></li>
+          <li><a href="/">Seramik Kaplama</a></li>
+          <li><a href="/">Cam Filmi</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-h">İletişim</div>
+        <ul class="footer-list">
+          <li><a href="tel:+908503052055"><svg class="ic"><use href="#i-phone"/></svg>0850 305 20 55</a></li>
+          <li><a href="https://wa.me/905457277172"><svg class="ic-fill"><use href="#i-whatsapp"/></svg>0545 727 71 72</a></li>
+          <li><a href="mailto:info@autonax.com.tr"><svg class="ic"><use href="#i-mail"/></svg>info@autonax.com.tr</a></li>
+          <li><a href="https://www.instagram.com/autoclubsamsunmerkez/" target="_blank"><svg class="ic"><use href="#i-instagram"/></svg>Instagram</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bot">
+      © 2026 Autonax · Autoclub Samsun Merkez · Karadeniz'in En Büyük Araç Kaplama Tesisi
+    </div>
+  </div>
+</footer>
+
+<!-- ══ STICKY WA ══ -->
+<a href="https://wa.me/905457277172?text=Togg%20PPF%20Kaplama%20bilgi%20almak%20istiyorum" target="_blank" class="wa-sticky">
+  <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+  <span>WhatsApp</span>
+</a>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   DİNAMİK SAYFA RENDERER
+   Panel'den gelen marka verisini tüm DOM'a işler.
+   DOM hazır olduğunda ve fetch sonrası (veri güncellenince) çalışır.
+══════════════════════════════════════════════════════════════════ */
+(function(){
+  var MARKA_KOD = window.__AUTONAX_MARKA_KOD || 'togg';
+
+  // Sayfa DOM hazır olana kadar bekle, sonra global renderer'ı çağır
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){
+      if(typeof window.__autonaxRender === 'function') window.__autonaxRender();
+    });
+  } else {
+    if(typeof window.__autonaxRender === 'function') window.__autonaxRender();
+  }
+
+  // HTML escape
+  function e(s){
+    if(s==null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  // Global render fonksiyonu - fetch sonrası da çağrılabilir
+  window.__autonaxRender = function(){
+    var marka = window.__AUTONAX_MARKA;
+    if(!marka){
+      console.log('[Autonax] Marka verisi yok ('+MARKA_KOD+'), default içerik gösteriliyor');
+      return;
+    }
+
+    try {
+      // HERO
+      if(marka.heroEtiket){
+        var tagEl = document.querySelector('.togg-hero-tag');
+        if(tagEl){
+          // SVG + text koru
+          var svg = tagEl.querySelector('svg');
+          tagEl.textContent = marka.heroEtiket;
+          if(svg) tagEl.insertBefore(svg, tagEl.firstChild);
+        }
+      }
+      if(marka.heroBaslik || marka.heroBaslikKirmizi){
+        var h1 = document.querySelector('.togg-hero-l h1');
+        if(h1){
+          h1.innerHTML = e(marka.heroBaslik||'') + '<em>' + e(marka.heroBaslikKirmizi||'') + '</em>';
+        }
+      }
+      if(marka.heroAciklama){
+        var pSub = document.querySelector('.togg-hero-sub');
+        if(pSub) pSub.innerHTML = marka.heroAciklama; // HTML izin veriliyor (b, br)
+      }
+
+      // Hero fotoğraf
+      if(marka.heroFoto){
+        var heroVis = document.querySelector('.togg-visual');
+        if(heroVis){
+          heroVis.innerHTML = '<img src="'+e(marka.heroFoto)+'" alt="'+e(marka.ad)+' PPF Kaplama" style="width:100%;height:100%;object-fit:cover;border-radius:20px">';
+        }
+      }
+
+      // İstatistik kutuları (3 kutu)
+      var statNodes = document.querySelectorAll('.togg-stat');
+      [1,2,3].forEach(function(idx){
+        var statEl = statNodes[idx-1];
+        if(!statEl) return;
+        var nEl = statEl.querySelector('.togg-stat-n');
+        var lEl = statEl.querySelector('.togg-stat-l');
+        if(nEl && marka['ist'+idx+'_n']) nEl.textContent = marka['ist'+idx+'_n'];
+        if(lEl && marka['ist'+idx+'_l']) lEl.textContent = marka['ist'+idx+'_l'];
+      });
+
+      // PAKETLER
+      if(marka.paketler && marka.paketler.length){
+        var paketGrid = document.querySelector('.paket-grid');
+        if(paketGrid){
+          var html = '';
+          marka.paketler.forEach(function(p){
+            var featClass = p.featured ? 'paket featured' : 'paket';
+            html += '<div class="'+featClass+'">';
+            html += '<div class="paket-name">'+e(p.ad||'')+'</div>';
+            html += '<div class="paket-desc">'+e(p.aciklama||'')+'</div>';
+            html += '<div class="paket-price">'+e(p.fiyat||'FİYAT SOR')+'</div>';
+            html += '<div class="paket-price-note">'+e(p.fiyatNot||'')+'</div>';
+            html += '<ul class="paket-list">';
+            (p.ozellikler||[]).forEach(function(oz){
+              html += '<li>'+e(oz)+'</li>';
+            });
+            html += '</ul>';
+            var waMsg = encodeURIComponent(marka.ad+' için '+p.ad+' fiyatı öğrenmek istiyorum');
+            html += '<a href="https://wa.me/905457277172?text='+waMsg+'" class="paket-btn" style="display:block;text-align:center;text-decoration:none">FİYAT AL</a>';
+            html += '</div>';
+          });
+          paketGrid.innerHTML = html;
+        }
+      }
+
+      // GALERİ başlık + açıklama
+      if(marka.galeriBaslik){
+        var galSec = document.querySelector('.galeri-sec .sec-title');
+        if(galSec) galSec.textContent = marka.galeriBaslik;
+      }
+      if(marka.galeriAciklama){
+        var galSub = document.querySelector('.galeri-sec .sec-sub');
+        if(galSub) galSub.textContent = marka.galeriAciklama;
+      }
+
+      // GALERİ — 6 fotoğraf
+      if(marka.galeri && marka.galeri.length){
+        var galItems = document.querySelectorAll('.galeri-grid .galeri-item');
+        marka.galeri.forEach(function(foto, idx){
+          var gEl = galItems[idx];
+          if(!gEl) return;
+          if(foto){
+            gEl.innerHTML = '<img src="'+e(foto)+'" alt="'+e(marka.ad)+' PPF Samsun '+(idx+1)+'" style="width:100%;height:100%;object-fit:cover">';
+          }
+        });
+      }
+
+      // YORUMLAR
+      if(marka.yorumlar && marka.yorumlar.length){
+        var yorumGrid = document.querySelector('.yorum-grid');
+        if(yorumGrid){
+          var ySvg = '<svg class="ic-fill"><use href="#i-star"/></svg>';
+          var starSVG = '<div class="yorum-star">'+ySvg+ySvg+ySvg+ySvg+ySvg+'</div>';
+          var html = '';
+          marka.yorumlar.forEach(function(y){
+            html += '<div class="yorum">';
+            html += starSVG;
+            html += '<div class="yorum-text">"'+e(y.yorum||'')+'"</div>';
+            html += '<div class="yorum-meta">';
+            html += '<div class="yorum-avatar">'+e((y.bas||'').substring(0,2).toUpperCase())+'</div>';
+            html += '<div class="yorum-info">';
+            html += '<div class="yorum-name">'+e(y.ad||'')+'</div>';
+            html += '<div class="yorum-sub">'+e(y.arac||'')+'</div>';
+            html += '</div></div></div>';
+          });
+          yorumGrid.innerHTML = html;
+        }
+      }
+
+      // SSS
+      if(marka.sss && marka.sss.length){
+        var sssList = document.querySelector('.sss-list');
+        if(sssList){
+          var html = '';
+          marka.sss.forEach(function(s){
+            html += '<details class="sss-item">';
+            html += '<summary class="sss-q">'+e(s.soru||'')+'</summary>';
+            html += '<div class="sss-a">'+(s.cevap||'')+'</div>';
+            html += '</details>';
+          });
+          sssList.innerHTML = html;
+        }
+      }
+
+      // FORMDA marka model bilgisi
+      var modelSel = document.querySelector('select[name="model"]');
+      if(modelSel){
+        modelSel.innerHTML = '<option value="'+e(marka.ad)+'">'+e(marka.ad)+'</option>';
+      }
+
+      // FAQ Schema güncellemesi
+      try {
+        var schemaScripts = document.querySelectorAll('script[type="application/ld+json"]');
+        schemaScripts.forEach(function(sc){
+          try {
+            var data = JSON.parse(sc.textContent);
+            if(data['@type']==='Service'){
+              if(marka.ad) data.name = marka.ad+' PPF Kaplama';
+              if(marka.seoDesc) data.description = marka.seoDesc;
+              data.alternateName = [marka.ad+' PPF Kaplama', marka.ad+' Araç Kaplama'];
+              if(marka.paketler && marka.paketler.length && data.hasOfferCatalog){
+                data.hasOfferCatalog.name = marka.ad+' PPF Paketleri';
+                data.hasOfferCatalog.itemListElement = marka.paketler.map(function(p){
+                  return { '@type':'Offer', 'name':marka.ad+' '+p.ad, 'description':p.aciklama };
+                });
+              }
+              sc.textContent = JSON.stringify(data, null, 2);
+            }
+            if(data['@type']==='BreadcrumbList' && marka.ad){
+              if(data.itemListElement && data.itemListElement[2]){
+                data.itemListElement[2].name = marka.ad+' PPF Kaplama';
+                data.itemListElement[2].item = 'https://www.autonax.com.tr/'+MARKA_KOD+'-ppf-kaplama.html';
+              }
+              sc.textContent = JSON.stringify(data, null, 2);
+            }
+            if(data['@type']==='FAQPage' && marka.sss && marka.sss.length){
+              data.mainEntity = marka.sss.map(function(s){
+                return {
+                  '@type':'Question',
+                  'name':s.soru,
+                  'acceptedAnswer':{'@type':'Answer','text':String(s.cevap||'').replace(/<[^>]+>/g,'')}
+                };
+              });
+              sc.textContent = JSON.stringify(data, null, 2);
+            }
+          } catch(e2){}
+        });
+      } catch(e3){}
+
+      // Breadcrumb
+      var breadcrumbStrong = document.querySelector('.breadcrumb strong');
+      if(breadcrumbStrong && marka.ad) breadcrumbStrong.textContent = marka.ad+' PPF Kaplama';
+
+      // Footer - güncel markayı göster
+      var footerLinks = document.querySelectorAll('.footer-list a');
+      footerLinks.forEach(function(a){
+        if(a.textContent.indexOf('Togg PPF') >= 0 && MARKA_KOD !== 'togg'){
+          a.textContent = marka.ad + ' PPF Kaplama';
+          a.setAttribute('href','/'+MARKA_KOD+'-ppf-kaplama.html');
+        }
+      });
+
+      // CTA başlığı
+      var ctaH2 = document.querySelector('.cta-sec h2');
+      if(ctaH2 && marka.ad){
+        ctaH2.innerHTML = marka.ad+'\'unuzu Koruma<em>Zamanı Geldi</em>';
+      }
+
+      console.log('[Autonax] Sayfa render edildi: '+marka.ad+' (kaynak: '+window.__AUTONAX_MARKA_KAYNAK+')');
+    } catch(err){
+      console.error('[Autonax] Render hatası:', err);
+    }
+  };
+})();
+</script>
+
+<script>
+/* Randevu gönderim - WhatsApp'a yönlendirir (marka dinamik) */
+function faturaRandevuGonder(form){
+  var fd = new FormData(form);
+  var ad = fd.get('ad') || '';
+  var tel = fd.get('tel') || '';
+  var model = fd.get('model') || '';
+  var paket = fd.get('paket') || '';
+  var sehir = fd.get('sehir') || '';
+  var not = fd.get('not') || '';
+  var markaAd = (window.__AUTONAX_MARKA && window.__AUTONAX_MARKA.ad) || 'Aracım';
+
+  var mesaj = 'Merhaba, '+markaAd+' PPF kaplama için randevu istiyorum.\n\n'
+    + '👤 Ad: ' + ad + '\n'
+    + '📞 Tel: ' + tel + '\n'
+    + '🚗 Model: ' + model + '\n'
+    + '📦 Paket: ' + paket + '\n'
+    + (sehir ? '📍 Şehir: ' + sehir + '\n' : '')
+    + (not ? '📝 Not: ' + not : '');
+
+  window.open('https://wa.me/905457277172?text=' + encodeURIComponent(mesaj), '_blank');
+}
+</script>
+
+</body>
+</html>
