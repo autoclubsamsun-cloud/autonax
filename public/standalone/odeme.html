@@ -68,6 +68,9 @@
     .form-grup input:focus, .form-grup select:focus, .form-grup textarea:focus {
       border-color: #a13128; box-shadow: 0 0 0 3px rgba(161, 49, 40, 0.1);
     }
+    .form-grup select:disabled {
+      background: #f5f5f5; color: #999; cursor: not-allowed;
+    }
     .form-grup textarea { resize: vertical; min-height: 60px; }
     .form-satir-3 { display: grid; grid-template-columns: 2fr 2fr 1.5fr; gap: 12px; }
 
@@ -91,7 +94,20 @@
       font-size: 11px; color: #a13128; display: none;
     }
     .kart-marka-bilgi.gorunur { display: block; }
+    .kart-marka-bilgi.uyari {
+      background: #fff8e1; color: #92400e; border: 1px solid #fde68a;
+    }
+    .kart-marka-bilgi.hata {
+      background: #fff5f3; color: #991b1b; border: 1px solid #f9d2c8;
+    }
     .kart-marka-bilgi .marka { font-weight: 700; }
+
+    .taksit-uyari {
+      margin-top: 8px; padding: 10px 12px; background: #fff8e1;
+      border: 1px solid #fde68a; border-radius: 8px;
+      font-size: 12px; color: #78350f; display: none;
+    }
+    .taksit-uyari.gorunur { display: block; }
 
     .odeme-btn {
       width: 100%; padding: 16px; background: linear-gradient(135deg, #a13128, #7a231a);
@@ -173,7 +189,8 @@
             <label for="card_number">Kart Numarası</label>
             <input type="text" id="card_number" name="card_number" required inputmode="numeric" autocomplete="cc-number" maxlength="23" placeholder="0000 0000 0000 0000" />
             <div id="kart-marka-bilgi" class="kart-marka-bilgi">
-              <span>🏦 Algılanan: </span>
+              <span id="kart-ikon">🏦</span>
+              <span> <span id="kart-durum-metin"></span></span>
               <span class="marka" id="kart-marka"></span>
               <span id="kart-banka"></span>
             </div>
@@ -213,6 +230,7 @@
             <select id="taksit" name="taksit">
               <option value="0">Tek Çekim</option>
             </select>
+            <div id="taksit-uyari" class="taksit-uyari"></div>
             <div id="taksit-detay" style="margin-top:8px;font-size:12px;color:#8a6d63;display:none"></div>
           </div>
 
@@ -244,6 +262,7 @@
     var TAKSIT_ORANLARI = {};
     var VADE_KARSILAYAN_FIRMA = true;
     var SECILEN_MARKA = null;
+    var MARKA_DURUMU = 'bekleniyor'; // 'bekleniyor' | 'tanindi' | 'tanimsiz'
     var BIN_SORGU_TIMER = null;
     var SON_BIN = null;
 
@@ -256,10 +275,13 @@
     var odemeBtn = document.getElementById('odeme-btn');
     var taksitSelectEl = document.getElementById('taksit');
     var taksitDetayEl = document.getElementById('taksit-detay');
+    var taksitUyariEl = document.getElementById('taksit-uyari');
     var ozetTutarEl = document.getElementById('ozet-tutar');
     var eskiTutarEl = document.getElementById('eski-tutar');
     var vadeNotEl = document.getElementById('vade-not');
     var kartMarkaBilgiEl = document.getElementById('kart-marka-bilgi');
+    var kartIkonEl = document.getElementById('kart-ikon');
+    var kartDurumMetinEl = document.getElementById('kart-durum-metin');
     var kartMarkaEl = document.getElementById('kart-marka');
     var kartBankaEl = document.getElementById('kart-banka');
 
@@ -276,13 +298,22 @@
         var bin = v.substring(0, 6);
         if (bin !== SON_BIN) {
           SON_BIN = bin;
+          MARKA_DURUMU = 'bekleniyor';
+          kartIkonEl.textContent = '⏳';
+          kartDurumMetinEl.textContent = 'Kart kontrol ediliyor... ';
+          kartMarkaEl.textContent = '';
+          kartBankaEl.textContent = '';
+          kartMarkaBilgiEl.className = 'kart-marka-bilgi gorunur';
           if (BIN_SORGU_TIMER) clearTimeout(BIN_SORGU_TIMER);
-          BIN_SORGU_TIMER = setTimeout(function() { binSorgu(bin); }, 600);
+          BIN_SORGU_TIMER = setTimeout(function() { binSorgu(bin); }, 500);
         }
       } else {
         SECILEN_MARKA = null;
         SON_BIN = null;
+        MARKA_DURUMU = 'bekleniyor';
         kartMarkaBilgiEl.classList.remove('gorunur');
+        kartMarkaBilgiEl.classList.remove('uyari');
+        kartMarkaBilgiEl.classList.remove('hata');
         taksitSeceneklerGuncelle();
       }
     });
@@ -334,21 +365,48 @@
         if (d.success && d.data) {
           var marka = d.data.brand || '';
           var banka = d.data.bank || '';
-          kartMarkaEl.textContent = marka || 'Bilinmeyen';
-          kartBankaEl.textContent = banka ? ' (' + banka + ')' : '';
-          kartMarkaBilgiEl.classList.add('gorunur');
-          SECILEN_MARKA = markaEslestir(marka);
+          var eslesenMarka = markaEslestir(marka);
+
+          if (eslesenMarka && TAKSIT_ORANLARI[eslesenMarka]) {
+            // Marka tanındı VE taksit oranlari var
+            SECILEN_MARKA = eslesenMarka;
+            MARKA_DURUMU = 'tanindi';
+            kartIkonEl.textContent = '✓';
+            kartDurumMetinEl.textContent = 'Kart tanındı: ';
+            kartMarkaEl.textContent = marka || eslesenMarka;
+            kartBankaEl.textContent = banka ? ' (' + banka + ')' : '';
+            kartMarkaBilgiEl.className = 'kart-marka-bilgi gorunur';
+          } else {
+            // Marka PayTR'dan geldi ama bizim taksit tablosunda YOK (örn Ziraat Combo, Halkbank Paraf vs)
+            SECILEN_MARKA = null;
+            MARKA_DURUMU = 'tanimsiz';
+            kartIkonEl.textContent = 'ℹ️';
+            kartDurumMetinEl.textContent = 'Bu kart için sadece tek çekim: ';
+            kartMarkaEl.textContent = marka || 'Bilinmeyen';
+            kartBankaEl.textContent = banka ? ' (' + banka + ')' : '';
+            kartMarkaBilgiEl.className = 'kart-marka-bilgi gorunur uyari';
+          }
         } else {
-          kartMarkaEl.textContent = 'Yabancı kart / Tanımsız';
-          kartBankaEl.textContent = '';
-          kartMarkaBilgiEl.classList.add('gorunur');
+          // PayTR BIN'i bilmiyor (yabanci kart vs)
           SECILEN_MARKA = null;
+          MARKA_DURUMU = 'tanimsiz';
+          kartIkonEl.textContent = 'ℹ️';
+          kartDurumMetinEl.textContent = 'Bu kart için sadece tek çekim yapılabilir';
+          kartMarkaEl.textContent = '';
+          kartBankaEl.textContent = '';
+          kartMarkaBilgiEl.className = 'kart-marka-bilgi gorunur uyari';
         }
         taksitSeceneklerGuncelle();
       })
       .catch(function(err) {
         console.error('BIN sorgu hatasi:', err);
         SECILEN_MARKA = null;
+        MARKA_DURUMU = 'tanimsiz';
+        kartIkonEl.textContent = 'ℹ️';
+        kartDurumMetinEl.textContent = 'Kart kontrol edilemedi - tek çekim öneriyoruz';
+        kartMarkaEl.textContent = '';
+        kartBankaEl.textContent = '';
+        kartMarkaBilgiEl.className = 'kart-marka-bilgi gorunur uyari';
         taksitSeceneklerGuncelle();
       });
     }
@@ -368,12 +426,10 @@
     }
 
     function aktifOranlariAl() {
-      var markalar = Object.keys(TAKSIT_ORANLARI);
-      if (markalar.length === 0) return null;
-      if (SECILEN_MARKA && TAKSIT_ORANLARI[SECILEN_MARKA]) {
-        return TAKSIT_ORANLARI[SECILEN_MARKA];
-      }
-      return TAKSIT_ORANLARI[markalar[0]];
+      // Marka tespit edilmediyse veya bizim tabloda yoksa - taksit vermeyelim
+      if (!SECILEN_MARKA || MARKA_DURUMU === 'tanimsiz') return null;
+      if (!TAKSIT_ORANLARI[SECILEN_MARKA]) return null;
+      return TAKSIT_ORANLARI[SECILEN_MARKA];
     }
 
     function taksitSeceneklerGuncelle() {
@@ -383,26 +439,41 @@
       var secili = taksitSelectEl.value;
 
       taksitSelectEl.innerHTML = '';
+      taksitUyariEl.classList.remove('gorunur');
+      taksitUyariEl.textContent = '';
 
-      var oran1 = oranlar ? (oranlar[1] || 0) : 0;
-      var metin1 = 'Tek Çekim';
-      if (oran1 > 0) {
-        if (VADE_KARSILAYAN_FIRMA) {
-          metin1 += '  (%' + oran1 + ' firmadan)';
-        } else {
-          var yeni1 = tutar * (1 + oran1/100);
-          metin1 += ' - ' + paraFormat(yeni1) + ' (+%' + oran1 + ')';
-        }
-      } else {
-        metin1 += ' - ' + paraFormat(tutar);
-      }
+      // TEK CEKIM - her zaman var
       var opt1 = document.createElement('option');
       opt1.value = '0';
-      opt1.textContent = metin1;
+      opt1.textContent = 'Tek Çekim - ' + paraFormat(tutar);
       taksitSelectEl.appendChild(opt1);
 
+      // Marka tanınmadı veya taksit tablosu yok - SADECE TEK CEKIM
+      if (!oranlar) {
+        taksitSelectEl.value = '0';
+        taksitSelectEl.disabled = false; // etkinlik korunuyor ama sadece 1 secenek
+
+        // Durum bazlı uyarı
+        if (MARKA_DURUMU === 'tanimsiz') {
+          taksitUyariEl.innerHTML = '<strong>ℹ️ Bilgi:</strong> Bu kart markası taksitli ödeme desteklemiyor. Tek çekim ile devam edebilirsiniz.';
+          taksitUyariEl.classList.add('gorunur');
+        } else if (MARKA_DURUMU === 'bekleniyor') {
+          taksitUyariEl.innerHTML = '<strong>⏳ Beklenyor:</strong> Kart kontrolü yapılıyor, taksit seçenekleri birazdan açılacak.';
+          taksitUyariEl.classList.add('gorunur');
+        }
+
+        tutarGuncelle();
+        return;
+      }
+
+      // Marka tanındı - taksit seçenekleri varsa göster
+      var eklenenAy = 0;
       for (var ay = 2; ay <= 12; ay++) {
-        var oran = oranlar ? (oranlar[ay] || 0) : 0;
+        var oran = oranlar[ay];
+        // Oran TANIMLI DEGIL (undefined) ise o taksiti atla - desteklenmiyor demektir
+        // Oran 0 ise bile taksit vardır ama firma yüzdelik almıyor - yine göster
+        if (oran === undefined || oran === null) continue;
+
         var metin = ay + ' Taksit';
         if (oran > 0) {
           if (VADE_KARSILAYAN_FIRMA) {
@@ -420,8 +491,15 @@
         opt.value = ay.toString();
         opt.textContent = metin;
         taksitSelectEl.appendChild(opt);
+        eklenenAy++;
       }
 
+      if (eklenenAy === 0) {
+        taksitUyariEl.innerHTML = '<strong>ℹ️ Bilgi:</strong> Bu kart için taksit tanımı yok. Tek çekim ile devam edin.';
+        taksitUyariEl.classList.add('gorunur');
+      }
+
+      taksitSelectEl.disabled = false;
       taksitSelectEl.value = secili || '0';
       tutarGuncelle();
     }
@@ -432,7 +510,7 @@
       var secim = parseInt(taksitSelectEl.value) || 0;
       var oranlar = aktifOranlariAl();
       var ay = secim === 0 ? 1 : secim;
-      var oran = oranlar ? (oranlar[ay] || 0) : 0;
+      var oran = (oranlar && oranlar[ay]) ? oranlar[ay] : 0;
       var gosterilecekTutar = tutar;
 
       if (oran > 0 && !VADE_KARSILAYAN_FIRMA) {
@@ -537,6 +615,15 @@
         hataMesajEl.classList.add('gorunur'); return;
       }
 
+      // EK GUVENLIK: Marka tespit edilmediyse ama taksit secildiyse ENGELLE
+      if (installmentCount > 1 && !SECILEN_MARKA) {
+        hataMesajEl.innerHTML = '<strong>⚠️ Uyarı:</strong> Bu kart için taksit desteklenmiyor olabilir. Lütfen "Tek Çekim" seçerek devam edin.';
+        hataMesajEl.classList.add('gorunur');
+        taksitSelectEl.value = '0';
+        tutarGuncelle();
+        return;
+      }
+
       odemeBtn.disabled = true;
       odemeBtn.innerHTML = '⏳ Ödeme İşleniyor...';
 
@@ -559,8 +646,26 @@
       .then(function(r) { return r.json(); })
       .then(function(d) {
         if (!d.success) {
-          hataMesajEl.textContent = d.error || 'Ödeme başlatılamadı';
-          hataMesajEl.classList.add('gorunur');
+          // PayTR hatasi - taksit sorunu olabilir, "Tek Cekim ile Dene" butonu ekle
+          var hataMetni = d.error || 'Ödeme başlatılamadı';
+          var taksitSorunuMu = installmentCount > 1;
+          if (taksitSorunuMu) {
+            hataMesajEl.innerHTML = '<div><strong>Ödeme reddedildi:</strong> ' + hataMetni + '</div>' +
+              '<div style="margin-top:8px"><button type="button" id="tek-cekim-btn" style="padding:8px 14px;background:#16a34a;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px">↻ Tek Çekim ile Tekrar Dene</button></div>';
+            hataMesajEl.classList.add('gorunur');
+            setTimeout(function() {
+              var btn = document.getElementById('tek-cekim-btn');
+              if (btn) btn.onclick = function() {
+                taksitSelectEl.value = '0';
+                tutarGuncelle();
+                hataMesajEl.classList.remove('gorunur');
+                hataMesajEl.innerHTML = '';
+              };
+            }, 50);
+          } else {
+            hataMesajEl.textContent = hataMetni;
+            hataMesajEl.classList.add('gorunur');
+          }
           odemeBtn.disabled = false;
           odemeBtn.innerHTML = '💳 Ödeme Yap';
           return;
