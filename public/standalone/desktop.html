@@ -8,19 +8,23 @@
   <link rel="apple-touch-icon" href="/uploads/logo/favicon.png">
   <meta name="description" content="Premium PPF kaplama ve seramik araç koruma hizmetleri.">
   <meta property="og:image" content="/uploads/logo/og-image.jpg">
-  <meta property="og:title" content="Autonax — Samsun Ppf Kaplama">
+  <meta property="og:title" content="Autonax — Premium Araç Koruma">
   <meta property="og:description" content="Premium PPF kaplama ve seramik araç koruma hizmetleri.">
   <meta property="og:site_name" content="Autonax">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.autonax.com.tr">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Autonax-Türkiye'nin İlk Online Ppf Kaplama Platfomu">
+  <meta name="twitter:title" content="Autonax — Premium Araç Koruma">
   <meta name="twitter:description" content="Premium PPF kaplama ve seramik araç koruma hizmetleri.">
-  <title>Autonax-Türkiye'nin İlk Online Ppf Kaplama Platfomu</title>
+  <title>Autonax — Premium Araç Koruma</title>
   <script>
   /* ══ ERKEN SEO UYGULAMASI ══
    * localStorage'daki SITE_AYARLAR'ı sayfa render olmadan önce title/meta'ya uygula.
    * Böylece kullanıcı tarayıcı sekmesinde başta yanlış başlık görüp sonra değişim görmez.
+   *
+   * Öncelik sırası: genel.metaTitle (panel'de Genel sekmesinde girilen) > seo.metaTitle > genel.siteAdi
+   * Bu sıra önemli çünkü kullanıcı genelde "Genel" sekmesinde düzenleme yapıyor, SEO sekmesi
+   * eski varsayılan değerleri tutabiliyor.
    */
   (function(){
     try {
@@ -29,8 +33,8 @@
       var sa = JSON.parse(raw);
       var g = sa.genel || {};
       var seo = sa.seo || {};
-      var yeniTitle = seo.metaTitle || g.metaTitle || g.siteAdi;
-      var yeniDesc = seo.metaDesc || g.metaDesc || g.siteAciklama;
+      var yeniTitle = g.metaTitle || seo.metaTitle || g.siteAdi;
+      var yeniDesc = g.metaDesc || seo.metaDesc || g.siteAciklama;
       if(yeniTitle) document.title = yeniTitle;
       // Meta tag güncelleyici
       var updateMeta = function(sel, attr, val){
@@ -4124,18 +4128,19 @@ function siteAyarlariniUygula(sa) {
   if(an.istat3Etiket && hsLbls[2]) { hsLbls[2].innerHTML = an.istat3Etiket; }
 
   // 4. SEO — Title ve Meta (siteAdi, metaTitle ve metaDesc'ten birleşik üretim)
+  // ÖNCELİK: genel.metaTitle (panel Genel sekmesi) > seo.metaTitle (SEO sekmesi) > genel.siteAdi
+  // Genel sekmesi önce çünkü kullanıcı genelde orayı düzenliyor
   (function(){
-    // Title öncelik sırası: seo.metaTitle > genel.metaTitle > genel.siteAdi > mevcut
     var yeniTitle = '';
-    if(seo && seo.metaTitle) yeniTitle = seo.metaTitle;
-    else if(g.metaTitle) yeniTitle = g.metaTitle;
+    if(g.metaTitle) yeniTitle = g.metaTitle;
+    else if(seo && seo.metaTitle) yeniTitle = seo.metaTitle;
     else if(g.siteAdi) yeniTitle = g.siteAdi + (g.siteAciklama ? ' — ' + g.siteAciklama : '');
     if(yeniTitle) document.title = yeniTitle;
 
-    // Meta description: seo.metaDesc > genel.metaDesc > genel.siteAciklama
+    // Meta description: genel.metaDesc > seo.metaDesc > genel.siteAciklama
     var yeniDesc = '';
-    if(seo && seo.metaDesc) yeniDesc = seo.metaDesc;
-    else if(g.metaDesc) yeniDesc = g.metaDesc;
+    if(g.metaDesc) yeniDesc = g.metaDesc;
+    else if(seo && seo.metaDesc) yeniDesc = seo.metaDesc;
     else if(g.siteAciklama) yeniDesc = g.siteAciklama;
 
     // <meta name="description">
