@@ -6153,13 +6153,24 @@ function faturaOnizlemeGoster(idx){
   ovl.style.cssText='position:fixed;inset:0;z-index:985;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px';
   ovl.onclick=function(e){if(e.target===ovl)ovl.remove();};
 
+  // Yazdır/Mail/WhatsApp butonları - her durumda görünür
+  var yardimciButonlar=''
+    +'<button type="button" onclick="faturaYazdir('+idx+')" title="Sadece fatura içeriğini yazdır" style="padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">🖨️ YAZDIR</button>'
+    +'<button type="button" onclick="faturaMailGonder('+idx+')" title="E-posta ile gönder" style="padding:9px 12px;border:1.5px solid #2563EB;border-radius:8px;background:rgba(37,99,235,.08);color:#2563EB;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">✉️ MAİL</button>'
+    +'<button type="button" onclick="faturaWhatsappGonder('+idx+')" title="WhatsApp ile gönder" style="padding:9px 12px;border:1.5px solid #25D366;border-radius:8px;background:rgba(37,211,102,.08);color:#128C3D;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">📱 WHATSAPP</button>';
+
   var butonlar='';
   if(f.durum==='KESILDI' || f.durum==='HATA'){
     butonlar=''
-      +'<button type="button" onclick="document.getElementById(\'fat-onizleme-ovl\').remove()" style="flex:1;padding:11px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;cursor:pointer;letter-spacing:1px">SONRA GÖNDERECEĞİM</button>'
-      +'<button type="button" onclick="faturaEDMGonder('+idx+');document.getElementById(\'fat-onizleme-ovl\').remove()" style="flex:2;padding:11px;border:none;border-radius:8px;background:#1a6b3c;color:#fff;font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:1px;cursor:pointer">📤 EDM\'E GÖNDER</button>';
+      +yardimciButonlar
+      +'<div style="flex:1"></div>'
+      +'<button type="button" onclick="document.getElementById(\'fat-onizleme-ovl\').remove()" style="padding:11px 16px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-family:Bebas Neue,sans-serif;font-size:12px;cursor:pointer;letter-spacing:1px;white-space:nowrap">SONRA</button>'
+      +'<button type="button" onclick="faturaEDMGonder('+idx+');document.getElementById(\'fat-onizleme-ovl\').remove()" style="padding:11px 20px;border:none;border-radius:8px;background:#1a6b3c;color:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer;white-space:nowrap">📤 EDM\'E GÖNDER</button>';
   } else {
-    butonlar='<button type="button" onclick="document.getElementById(\'fat-onizleme-ovl\').remove()" style="flex:1;padding:11px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;cursor:pointer;letter-spacing:1px">KAPAT</button>';
+    butonlar=''
+      +yardimciButonlar
+      +'<div style="flex:1"></div>'
+      +'<button type="button" onclick="document.getElementById(\'fat-onizleme-ovl\').remove()" style="padding:11px 20px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;cursor:pointer;letter-spacing:1px">KAPAT</button>';
   }
 
   ovl.innerHTML='<div style="background:#fff;border-radius:14px;max-width:900px;width:100%;height:95vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.35)">'
@@ -6170,7 +6181,7 @@ function faturaOnizlemeGoster(idx){
     +'<div style="flex:1;overflow:auto;background:#e5e7eb;min-height:0;display:flex;justify-content:center;padding:16px">'
       +'<iframe id="fat-onizleme-iframe" style="width:100%;max-width:820px;min-height:1100px;border:none;background:#fff;box-shadow:0 4px 20px rgba(0,0,0,.15);border-radius:4px"></iframe>'
     +'</div>'
-    +'<div style="padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--bd);flex-shrink:0;background:#fff">'
+    +'<div style="padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--bd);flex-shrink:0;background:#fff;flex-wrap:wrap;align-items:center">'
       +butonlar
     +'</div>'
   +'</div>';
@@ -6193,6 +6204,89 @@ function faturaOnizlemeGoster(idx){
       }catch(e){}
     }, 150);
   }, 30);
+}
+
+/** Sadece fatura içeriğini yazdır (modal başlığı/butonları dahil değil) */
+function faturaYazdir(idx){
+  var f=FATURALAR[idx];
+  if(!f) return;
+  // Önizleme modal açıksa iframe'den direkt yazdır
+  var ifr=document.getElementById('fat-onizleme-iframe');
+  if(ifr && ifr.contentWindow){
+    try{
+      ifr.contentWindow.focus();
+      ifr.contentWindow.print();
+      return;
+    }catch(e){
+      console.warn('iframe print hatası:',e);
+    }
+  }
+  // Fallback: yeni pencerede aç ve yazdır
+  var html=faturaXSLTRender(f);
+  var w=window.open('','_blank','width=900,height=1100');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(function(){ try{ w.focus(); w.print(); }catch(e){} },400);
+}
+
+/** Faturayı e-posta ile gönder (mailto: ile varsayılan mail uygulaması açılır) */
+function faturaMailGonder(idx){
+  var f=FATURALAR[idx];
+  if(!f) return;
+  var mail=(f.email||'').trim();
+  if(!mail){
+    var girilen=prompt('Müşteri e-posta adresi girin:','');
+    if(!girilen) return;
+    mail=girilen.trim();
+  }
+  var konu='Faturanız · '+f.faturaNo+' · AUTONAX';
+  var tutarStr='₺'+(f.toplamTutar||0).toLocaleString('tr-TR');
+  // Gövde: kısa bilgi + ETTN/QR bilgileri (PDF ek olarak eklenemez - mailto limiti)
+  var govde=''
+    +'Sayın '+(f.musteri||'')+','+'\n\n'
+    +'Faturanızın bilgileri aşağıdadır:\n\n'
+    +'Fatura No: '+f.faturaNo+'\n'
+    +'Tarih: '+f.tarih+'\n'
+    +'Tutar: '+tutarStr+' (KDV Dahil)\n'
+    +(f.edmEttn?'ETTN: '+f.edmEttn+'\n':'')
+    +'\n'
+    +'Faturanızın kopyasını ayrıca göndereceğiz. Herhangi bir sorunuz olursa lütfen bize ulaşın.\n\n'
+    +'İyi günler dileriz,\n'
+    +'AUTONAX';
+  var url='mailto:'+encodeURIComponent(mail)+'?subject='+encodeURIComponent(konu)+'&body='+encodeURIComponent(govde);
+  window.location.href=url;
+  toast('E-posta uygulaması açılıyor...','green');
+}
+
+/** Faturayı WhatsApp ile gönder */
+function faturaWhatsappGonder(idx){
+  var f=FATURALAR[idx];
+  if(!f) return;
+  var tel=(f.tel||'').trim().replace(/[^0-9+]/g,'');
+  if(!tel){
+    var girilen=prompt('Müşteri telefon numarası (başında 90 olmadan, örn: 5551234567):','');
+    if(!girilen) return;
+    tel=girilen.trim().replace(/[^0-9+]/g,'');
+  }
+  // 0 ile başlıyorsa at, 90 yoksa ekle
+  if(tel.charAt(0)==='0') tel=tel.substring(1);
+  if(tel.charAt(0)==='+') tel=tel.substring(1);
+  if(!tel.startsWith('90')) tel='90'+tel;
+
+  var tutarStr='₺'+(f.toplamTutar||0).toLocaleString('tr-TR');
+  var mesaj=''
+    +'Merhaba '+(f.musteri||'')+',\n\n'
+    +'Faturanızın bilgileri:\n'
+    +'📄 *Fatura No:* '+f.faturaNo+'\n'
+    +'📅 *Tarih:* '+f.tarih+'\n'
+    +'💰 *Tutar:* '+tutarStr+'\n'
+    +(f.edmEttn?'🔖 *ETTN:* '+f.edmEttn+'\n':'')
+    +'\nHerhangi bir sorunuz olursa lütfen bize ulaşın.\n\n'
+    +'_AUTONAX_';
+  // wa.me formatı: telefon uluslararası format (90 ile), + işareti yok
+  var url='https://wa.me/'+tel+'?text='+encodeURIComponent(mesaj);
+  window.open(url,'_blank');
+  toast('WhatsApp açılıyor...','green');
 }
 
 /** Fatura EDM'e gönder (tek fatura) */
@@ -6823,11 +6917,28 @@ function faturaQROverlayEkle(html, f){
     if(!svgTag) return html;
     // SVG'yi data URL yap
     var svgDataUrl='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(svgTag)));
+    // Print CSS + QR overlay
+    var printCss='<style id="autonax-print-css">'
+      +'@page { size: A4; margin: 10mm; }'
+      +'@media print {'
+        +'body { margin:0 !important; padding:0 !important; }'
+        +'.autonax-qr-overlay { position:absolute !important; top:10mm !important; right:10mm !important; box-shadow:none !important; }'
+        +'button, .no-print { display:none !important; }'
+      +'}'
+    +'</style>';
     var qrOverlay=''
-      +'<div style="position:fixed;top:12px;right:12px;background:#fff;padding:6px;border:1px solid #d1d5db;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.1);z-index:9999">'
+      +'<div class="autonax-qr-overlay" style="position:fixed;top:12px;right:12px;background:#fff;padding:6px;border:1px solid #d1d5db;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.1);z-index:9999">'
         +'<img src="'+svgDataUrl+'" style="width:110px;height:110px;display:block" alt="QR">'
       +'</div>';
-    // <body> tagına enjekte et
+    // <head> varsa print CSS oraya, yoksa body'nin üstüne
+    if(html.indexOf('</head>')>-1){
+      html=html.replace('</head>', printCss+'</head>');
+    } else if(html.indexOf('<body')>-1){
+      html=html.replace(/<body([^>]*)>/, '<body$1>'+printCss);
+    } else {
+      html=printCss+html;
+    }
+    // QR'ı body sonuna koy
     if(html.indexOf('</body>')>-1){
       return html.replace('</body>', qrOverlay+'</body>');
     } else if(html.indexOf('</html>')>-1){
