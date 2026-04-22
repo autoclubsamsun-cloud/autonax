@@ -6229,36 +6229,36 @@ function faturaYazdir(idx){
   setTimeout(function(){ try{ w.focus(); w.print(); }catch(e){} },400);
 }
 
-/** Faturayı e-posta ile gönder (mailto: ile varsayılan mail uygulaması açılır) */
-function faturaMailGonder(idx){
+/** Faturayı PDF olarak indir (tarayıcının yazdır→PDF kaydet özelliği) 
+ *  Dosya adı: faturaNo.pdf
+ */
+function faturaPDFIndir(idx){
   var f=FATURALAR[idx];
   if(!f) return;
-  var mail=(f.email||'').trim();
-  if(!mail){
-    var girilen=prompt('Müşteri e-posta adresi girin:','');
-    if(!girilen) return;
-    mail=girilen.trim();
+  var html=faturaXSLTRender(f);
+  // Yeni pencere aç, dosya adını title olarak set et (tarayıcı PDF kaydederken title kullanır)
+  var w=window.open('','_blank','width=900,height=1100');
+  if(!w){ toast('Pop-up engellendi. Tarayıcı pop-up iznini verin.','red'); return; }
+  // HTML'deki <title>'ı fatura numarası yap (PDF dosya adı önerisi)
+  if(html.indexOf('<title>')>-1){
+    html=html.replace(/<title>[^<]*<\/title>/,'<title>'+f.faturaNo+'</title>');
+  } else if(html.indexOf('</head>')>-1){
+    html=html.replace('</head>','<title>'+f.faturaNo+'</title></head>');
   }
-  var konu='Faturanız · '+f.faturaNo+' · AUTONAX';
-  var tutarStr='₺'+(f.toplamTutar||0).toLocaleString('tr-TR');
-  // Gövde: kısa bilgi + ETTN/QR bilgileri (PDF ek olarak eklenemez - mailto limiti)
-  var govde=''
-    +'Sayın '+(f.musteri||'')+','+'\n\n'
-    +'Faturanızın bilgileri aşağıdadır:\n\n'
-    +'Fatura No: '+f.faturaNo+'\n'
-    +'Tarih: '+f.tarih+'\n'
-    +'Tutar: '+tutarStr+' (KDV Dahil)\n'
-    +(f.edmEttn?'ETTN: '+f.edmEttn+'\n':'')
-    +'\n'
-    +'Faturanızın kopyasını ayrıca göndereceğiz. Herhangi bir sorunuz olursa lütfen bize ulaşın.\n\n'
-    +'İyi günler dileriz,\n'
-    +'AUTONAX';
-  var url='mailto:'+encodeURIComponent(mail)+'?subject='+encodeURIComponent(konu)+'&body='+encodeURIComponent(govde);
-  window.location.href=url;
-  toast('E-posta uygulaması açılıyor...','green');
+  w.document.write(html);
+  w.document.close();
+  w.document.title=f.faturaNo; // Fallback
+  setTimeout(function(){
+    try{
+      w.focus();
+      w.print(); // Tarayıcı yazdır diyaloğu açılır, kullanıcı "PDF Olarak Kaydet" seçer
+    }catch(e){
+      console.warn('print hatası:',e);
+    }
+  },500);
 }
 
-/** Faturayı WhatsApp ile gönder */
+/** Faturayı WhatsApp ile gönder - önce PDF indir, sonra WhatsApp aç */
 function faturaWhatsappGonder(idx){
   var f=FATURALAR[idx];
   if(!f) return;
@@ -6273,20 +6273,63 @@ function faturaWhatsappGonder(idx){
   if(tel.charAt(0)==='+') tel=tel.substring(1);
   if(!tel.startsWith('90')) tel='90'+tel;
 
-  var tutarStr='₺'+(f.toplamTutar||0).toLocaleString('tr-TR');
-  var mesaj=''
-    +'Merhaba '+(f.musteri||'')+',\n\n'
-    +'Faturanızın bilgileri:\n'
-    +'📄 *Fatura No:* '+f.faturaNo+'\n'
-    +'📅 *Tarih:* '+f.tarih+'\n'
-    +'💰 *Tutar:* '+tutarStr+'\n'
-    +(f.edmEttn?'🔖 *ETTN:* '+f.edmEttn+'\n':'')
-    +'\nHerhangi bir sorunuz olursa lütfen bize ulaşın.\n\n'
-    +'_AUTONAX_';
-  // wa.me formatı: telefon uluslararası format (90 ile), + işareti yok
-  var url='https://wa.me/'+tel+'?text='+encodeURIComponent(mesaj);
-  window.open(url,'_blank');
-  toast('WhatsApp açılıyor...','green');
+  // Adım 1: PDF indir (yazdır penceresi açılır, kullanıcı "PDF Olarak Kaydet" seçer)
+  faturaPDFIndir(idx);
+
+  // Adım 2: 2 saniye sonra WhatsApp'ı aç (kullanıcı PDF'i kaydetmeye vakit bulsun)
+  setTimeout(function(){
+    var tutarStr='₺'+(f.toplamTutar||0).toLocaleString('tr-TR');
+    var mesaj=''
+      +'Merhaba '+(f.musteri||'')+',\n\n'
+      +'Faturanızın bilgileri:\n'
+      +'📄 *Fatura No:* '+f.faturaNo+'\n'
+      +'📅 *Tarih:* '+f.tarih+'\n'
+      +'💰 *Tutar:* '+tutarStr+'\n'
+      +(f.edmEttn?'🔖 *ETTN:* '+f.edmEttn+'\n':'')
+      +'\nFatura PDF\'i ektedir.\n\n'
+      +'_AUTONAX_';
+    var url='https://wa.me/'+tel+'?text='+encodeURIComponent(mesaj);
+    window.open(url,'_blank');
+  }, 2000);
+
+  // Kullanıcıya net talimat
+  toast('📄 PDF yazdırma açıldı → "PDF Olarak Kaydet" seçin (dosya adı: '+f.faturaNo+') → WhatsApp açılınca 📎 ile ekleyin','green');
+}
+
+/** Faturayı e-posta ile gönder - önce PDF indir, sonra mail aç */
+function faturaMailGonder(idx){
+  var f=FATURALAR[idx];
+  if(!f) return;
+  var mail=(f.email||'').trim();
+  if(!mail){
+    var girilen=prompt('Müşteri e-posta adresi girin:','');
+    if(!girilen) return;
+    mail=girilen.trim();
+  }
+
+  // Adım 1: PDF indir
+  faturaPDFIndir(idx);
+
+  // Adım 2: 2 saniye sonra mail uygulamasını aç
+  setTimeout(function(){
+    var konu='Faturanız · '+f.faturaNo+' · AUTONAX';
+    var tutarStr='₺'+(f.toplamTutar||0).toLocaleString('tr-TR');
+    var govde=''
+      +'Sayın '+(f.musteri||'')+','+'\n\n'
+      +'Faturanızın bilgileri aşağıdadır:\n\n'
+      +'Fatura No: '+f.faturaNo+'\n'
+      +'Tarih: '+f.tarih+'\n'
+      +'Tutar: '+tutarStr+' (KDV Dahil)\n'
+      +(f.edmEttn?'ETTN: '+f.edmEttn+'\n':'')
+      +'\n'
+      +'Fatura PDF\'i ekte gönderilmektedir. Herhangi bir sorunuz olursa lütfen bize ulaşın.\n\n'
+      +'İyi günler dileriz,\n'
+      +'AUTONAX';
+    var url='mailto:'+encodeURIComponent(mail)+'?subject='+encodeURIComponent(konu)+'&body='+encodeURIComponent(govde);
+    window.location.href=url;
+  }, 2000);
+
+  toast('📄 PDF yazdırma açıldı → "PDF Olarak Kaydet" seçin (dosya adı: '+f.faturaNo+') → E-posta açılınca 📎 ile ekleyin','green');
 }
 
 /** Fatura EDM'e gönder (tek fatura) */
