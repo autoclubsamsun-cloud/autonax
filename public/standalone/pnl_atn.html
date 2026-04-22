@@ -4808,43 +4808,99 @@ function taksitHesapla(tutar,ay,pct,firmaNin){
 }
 
 /* ════════════ KOMİSYON HESAPLAMA ════════════
- * Bir odemeGecmisi kaydından (ör: {yontem:'Kredi Karti Taksit', miktar:54000,
- * not:'Maximum - 3 taksit - Vade farkı firmadan'}) firmanın karşıladığı
- * komisyon tutarını hesaplar. Sadece vade farkı firmadan kesilen kredi kartı
- * ödemelerinde komisyon döner; diğerlerinde 0.
+ * Bir odemeGecmisi kaydından firmanın karşıladığı komisyon tutarını hesaplar.
+ * 3 kayıt formatını da destekler:
+ *   1) Manuel taksit: not='Maximum - 3 taksit - Vade farkı firmadan'
+ *   2) Online (PayTR) tam: {yontem:'PayTR', taksit:3, banka:'Maximum',
+ *      vadeKarsilayanFirma:true, siparisId:'...'}
+ *   3) Online (PayTR) eksik: {yontem:'PayTR Kredi Karti', taksit:3,
+ *      tutar:54000, siparisId:'...'} — banka ve vade bilgisi yok
+ *
+ * Eksik formatta çıkarım yapılır:
+ *   - Banka yoksa: TAKSIT_ORANLARI'ndaki ilk bankanın oranı kullanılır
+ *     (tüm bankalar aynı oransa sonuç değişmez)
+ *   - Vade bilgisi yoksa: randevu.tutar ile ödeme.miktar karşılaştırılır.
+ *     Eğer miktar <= randevu payı kadarsa firma karşıladı demektir
+ *     (müşteri karşılasa tutar üstüne vade farkı eklenirdi).
+ *   - Hiçbirinden emin olamazsa 0 döner.
  */
-function odemeKomisyonHesapla(og){
+function odemeKomisyonHesapla(og, randevu){
   if(!og||!og.yontem) return 0;
   var yontem=(og.yontem||'').toLowerCase();
   // Sadece kart ile yapılan ödemeler
   if(yontem.indexOf('kart')<0 && yontem.indexOf('taksit')<0 && yontem.indexOf('paytr')<0 && yontem.indexOf('iyzico')<0) return 0;
+
   var not=(og.not||'').toLowerCase();
-  // "Vade farkı firmadan" veya "firma karşılar" geçiyorsa firma karşılamış
-  var firmaKarsiladi = not.indexOf('firmadan')>-1 || not.indexOf('firma karşıl')>-1 || not.indexOf('firma karsil')>-1;
-  if(!firmaKarsiladi) return 0;
-  // Banka ve taksit sayısını not'tan parse et — format: "Banka - N taksit - ..."
-  // Örnek: "Maximum - 3 taksit - Vade farkı firmadan"
-  var banka=null, ay=1;
+  var miktar=(og.miktar||og.tutar||0);
+  if(!miktar) return 0;
+
+  // Vade kimin üstünde?
+  var firmaKarsiladi = null; // null = bilinmiyor
+  if(typeof og.vadeKarsilayanFirma !== 'undefined') firmaKarsiladi = !!og.vadeKarsilayanFirma;
+  else if(typeof og.vadeFirma !== 'undefined') firmaKarsiladi = !!og.vadeFirma;
+  else if(typeof og.firmaKarsiladi !== 'undefined') firmaKarsiladi = !!og.firmaKarsiladi;
+  else if(not.indexOf('firmadan')>-1 || not.indexOf('firma karşıl')>-1 || not.indexOf('firma karsil')>-1) firmaKarsiladi = true;
+  else if(not.indexOf('müşteriden')>-1 || not.indexOf('musteriden')>-1 || not.indexOf('müşteri karşıl')>-1 || not.indexOf('musteri karsil')>-1) firmaKarsiladi = false;
+
+  // Banka (varsa)
+  var banka=null;
   var bankalar=Object.keys(TAKSIT_ORANLARI||{});
-  for(var i=0;i<bankalar.length;i++){
-    if(not.indexOf(bankalar[i].toLowerCase())>-1){ banka=bankalar[i]; break; }
+  if(!bankalar.length) return 0;
+  var explicitBanka = og.banka || og.bankaAdi || og.kartMarka || og.cardBrand || og.secilenMarka || '';
+  if(explicitBanka){
+    var eb=(''+explicitBanka).toLowerCase();
+    for(var j=0;j<bankalar.length;j++){
+      if(bankalar[j].toLowerCase()===eb || eb.indexOf(bankalar[j].toLowerCase())>-1 || bankalar[j].toLowerCase().indexOf(eb)>-1){
+        banka=bankalar[j]; break;
+      }
+    }
   }
-  var taksitMatch=(og.not||'').match(/(\d+)\s*taksit/i);
-  if(taksitMatch) ay=parseInt(taksitMatch[1])||1;
-  // Tek çekim olsa bile oran olabilir (1 taksit = tek çekim)
-  if(!banka) return 0;
+  if(!banka){
+    for(var i=0;i<bankalar.length;i++){
+      if(not.indexOf(bankalar[i].toLowerCase())>-1){ banka=bankalar[i]; break; }
+    }
+  }
+  // Banka bulunamadıysa ilk bankayı fallback olarak kullan
+  if(!banka) banka = bankalar[0];
+
+  // Taksit sayısı
+  var ay=1;
+  if(og.taksit) ay=parseInt(og.taksit)||1;
+  else if(og.installmentCount) ay=parseInt(og.installmentCount)||1;
+  else if(og.taksitSayisi) ay=parseInt(og.taksitSayisi)||1;
+  else {
+    var taksitMatch=(og.not||'').match(/(\d+)\s*taksit/i);
+    if(taksitMatch) ay=parseInt(taksitMatch[1])||1;
+  }
+
   var oranlar=TAKSIT_ORANLARI[banka]||{};
   var oran=oranlar[ay]||oranlar['1']||0;
   if(!oran) return 0;
-  // Firma karşıladığı için: komisyon = miktar * oran/100 (miktardan kesilir)
-  return Math.round((og.miktar||0)*(oran/100));
+
+  // Vade bilinmiyorsa: tutarı inceleyerek çıkarım yap.
+  // Müşteri karşılasaydı miktar = orijinalTutar * (1 + oran/100) olurdu.
+  // Firma karşıladıysa miktar = orijinalTutar (veya kısmi ödeme payı) olur.
+  if(firmaKarsiladi === null && randevu && randevu.tutar){
+    var rdvTutar = randevu.tutar;
+    var esikMusteri = rdvTutar * (1 + oran/100); // müşteri karşılasaydı olurdu
+    // Tolerans %1 — virgül yuvarlama hataları için
+    if(miktar > rdvTutar * 1.01 && Math.abs(miktar - esikMusteri) < rdvTutar * 0.02){
+      firmaKarsiladi = false; // müşteri karşılamış
+    } else if(miktar <= rdvTutar * 1.01){
+      firmaKarsiladi = true;  // firma karşılamış (tutar orijinal)
+    }
+  }
+
+  if(firmaKarsiladi !== true) return 0;
+  // Firma karşıladığı için: komisyon = miktar * oran/100
+  return Math.round(miktar*(oran/100));
 }
 
 /* Bir randevunun toplam firma komisyon giderini döner */
 function randevuKomisyonHesapla(r){
   if(!r||!r.odemeGecmisi||!r.odemeGecmisi.length) return 0;
   var top=0;
-  r.odemeGecmisi.forEach(function(og){ top+=odemeKomisyonHesapla(og); });
+  r.odemeGecmisi.forEach(function(og){ top+=odemeKomisyonHesapla(og, r); });
   return top;
 }
 
@@ -6263,7 +6319,7 @@ function odemeDetayGoster(idx){
   if(r.odemeGecmisi&&r.odemeGecmisi.length){
     gecmisHTML=r.odemeGecmisi.map(function(og,i){
       var ikon=og.yontem.indexOf('Nakit')>-1?'💵':og.yontem.indexOf('Havale')>-1?'🏦':og.yontem.indexOf('Taksit')>-1?'📋':'💳';
-      var kom=odemeKomisyonHesapla(og);
+      var kom=odemeKomisyonHesapla(og, r);
       return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bg)">'
         +'<div style="font-size:18px;flex-shrink:0">'+ikon+'</div>'
         +'<div style="flex:1;min-width:0">'
