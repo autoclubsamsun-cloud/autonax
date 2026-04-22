@@ -1,7 +1,10 @@
 /**
- * POST /api/odeme/paytr/bildirim - v3
+ * POST /api/odeme/paytr/bildirim - v4
  *
- * v2'den fark: Basarili odeme geldiginde borc-store'daki kayit guncellenir
+ * v3'ten fark: Randevu guncellemesi artik HTTP fetch ile degil,
+ * dogrudan DB sorgusu ile yapilir. Auth sorunu olmaz.
+ *
+ * PayTR webhook buraya POST atar, hash dogrulanir, borc ve randevu guncellenir.
  */
 
 import { NextRequest } from 'next/server';
@@ -11,6 +14,12 @@ import {
   odemeIslendiOlarakIsaretle,
 } from '@/lib/odeme/siparis-store';
 import { borcDurumGuncelle } from '@/lib/odeme/borc-store';
+import { sql, initDB } from '@/lib/db';
+
+let dbReady = false;
+async function ensureDB() {
+  if (!dbReady) { await initDB(); dbReady = true; }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -70,7 +79,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (status === 'success') {
-      console.log('[PayTR Bildirim] ✓ BASARILI ODEME:', {
+      console.log('[PayTR Bildirim] BASARILI ODEME:', {
         merchantOid,
         tutar: totalAmount,
         taksit: installmentCount,
@@ -78,7 +87,7 @@ export async function POST(req: NextRequest) {
 
       odemeIslendiOlarakIsaretle(merchantOid, 'ODENDI');
 
-      // YENI: Borc kaydini guncelle
+      // Borc kaydini guncelle
       const odemeYontemi = paymentType === 'card' ? 'Kredi Karti' : paymentType || 'Kredi Karti';
       const taksit = installmentCount ? parseInt(installmentCount, 10) : 1;
       const borc = await borcDurumGuncelle(merchantOid, 'ODENDI', {
@@ -89,53 +98,67 @@ export async function POST(req: NextRequest) {
       if (borc) {
         console.log('[PayTR Bildirim] Borc guncellendi:', borc.kod);
 
-        // YENI: Borc randevuya bagliysa randevuyu da guncelle
+        // === RANDEVU GUNCELLEMESI - DOGRUDAN DB ===
+        // HTTP fetch yerine dogrudan SQL kullanilir (auth sorunu yok)
         if (borc.randevuId) {
           try {
-            const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.autonax.com.tr').replace(/\/$/, '');
-            // Once randevuyu oku
-            const rdvRes = await fetch(`${siteUrl}/api/randevular`, {
-              method: 'GET',
-            });
-            const rdvData = await rdvRes.json();
-            const rdvlar = rdvData.data || rdvData.randevular || [];
-            const rdv = rdvlar.find((x: { id: string }) => x.id === borc.randevuId);
+            await ensureDB();
 
-            if (rdv) {
+            // Randevuyu DB'den oku
+            const rdvRows = await sql`
+              SELECT * FROM randevular WHERE id = ${borc.randevuId} LIMIT 1
+            ` as Array<{
+              id: string;
+              tutar: number;
+              odenen_toplam: number;
+              odeme_gecmisi: Array<{tarih: string; tutar: number; yontem: string; taksit?: number; siparisId?: string; borcKod?: string;}> | null;
+              odendi: boolean;
+              online_odeme: boolean;
+            }>;
+
+            if (rdvRows.length === 0) {
+              console.log('[PayTR Bildirim] Randevu bulunamadi DB\'de:', borc.randevuId);
+            } else {
+              const rdv = rdvRows[0];
+
               // Mevcut odeme gecmisine ekle
-              if (!rdv.odemeGecmisi) rdv.odemeGecmisi = [];
-              rdv.odemeGecmisi.push({
+              const eskiGecmis = Array.isArray(rdv.odeme_gecmisi) ? rdv.odeme_gecmisi : [];
+              const yeniOdemeKaydi = {
                 tarih: new Date().toISOString(),
                 tutar: borc.tutar,
                 yontem: 'PayTR ' + odemeYontemi,
                 taksit: isNaN(taksit) ? 1 : taksit,
                 siparisId: merchantOid,
                 borcKod: borc.kod,
-              });
-              // Toplam odeneni guncelle
-              rdv.odenenToplam = (Number(rdv.odenenToplam) || 0) + borc.tutar;
-              rdv.onlineOdeme = true;
-              if (rdv.odenenToplam >= rdv.tutar) {
-                rdv.odendi = true;
-              }
+              };
+              const yeniGecmis = [...eskiGecmis, yeniOdemeKaydi];
 
-              // POST ile kaydet (upsert)
-              const updateRes = await fetch(`${siteUrl}/api/randevular`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(rdv),
+              // Yeni toplam odenen
+              const yeniOdenenToplam = (Number(rdv.odenen_toplam) || 0) + borc.tutar;
+              const yeniOdendi = yeniOdenenToplam >= Number(rdv.tutar);
+
+              // DB'de UPDATE
+              await sql`
+                UPDATE randevular
+                SET odenen_toplam = ${yeniOdenenToplam},
+                    odendi = ${yeniOdendi},
+                    online_odeme = TRUE,
+                    odeme_gecmisi = ${JSON.stringify(yeniGecmis)}::jsonb,
+                    guncelleme = NOW()
+                WHERE id = ${borc.randevuId}
+              `;
+
+              console.log('[PayTR Bildirim] Randevu guncellendi:', {
+                id: rdv.id,
+                eskiOdenen: rdv.odenen_toplam,
+                yeniOdenen: yeniOdenenToplam,
+                toplam: rdv.tutar,
+                odendi: yeniOdendi,
               });
-              const updateJson = await updateRes.json();
-              if (updateJson.success) {
-                console.log('[PayTR Bildirim] Randevu guncellendi:', rdv.id);
-              } else {
-                console.error('[PayTR Bildirim] Randevu guncelleme hatasi:', updateJson.error);
-              }
-            } else {
-              console.log('[PayTR Bildirim] Randevu bulunamadi:', borc.randevuId);
             }
           } catch (rdvErr) {
-            console.error('[PayTR Bildirim] Randevu guncelleme istegi hatasi:', rdvErr);
+            const msg = rdvErr instanceof Error ? rdvErr.message : String(rdvErr);
+            console.error('[PayTR Bildirim] Randevu DB guncelleme hatasi:', msg);
             // Randevu guncellemesi basarisiz olsa bile callback basarili donmeli
           }
         } else {
@@ -145,7 +168,7 @@ export async function POST(req: NextRequest) {
         console.log('[PayTR Bildirim] Borc bulunamadi (manuel odeme?):', merchantOid);
       }
     } else {
-      console.log('[PayTR Bildirim] ✗ BASARISIZ ODEME:', {
+      console.log('[PayTR Bildirim] BASARISIZ ODEME:', {
         merchantOid,
         hataKodu: failedReasonCode,
         hataMesaji: failedReasonMsg,
