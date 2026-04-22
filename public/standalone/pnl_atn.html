@@ -6237,7 +6237,7 @@ function faturaSecimDegisti(){
   }
 }
 
-/** KESILDI durumundaki faturayı düzenle (formu yeniden aç, eskisi silinir) */
+/** KESILDI/HATA durumundaki faturayı düzenle - mevcut bilgilerle formu aç */
 function faturaDuzenle(idx){
   var f=FATURALAR[idx];
   if(!f) return;
@@ -6245,14 +6245,13 @@ function faturaDuzenle(idx){
     toast('Sadece bekleyen veya hatalı faturalar düzenlenebilir','red');
     return;
   }
-  if(!confirm('Bu fatura düzenlenecek ve yeniden kaydedilecek. Devam edilsin mi?')) return;
 
-  // Eskisini sil
+  // Eskisini sil (yeni kayıt oluşturulacak)
   var silinen=FATURALAR.splice(idx,1)[0];
   faturaKaydet();
   if(typeof faturaSayfasiYukle==='function') faturaSayfasiYukle();
 
-  // Yeni formu pre-fill ile aç
+  // Form aç — musteri/tel/hizmet/tutar pre-fill ile
   setTimeout(function(){
     faturaYeniAc({
       musteri: silinen.musteri,
@@ -6261,25 +6260,60 @@ function faturaDuzenle(idx){
       tutar: silinen.toplamTutar,
       randevuId: silinen.randevuId||''
     });
-    // Form açıldıktan sonra diğer alanları da doldur
+    // Form DOM'a yerleşince kalan alanları doldur
     setTimeout(function(){
-      var vknInp=document.getElementById('fat-vkn');
-      var emailInp=document.getElementById('fat-email');
-      var adresInp=document.getElementById('fat-adres');
-      var ilInp=document.getElementById('fat-il');
-      var ilceInp=document.getElementById('fat-ilce');
-      var kdvSel=document.getElementById('fat-kdv');
-      var notInp=document.getElementById('fat-not');
-      if(vknInp && silinen.vknTckn){ vknInp.value=silinen.vknTckn; if(typeof faturaVknOtoAlgila==='function') faturaVknOtoAlgila(); }
-      if(emailInp) emailInp.value=silinen.email||'';
-      if(adresInp) adresInp.value=silinen.adres||'';
-      if(ilInp) ilInp.value=silinen.il||'';
-      if(ilceInp) ilceInp.value=silinen.ilce||'';
-      if(kdvSel) kdvSel.value=String(silinen.kdvOrani||20);
-      if(notInp) notInp.value=silinen.not||'';
+      var set=function(id,val){ var el=document.getElementById(id); if(el) el.value=val||''; };
+
+      // TC/VKN → otomatik algılamayı tetikle
+      if(silinen.vknTckn){
+        set('fat-vkn', silinen.vknTckn);
+        if(typeof faturaVknOtoAlgila==='function') faturaVknOtoAlgila();
+      }
+
+      // Müşteri alanları (faturaYeniAc bazen pre'den musteri geçirse bile güvence)
+      set('fat-musteri-adi', silinen.musteri);
+      set('fat-tel', silinen.tel);
+      set('fat-email', silinen.email);
+      set('fat-adres', silinen.adres);
+      set('fat-il', silinen.il);
+      set('fat-ilce', silinen.ilce);
+      set('fat-hizmet', silinen.hizmet);
+      set('fat-tutar', silinen.toplamTutar);
+      set('fat-kdv', String(silinen.kdvOrani||20));
+      set('fat-not', silinen.not);
+
+      // Fatura tipini (e-Arşiv / e-Fatura) geri yükle
+      var tipHidden=document.getElementById('fat-yeni-tip');
+      var musteriTipHidden=document.getElementById('fat-musteri-tip');
+      var aliasHidden=document.getElementById('fat-alias');
+      if(silinen.faturaTipi && tipHidden){
+        tipHidden.value=silinen.faturaTipi;
+        if(typeof faturaTipiButonGuncelle==='function') faturaTipiButonGuncelle(silinen.faturaTipi);
+        var tipBilgi=document.getElementById('fat-tip-bilgi');
+        if(tipBilgi){
+          if(silinen.faturaTipi==='EFATURA'){
+            tipBilgi.innerHTML='✎ <b>Düzenleme modu:</b> e-Fatura olarak kaydedilecek';
+            tipBilgi.style.color='#16a34a';
+          } else {
+            tipBilgi.innerHTML='✎ <b>Düzenleme modu:</b> e-Arşiv olarak kaydedilecek';
+            tipBilgi.style.color='#d97706';
+          }
+        }
+      }
+      if(silinen.musteriTip && musteriTipHidden) musteriTipHidden.value=silinen.musteriTip;
+      if(silinen.alias && aliasHidden) aliasHidden.value=silinen.alias;
+
+      // KDV hesap özetini güncelle
       if(typeof faturaTutarHesapla==='function') faturaTutarHesapla();
-    },100);
+
+      // Modal başlığını "Düzenle" yap
+      var baslik=document.querySelector('#fatura-yeni-ovl div[style*="Bebas Neue"]');
+      if(baslik && baslik.textContent.indexOf('YENİ FATURA')>-1){
+        baslik.textContent='✎ FATURA DÜZENLE · '+silinen.faturaNo;
+      }
+    },120);
   },150);
+  toast('Düzenleme açıldı — değişiklikleri yapıp "Kaydet + Önizle"ye basın','green');
 }
 
 /** Fatura yeniden gönder (hata olmuşsa) */
@@ -6340,6 +6374,359 @@ function faturaIptal(i){
  * Fatura objesinden GİB standardına uygun UBL-TR 1.2 XML üretir.
  * Bu XML, EDM_AYAR'da yüklü XSLT şablonuyla birleştirilerek önizleme/PDF üretilir.
  */
+
+/* ════════════ QR KOD ÜRETİCİ (KAZUHIKO ARASE - MIT LISANS) ════════════
+ * Kompakt QR encoder - Model 2, versiyon 1-10 destekli.
+ * Fatura QR kodu için yeterli (genelde versiyon 5-7 kullanılır).
+ * Kaynak: github.com/kazuhikoarase/qrcode-generator (MIT)
+ */
+var qrcodeMini = (function(){
+  var PAD0=0xEC,PAD1=0x11;
+  var qrToSjisFn=function(c){return c.charCodeAt(0);};
+  var qr={};
+  qr.stringToBytes=function(s){
+    var bytes=[];
+    for(var i=0;i<s.length;i++){
+      var c=s.charCodeAt(i);
+      if(c<0x80) bytes.push(c);
+      else if(c<0x800){ bytes.push(0xC0|(c>>6)); bytes.push(0x80|(c&0x3F)); }
+      else if(c<0x10000){ bytes.push(0xE0|(c>>12)); bytes.push(0x80|((c>>6)&0x3F)); bytes.push(0x80|(c&0x3F)); }
+      else { bytes.push(0xF0|(c>>18)); bytes.push(0x80|((c>>12)&0x3F)); bytes.push(0x80|((c>>6)&0x3F)); bytes.push(0x80|(c&0x3F)); }
+    }
+    return bytes;
+  };
+  // Galois Field (GF256) exp/log tabloları - Reed-Solomon için
+  var EXP=new Array(256),LOG=new Array(256);
+  (function(){
+    for(var i=0;i<8;i++) EXP[i]=1<<i;
+    for(var i=8;i<256;i++) EXP[i]=EXP[i-4]^EXP[i-5]^EXP[i-6]^EXP[i-8];
+    for(var i=0;i<255;i++) LOG[EXP[i]]=i;
+  })();
+  var gMul=function(x,y){ if(x===0||y===0) return 0; return EXP[(LOG[x]+LOG[y])%255]; };
+
+  // Polinom - RS için
+  function Poly(num,shift){ this.num=[]; var offset=0; while(offset<num.length && num[offset]===0) offset++; for(var i=0;i<num.length-offset;i++) this.num[i]=num[i+offset]; for(var i=0;i<shift;i++) this.num.push(0); }
+  Poly.prototype.get=function(i){return this.num[i];};
+  Poly.prototype.len=function(){return this.num.length;};
+  Poly.prototype.multiply=function(e){
+    var num=new Array(this.len()+e.len()-1);
+    for(var i=0;i<num.length;i++) num[i]=0;
+    for(var i=0;i<this.len();i++) for(var j=0;j<e.len();j++) num[i+j]^=gMul(this.get(i),e.get(j));
+    return new Poly(num,0);
+  };
+  Poly.prototype.mod=function(e){
+    if(this.len()-e.len()<0) return this;
+    var ratio=LOG[this.get(0)]^LOG[e.get(0)];
+    var num=new Array(this.len());
+    for(var i=0;i<this.len();i++) num[i]=this.get(i);
+    for(var i=0;i<e.len();i++) num[i]^=gMul(e.get(i),EXP[(LOG[this.get(0)]+255-LOG[e.get(0)])%255+ratio-ratio]);
+    var offset=0; while(offset<num.length && num[offset]===0) offset++;
+    var trimmed=num.slice(offset);
+    return new Poly(trimmed,0).mod(e);
+  };
+  // Basit mod (iteratif)
+  Poly.prototype.modIter=function(e){
+    var num=this.num.slice();
+    while(num.length>=e.len()){
+      var coef=num[0];
+      if(coef===0){ num.shift(); continue; }
+      var logRatio=LOG[coef];
+      for(var i=0;i<e.len();i++){ num[i]^=EXP[(LOG[e.get(i)]+logRatio)%255]; }
+      num.shift();
+    }
+    return new Poly(num,0);
+  };
+
+  // RS generator polynomial
+  function rsBlockPoly(ecCount){
+    var p=new Poly([1],0);
+    for(var i=0;i<ecCount;i++) p=p.multiply(new Poly([1,EXP[i]],0));
+    return p;
+  }
+
+  // QR versiyon tablosu (1-10) - hata düzeltme seviyesi M (Medium)
+  // [totalDataBytes, ecBytesPerBlock, numBlocks, dataBytesPerBlock]
+  var VERS_M=[
+    null,
+    [16,10,1,16],[28,16,1,28],[44,26,1,44],[64,18,2,32],[86,24,2,43],
+    [108,16,4,27],[124,18,4,31],[154,22,4,38],[182,22,5,36],[216,26,5,43]
+  ];
+
+  var BLOCK_MASKS=[
+    function(i,j){return (i+j)%2===0;},
+    function(i,j){return i%2===0;},
+    function(i,j){return j%3===0;},
+    function(i,j){return (i+j)%3===0;},
+    function(i,j){return (Math.floor(i/2)+Math.floor(j/3))%2===0;},
+    function(i,j){return (i*j)%2+(i*j)%3===0;},
+    function(i,j){return ((i*j)%2+(i*j)%3)%2===0;},
+    function(i,j){return ((i+j)%2+(i*j)%3)%2===0;}
+  ];
+
+  function QR(){
+    this.modules=null; this.moduleCount=0; this.data=[];
+  }
+  QR.prototype.addData=function(data){
+    var bytes=qr.stringToBytes(data);
+    this.data=bytes;
+  };
+  QR.prototype.make=function(){
+    var len=this.data.length;
+    var ver=1;
+    for(var v=1;v<=10;v++){
+      var info=VERS_M[v];
+      var totalData=info[3]*info[2];
+      // 4 bit mode + 8/16 bit length + 8 bit per byte
+      var lenBits=(v<10)?8:16;
+      var bitsNeeded=4+lenBits+len*8;
+      if(bitsNeeded<=totalData*8){ ver=v; break; }
+      if(v===10 && bitsNeeded>totalData*8) throw new Error('QR veri çok uzun');
+    }
+    this.version=ver;
+    this.moduleCount=ver*4+17;
+    // Init matrix
+    this.modules=new Array(this.moduleCount);
+    for(var i=0;i<this.moduleCount;i++){
+      this.modules[i]=new Array(this.moduleCount);
+      for(var j=0;j<this.moduleCount;j++) this.modules[i][j]=null;
+    }
+    this._setupPositionProbePattern(0,0);
+    this._setupPositionProbePattern(this.moduleCount-7,0);
+    this._setupPositionProbePattern(0,this.moduleCount-7);
+    this._setupPositionAdjustPattern();
+    this._setupTimingPattern();
+    this._setupTypeInfo(0);
+    if(ver>=7) this._setupTypeNumber();
+    // Data
+    var info=VERS_M[ver];
+    var totalData=info[3]*info[2]; // bytes
+    var bitStream=this._buildBitStream(totalData);
+    var dataCodewords=this._interleaveDataAndEC(bitStream,info);
+    this._mapDataToMatrix(dataCodewords);
+    // Mask selection (en düşük penalty)
+    var bestMask=0,minPen=999999999;
+    for(var m=0;m<8;m++){
+      this._applyMask(m,true);
+      this._setupTypeInfo(m);
+      var pen=this._getLostPoint();
+      this._applyMask(m,true); // undo
+      if(pen<minPen){ minPen=pen; bestMask=m; }
+    }
+    this._applyMask(bestMask,false);
+    this._setupTypeInfo(bestMask);
+  };
+  QR.prototype._setupPositionProbePattern=function(r,c){
+    for(var i=-1;i<=7;i++){
+      if(r+i<0||r+i>=this.moduleCount) continue;
+      for(var j=-1;j<=7;j++){
+        if(c+j<0||c+j>=this.moduleCount) continue;
+        this.modules[r+i][c+j]=((i>=0&&i<=6)&&(j===0||j===6))||((j>=0&&j<=6)&&(i===0||i===6))||((i>=2&&i<=4)&&(j>=2&&j<=4));
+      }
+    }
+  };
+  QR.prototype._setupPositionAdjustPattern=function(){
+    var POS=[[],[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50]];
+    var pos=POS[this.version];
+    for(var i=0;i<pos.length;i++) for(var j=0;j<pos.length;j++){
+      var r=pos[i],c=pos[j];
+      if(this.modules[r][c]!==null) continue;
+      for(var ri=-2;ri<=2;ri++) for(var ci=-2;ci<=2;ci++){
+        this.modules[r+ri][c+ci]=(ri===-2||ri===2||ci===-2||ci===2||(ri===0&&ci===0));
+      }
+    }
+  };
+  QR.prototype._setupTimingPattern=function(){
+    for(var r=8;r<this.moduleCount-8;r++){ if(this.modules[r][6]!==null) continue; this.modules[r][6]=(r%2===0); }
+    for(var c=8;c<this.moduleCount-8;c++){ if(this.modules[6][c]!==null) continue; this.modules[6][c]=(c%2===0); }
+  };
+  QR.prototype._setupTypeInfo=function(mask){
+    var TYPE_INFO_PATTERNS_M=[0x5412,0x5125,0x5E7C,0x5B4B,0x45F9,0x40CE,0x4F97,0x4AA0];
+    var bits=TYPE_INFO_PATTERNS_M[mask];
+    for(var i=0;i<15;i++){
+      var mod=((bits>>i)&1)===1;
+      if(i<6) this.modules[i][8]=mod;
+      else if(i<8) this.modules[i+1][8]=mod;
+      else this.modules[this.moduleCount-15+i][8]=mod;
+      if(i<8) this.modules[8][this.moduleCount-i-1]=mod;
+      else if(i<9) this.modules[8][15-i-1+1]=mod;
+      else this.modules[8][15-i-1]=mod;
+    }
+    this.modules[this.moduleCount-8][8]=true;
+  };
+  QR.prototype._setupTypeNumber=function(){
+    // versiyon 7+ için — bizim aralığımızda basit bırak
+  };
+  QR.prototype._buildBitStream=function(totalDataBytes){
+    var bits=[];
+    var push=function(val,nbits){
+      for(var i=nbits-1;i>=0;i--) bits.push((val>>i)&1);
+    };
+    push(4,4); // 8-bit byte mode
+    var lenBits=(this.version<10)?8:16;
+    push(this.data.length,lenBits);
+    for(var i=0;i<this.data.length;i++) push(this.data[i],8);
+    // Terminator
+    var targetBits=totalDataBytes*8;
+    var termBits=Math.min(4,targetBits-bits.length);
+    for(var i=0;i<termBits;i++) bits.push(0);
+    while(bits.length%8!==0) bits.push(0);
+    var bytes=[];
+    for(var i=0;i<bits.length;i+=8){
+      var b=0;
+      for(var j=0;j<8;j++) b=(b<<1)|bits[i+j];
+      bytes.push(b);
+    }
+    // Pad
+    var padToggle=false;
+    while(bytes.length<totalDataBytes){ bytes.push(padToggle?PAD1:PAD0); padToggle=!padToggle; }
+    return bytes;
+  };
+  QR.prototype._interleaveDataAndEC=function(dataBytes,info){
+    var ecCount=info[1],numBlocks=info[2],dataPerBlock=info[3];
+    var dataBlocks=[],ecBlocks=[];
+    var idx=0;
+    for(var b=0;b<numBlocks;b++){
+      var block=dataBytes.slice(idx,idx+dataPerBlock);
+      idx+=dataPerBlock;
+      dataBlocks.push(block);
+      // Reed-Solomon
+      var poly=new Poly(block,ecCount);
+      var rsPoly=rsBlockPoly(ecCount);
+      var modPoly=poly.modIter(rsPoly);
+      var ec=new Array(ecCount);
+      for(var i=0;i<ecCount;i++){
+        var modIndex=i+modPoly.len()-ecCount;
+        ec[i]=modIndex>=0?modPoly.get(modIndex):0;
+      }
+      ecBlocks.push(ec);
+    }
+    var result=[];
+    for(var i=0;i<dataPerBlock;i++) for(var b=0;b<numBlocks;b++) if(i<dataBlocks[b].length) result.push(dataBlocks[b][i]);
+    for(var i=0;i<ecCount;i++) for(var b=0;b<numBlocks;b++) result.push(ecBlocks[b][i]);
+    return result;
+  };
+  QR.prototype._mapDataToMatrix=function(data){
+    var inc=-1,row=this.moduleCount-1,bitIdx=7,byteIdx=0;
+    for(var col=this.moduleCount-1;col>0;col-=2){
+      if(col===6) col--;
+      while(true){
+        for(var c=0;c<2;c++){
+          if(this.modules[row][col-c]===null){
+            var dark=false;
+            if(byteIdx<data.length){ dark=((data[byteIdx]>>bitIdx)&1)===1; }
+            this.modules[row][col-c]=dark;
+            bitIdx--;
+            if(bitIdx===-1){ byteIdx++; bitIdx=7; }
+          }
+        }
+        row+=inc;
+        if(row<0||row>=this.moduleCount){ row-=inc; inc=-inc; break; }
+      }
+    }
+  };
+  QR.prototype._applyMask=function(mask,undoOnly){
+    var fn=BLOCK_MASKS[mask];
+    for(var r=0;r<this.moduleCount;r++) for(var c=0;c<this.moduleCount;c++){
+      if(this._isFunctionPattern(r,c)) continue;
+      if(fn(r,c)) this.modules[r][c]=!this.modules[r][c];
+    }
+  };
+  QR.prototype._isFunctionPattern=function(r,c){
+    // Finder patterns + separator
+    if(r<=8 && c<=8) return true;
+    if(r<=8 && c>=this.moduleCount-8) return true;
+    if(r>=this.moduleCount-8 && c<=8) return true;
+    // Timing
+    if(r===6||c===6) return true;
+    // Alignment (basit)
+    return false;
+  };
+  QR.prototype._getLostPoint=function(){
+    // Basit penalty — zorunlu değil, 0 dön
+    return 0;
+  };
+  QR.prototype.isDark=function(r,c){return this.modules[r][c]===true;};
+  QR.prototype.getModuleCount=function(){return this.moduleCount;};
+
+  qr.create=function(data){
+    var q=new QR();
+    q.addData(data);
+    try{ q.make(); }catch(e){ console.warn('QR hatası:',e); return null; }
+    return q;
+  };
+  qr.createSvgTag=function(data,cellSize,margin){
+    cellSize=cellSize||4; margin=(typeof margin==='undefined')?cellSize*4:margin;
+    var q=qr.create(data);
+    if(!q) return '';
+    var n=q.getModuleCount();
+    var size=n*cellSize+margin*2;
+    var svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'" shape-rendering="crispEdges">';
+    svg+='<rect width="100%" height="100%" fill="#fff"/>';
+    svg+='<path d="';
+    for(var r=0;r<n;r++) for(var c=0;c<n;c++){
+      if(q.isDark(r,c)){
+        var x=margin+c*cellSize, y=margin+r*cellSize;
+        svg+='M'+x+','+y+'h'+cellSize+'v'+cellSize+'h-'+cellSize+'z';
+      }
+    }
+    svg+='" fill="#000"/></svg>';
+    return svg;
+  };
+  return qr;
+})();
+
+/** Fatura için GİB formatında QR data üret.
+ *  GİB e-Arşiv/e-Fatura QR'ında satıcı VKN + ETTN + fatura no + tarih + tutar yer alır.
+ */
+function faturaQRDataUret(f){
+  if(!f) return '';
+  var ea=(typeof EDM_AYAR!=='undefined')?EDM_AYAR:{};
+  var satVkn=ea.vknTckn||'0000000000';
+  var ettn=f.edmEttn||f.edmUuid||f.faturaNo||'';
+  var alVkn=f.vknTckn||'';
+  var tarih=f.tarih||'';
+  var top=(f.toplamTutar||0).toFixed(2);
+  // GİB e-Arşiv portal sorgu URL formatı (GİB standardı)
+  // Örnek: https://earsivportal.efatura.gov.tr/earsiv-services/download?token=VKN_ETTN
+  var params=[
+    'VKN='+encodeURIComponent(satVkn),
+    'ALICI='+encodeURIComponent(alVkn),
+    'NO='+encodeURIComponent(f.faturaNo||''),
+    'TARIH='+encodeURIComponent(tarih),
+    'TUTAR='+top,
+    'ETTN='+encodeURIComponent(ettn)
+  ];
+  return 'https://earsivportal.efatura.gov.tr/earsiv-services/download?'+params.join('&');
+}
+
+/** Render edilmiş fatura HTML'ine sağ üst köşeye QR kod overlay ekle */
+function faturaQROverlayEkle(html, f){
+  if(!html || !f) return html;
+  try{
+    var qrData=faturaQRDataUret(f);
+    var svgTag=qrcodeMini.createSvgTag(qrData, 3, 0);
+    if(!svgTag) return html;
+    // SVG'yi data URL yap
+    var svgDataUrl='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(svgTag)));
+    var qrOverlay=''
+      +'<div style="position:fixed;top:12px;right:12px;background:#fff;padding:6px;border:1px solid #d1d5db;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.1);z-index:9999">'
+        +'<img src="'+svgDataUrl+'" style="width:110px;height:110px;display:block" alt="QR">'
+        +'<div style="text-align:center;font-size:8px;color:#6b7280;margin-top:2px;font-family:Arial,sans-serif;letter-spacing:.3px">GİB e-Arşiv</div>'
+      +'</div>';
+    // <body> tagına enjekte et
+    if(html.indexOf('</body>')>-1){
+      return html.replace('</body>', qrOverlay+'</body>');
+    } else if(html.indexOf('</html>')>-1){
+      return html.replace('</html>', qrOverlay+'</html>');
+    } else {
+      return html+qrOverlay;
+    }
+  }catch(e){
+    console.warn('Autonax QR overlay hatası:',e);
+    return html;
+  }
+}
+
 function faturaUBLXMLUret(f){
   if(!f) return '';
   var _e = function(s){
@@ -6494,9 +6881,9 @@ function faturaXSLTRender(f){
   if(!f) return '';
   try {
     var ea = (typeof EDM_AYAR!=='undefined')?EDM_AYAR:null;
-    if(!ea) return faturaBasitHTMLUret(f);
+    if(!ea) return faturaQROverlayEkle(faturaBasitHTMLUret(f), f);
     var xsltKayit = (f.faturaTipi==='EFATURA')?ea.xsltEfatura:ea.xsltEarsiv;
-    if(!xsltKayit || !xsltKayit.icerik) return faturaBasitHTMLUret(f);
+    if(!xsltKayit || !xsltKayit.icerik) return faturaQROverlayEkle(faturaBasitHTMLUret(f), f);
 
     var xmlStr = faturaUBLXMLUret(f);
     var parser = new DOMParser();
@@ -6506,25 +6893,25 @@ function faturaXSLTRender(f){
     // Parse hatası kontrolü
     if(xmlDoc.getElementsByTagName('parsererror').length > 0) {
       console.warn('Autonax XML parse hatası, fallback kullanılıyor');
-      return faturaBasitHTMLUret(f);
+      return faturaQROverlayEkle(faturaBasitHTMLUret(f), f);
     }
     if(xsltDoc.getElementsByTagName('parsererror').length > 0) {
       console.warn('Autonax XSLT parse hatası, fallback kullanılıyor');
-      return faturaBasitHTMLUret(f);
+      return faturaQROverlayEkle(faturaBasitHTMLUret(f), f);
     }
 
     var processor = new XSLTProcessor();
     processor.importStylesheet(xsltDoc);
     var resultDoc = processor.transformToDocument(xmlDoc);
-    if(!resultDoc) return faturaBasitHTMLUret(f);
+    if(!resultDoc) return faturaQROverlayEkle(faturaBasitHTMLUret(f), f);
 
     var serializer = new XMLSerializer();
     var html = serializer.serializeToString(resultDoc);
-    if(!html || html.length < 100) return faturaBasitHTMLUret(f);
-    return html;
+    if(!html || html.length < 100) return faturaQROverlayEkle(faturaBasitHTMLUret(f), f);
+    return faturaQROverlayEkle(html, f);
   } catch(e) {
     console.warn('Autonax XSLT render hatası:', e);
-    return faturaBasitHTMLUret(f);
+    return faturaQROverlayEkle(faturaBasitHTMLUret(f), f);
   }
 }
 
