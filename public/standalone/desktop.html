@@ -3,20 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+  <!-- ══ SEO META ETİKETLERİ (Autonax Lokal SEO) ══ -->
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="googlebot" content="index, follow">
+  <meta name="author" content="Autonax">
+  <meta name="publisher" content="Autonax">
+  <meta http-equiv="content-language" content="tr">
+  <meta name="language" content="Turkish">
+  <meta name="keywords" content="samsun ppf kaplama, samsun ppf, ppf kaplama samsun, autoclub samsun merkez, autoclub samsun, samsun araç kaplama, canik ppf, atakum ppf kaplama, ilkadım ppf, komple ppf kaplama, tpu ppf, ön üçlü ppf, kaput ppf, ppf kaplama fiyatları, ppf fiyat, ordu ppf kaplama, giresun ppf kaplama, amasya ppf kaplama, sinop ppf kaplama, trabzon ppf kaplama, tokat ppf kaplama, kastamonu ppf kaplama, karadeniz ppf, togg ppf kaplama, togg t10x ppf, togg t10f ppf, togg kaplama samsun, byd ppf kaplama, byd seal ppf, byd atto ppf, byd song ppf, chery ppf kaplama, chery tiggo ppf, chery omoda ppf, chery arrizo ppf, toyota ppf kaplama, toyota corolla ppf, toyota rav4 ppf, toyota chr ppf, tesla ppf, tesla model y ppf, mg ppf, mg zs ppf, mg hs ppf, jaecoo ppf, jaecoo 7 ppf, hyundai ppf, hyundai tucson ppf, honda ppf, honda crv ppf, nissan ppf, dacia duster ppf, kia ppf, kia sportage ppf, yerli araç ppf, elektrikli araç ppf, hibrit araç ppf, suv ppf kaplama, sıfır araç ppf, samsun seramik kaplama, seramik kaplama samsun, nano seramik, grafen kaplama, boya koruma, araç folyo samsun, cam filmi samsun, paint protection film, matte ppf, mat ppf, self healing ppf, autonax, premium araç koruma">
+  <!-- Lokasyon meta etiketleri - Google'a konum sinyali -->
+  <meta name="geo.region" content="TR-55">
+  <meta name="geo.placename" content="Samsun">
+  <meta name="geo.position" content="41.2797;36.3361">
+  <meta name="ICBM" content="41.2797, 36.3361">
+  <!-- Canonical URL - duplicate content önlemi -->
+  <link rel="canonical" href="https://www.autonax.com.tr/">
+  <!-- Favicon -->
   <link rel="icon" type="image/png" href="/uploads/logo/favicon.png">
   <link rel="shortcut icon" type="image/png" href="/uploads/logo/favicon.png">
   <link rel="apple-touch-icon" href="/uploads/logo/favicon.png">
-  <meta name="description" content="Premium PPF kaplama ve seramik araç koruma hizmetleri.">
+  <meta name="description" content="Karadeniz'in En Büyük Araç Kaplama Tesisi - Premium PPF Kaplama, TPU PPF, seramik kaplama. Samsun, Ordu, Giresun, Amasya, Sinop, Trabzon'a hizmet. Autoclub Samsun Merkez.">
   <meta property="og:image" content="/uploads/logo/og-image.jpg">
-  <meta property="og:title" content="Autonax — Premium Araç Koruma">
-  <meta property="og:description" content="Premium PPF kaplama ve seramik araç koruma hizmetleri.">
-  <meta property="og:site_name" content="Autonax">
+  <meta property="og:title" content="Autonax — Karadeniz'in En Büyük Araç Kaplama Tesisi | PPF Kaplama Samsun">
+  <meta property="og:description" content="Premium PPF kaplama ve seramik araç koruma hizmetleri. Samsun merkezli, 8 ile hizmet. Autoclub Samsun Merkez — 9.400+ takipçili Instagram topluluğu.">
+  <meta property="og:site_name" content="Autonax | Autoclub Samsun Merkez">
   <meta property="og:type" content="website">
+  <meta property="og:locale" content="tr_TR">
   <meta property="og:url" content="https://www.autonax.com.tr">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Autonax — Premium Araç Koruma">
-  <meta name="twitter:description" content="Premium PPF kaplama ve seramik araç koruma hizmetleri.">
-  <title>Autonax — Premium Araç Koruma</title>
+  <meta name="twitter:title" content="Autonax — Karadeniz'in En Büyük Araç Kaplama Tesisi">
+  <meta name="twitter:description" content="Premium PPF kaplama ve seramik araç koruma hizmetleri. Samsun merkezli, Karadeniz bölgesine hizmet.">
+  <title>Autonax — Karadeniz'in En Büyük Araç Kaplama Tesisi | PPF Kaplama Samsun</title>
   <script>
   /* ══ ERKEN SEO UYGULAMASI ══
    * localStorage'daki SITE_AYARLAR'ı sayfa render olmadan önce title/meta'ya uygula.
@@ -45,9 +62,272 @@
       updateMeta('meta[name="description"]', 'content', yeniDesc);
       updateMeta('meta[property="og:title"]', 'content', yeniTitle);
       updateMeta('meta[property="og:description"]', 'content', yeniDesc);
+      updateMeta('meta[name="twitter:title"]', 'content', yeniTitle);
+      updateMeta('meta[name="twitter:description"]', 'content', yeniDesc);
+
+      // Schema.org JSON-LD güncelle - panel verisinden gerçek değerleri al
+      try {
+        var schemaEl = document.getElementById('schema-autonax-business');
+        if(schemaEl){
+          var schema = JSON.parse(schemaEl.textContent);
+          if(g.tel1) schema.telephone = g.tel1.replace(/\D/g,'').replace(/^0/,'+90');
+          if(g.email) schema.email = g.email;
+          if(g.adres) schema.address.streetAddress = g.adres;
+          if(g.siteAdi) schema.name = g.siteAdi;
+          if(yeniDesc) schema.description = yeniDesc;
+          // Sosyal medya linklerini ekle
+          if(sa.sosyal){
+            var sameAs = [];
+            if(sa.sosyal.instagram) sameAs.push(sa.sosyal.instagram);
+            if(sa.sosyal.facebook) sameAs.push(sa.sosyal.facebook);
+            if(sa.sosyal.youtube) sameAs.push(sa.sosyal.youtube);
+            if(sa.sosyal.tiktok) sameAs.push(sa.sosyal.tiktok);
+            if(sameAs.length) schema.sameAs = sameAs;
+          }
+          schemaEl.textContent = JSON.stringify(schema, null, 2);
+        }
+      } catch(e2){}
     } catch(e){}
   })();
   </script>
+
+  <!-- ══ SCHEMA.ORG JSON-LD — YAPILANDIRILMIŞ VERİ (Autonax LocalBusiness) ══ 
+       Google arama sonuçlarında zengin snippet (yıldız, adres, saat, harita) gösterimi için.
+       Google'ın önerisi: https://schema.org/LocalBusiness + AutomotiveBusiness
+       
+       ÖNEMLİ: "Autonax" ve "Autoclub Samsun Merkez" aynı işletme — ikisini de alternateName olarak bildir.
+       Instagram'da @autoclubsamsunmerkez ile 9.400+ takipçi = güçlü sosyal kanıt.
+  -->
+  <script type="application/ld+json" id="schema-autonax-business">
+  {
+    "@context": "https://schema.org",
+    "@type": ["LocalBusiness", "AutomotiveBusiness", "AutoBodyShop"],
+    "@id": "https://www.autonax.com.tr/#business",
+    "name": "Autonax",
+    "alternateName": ["Autoclub Samsun Merkez", "AutoClub Samsun Merkez", "Autonax Samsun", "Autoclub PPF Samsun"],
+    "legalName": "Autonax",
+    "description": "Karadeniz'in en büyük araç kaplama tesisi. Samsun merkezli premium PPF (Paint Protection Film) kaplama, TPU PPF, seramik kaplama ve detaylı araç temizlik merkezi. Togg, BYD, Chery, Toyota, Tesla, MG, Jaecoo, Hyundai gibi tüm marka araçlara hizmet veriyoruz. Samsun, Ordu, Giresun, Amasya, Sinop, Trabzon, Tokat ve Kastamonu bölgelerine hizmet vermektedir. Türkiye'de ilk ve tek tüm aksamlar içe kıvrılarak aynı gün teslim.",
+    "url": "https://www.autonax.com.tr",
+    "logo": "https://www.autonax.com.tr/uploads/logo/favicon.png",
+    "image": [
+      "https://www.autonax.com.tr/uploads/logo/og-image.jpg",
+      "https://www.autonax.com.tr/uploads/logo/favicon.png"
+    ],
+    "telephone": "+908503052055",
+    "faxNumber": "",
+    "email": "info@autonax.com.tr",
+    "priceRange": "₺₺₺",
+    "currenciesAccepted": "TRY",
+    "paymentAccepted": "Nakit, Kredi Kartı, Havale/EFT, Taksit",
+    "vatID": "20582628744",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Kuzeyyıldızı Mah. 100. Yıl Bulvarı No:16/A (Eski Canik Kaymakamlığı Yanı)",
+      "addressLocality": "Canik",
+      "addressRegion": "Samsun",
+      "postalCode": "55080",
+      "addressCountry": "TR"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 41.2797,
+      "longitude": 36.3361
+    },
+    "hasMap": "https://maps.google.com/?q=Autonax+Samsun",
+    "openingHoursSpecification": [
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+        "opens": "08:00",
+        "closes": "20:00"
+      }
+    ],
+    "areaServed": [
+      { "@type": "City", "name": "Samsun" },
+      { "@type": "City", "name": "Ordu" },
+      { "@type": "City", "name": "Giresun" },
+      { "@type": "City", "name": "Amasya" },
+      { "@type": "City", "name": "Sinop" },
+      { "@type": "City", "name": "Trabzon" },
+      { "@type": "City", "name": "Tokat" },
+      { "@type": "City", "name": "Kastamonu" },
+      { "@type": "State", "name": "Karadeniz Bölgesi" }
+    ],
+    "serviceArea": {
+      "@type": "GeoCircle",
+      "geoMidpoint": { "@type": "GeoCoordinates", "latitude": 41.2797, "longitude": 36.3361 },
+      "geoRadius": "300000"
+    },
+    "slogan": "Karadeniz'in En Büyük Araç Kaplama Tesisi · Premium PPF Kaplama",
+    "keywords": "PPF kaplama, TPU PPF, Samsun PPF, araç kaplama, seramik kaplama, boya koruma, cam filmi, detaylı temizlik, paint protection film",
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "Autonax PPF ve Araç Koruma Hizmetleri",
+      "itemListElement": [
+        {
+          "@type": "OfferCatalog",
+          "name": "PPF Kaplama (Paint Protection Film)",
+          "itemListElement": [
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Komple PPF Kaplama", "description": "Aracın tamamına TPU PPF film kaplama, 5 yıl garanti, self-healing özelliği" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Ön 3'lü PPF Kaplama", "description": "Ön tampon, ön kapı ve aynalar için PPF koruma - en çok tercih edilen paket" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Kaput PPF Kaplama", "description": "Kaput, far ve ön tampon için PPF koruma - ekonomik paket" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "TPU PPF Premium", "description": "En yüksek kalitede TPU bazlı PPF, 10 yıl dayanım" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Matte PPF", "description": "Mat görünüm veren özel PPF kaplama" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Farlar için PPF", "description": "Far koruma PPF, taş ve çizikten korur" } }
+          ]
+        },
+        {
+          "@type": "OfferCatalog",
+          "name": "Marka Bazlı PPF Kaplama",
+          "itemListElement": [
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Togg T10X PPF Kaplama", "description": "Türkiye'nin yerli otomobili Togg T10X için özel PPF kaplama paketi" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Togg T10F PPF Kaplama", "description": "Togg T10F sedan için özel PPF kaplama paketi" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "BYD Seal / Atto / Song PPF Kaplama", "description": "BYD elektrikli ve hibrit araçlar için PPF koruma" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Chery Tiggo / Omoda / Arrizo PPF Kaplama", "description": "Chery SUV ve sedan modelleri için PPF kaplama" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Toyota Corolla / RAV4 / C-HR PPF Kaplama", "description": "Toyota hibrit ve benzinli modeller için PPF" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Tesla Model Y / Model 3 PPF Kaplama", "description": "Tesla elektrikli araçlar için PPF koruma paketi" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "MG ZS / HS PPF Kaplama", "description": "MG SUV modelleri için PPF kaplama" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Jaecoo 7 PPF Kaplama", "description": "Jaecoo 7 için özel PPF kaplama paketi" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Hyundai Tucson / Kona PPF Kaplama", "description": "Hyundai SUV modelleri için PPF koruma" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Honda CR-V / HR-V PPF Kaplama", "description": "Honda SUV modelleri için PPF" } }
+          ]
+        },
+        {
+          "@type": "OfferCatalog",
+          "name": "Seramik Kaplama",
+          "itemListElement": [
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Nano Seramik Kaplama", "description": "9H sertlikte nano seramik koruma" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Grafen Seramik", "description": "Yeni nesil grafen katkılı seramik kaplama" } }
+          ]
+        },
+        {
+          "@type": "OfferCatalog",
+          "name": "Detaylı Araç Temizliği",
+          "itemListElement": [
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Detaylı İç Temizlik" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Detaylı Dış Temizlik + Pasta-Cila" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Motor Temizliği" } }
+          ]
+        },
+        {
+          "@type": "OfferCatalog",
+          "name": "Cam Filmi",
+          "itemListElement": [
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Araç Cam Filmi" } }
+          ]
+        }
+      ]
+    },
+    "sameAs": [
+      "https://www.instagram.com/autoclubsamsunmerkez/",
+      "https://www.instagram.com/autoclubgenelmerkez/",
+      "https://www.facebook.com/p/Autoclub-Samsun-Merkez-100083034085584/"
+    ],
+    "foundingDate": "2019",
+    "knowsAbout": [
+      "PPF Kaplama",
+      "TPU PPF",
+      "Paint Protection Film",
+      "Togg PPF Kaplama",
+      "BYD PPF Kaplama",
+      "Chery PPF Kaplama",
+      "Toyota PPF Kaplama",
+      "Tesla PPF Kaplama",
+      "MG PPF Kaplama",
+      "Jaecoo PPF Kaplama",
+      "Elektrikli Araç PPF",
+      "Hibrit Araç PPF",
+      "SUV PPF Kaplama",
+      "Yerli Araç PPF",
+      "Sıfır Araç PPF",
+      "Seramik Kaplama",
+      "Nano Seramik",
+      "Grafen Seramik",
+      "Araç Koruma",
+      "Boyasız Göçük Düzeltme",
+      "Cam Filmi",
+      "Detaylı Araç Temizliği"
+    ]
+  }
+  </script>
+
+  <!-- Organization (marka kimliği - logo ve sosyal medya için) -->
+  <script type="application/ld+json" id="schema-autonax-organization">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": "https://www.autonax.com.tr/#organization",
+    "name": "Autonax",
+    "alternateName": ["Autoclub Samsun Merkez", "AutoClub Samsun Merkez"],
+    "url": "https://www.autonax.com.tr",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://www.autonax.com.tr/uploads/logo/favicon.png",
+      "width": 512,
+      "height": 512
+    },
+    "sameAs": [
+      "https://www.instagram.com/autoclubsamsunmerkez/",
+      "https://www.instagram.com/autoclubgenelmerkez/",
+      "https://www.facebook.com/p/Autoclub-Samsun-Merkez-100083034085584/"
+    ],
+    "contactPoint": [
+      {
+        "@type": "ContactPoint",
+        "telephone": "+908503052055",
+        "contactType": "customer service",
+        "areaServed": "TR",
+        "availableLanguage": ["Turkish"]
+      },
+      {
+        "@type": "ContactPoint",
+        "telephone": "+905457277172",
+        "contactType": "sales",
+        "areaServed": "TR",
+        "availableLanguage": ["Turkish"]
+      }
+    ]
+  }
+  </script>
+
+  <!-- WebSite (site araması için Google'a sinyal) -->
+  <script type="application/ld+json" id="schema-autonax-website">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": "https://www.autonax.com.tr/#website",
+    "url": "https://www.autonax.com.tr",
+    "name": "Autonax",
+    "alternateName": "Autoclub Samsun Merkez",
+    "description": "Karadeniz'in En Büyük Araç Kaplama Tesisi - Premium PPF Kaplama",
+    "publisher": { "@id": "https://www.autonax.com.tr/#organization" },
+    "inLanguage": "tr-TR"
+  }
+  </script>
+
+  <!-- BreadcrumbList (sayfanın yerini Google'a bildir) -->
+  <script type="application/ld+json" id="schema-autonax-breadcrumb">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Ana Sayfa",
+        "item": "https://www.autonax.com.tr/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "PPF Kaplama",
+        "item": "https://www.autonax.com.tr/#ppf-kaplama"
+      }
+    ]
+  }
+  </script>
+
+
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}

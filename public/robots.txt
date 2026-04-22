@@ -1,0 +1,18 @@
+# Autonax robots.txt
+# https://www.autonax.com.tr
+
+User-agent: *
+Allow: /
+
+# Admin panel (yönetim paneli indexlenmesin)
+Disallow: /standalone/pnl_atn.html
+Disallow: /panel/
+Disallow: /admin/
+Disallow: /api/
+
+# Test/development paths
+Disallow: /test/
+Disallow: /dev/
+
+# Sitemap
+Sitemap: https://www.autonax.com.tr/sitemap.xml
