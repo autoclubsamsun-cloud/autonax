@@ -1735,19 +1735,20 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
           <div style="display:flex;align-items:center;gap:8px;width:100%;flex-wrap:wrap">
             <div class="kt" style="flex:0 0 auto;white-space:nowrap">Fatura Listesi</div>
             <div style="flex:1"></div>
+            <button id="fat-toplu-gonder-btn" class="ab ab-n" style="font-size:11px;background:#1a6b3c;color:#fff;border-color:#1a6b3c;display:none" onclick="faturaTopluEDMGonder()">📤 Seçilenleri EDM'e Gönder</button>
             <button class="ab ab-g" style="font-size:11px" onclick="faturaYeniAc()">+ Yeni Fatura</button>
           </div>
           <div style="width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch">
             <div style="display:flex;gap:5px;align-items:center;min-width:max-content">
               <input type="text" id="fat-arama" placeholder="Müşteri ara..." oninput="faturaListeYukle()" style="padding:5px 8px;border:1.5px solid var(--bd);border-radius:7px;font-size:11px;font-family:Outfit,sans-serif;outline:none;width:140px">
               <select id="fat-tip" onchange="faturaListeYukle()" style="border:1.5px solid var(--bd);border-radius:7px;padding:5px 8px;font-size:11px;font-family:Outfit,sans-serif;outline:none"><option value="">Tüm Tipler</option><option value="EARSIV">e-Arşiv</option><option value="EFATURA">e-Fatura</option></select>
-              <select id="fat-durum" onchange="faturaListeYukle()" style="border:1.5px solid var(--bd);border-radius:7px;padding:5px 8px;font-size:11px;font-family:Outfit,sans-serif;outline:none"><option value="">Tüm Durumlar</option><option value="KESILIYOR">Gönderiliyor</option><option value="GONDERILDI">Gönderildi</option><option value="ONAYLANDI">Onaylandı</option><option value="HATA">Hata</option><option value="IPTAL">İptal</option></select>
+              <select id="fat-durum" onchange="faturaListeYukle()" style="border:1.5px solid var(--bd);border-radius:7px;padding:5px 8px;font-size:11px;font-family:Outfit,sans-serif;outline:none"><option value="">Tüm Durumlar</option><option value="KESILDI">Kesildi (Bekliyor)</option><option value="KESILIYOR">Gönderiliyor</option><option value="GONDERILDI">Gönderildi</option><option value="ONAYLANDI">Onaylandı</option><option value="HATA">Hata</option><option value="IPTAL">İptal</option></select>
               <button class="ab ab-n" style="font-size:10px" onclick="faturaFiltreTemizle()">✕ Sıfırla</button>
             </div>
           </div>
         </div>
         <div class="kb" style="padding:0">
-          <div class="tbl-wrap has-mobile-cards"><table class="tbl"><thead><tr><th>Fatura No</th><th>Tarih</th><th>Müşteri</th><th>Tip</th><th>Tutar</th><th>KDV</th><th>Toplam</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="fat-tbody"></tbody></table></div>
+          <div class="tbl-wrap has-mobile-cards"><table class="tbl"><thead><tr><th style="width:30px"><input type="checkbox" id="fat-secim-all" onchange="faturaTumunuSec(this.checked)" style="cursor:pointer"></th><th>Fatura No</th><th>Tarih</th><th>Müşteri</th><th>Tip</th><th>Tutar</th><th>KDV</th><th>Toplam</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="fat-tbody"></tbody></table></div>
           <div class="mobile-card-list" id="fat-mobile-kartlar"></div>
         </div>
       </div>
@@ -5578,13 +5579,13 @@ function faturaListeYukle(){
     if(durum&&f.durum!==durum)return false;
     return true;
   });
-  if(!liste.length){tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:20px;color:#999">Fatura bulunamadı</td></tr>';return;}
+  if(!liste.length){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:#999">Fatura bulunamadı</td></tr>';return;}
   tbody.innerHTML=liste.map(function(f){
     // BUG FIX: filtre sonrasi gercek index
     var i=FATURALAR.indexOf(f);
     var tipRenk=f.faturaTipi==='EFATURA'?'#2563EB':'#16a34a';
 
-    // 4 durum: KESILIYOR (sari), GONDERILDI (yesil/mavi), HATA (kirmizi), IPTAL (gri)
+    // Durumlar: KESILDI (yerel), KESILIYOR (gönderim anında), GONDERILDI, HATA, IPTAL
     var durRenk='#999', durEtiket=f.durum||'—', durBg='rgba(153,153,153,.1)';
     if(f.durum==='KESILIYOR'){durRenk='#d97706';durBg='rgba(217,119,6,.12)';durEtiket='⏳ GÖNDERİLİYOR';}
     else if(f.durum==='GONDERILDI'){
@@ -5595,7 +5596,7 @@ function faturaListeYukle(){
     else if(f.durum==='ONAYLANDI'){durRenk='#16a34a';durBg='rgba(22,163,74,.15)';durEtiket='✓ ONAYLANDI';}
     else if(f.durum==='HATA'){durRenk='#dc2626';durBg='rgba(220,38,38,.1)';durEtiket='⚠️ HATA';}
     else if(f.durum==='IPTAL'){durRenk='#991b1b';durBg='rgba(153,27,27,.1)';durEtiket='✕ İPTAL';}
-    else if(f.durum==='KESILDI'){durRenk='#d97706';durBg='rgba(217,119,6,.1)';durEtiket='KESILDI';}
+    else if(f.durum==='KESILDI'){durRenk='#d97706';durBg='rgba(217,119,6,.1)';durEtiket='📝 BEKLİYOR';}
 
     var edmInfo='';
     if(f.edmEttn) edmInfo+='<br><small style="font-size:9px;color:var(--ink4);font-family:monospace" title="EDM\'den dönen ETTN">'+f.edmEttn+'</small>';
@@ -5603,7 +5604,14 @@ function faturaListeYukle(){
 
     var musteriEtiketi=f.musteriTip==='kurumsal'?'🏢':'👤';
 
+    // Gönderilebilir durumda mı? (KESILDI veya HATA)
+    var gonderilebilir = (f.durum==='KESILDI' || f.durum==='HATA');
+    var checkboxHtml = gonderilebilir
+      ? '<input type="checkbox" class="fat-secim" data-fno="'+f.faturaNo+'" onchange="faturaSecimDegisti()" style="cursor:pointer">'
+      : '<span style="color:#d1d5db;font-size:11px">—</span>';
+
     return '<tr>'
+      +'<td style="text-align:center">'+checkboxHtml+'</td>'
       +'<td style="font-weight:700;font-size:11px">'+f.faturaNo+'</td>'
       +'<td>'+f.tarih+'</td>'
       +'<td>'+musteriEtiketi+' <b>'+f.musteri+'</b>'+(f.vknTckn?'<br><small style="color:var(--ink4);font-family:monospace">'+f.vknTckn+'</small>':'')+'</td>'
@@ -5613,14 +5621,17 @@ function faturaListeYukle(){
       +'<td class="tbl-fiyat" style="font-weight:700">₺'+(f.toplamTutar||0).toLocaleString('tr-TR')+'</td>'
       +'<td><span style="font-size:10px;background:'+durBg+';color:'+durRenk+';padding:3px 8px;border-radius:10px;font-weight:700">'+durEtiket+'</span>'+edmInfo+'</td>'
       +'<td style="display:flex;gap:4px;flex-wrap:wrap">'
-        +'<button class="ab ab-n" style="font-size:10px" onclick="faturaPDFGoster('+i+')">👁 Göster</button>'
-        +(f.durum==='HATA'?'<button class="ab ab-r" style="font-size:10px;border-color:#d97706;color:#d97706" onclick="faturaYenidenGonder('+i+')">↻ Yeniden Gönder</button>':'')
-        +(f.durum==='GONDERILDI' || f.durum==='KESILDI'?'<button class="ab ab-r" style="font-size:10px" onclick="faturaIptal('+i+')">✕ İptal</button>':'')
+        +'<button class="ab ab-n" style="font-size:10px" onclick="faturaOnizlemeGoster('+i+')">👁 Önizle</button>'
+        +(gonderilebilir?'<button class="ab ab-n" style="font-size:10px;border-color:#1a6b3c;color:#1a6b3c;background:rgba(26,107,60,.06)" onclick="faturaEDMGonder('+i+')">📤 EDM\'e Gönder</button>':'')
+        +(f.durum==='KESILDI'?'<button class="ab ab-n" style="font-size:10px" onclick="faturaDuzenle('+i+')">✎ Düzenle</button>':'')
+        +(f.durum==='GONDERILDI' || f.durum==='ONAYLANDI'?'<button class="ab ab-r" style="font-size:10px" onclick="faturaIptal('+i+')">✕ İptal</button>':'')
       +'</td></tr>';
   }).join('');
 
   // ═══ SPRINT 10.2 - Fatura mobil kart listesi ═══
   faturaMobilKartlariRender(liste);
+  // Seçim durumunu sıfırla
+  faturaSecimDegisti();
 }
 
 /** Fatura mobil kart listesi render */
@@ -5648,15 +5659,19 @@ function faturaMobilKartlariRender(liste){
     var musteriEtiketi=f.musteriTip==='kurumsal'?'🏢':'👤';
 
     // Aksiyonlar
-    var aksiyonlar='<button class="mcard-btn info" onclick="event.stopPropagation();faturaPDFGoster('+i+')">👁 Göster</button>';
-    if(f.durum==='HATA'){
-      aksiyonlar+='<button class="mcard-btn warn" onclick="event.stopPropagation();faturaYenidenGonder('+i+')">↻ Tekrar Gönder</button>';
+    var gonderilebilir = (f.durum==='KESILDI' || f.durum==='HATA');
+    var aksiyonlar='<button class="mcard-btn info" onclick="event.stopPropagation();faturaOnizlemeGoster('+i+')">👁 Önizle</button>';
+    if(gonderilebilir){
+      aksiyonlar+='<button class="mcard-btn" style="border-color:#1a6b3c;color:#1a6b3c;background:rgba(26,107,60,.06)" onclick="event.stopPropagation();faturaEDMGonder('+i+')">📤 EDM\'e Gönder</button>';
     }
-    if(f.durum==='GONDERILDI' || f.durum==='KESILDI'){
+    if(f.durum==='KESILDI'){
+      aksiyonlar+='<button class="mcard-btn" onclick="event.stopPropagation();faturaDuzenle('+i+')">✎ Düzenle</button>';
+    }
+    if(f.durum==='GONDERILDI' || f.durum==='ONAYLANDI'){
       aksiyonlar+='<button class="mcard-btn" style="border-color:var(--r);color:var(--r)" onclick="event.stopPropagation();faturaIptal('+i+')">✕ İptal</button>';
     }
 
-    return '<div class="mcard" onclick="faturaPDFGoster('+i+')">'
+    return '<div class="mcard" onclick="faturaOnizlemeGoster('+i+')">'
       +'<div class="mcard-top">'
         +'<span style="font-family:monospace;font-size:12px;font-weight:700;color:var(--ink)">'+f.faturaNo+'</span>'
         +'<span class="mcard-tag '+durClass+'">'+durEtiket+'</span>'
@@ -5710,17 +5725,10 @@ function faturaYeniAc(onceden){
       +'<div style="overflow-y:auto;flex:1;padding:16px">'
         +edmAyarUyari
 
-        // ═══ MÜŞTERI TİPİ ═══
-        +'<div style="'+LS+'">Müşteri Tipi</div>'
-        +'<div style="display:flex;gap:6px;margin-bottom:12px">'
-          +'<button type="button" id="fat-tip-birey" onclick="faturaTipSec(\'bireysel\')" style="flex:1;padding:9px;border:2px solid #2563EB;border-radius:8px;background:rgba(37,99,235,.08);color:#2563EB;font-size:12px;font-weight:700;cursor:pointer">👤 Bireysel (TC)</button>'
-          +'<button type="button" id="fat-tip-kurum" onclick="faturaTipSec(\'kurumsal\')" style="flex:1;padding:9px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;color:var(--ink4);font-size:12px;font-weight:700;cursor:pointer">🏢 Kurumsal (Vergi No)</button>'
-        +'</div>'
-
-        // ═══ TC/VKN SORGU ═══
-        +'<div style="'+LS+'"><span id="fat-vkn-label">TC Kimlik No</span> *</div>'
+        // ═══ TC/VKN SORGU (OTOMATİK ALGILAMA) ═══
+        +'<div style="'+LS+'">TC Kimlik No / Vergi No *</div>'
         +'<div style="display:flex;gap:6px;margin-bottom:4px">'
-          +'<input type="text" id="fat-vkn" maxlength="11" placeholder="11 haneli TC" inputmode="numeric" style="'+IS+';flex:1" oninput="this.value=this.value.replace(/[^0-9]/g,\'\')">'
+          +'<input type="text" id="fat-vkn" maxlength="11" placeholder="10 haneli VKN veya 11 haneli TC" inputmode="numeric" style="'+IS+';flex:1" oninput="this.value=this.value.replace(/[^0-9]/g,\'\');faturaVknOtoAlgila()">'
           +'<button type="button" id="fat-sorgu-btn" onclick="faturaEDMSorgu()" style="padding:9px 14px;border:1.5px solid #1a6b3c;border-radius:8px;background:rgba(26,107,60,.08);color:#1a6b3c;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">🔍 EDM\'den Sorgula</button>'
         +'</div>'
         +'<div id="fat-sorgu-sonuc" style="font-size:11px;margin-bottom:12px;min-height:16px"></div>'
@@ -5738,9 +5746,10 @@ function faturaYeniAc(onceden){
         // ═══ FATURA TİPİ (otomatik) ═══
         +'<div style="padding:10px 12px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;margin-bottom:12px;font-size:12px">'
           +'<div style="'+LS+';margin-bottom:2px">Fatura Tipi (otomatik belirlenir)</div>'
-          +'<div id="fat-tip-bilgi" style="font-weight:700;color:#d97706">📋 e-Arşiv Fatura (bireysel müşteriler veya mükellef olmayan kurumlar için)</div>'
+          +'<div id="fat-tip-bilgi" style="font-weight:700;color:var(--ink4)">⏳ TC/VKN girip sorgulayın</div>'
           +'<input type="hidden" id="fat-yeni-tip" value="EARSIV">'
           +'<input type="hidden" id="fat-alias" value="">'
+          +'<input type="hidden" id="fat-musteri-tip" value="bireysel">'
         +'</div>'
 
         // ═══ HİZMET / TUTAR ═══
@@ -5758,11 +5767,10 @@ function faturaYeniAc(onceden){
         +'<input type="text" id="fat-not" placeholder="Fatura açıklaması..." style="'+IS+';margin-bottom:10px">'
 
         +'<input type="hidden" id="fat-randevu-id" value="'+(pre.randevuId||'')+'">'
-        +'<input type="hidden" id="fat-musteri-tip" value="bireysel">'
       +'</div>'
       +'<div style="padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--bd);flex-shrink:0">'
         +'<button type="button" onclick="document.getElementById(\'fatura-yeni-ovl\').remove()" style="flex:1;padding:10px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;cursor:pointer">İptal</button>'
-        +'<button type="button" id="fat-kes-btn" onclick="faturaKes()" style="flex:2;padding:10px;border:none;border-radius:8px;background:var(--r);color:#fff;font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:1px;cursor:pointer">🧾 FATURAYI KES</button>'
+        +'<button type="button" id="fat-kes-btn" onclick="faturaKes()" style="flex:2;padding:10px;border:none;border-radius:8px;background:var(--r);color:#fff;font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:1px;cursor:pointer">🧾 KAYDET + ÖNİZLE</button>'
       +'</div>'
     +'</div>';
   document.body.appendChild(ovl);
@@ -5773,39 +5781,46 @@ function faturaYeniAc(onceden){
   faturaTutarHesapla();
 }
 
-/** Müşteri tipi seç (bireysel/kurumsal) - UI güncelleme */
-function faturaTipSec(tip){
-  var birey=document.getElementById('fat-tip-birey');
-  var kurum=document.getElementById('fat-tip-kurum');
+/** TC/VKN input değiştikçe otomatik tip algılama (10 hane = VKN/kurumsal, 11 hane = TC/bireysel) */
+function faturaVknOtoAlgila(){
   var vknInp=document.getElementById('fat-vkn');
-  var vknLabel=document.getElementById('fat-vkn-label');
   var hidden=document.getElementById('fat-musteri-tip');
   var tipBilgi=document.getElementById('fat-tip-bilgi');
   var tipHidden=document.getElementById('fat-yeni-tip');
-
-  if(tip==='bireysel'){
-    birey.style.background='rgba(37,99,235,.08)';birey.style.color='#2563EB';birey.style.borderColor='#2563EB';birey.style.borderWidth='2px';
-    kurum.style.background='#fff';kurum.style.color='var(--ink4)';kurum.style.borderColor='var(--bd)';kurum.style.borderWidth='1.5px';
-    if(vknInp){vknInp.maxLength=11;vknInp.placeholder='11 haneli TC';}
-    if(vknLabel) vknLabel.textContent='TC Kimlik No';
-    if(hidden) hidden.value='bireysel';
-    if(tipBilgi) tipBilgi.textContent='📋 e-Arşiv Fatura (bireysel müşteriler)';
-    if(tipHidden) tipHidden.value='EARSIV';
-  } else {
-    kurum.style.background='rgba(37,99,235,.08)';kurum.style.color='#2563EB';kurum.style.borderColor='#2563EB';kurum.style.borderWidth='2px';
-    birey.style.background='#fff';birey.style.color='var(--ink4)';birey.style.borderColor='var(--bd)';birey.style.borderWidth='1.5px';
-    if(vknInp){vknInp.maxLength=10;vknInp.placeholder='10 haneli VKN';}
-    if(vknLabel) vknLabel.textContent='Vergi Kimlik No (VKN)';
-    if(hidden) hidden.value='kurumsal';
-    if(tipBilgi) tipBilgi.textContent='⏳ EDM sorgulaması ile belirlenecek';
-    if(tipHidden) tipHidden.value='EARSIV'; // default, sorgu sonrası değişir
-  }
-  // Sorgu sonucunu temizle
   var sonucEl=document.getElementById('fat-sorgu-sonuc');
-  if(sonucEl) sonucEl.innerHTML='';
+  if(!vknInp) return;
+  var val=(vknInp.value||'').trim();
+  // Önceki EDM sorgu sonucunu temizle (kullanıcı yeniden yazıyorsa)
   var aliasEl=document.getElementById('fat-alias');
   if(aliasEl) aliasEl.value='';
+  if(sonucEl) sonucEl.innerHTML='';
+  if(val.length===11){
+    if(hidden) hidden.value='bireysel';
+    if(tipHidden) tipHidden.value='EARSIV';
+    if(tipBilgi){
+      tipBilgi.innerHTML='👤 <b>Bireysel</b> — e-Arşiv Fatura olarak kesilecek';
+      tipBilgi.style.color='#d97706';
+    }
+  } else if(val.length===10){
+    if(hidden) hidden.value='kurumsal';
+    // Kurumsal için default e-Arşiv (EDM sorgu sonrası e-Fatura'ya geçebilir)
+    if(tipHidden) tipHidden.value='EARSIV';
+    if(tipBilgi){
+      tipBilgi.innerHTML='🏢 <b>Kurumsal</b> — EDM sorgu yapılmalı (Mükellef mi kontrol)';
+      tipBilgi.style.color='#2563EB';
+    }
+  } else {
+    if(hidden) hidden.value='bireysel';
+    if(tipHidden) tipHidden.value='EARSIV';
+    if(tipBilgi){
+      tipBilgi.innerHTML='⏳ TC/VKN girin (10 hane = kurumsal, 11 hane = bireysel)';
+      tipBilgi.style.color='var(--ink4)';
+    }
+  }
 }
+
+// Eski faturaTipSec fonksiyonu artık kullanılmıyor, ama backward compat için null-op tutalım
+function faturaTipSec(){ /* deprecated: müşteri tipi otomatik algılanıyor */ }
 
 /** EDM'den TC/VKN sorgula */
 function faturaEDMSorgu(){
@@ -5949,7 +5964,7 @@ function faturaKes(){
     kdvTutar: Math.round(kdvTutar*100)/100,
     kdvOrani: kdvOrani,
     toplamTutar: tutar,
-    durum: 'KESILIYOR',
+    durum: 'KESILDI',  // Local kayıt — EDM'e göndermek için ayrı aksiyon
     edmGonderilen: false,
     edmUuid: '',
     edmEttn: '',
@@ -5962,11 +5977,75 @@ function faturaKes(){
   FATURALAR.unshift(fatura);
   faturaKaydet();
 
-  // Buton loading
-  var btn=document.getElementById('fat-kes-btn');
-  if(btn){btn.disabled=true;btn.textContent='⏳ EDM\'E GÖNDERİLİYOR...';}
+  // Modal kapat
+  var ovl=document.getElementById('fatura-yeni-ovl');
+  if(ovl) ovl.remove();
+  if(typeof faturaSayfasiYukle==='function') faturaSayfasiYukle();
 
-  // EDM'e gönder (simulasyon veya gerçek)
+  toast('✓ Fatura '+faturaNo+' yerel kaydedildi','green');
+  // Önizleme + EDM gönder seçeneği aç
+  var yeniIdx=0; // unshift ile başa eklendiği için 0
+  setTimeout(function(){ faturaOnizlemeGoster(yeniIdx); }, 150);
+}
+
+/** Fatura önizleme modalı - XSLT render ile gerçek görünümü göster */
+function faturaOnizlemeGoster(idx){
+  var f=FATURALAR[idx];
+  if(!f) return;
+  var html = faturaXSLTRender(f);
+
+  var ovl=document.createElement('div');
+  ovl.id='fat-onizleme-ovl';
+  ovl.style.cssText='position:fixed;inset:0;z-index:985;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px';
+  ovl.onclick=function(e){if(e.target===ovl)ovl.remove();};
+
+  var butonlar='';
+  if(f.durum==='KESILDI' || f.durum==='HATA'){
+    butonlar=''
+      +'<button type="button" onclick="document.getElementById(\'fat-onizleme-ovl\').remove()" style="flex:1;padding:11px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;cursor:pointer;letter-spacing:1px">SONRA GÖNDERECEĞİM</button>'
+      +'<button type="button" onclick="faturaEDMGonder('+idx+');document.getElementById(\'fat-onizleme-ovl\').remove()" style="flex:2;padding:11px;border:none;border-radius:8px;background:#1a6b3c;color:#fff;font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:1px;cursor:pointer">📤 EDM\'E GÖNDER</button>';
+  } else {
+    butonlar='<button type="button" onclick="document.getElementById(\'fat-onizleme-ovl\').remove()" style="flex:1;padding:11px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;cursor:pointer;letter-spacing:1px">KAPAT</button>';
+  }
+
+  ovl.innerHTML='<div style="background:#fff;border-radius:14px;max-width:860px;width:100%;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.35)">'
+    +'<div style="background:var(--ink);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">'
+      +'<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#fff">📄 FATURA ÖNİZLEME · '+f.faturaNo+'</div>'
+      +'<div onclick="document.getElementById(\'fat-onizleme-ovl\').remove()" style="cursor:pointer;color:#888;font-size:26px">&times;</div>'
+    +'</div>'
+    +'<div style="flex:1;overflow:hidden;background:#e5e7eb">'
+      +'<iframe id="fat-onizleme-iframe" style="width:100%;height:100%;border:none;background:#fff"></iframe>'
+    +'</div>'
+    +'<div style="padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--bd);flex-shrink:0;background:#fff">'
+      +butonlar
+    +'</div>'
+  +'</div>';
+  document.body.appendChild(ovl);
+  // iframe içeriğini yaz
+  setTimeout(function(){
+    var ifr=document.getElementById('fat-onizleme-iframe');
+    if(ifr){ ifr.contentDocument.open(); ifr.contentDocument.write(html); ifr.contentDocument.close(); }
+  }, 30);
+}
+
+/** Fatura EDM'e gönder (tek fatura) */
+function faturaEDMGonder(idx){
+  var f=FATURALAR[idx];
+  if(!f) return;
+  if(f.durum==='GONDERILDI' || f.durum==='ONAYLANDI'){
+    toast('Bu fatura zaten gönderilmiş','red');
+    return;
+  }
+  if(!EDM_AYAR || !EDM_AYAR.kullaniciAdi || !EDM_AYAR.sifre){
+    toast('EDM ayarları eksik (Ayarlar → EDM Bilişim)','red');
+    return;
+  }
+
+  var faturaNo=f.faturaNo;
+  FATURALAR[idx].durum='KESILIYOR';
+  faturaKaydet();
+  if(typeof faturaSayfasiYukle==='function') faturaSayfasiYukle();
+
   fetch('/api/edm/gonder',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
@@ -5974,36 +6053,32 @@ function faturaKes(){
     body:JSON.stringify({
       kullaniciAdi: (EDM_AYAR||{}).kullaniciAdi||'',
       sifre: (EDM_AYAR||{}).sifre||'',
-      testMod: (EDM_AYAR||{}).testMod!==false, // default test modu
+      testMod: (EDM_AYAR||{}).testMod!==false,
       gondericEtiketi: (EDM_AYAR||{}).gondericEtiketi||'',
       vknTckn: (EDM_AYAR||{}).vknTckn||'',
       xsltEarsiv: (EDM_AYAR||{}).xsltEarsiv||null,
       xsltEfatura: (EDM_AYAR||{}).xsltEfatura||null,
-      fatura: fatura
+      fatura: f
     })
   }).then(function(r){return r.json();}).then(function(d){
-    if(btn){btn.disabled=false;btn.textContent='🧾 FATURAYI KES';}
-
-    // FATURALAR'da faturaNo ile bul ve güncelle
-    var idx=-1;
-    for(var i=0;i<FATURALAR.length;i++){
-      if(FATURALAR[i].faturaNo===faturaNo){idx=i;break;}
-    }
-    if(idx<0) return;
+    // faturaNo ile yeniden bul (liste değişmiş olabilir)
+    var i=-1;
+    for(var k=0;k<FATURALAR.length;k++){ if(FATURALAR[k].faturaNo===faturaNo){i=k;break;} }
+    if(i<0) return;
 
     if(d.success && d.data && d.data.basarili){
-      FATURALAR[idx].durum='GONDERILDI';
-      FATURALAR[idx].edmGonderilen=true;
-      FATURALAR[idx].edmUuid=d.data.faturaUuid||'';
-      FATURALAR[idx].edmEttn=d.data.ettn||'';
-      FATURALAR[idx].edmMesaj=d.data.mesaj||'';
-      FATURALAR[idx].edmTestMod=!!d.data.testMod;
+      FATURALAR[i].durum='GONDERILDI';
+      FATURALAR[i].edmGonderilen=true;
+      FATURALAR[i].edmUuid=d.data.faturaUuid||'';
+      FATURALAR[i].edmEttn=d.data.ettn||'';
+      FATURALAR[i].edmMesaj=d.data.mesaj||'';
+      FATURALAR[i].edmTestMod=!!d.data.testMod;
       faturaKaydet();
 
       // Randevuya fatura bilgisini ekle
-      if(randevuId){
+      if(FATURALAR[i].randevuId){
         RANDEVULAR.forEach(function(r){
-          if(r.id===randevuId){
+          if(r.id===FATURALAR[i].randevuId){
             r.faturaNo=faturaNo;
             r.faturaDurum='GONDERILDI';
             if(typeof dbRandevuKaydet==='function') dbRandevuKaydet(r);
@@ -6011,7 +6086,7 @@ function faturaKes(){
         });
       } else {
         RANDEVULAR.forEach(function(r){
-          if(r.musteri===musteri && !r.faturaNo){
+          if(r.musteri===FATURALAR[i].musteri && !r.faturaNo){
             r.faturaNo=faturaNo;
             r.faturaDurum='GONDERILDI';
             if(typeof dbRandevuKaydet==='function') dbRandevuKaydet(r);
@@ -6019,43 +6094,135 @@ function faturaKes(){
         });
       }
       storageKaydet();
-
-      // Modal kapat, liste yenile
-      var ovl=document.getElementById('fatura-yeni-ovl');
-      if(ovl) ovl.remove();
       if(typeof faturaSayfasiYukle==='function') faturaSayfasiYukle();
 
       var durumEtiket=d.data.testMod?'🧪 TEST':'✓';
       toast(durumEtiket+' Fatura '+faturaNo+' EDM\'e gönderildi','green');
     } else {
-      // EDM hatasi - yerel kayit kalsin ama hata durumu
-      FATURALAR[idx].durum='HATA';
-      FATURALAR[idx].edmMesaj=(d.data&&d.data.mesaj)||d.error||'Bilinmeyen hata';
+      FATURALAR[i].durum='HATA';
+      FATURALAR[i].edmMesaj=(d.data&&d.data.mesaj)||d.error||'Bilinmeyen hata';
       faturaKaydet();
-
-      var ovl2=document.getElementById('fatura-yeni-ovl');
-      if(ovl2) ovl2.remove();
       if(typeof faturaSayfasiYukle==='function') faturaSayfasiYukle();
-
-      toast('⚠️ Yerel kaydedildi ama EDM gönderimi başarısız: '+((d.data&&d.data.mesaj)||d.error||''),'red');
+      toast('⚠️ EDM gönderimi başarısız: '+((d.data&&d.data.mesaj)||d.error||''),'red');
     }
   }).catch(function(err){
-    if(btn){btn.disabled=false;btn.textContent='🧾 FATURAYI KES';}
-    // Bağlantı hatası - kayıt yerel kalır
-    var idx=-1;
-    for(var i=0;i<FATURALAR.length;i++){
-      if(FATURALAR[i].faturaNo===faturaNo){idx=i;break;}
-    }
-    if(idx>=0){
-      FATURALAR[idx].durum='HATA';
-      FATURALAR[idx].edmMesaj='Bağlantı hatası: '+err.message;
+    var i=-1;
+    for(var k=0;k<FATURALAR.length;k++){ if(FATURALAR[k].faturaNo===faturaNo){i=k;break;} }
+    if(i>=0){
+      FATURALAR[i].durum='HATA';
+      FATURALAR[i].edmMesaj='Bağlantı hatası: '+err.message;
       faturaKaydet();
     }
-    var ovl3=document.getElementById('fatura-yeni-ovl');
-    if(ovl3) ovl3.remove();
     if(typeof faturaSayfasiYukle==='function') faturaSayfasiYukle();
     toast('❌ EDM bağlantı hatası: '+err.message,'red');
   });
+}
+
+/** Toplu EDM gönderim - seçili olanları sırayla gönder */
+function faturaTopluEDMGonder(){
+  var secilenNolar=[];
+  document.querySelectorAll('input.fat-secim:checked').forEach(function(cb){
+    var n=cb.getAttribute('data-fno');
+    if(n) secilenNolar.push(n);
+  });
+  if(!secilenNolar.length){
+    toast('Gönderilecek fatura seçmediniz','red');
+    return;
+  }
+  if(!EDM_AYAR || !EDM_AYAR.kullaniciAdi || !EDM_AYAR.sifre){
+    toast('EDM ayarları eksik (Ayarlar → EDM Bilişim)','red');
+    return;
+  }
+  if(!confirm(secilenNolar.length+' fatura EDM\'e gönderilecek. Devam edilsin mi?')) return;
+
+  var gonderilen=0, hatali=0;
+  secilenNolar.forEach(function(no){
+    var idx=-1;
+    for(var k=0;k<FATURALAR.length;k++){ if(FATURALAR[k].faturaNo===no){idx=k;break;} }
+    if(idx<0) return;
+    var f=FATURALAR[idx];
+    if(f.durum==='GONDERILDI' || f.durum==='ONAYLANDI'){ hatali++; return; }
+    // Tek tek gönder (paralel değil, sıralı — backend'i bunaltmamak için)
+    faturaEDMGonder(idx);
+    gonderilen++;
+  });
+  toast(gonderilen+' fatura gönderim için işleme alındı'+(hatali>0?' ('+hatali+' atlandı - zaten gönderilmiş)':''),'green');
+}
+
+/** Header checkbox ile tümünü seç/kaldır */
+function faturaTumunuSec(checked){
+  document.querySelectorAll('input.fat-secim').forEach(function(cb){
+    cb.checked = checked;
+  });
+  faturaSecimDegisti();
+}
+
+/** Seçim değişince toplu gönder butonunu göster/gizle + sayaç güncelle */
+function faturaSecimDegisti(){
+  var secilenler=document.querySelectorAll('input.fat-secim:checked');
+  var btn=document.getElementById('fat-toplu-gonder-btn');
+  if(!btn) return;
+  if(secilenler.length>0){
+    btn.style.display='inline-block';
+    btn.textContent='📤 Seçilenleri EDM\'e Gönder ('+secilenler.length+')';
+  } else {
+    btn.style.display='none';
+    btn.textContent='📤 Seçilenleri EDM\'e Gönder';
+  }
+  // Header checkbox senkronize
+  var allCb=document.getElementById('fat-secim-all');
+  var allSecim=document.querySelectorAll('input.fat-secim');
+  if(allCb){
+    if(allSecim.length===0){ allCb.checked=false; allCb.indeterminate=false; }
+    else if(secilenler.length===0){ allCb.checked=false; allCb.indeterminate=false; }
+    else if(secilenler.length===allSecim.length){ allCb.checked=true; allCb.indeterminate=false; }
+    else { allCb.checked=false; allCb.indeterminate=true; }
+  }
+}
+
+/** KESILDI durumundaki faturayı düzenle (formu yeniden aç, eskisi silinir) */
+function faturaDuzenle(idx){
+  var f=FATURALAR[idx];
+  if(!f) return;
+  if(f.durum!=='KESILDI' && f.durum!=='HATA'){
+    toast('Sadece bekleyen veya hatalı faturalar düzenlenebilir','red');
+    return;
+  }
+  if(!confirm('Bu fatura düzenlenecek ve yeniden kaydedilecek. Devam edilsin mi?')) return;
+
+  // Eskisini sil
+  var silinen=FATURALAR.splice(idx,1)[0];
+  faturaKaydet();
+  if(typeof faturaSayfasiYukle==='function') faturaSayfasiYukle();
+
+  // Yeni formu pre-fill ile aç
+  setTimeout(function(){
+    faturaYeniAc({
+      musteri: silinen.musteri,
+      tel: silinen.tel,
+      hizmet: silinen.hizmet,
+      tutar: silinen.toplamTutar,
+      randevuId: silinen.randevuId||''
+    });
+    // Form açıldıktan sonra diğer alanları da doldur
+    setTimeout(function(){
+      var vknInp=document.getElementById('fat-vkn');
+      var emailInp=document.getElementById('fat-email');
+      var adresInp=document.getElementById('fat-adres');
+      var ilInp=document.getElementById('fat-il');
+      var ilceInp=document.getElementById('fat-ilce');
+      var kdvSel=document.getElementById('fat-kdv');
+      var notInp=document.getElementById('fat-not');
+      if(vknInp && silinen.vknTckn){ vknInp.value=silinen.vknTckn; if(typeof faturaVknOtoAlgila==='function') faturaVknOtoAlgila(); }
+      if(emailInp) emailInp.value=silinen.email||'';
+      if(adresInp) adresInp.value=silinen.adres||'';
+      if(ilInp) ilInp.value=silinen.il||'';
+      if(ilceInp) ilceInp.value=silinen.ilce||'';
+      if(kdvSel) kdvSel.value=String(silinen.kdvOrani||20);
+      if(notInp) notInp.value=silinen.not||'';
+      if(typeof faturaTutarHesapla==='function') faturaTutarHesapla();
+    },100);
+  },150);
 }
 
 /** Fatura yeniden gönder (hata olmuşsa) */
@@ -6112,9 +6279,204 @@ function faturaIptal(i){
   FATURALAR[i].durum='IPTAL';faturaKaydet();faturaSayfasiYukle();toast('Fatura iptal edildi','red');
 }
 
-function faturaPDFGoster(i){
-  var f=FATURALAR[i];if(!f)return;
-  var html='<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>Fatura '+f.faturaNo+'</title>'
+/* ════════════ UBL-TR 1.2 XML ÜRETİCİ ════════════
+ * Fatura objesinden GİB standardına uygun UBL-TR 1.2 XML üretir.
+ * Bu XML, EDM_AYAR'da yüklü XSLT şablonuyla birleştirilerek önizleme/PDF üretilir.
+ */
+function faturaUBLXMLUret(f){
+  if(!f) return '';
+  var _e = function(s){
+    if(s===null||s===undefined) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+  };
+  var _num = function(n){ return (parseFloat(n)||0).toFixed(2); };
+  var _num4 = function(n){ return (parseFloat(n)||0).toFixed(4); };
+  // UUID üret (EDM'e giden ettn'den bağımsız, sadece önizleme için)
+  var uuid = f.edmUuid || f.faturaUuid || ('PREVIEW-'+(f.faturaNo||'UNKNOWN'));
+  // Tarih: "DD.MM.YYYY" → "YYYY-MM-DD"
+  var iso = (function(){
+    var p = (f.tarih||'').split('.');
+    if(p.length===3) return p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');
+    return new Date().toISOString().slice(0,10);
+  })();
+  var saat = (new Date().toTimeString().slice(0,8));
+  var tipKod = (f.faturaTipi==='EFATURA')?'SATIS':'SATIS';
+  var profilId = (f.faturaTipi==='EFATURA')?'TICARIFATURA':'EARSIVFATURA';
+  var faturaTur = (f.faturaTipi==='EFATURA')?'FATURA':'E-ARSIV';
+
+  // Tedarikçi (satıcı) bilgileri - EDM_AYAR'dan
+  var ea = (typeof EDM_AYAR!=='undefined')?EDM_AYAR:{};
+  var firmaVkn = ea.vknTckn || '0000000000';
+  var firmaEtiket = ea.gondericEtiketi || '';
+  var firmaUnvan = 'AUTONAX'; // SITE_AYAR'dan alınabilir
+  try {
+    if(typeof SITE_AYAR!=='undefined' && SITE_AYAR.firmaAdi) firmaUnvan = SITE_AYAR.firmaAdi;
+    if(typeof SITE_AYAR!=='undefined' && SITE_AYAR.firmaVkn) firmaVkn = SITE_AYAR.firmaVkn;
+  } catch(e){}
+
+  // Alıcı (müşteri) bilgileri
+  var alVkn = f.vknTckn || '';
+  var alUnvan = f.musteri || '';
+  var alAdres = f.adres || '';
+  var alIl = f.il || '';
+  var alIlce = f.ilce || '';
+  var alTel = f.tel || '';
+  var alEmail = f.email || '';
+  var kurumsal = (alVkn && alVkn.length===10) || f.musteriTip==='kurumsal';
+
+  // Alıcı Party XML'i
+  var alPartyXml = '';
+  if(kurumsal){
+    alPartyXml = ''
+      +'<cac:PartyIdentification><cbc:ID schemeID="VKN">'+_e(alVkn)+'</cbc:ID></cac:PartyIdentification>'
+      +'<cac:PartyName><cbc:Name>'+_e(alUnvan)+'</cbc:Name></cac:PartyName>'
+      +'<cac:PostalAddress>'
+        +'<cbc:StreetName>'+_e(alAdres)+'</cbc:StreetName>'
+        +'<cbc:CitySubdivisionName>'+_e(alIlce)+'</cbc:CitySubdivisionName>'
+        +'<cbc:CityName>'+_e(alIl)+'</cbc:CityName>'
+        +'<cac:Country><cbc:Name>Türkiye</cbc:Name></cac:Country>'
+      +'</cac:PostalAddress>'
+      +'<cac:PartyTaxScheme><cac:TaxScheme><cbc:Name></cbc:Name></cac:TaxScheme></cac:PartyTaxScheme>'
+      +(alTel?'<cac:Contact><cbc:Telephone>'+_e(alTel)+'</cbc:Telephone>'+(alEmail?'<cbc:ElectronicMail>'+_e(alEmail)+'</cbc:ElectronicMail>':'')+'</cac:Contact>':(alEmail?'<cac:Contact><cbc:ElectronicMail>'+_e(alEmail)+'</cbc:ElectronicMail></cac:Contact>':''));
+  } else {
+    // Bireysel - ad soyad ayırma
+    var isim = alUnvan.split(' ');
+    var soyad = isim.length>1?isim.pop():'';
+    var ad = isim.join(' ');
+    alPartyXml = ''
+      +(alVkn?'<cac:PartyIdentification><cbc:ID schemeID="TCKN">'+_e(alVkn)+'</cbc:ID></cac:PartyIdentification>':'')
+      +'<cac:PostalAddress>'
+        +'<cbc:StreetName>'+_e(alAdres)+'</cbc:StreetName>'
+        +'<cbc:CitySubdivisionName>'+_e(alIlce)+'</cbc:CitySubdivisionName>'
+        +'<cbc:CityName>'+_e(alIl)+'</cbc:CityName>'
+        +'<cac:Country><cbc:Name>Türkiye</cbc:Name></cac:Country>'
+      +'</cac:PostalAddress>'
+      +(alTel||alEmail?'<cac:Contact>'+(alTel?'<cbc:Telephone>'+_e(alTel)+'</cbc:Telephone>':'')+(alEmail?'<cbc:ElectronicMail>'+_e(alEmail)+'</cbc:ElectronicMail>':'')+'</cac:Contact>':'')
+      +'<cac:Person><cbc:FirstName>'+_e(ad)+'</cbc:FirstName><cbc:FamilyName>'+_e(soyad)+'</cbc:FamilyName></cac:Person>';
+  }
+
+  // Fatura satırı (tek kalem - mevcut sistemde bir fatura = bir hizmet)
+  var miktar = '1';
+  var birimFiyat = _num4(f.kdvsizTutar||0);
+  var kdvOran = f.kdvOrani||20;
+  var lineXml = ''
+    +'<cac:InvoiceLine>'
+      +'<cbc:ID>1</cbc:ID>'
+      +'<cbc:InvoicedQuantity unitCode="C62">'+miktar+'</cbc:InvoicedQuantity>'
+      +'<cbc:LineExtensionAmount currencyID="TRY">'+_num(f.kdvsizTutar||0)+'</cbc:LineExtensionAmount>'
+      +'<cac:TaxTotal>'
+        +'<cbc:TaxAmount currencyID="TRY">'+_num(f.kdvTutar||0)+'</cbc:TaxAmount>'
+        +'<cac:TaxSubtotal>'
+          +'<cbc:TaxableAmount currencyID="TRY">'+_num(f.kdvsizTutar||0)+'</cbc:TaxableAmount>'
+          +'<cbc:TaxAmount currencyID="TRY">'+_num(f.kdvTutar||0)+'</cbc:TaxAmount>'
+          +'<cbc:Percent>'+kdvOran+'</cbc:Percent>'
+          +'<cac:TaxCategory><cac:TaxScheme><cbc:Name>KDV</cbc:Name><cbc:TaxTypeCode>0015</cbc:TaxTypeCode></cac:TaxScheme></cac:TaxCategory>'
+        +'</cac:TaxSubtotal>'
+      +'</cac:TaxTotal>'
+      +'<cac:Item><cbc:Name>'+_e(f.hizmet||'')+'</cbc:Name></cac:Item>'
+      +'<cac:Price><cbc:PriceAmount currencyID="TRY">'+birimFiyat+'</cbc:PriceAmount></cac:Price>'
+    +'</cac:InvoiceLine>';
+
+  var xml = '<?xml version="1.0" encoding="UTF-8"?>'
+    +'<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"'
+    +' xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"'
+    +' xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"'
+    +' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
+    +' xmlns:n1="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">'
+      +'<cbc:UBLVersionID>2.1</cbc:UBLVersionID>'
+      +'<cbc:CustomizationID>TR1.2</cbc:CustomizationID>'
+      +'<cbc:ProfileID>'+profilId+'</cbc:ProfileID>'
+      +'<cbc:ID>'+_e(f.faturaNo||'')+'</cbc:ID>'
+      +'<cbc:CopyIndicator>false</cbc:CopyIndicator>'
+      +'<cbc:UUID>'+_e(uuid)+'</cbc:UUID>'
+      +'<cbc:IssueDate>'+iso+'</cbc:IssueDate>'
+      +'<cbc:IssueTime>'+saat+'</cbc:IssueTime>'
+      +'<cbc:InvoiceTypeCode>'+tipKod+'</cbc:InvoiceTypeCode>'
+      +(f.not?'<cbc:Note>'+_e(f.not)+'</cbc:Note>':'')
+      +'<cbc:DocumentCurrencyCode>TRY</cbc:DocumentCurrencyCode>'
+      +'<cbc:LineCountNumeric>1</cbc:LineCountNumeric>'
+      // Tedarikçi
+      +'<cac:AccountingSupplierParty><cac:Party>'
+        +'<cac:PartyIdentification><cbc:ID schemeID="VKN">'+_e(firmaVkn)+'</cbc:ID></cac:PartyIdentification>'
+        +'<cac:PartyName><cbc:Name>'+_e(firmaUnvan)+'</cbc:Name></cac:PartyName>'
+        +'<cac:PostalAddress><cbc:StreetName></cbc:StreetName><cbc:CityName></cbc:CityName><cac:Country><cbc:Name>Türkiye</cbc:Name></cac:Country></cac:PostalAddress>'
+        +'<cac:PartyTaxScheme><cac:TaxScheme><cbc:Name></cbc:Name></cac:TaxScheme></cac:PartyTaxScheme>'
+      +'</cac:Party></cac:AccountingSupplierParty>'
+      // Alıcı
+      +'<cac:AccountingCustomerParty><cac:Party>'
+        +alPartyXml
+      +'</cac:Party></cac:AccountingCustomerParty>'
+      // Vergi toplam
+      +'<cac:TaxTotal>'
+        +'<cbc:TaxAmount currencyID="TRY">'+_num(f.kdvTutar||0)+'</cbc:TaxAmount>'
+        +'<cac:TaxSubtotal>'
+          +'<cbc:TaxableAmount currencyID="TRY">'+_num(f.kdvsizTutar||0)+'</cbc:TaxableAmount>'
+          +'<cbc:TaxAmount currencyID="TRY">'+_num(f.kdvTutar||0)+'</cbc:TaxAmount>'
+          +'<cbc:Percent>'+kdvOran+'</cbc:Percent>'
+          +'<cac:TaxCategory><cac:TaxScheme><cbc:Name>KDV</cbc:Name><cbc:TaxTypeCode>0015</cbc:TaxTypeCode></cac:TaxScheme></cac:TaxCategory>'
+        +'</cac:TaxSubtotal>'
+      +'</cac:TaxTotal>'
+      // Yasal toplamlar
+      +'<cac:LegalMonetaryTotal>'
+        +'<cbc:LineExtensionAmount currencyID="TRY">'+_num(f.kdvsizTutar||0)+'</cbc:LineExtensionAmount>'
+        +'<cbc:TaxExclusiveAmount currencyID="TRY">'+_num(f.kdvsizTutar||0)+'</cbc:TaxExclusiveAmount>'
+        +'<cbc:TaxInclusiveAmount currencyID="TRY">'+_num(f.toplamTutar||0)+'</cbc:TaxInclusiveAmount>'
+        +'<cbc:PayableAmount currencyID="TRY">'+_num(f.toplamTutar||0)+'</cbc:PayableAmount>'
+      +'</cac:LegalMonetaryTotal>'
+      +lineXml
+    +'</Invoice>';
+  return xml;
+}
+
+/* ════════════ XSLT RENDER ════════════
+ * UBL-TR XML'i EDM_AYAR'daki XSLT şablonuyla birleştirip HTML üretir.
+ * XSLTProcessor kullanır (tüm modern tarayıcılarda mevcut).
+ * Başarısız olursa fallback: basit HTML önizleme
+ */
+function faturaXSLTRender(f){
+  if(!f) return '';
+  try {
+    var ea = (typeof EDM_AYAR!=='undefined')?EDM_AYAR:null;
+    if(!ea) return faturaBasitHTMLUret(f);
+    var xsltKayit = (f.faturaTipi==='EFATURA')?ea.xsltEfatura:ea.xsltEarsiv;
+    if(!xsltKayit || !xsltKayit.icerik) return faturaBasitHTMLUret(f);
+
+    var xmlStr = faturaUBLXMLUret(f);
+    var parser = new DOMParser();
+    var xmlDoc = parser.parseFromString(xmlStr, 'application/xml');
+    var xsltDoc = parser.parseFromString(xsltKayit.icerik, 'application/xml');
+
+    // Parse hatası kontrolü
+    if(xmlDoc.getElementsByTagName('parsererror').length > 0) {
+      console.warn('Autonax XML parse hatası, fallback kullanılıyor');
+      return faturaBasitHTMLUret(f);
+    }
+    if(xsltDoc.getElementsByTagName('parsererror').length > 0) {
+      console.warn('Autonax XSLT parse hatası, fallback kullanılıyor');
+      return faturaBasitHTMLUret(f);
+    }
+
+    var processor = new XSLTProcessor();
+    processor.importStylesheet(xsltDoc);
+    var resultDoc = processor.transformToDocument(xmlDoc);
+    if(!resultDoc) return faturaBasitHTMLUret(f);
+
+    var serializer = new XMLSerializer();
+    var html = serializer.serializeToString(resultDoc);
+    if(!html || html.length < 100) return faturaBasitHTMLUret(f);
+    return html;
+  } catch(e) {
+    console.warn('Autonax XSLT render hatası:', e);
+    return faturaBasitHTMLUret(f);
+  }
+}
+
+/* ════════════ FALLBACK: BASİT HTML ÖNİZLEME ════════════
+ * XSLT başarısız olursa veya ayarda XSLT yoksa kullanılır.
+ * Eski faturaPDFGoster içeriğinin aynısı.
+ */
+function faturaBasitHTMLUret(f){
+  return '<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>Fatura '+f.faturaNo+'</title>'
     +'<style>body{font-family:Outfit,Arial,sans-serif;max-width:500px;margin:40px auto;padding:0 20px;color:#111}'
     +'.logo{font-size:28px;font-weight:900;color:#B01C2E;letter-spacing:4px;text-align:center;margin-bottom:4px}'
     +'.sub{text-align:center;font-size:11px;color:#777;margin-bottom:20px}'
@@ -6124,22 +6486,28 @@ function faturaPDFGoster(i){
     +'.badge{display:inline-block;padding:4px 12px;border-radius:10px;font-size:11px;font-weight:700}'
     +'@media print{body{margin:20px}button{display:none!important}}</style></head><body>'
     +'<div class="logo">AUTONAX</div><div class="sub">Premium Araç Koruma · '+f.faturaTipi+'</div>'
-    +'<h3>'+f.faturaTipi+' FATURA</h3>'
+    +'<h3>'+f.faturaTipi+' FATURA (Basit Önizleme)</h3>'
+    +'<div style="padding:10px;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;font-size:11px;color:#92400e;margin-bottom:12px">ℹ️ XSLT şablonu yüklü değil veya render başarısız. Standart önizleme gösteriliyor.</div>'
     +'<div class="row"><span>Fatura No</span><b>'+f.faturaNo+'</b></div>'
     +'<div class="row"><span>Tarih</span><b>'+f.tarih+'</b></div>'
     +'<div class="row"><span>Müşteri</span><b>'+f.musteri+'</b></div>'
     +(f.vknTckn?'<div class="row"><span>VKN/TCKN</span><b>'+f.vknTckn+'</b></div>':'')
     +'<div class="row"><span>Durum</span><span class="badge" style="background:'+(f.durum==='KESILDI'?'#dcfce7;color:#16a34a':'#fee2e2;color:#dc2626')+'">'+f.durum+'</span></div>'
     +'<div style="margin:20px 0;border:1px solid #eee;border-radius:8px;overflow:hidden">'
-      +'<div style="display:flex;justify-content:space-between;padding:10px 14px;background:#f9f9f9;font-size:12px;font-weight:700;border-bottom:1px solid #eee"><span>KDV\'siz Tutar</span><span>₺'+f.kdvsizTutar.toLocaleString('tr-TR')+'</span></div>'
-      +'<div style="display:flex;justify-content:space-between;padding:10px 14px;font-size:12px;border-bottom:1px solid #eee"><span>KDV (%'+f.kdvOrani+')</span><span style="color:#d97706;font-weight:600">₺'+f.kdvTutar.toLocaleString('tr-TR')+'</span></div>'
-      +'<div style="display:flex;justify-content:space-between;padding:12px 14px;font-size:14px;font-weight:700;background:#fef2f2"><span>Toplam</span><span style="color:#B01C2E">₺'+f.toplamTutar.toLocaleString('tr-TR')+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;padding:10px 14px;background:#f9f9f9;font-size:12px;font-weight:700;border-bottom:1px solid #eee"><span>KDV\'siz Tutar</span><span>₺'+(f.kdvsizTutar||0).toLocaleString('tr-TR')+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;padding:10px 14px;font-size:12px;border-bottom:1px solid #eee"><span>KDV (%'+f.kdvOrani+')</span><span style="color:#d97706;font-weight:600">₺'+(f.kdvTutar||0).toLocaleString('tr-TR')+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;padding:12px 14px;font-size:14px;font-weight:700;background:#fef2f2"><span>Toplam</span><span style="color:#B01C2E">₺'+(f.toplamTutar||0).toLocaleString('tr-TR')+'</span></div>'
     +'</div>'
     +(f.not?'<div style="margin:10px 0;padding:10px;background:#f9f9f9;border-radius:8px;font-size:12px;color:#555"><b>Not:</b> '+f.not+'</div>':'')
     +'<div style="text-align:center;margin-top:30px;font-size:10px;color:#999">Bu fatura Autonax sistemi tarafından oluşturulmuştur.</div>'
     +'<div style="text-align:center;margin-top:8px"><button onclick="window.print()" style="padding:8px 24px;background:#B01C2E;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px">🖨️ Yazdır / PDF</button></div>'
     +'</body></html>';
-  var w=window.open('','_blank','width=600,height=700');w.document.write(html);w.document.close();
+}
+
+function faturaPDFGoster(i){
+  var f=FATURALAR[i];if(!f)return;
+  var html = faturaXSLTRender(f);
+  var w=window.open('','_blank','width=900,height=1000');w.document.write(html);w.document.close();
 }
 
 /* Mevcut rdvFaturaKes'i Fatura sayfasına yönlendir */
