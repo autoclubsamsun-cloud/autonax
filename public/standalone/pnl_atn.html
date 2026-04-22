@@ -5328,8 +5328,59 @@ function odemeLinkGonder(idx){
 
 var EDM_AYAR=(function(){try{var r=localStorage.getItem('autonax_edm_v1');if(r)return JSON.parse(r);}catch(e){console.error('Autonax:',e)}return{aktif:false,testMod:true,kullaniciAdi:'',sifre:'',vknTckn:'',gondericEtiketi:'',faturaTipi:'EARSIV',faturaSeri:'AUT',kdvOrani:20,notSablonu:'Autonax Hizmet Faturasi',otomatikFatura:false,xsltEarsiv:{isim:'',icerik:'',boyut:0},xsltEfatura:{isim:'',icerik:'',boyut:0}};})();
 
+/* ════════════ MERKEZI EDM AYAR KONTROL ════════════
+ * Tüm fatura/EDM işlemleri bu fonksiyondan geçer.
+ * Ayarlar > EDM Bilişim bölümündeki veriyi merkezi olarak doğrular.
+ *
+ * siddet parametreleri:
+ *   - 'minimal': kullanıcıAdı + şifre (müşteri sorgu)
+ *   - 'gonderim': EDM'e fatura gönderimi için tam kontrol
+ *   - 'onizleme': XSLT şablonları (credentials şart değil)
+ *
+ * Dönüş: { ok:bool, hatalar:[...], uyarilar:[...], detay:{} }
+ */
+function edmAyarKontrol(siddet){
+  siddet = siddet || 'minimal';
+  var ea = (typeof EDM_AYAR!=='undefined') ? EDM_AYAR : null;
+  var sonuc = { ok:true, hatalar:[], uyarilar:[], detay:{} };
+  if(!ea){ sonuc.ok=false; sonuc.hatalar.push('EDM ayarları yüklenemedi'); return sonuc; }
+  sonuc.detay.testMod = !!ea.testMod;
+  sonuc.detay.aktif = !!ea.aktif;
 
+  if(siddet==='onizleme'){
+    if(!ea.xsltEarsiv || !ea.xsltEarsiv.icerik) sonuc.uyarilar.push('e-Arşiv XSLT şablonu yok - basit önizleme');
+    if(!ea.xsltEfatura || !ea.xsltEfatura.icerik) sonuc.uyarilar.push('e-Fatura XSLT şablonu yok - basit önizleme');
+    return sonuc;
+  }
 
+  if(!ea.kullaniciAdi) sonuc.hatalar.push('EDM kullanıcı adı girilmemiş');
+  if(!ea.sifre) sonuc.hatalar.push('EDM şifresi girilmemiş');
+
+  if(siddet==='gonderim'){
+    if(!ea.aktif) sonuc.hatalar.push('EDM entegrasyonu aktif değil (Ayarlar → EDM → EDM Aktif)');
+    if(!ea.vknTckn) sonuc.hatalar.push('Firma VKN/TCKN girilmemiş');
+    if(!ea.gondericEtiketi) sonuc.hatalar.push('Gönderici etiketi girilmemiş');
+    if(!ea.faturaSeri) sonuc.uyarilar.push('Fatura seri boş - default "AUT" kullanılacak');
+    if(!ea.xsltEarsiv || !ea.xsltEarsiv.icerik) sonuc.uyarilar.push('e-Arşiv XSLT yüklenmemiş');
+    if(!ea.xsltEfatura || !ea.xsltEfatura.icerik) sonuc.uyarilar.push('e-Fatura XSLT yüklenmemiş');
+  }
+
+  sonuc.ok = sonuc.hatalar.length===0;
+  return sonuc;
+}
+
+/* Ayarlara erişim kısayolları - merkezi okuma */
+function edmFaturaSeri(){ return (EDM_AYAR && EDM_AYAR.faturaSeri) || 'AUT'; }
+function edmKdvOrani(){ var k=(EDM_AYAR && EDM_AYAR.kdvOrani); return (k!==undefined && k!==null && k!=='') ? parseInt(k) : 20; }
+function edmNotSablonu(){ return (EDM_AYAR && EDM_AYAR.notSablonu) || ''; }
+function edmTestMi(){ return !EDM_AYAR || EDM_AYAR.testMod!==false; }
+function edmAktifMi(){ return !!(EDM_AYAR && EDM_AYAR.aktif); }
+
+/* Hataları toast ile göster */
+function edmAyarHatalariGoster(sonuc){
+  if(!sonuc || sonuc.ok) return;
+  toast('⚠️ EDM: '+sonuc.hatalar.join(' · '), 'red');
+}
 
 
 function edmKaydet(){try{localStorage.setItem('autonax_edm_v1',JSON.stringify(EDM_AYAR));}catch(e){console.error('Autonax:',e)}siteAyarKaydet('EDM Fatura');}
@@ -5708,13 +5759,35 @@ function faturaYeniAc(onceden){
   var IS='width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box';
   var LS='font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:4px;letter-spacing:.3px';
 
-  // EDM ayarı hazır mı kontrol
+  // EDM ayar durum paneli - merkezi kontrolden oku
   var edmAyarUyari='';
-  if(!EDM_AYAR || !EDM_AYAR.kullaniciAdi || !EDM_AYAR.sifre){
-    edmAyarUyari='<div style="padding:8px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#991b1b;font-size:11px;margin-bottom:12px">'
-      +'⚠️ <b>EDM ayarları eksik.</b> Ayarlar → EDM Bilişim bölümünden kullanıcı adı ve şifreyi girin. Şimdilik sadece yerel kayıt yapılacak.'
+  (function(){
+    var gonderimDurum = edmAyarKontrol('gonderim');
+    var onizlemeDurum = edmAyarKontrol('onizleme');
+    var ikonlar=[];
+    var testEtiketi = edmTestMi() ? '<span style="background:rgba(37,99,235,.1);color:#2563EB;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700">🧪 TEST MODU</span>' : '<span style="background:rgba(22,163,74,.1);color:#16a34a;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700">✅ CANLI MOD</span>';
+    var durumRenk, durumIkon, durumText;
+    if(gonderimDurum.ok){
+      durumRenk='#16a34a'; durumIkon='✅'; durumText='EDM ayarları hazır - fatura direkt gönderilebilir';
+      edmAyarUyari='<div style="padding:8px 12px;background:rgba(22,163,74,.05);border:1px solid rgba(22,163,74,.2);border-radius:8px;color:#16a34a;font-size:11px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">'
+        +'<span>'+durumIkon+' <b>'+durumText+'</b></span>'
+        +testEtiketi
       +'</div>';
-  }
+    } else if(gonderimDurum.hatalar.length === 1 && gonderimDurum.hatalar[0].indexOf('aktif değil')>-1){
+      // Sadece "aktif değil" hatası → fatura kesebilir ama gönderemez
+      durumRenk='#d97706';
+      edmAyarUyari='<div style="padding:8px 12px;background:rgba(217,119,6,.05);border:1px solid rgba(217,119,6,.2);border-radius:8px;color:#92400e;font-size:11px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">'
+        +'<span>⚠️ <b>EDM kapalı</b> - fatura yerel kaydedilecek, göndermek için ayarlardan açın</span>'
+        +testEtiketi
+      +'</div>';
+    } else {
+      durumRenk='#dc2626';
+      edmAyarUyari='<div style="padding:8px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#991b1b;font-size:11px;margin-bottom:12px">'
+        +'⚠️ <b>EDM ayarları eksik:</b> '+gonderimDurum.hatalar.join(' · ')+'<br>'
+        +'<small style="font-size:10px">Ayarlar → EDM Bilişim bölümünden tamamlayın. Fatura şimdilik sadece yerel kaydedilecek.</small>'
+      +'</div>';
+    }
+  })();
 
   ovl.innerHTML=''
     +'<div style="background:#fff;border-radius:16px;max-width:640px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.25);max-height:92vh;display:flex;flex-direction:column;overflow:hidden">'
@@ -5763,13 +5836,19 @@ function faturaYeniAc(onceden){
 
         +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
           +'<div><div style="'+LS+'">Tutar KDV Dahil (₺) *</div><input type="number" id="fat-tutar" value="'+(pre.tutar||0)+'" style="'+IS+';font-weight:700;font-size:15px;color:var(--r)"></div>'
-          +'<div><div style="'+LS+'">KDV Oranı</div><select id="fat-kdv" style="'+IS+'" onchange="faturaTutarHesapla()"><option value="20">%20</option><option value="10">%10</option><option value="1">%1</option><option value="0">%0 (KDV yok)</option></select></div>'
+          +'<div><div style="'+LS+'">KDV Oranı</div><select id="fat-kdv" style="'+IS+'" onchange="faturaTutarHesapla()">'
+            +['20','10','1','0'].map(function(v){
+              var secili=(parseInt(v)===edmKdvOrani())?' selected':'';
+              var lbl=(v==='0')?'%0 (KDV yok)':'%'+v;
+              return '<option value="'+v+'"'+secili+'>'+lbl+'</option>';
+            }).join('')
+          +'</select></div>'
         +'</div>'
 
         +'<div id="fat-hesap-ozet" style="padding:10px 12px;background:#fef7f2;border:1px solid #f5d5b8;border-radius:8px;margin-bottom:10px;font-size:11px"></div>'
 
         +'<div style="'+LS+'">Not (opsiyonel)</div>'
-        +'<input type="text" id="fat-not" placeholder="Fatura açıklaması..." style="'+IS+';margin-bottom:10px">'
+        +'<input type="text" id="fat-not" value="'+(edmNotSablonu()||'')+'" placeholder="Fatura açıklaması..." style="'+IS+';margin-bottom:10px">'
 
         +'<input type="hidden" id="fat-randevu-id" value="'+(pre.randevuId||'')+'">'
       +'</div>'
@@ -5884,9 +5963,10 @@ function faturaEDMSorgu(){
     return;
   }
 
-  // EDM credentials kontrol
-  if(!EDM_AYAR || !EDM_AYAR.kullaniciAdi || !EDM_AYAR.sifre){
-    if(sonucEl) sonucEl.innerHTML='<span style="color:#991b1b">⚠️ EDM ayarları eksik. Ayarlar → EDM Bilişim</span>';
+  // EDM credentials kontrol (merkezi)
+  var ayarDurum=edmAyarKontrol('minimal');
+  if(!ayarDurum.ok){
+    if(sonucEl) sonucEl.innerHTML='<span style="color:#991b1b">⚠️ '+ayarDurum.hatalar.join(' · ')+' (Ayarlar → EDM Bilişim)</span>';
     return;
   }
 
@@ -5988,7 +6068,7 @@ function faturaKes(){
   var kdvTutar=tutar-kdvsiz;
   var bugun=new Date();
   var tarih=bugun.getDate().toString().padStart(2,'0')+'.'+(bugun.getMonth()+1).toString().padStart(2,'0')+'.'+bugun.getFullYear();
-  var faturaNo='AUT'+bugun.getFullYear()+String(Date.now()).slice(-6);
+  var faturaNo=edmFaturaSeri()+bugun.getFullYear()+String(Date.now()).slice(-6);
 
   var fatura={
     faturaNo: faturaNo,
@@ -6093,8 +6173,10 @@ function faturaEDMGonder(idx){
     toast('Bu fatura zaten gönderilmiş','red');
     return;
   }
-  if(!EDM_AYAR || !EDM_AYAR.kullaniciAdi || !EDM_AYAR.sifre){
-    toast('EDM ayarları eksik (Ayarlar → EDM Bilişim)','red');
+  // Merkezi EDM ayar kontrolü (gönderim için tam ayarlar gerekli)
+  var ayarDurum=edmAyarKontrol('gonderim');
+  if(!ayarDurum.ok){
+    edmAyarHatalariGoster(ayarDurum);
     return;
   }
 
@@ -6186,11 +6268,14 @@ function faturaTopluEDMGonder(){
     toast('Gönderilecek fatura seçmediniz','red');
     return;
   }
-  if(!EDM_AYAR || !EDM_AYAR.kullaniciAdi || !EDM_AYAR.sifre){
-    toast('EDM ayarları eksik (Ayarlar → EDM Bilişim)','red');
+  // Merkezi EDM ayar kontrolü
+  var ayarDurum=edmAyarKontrol('gonderim');
+  if(!ayarDurum.ok){
+    edmAyarHatalariGoster(ayarDurum);
     return;
   }
-  if(!confirm(secilenNolar.length+' fatura EDM\'e gönderilecek. Devam edilsin mi?')) return;
+  var modEtiket=edmTestMi()?'🧪 TEST MODU':'✅ CANLI MOD';
+  if(!confirm(secilenNolar.length+' fatura EDM\'e gönderilecek ('+modEtiket+'). Devam edilsin mi?')) return;
 
   var gonderilen=0, hatali=0;
   secilenNolar.forEach(function(no){
