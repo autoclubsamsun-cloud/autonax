@@ -7368,6 +7368,17 @@ window.onload=function(){
         try{ sonSayfa=localStorage.getItem('autonax_son_sayfa'); }catch(e){}
         if(sonSayfa && sonSayfa!=='dashboard' && document.getElementById('pg-'+sonSayfa) && typeof doPg==='function'){
           doPg(sonSayfa);
+          // Ekstra güvenlik: Ödemeler/Hizmetler/Faturalar async veriye bağımlı.
+          // dbSync tamamlandığında zaten refresh oluyor ama yetişmediyse
+          // 1.5sn sonra bir kez daha yenile (silent fallback).
+          setTimeout(function(){
+            try{
+              if(sonSayfa==='odemeler' && typeof odemeSayfasiYukle==='function') odemeSayfasiYukle();
+              else if(sonSayfa==='hizmetler' && typeof hgListele==='function') hgListele();
+              else if(sonSayfa==='faturalar' && typeof faturaSayfasiYukle==='function') faturaSayfasiYukle();
+              else if(sonSayfa==='musteriler' && typeof mstListele==='function') mstListele();
+            }catch(e){}
+          }, 1500);
         } else {
           dashboardYukle();
         }
@@ -8476,6 +8487,16 @@ function dbSyncYukle(){
       if(typeof doRdvListele==='function') doRdvListele();
       if(typeof doTakvim==='function') doTakvim();
       if(typeof bugununRandevulariGoster==='function') bugununRandevulariGoster();
+      // RANDEVULAR'a bağımlı diğer aktif sayfayı da yenile (F5 restore sonrası boş görünmesin)
+      try{
+        var aktifPg=document.querySelector('.pg.on');
+        var aktifId=aktifPg?aktifPg.id.replace('pg-',''):'';
+        if(aktifId==='odemeler' && typeof odemeSayfasiYukle==='function') odemeSayfasiYukle();
+        else if(aktifId==='hizmetler' && typeof hgListele==='function') hgListele();
+        else if(aktifId==='faturalar' && typeof faturaSayfasiYukle==='function') faturaSayfasiYukle();
+        else if(aktifId==='musteriler' && typeof mstListele==='function') mstListele();
+        else if(aktifId==='raporlar' && typeof raporYukle==='function') raporYukle();
+      }catch(e){}
     }
   }).catch(function(){
     // Offline - localStorage'dan yükle
@@ -8483,6 +8504,15 @@ function dbSyncYukle(){
     // Takvimi ve listeyi localStorage sonrası da güncelle
     if(typeof doTakvim==='function') doTakvim();
     if(typeof doRdvListele==='function') doRdvListele();
+    // Offline modda da aktif sayfayı yenile
+    try{
+      var aktifPg=document.querySelector('.pg.on');
+      var aktifId=aktifPg?aktifPg.id.replace('pg-',''):'';
+      if(aktifId==='odemeler' && typeof odemeSayfasiYukle==='function') odemeSayfasiYukle();
+      else if(aktifId==='hizmetler' && typeof hgListele==='function') hgListele();
+      else if(aktifId==='faturalar' && typeof faturaSayfasiYukle==='function') faturaSayfasiYukle();
+      else if(aktifId==='musteriler' && typeof mstListele==='function') mstListele();
+    }catch(e){}
   });
   // Bayileri DB'den çek
   fetch('/api/bayiler',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
