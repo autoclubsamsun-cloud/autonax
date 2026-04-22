@@ -5743,10 +5743,15 @@ function faturaYeniAc(onceden){
           +'<div><div style="'+LS+'">İlçe</div><input type="text" id="fat-ilce" style="'+IS+'"></div>'
         +'</div>'
 
-        // ═══ FATURA TİPİ (otomatik) ═══
+        // ═══ FATURA TİPİ (otomatik + manuel override) ═══
         +'<div style="padding:10px 12px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;margin-bottom:12px;font-size:12px">'
-          +'<div style="'+LS+';margin-bottom:2px">Fatura Tipi (otomatik belirlenir)</div>'
-          +'<div id="fat-tip-bilgi" style="font-weight:700;color:var(--ink4)">⏳ TC/VKN girip sorgulayın</div>'
+          +'<div style="'+LS+';margin-bottom:4px">Fatura Tipi</div>'
+          +'<div id="fat-tip-bilgi" style="font-weight:700;color:var(--ink4);margin-bottom:8px">⏳ TC/VKN girin veya aşağıdan manuel seçin</div>'
+          +'<div style="display:flex;gap:6px">'
+            +'<button type="button" id="fat-tip-earsiv-btn" onclick="faturaTipiManuel(\'EARSIV\')" style="flex:1;padding:8px;border:2px solid #d97706;border-radius:7px;background:rgba(217,119,6,.08);color:#d97706;font-size:11px;font-weight:700;cursor:pointer">📋 e-Arşiv</button>'
+            +'<button type="button" id="fat-tip-efatura-btn" onclick="faturaTipiManuel(\'EFATURA\')" style="flex:1;padding:8px;border:1.5px solid var(--bd);border-radius:7px;background:#fff;color:var(--ink4);font-size:11px;font-weight:700;cursor:pointer">🏢 e-Fatura</button>'
+          +'</div>'
+          +'<div style="font-size:10px;color:var(--ink4);margin-top:6px">EDM sorgusu yapamazsanız (internet yok vb.) müşteriye sorup manuel seçebilirsiniz</div>'
           +'<input type="hidden" id="fat-yeni-tip" value="EARSIV">'
           +'<input type="hidden" id="fat-alias" value="">'
           +'<input type="hidden" id="fat-musteri-tip" value="bireysel">'
@@ -5794,28 +5799,65 @@ function faturaVknOtoAlgila(){
   var aliasEl=document.getElementById('fat-alias');
   if(aliasEl) aliasEl.value='';
   if(sonucEl) sonucEl.innerHTML='';
+  // Manuel seçim flag'ini sıfırla (kullanıcı numarayı değiştirdiyse tekrar otomatik algılasın)
+  try{ delete window._faturaTipManuel; }catch(e){}
+
   if(val.length===11){
     if(hidden) hidden.value='bireysel';
     if(tipHidden) tipHidden.value='EARSIV';
     if(tipBilgi){
-      tipBilgi.innerHTML='👤 <b>Bireysel</b> — e-Arşiv Fatura olarak kesilecek';
+      tipBilgi.innerHTML='👤 <b>Bireysel/Şahıs</b> — Default <b>e-Arşiv</b>. Mükellef ise "EDM\'den Sorgula" yapın veya "e-Fatura" seçin';
       tipBilgi.style.color='#d97706';
     }
+    faturaTipiButonGuncelle('EARSIV');
   } else if(val.length===10){
     if(hidden) hidden.value='kurumsal';
-    // Kurumsal için default e-Arşiv (EDM sorgu sonrası e-Fatura'ya geçebilir)
     if(tipHidden) tipHidden.value='EARSIV';
     if(tipBilgi){
-      tipBilgi.innerHTML='🏢 <b>Kurumsal</b> — EDM sorgu yapılmalı (Mükellef mi kontrol)';
+      tipBilgi.innerHTML='🏢 <b>Kurumsal</b> — EDM sorgu ile mükellef kontrol edin, veya manuel seçin';
       tipBilgi.style.color='#2563EB';
     }
+    faturaTipiButonGuncelle('EARSIV');
   } else {
     if(hidden) hidden.value='bireysel';
     if(tipHidden) tipHidden.value='EARSIV';
     if(tipBilgi){
-      tipBilgi.innerHTML='⏳ TC/VKN girin (10 hane = kurumsal, 11 hane = bireysel)';
+      tipBilgi.innerHTML='⏳ TC/VKN girin (10 hane = kurumsal, 11 hane = bireysel) veya manuel seçin';
       tipBilgi.style.color='var(--ink4)';
     }
+    faturaTipiButonGuncelle('EARSIV');
+  }
+}
+
+/** Manuel olarak fatura tipi seç (EDM sorgusu yapılamadığında) */
+function faturaTipiManuel(tip){
+  var tipHidden=document.getElementById('fat-yeni-tip');
+  var tipBilgi=document.getElementById('fat-tip-bilgi');
+  if(tipHidden) tipHidden.value=tip;
+  // Manuel seçim yapıldığını işaretle
+  window._faturaTipManuel = tip;
+  if(tipBilgi){
+    if(tip==='EFATURA'){
+      tipBilgi.innerHTML='✋ <b>Manuel seçim:</b> e-Fatura olarak kesilecek (müşteri mükellef olduğu onaylandı)';
+      tipBilgi.style.color='#16a34a';
+    } else {
+      tipBilgi.innerHTML='✋ <b>Manuel seçim:</b> e-Arşiv olarak kesilecek';
+      tipBilgi.style.color='#d97706';
+    }
+  }
+  faturaTipiButonGuncelle(tip);
+}
+
+/** Tip butonlarının görsel durumunu güncelle */
+function faturaTipiButonGuncelle(tip){
+  var earsivBtn=document.getElementById('fat-tip-earsiv-btn');
+  var efaturaBtn=document.getElementById('fat-tip-efatura-btn');
+  if(tip==='EFATURA'){
+    if(efaturaBtn){ efaturaBtn.style.background='rgba(22,163,74,.08)';efaturaBtn.style.color='#16a34a';efaturaBtn.style.borderColor='#16a34a';efaturaBtn.style.borderWidth='2px'; }
+    if(earsivBtn){ earsivBtn.style.background='#fff';earsivBtn.style.color='var(--ink4)';earsivBtn.style.borderColor='var(--bd)';earsivBtn.style.borderWidth='1.5px'; }
+  } else {
+    if(earsivBtn){ earsivBtn.style.background='rgba(217,119,6,.08)';earsivBtn.style.color='#d97706';earsivBtn.style.borderColor='#d97706';earsivBtn.style.borderWidth='2px'; }
+    if(efaturaBtn){ efaturaBtn.style.background='#fff';efaturaBtn.style.color='var(--ink4)';efaturaBtn.style.borderColor='var(--bd)';efaturaBtn.style.borderWidth='1.5px'; }
   }
 }
 
@@ -5882,13 +5924,15 @@ function faturaEDMSorgu(){
       if(tipBilgi) tipBilgi.innerHTML='✅ <b>e-Fatura</b> olarak kesilecek (müşteri GİB mükellefi)';
       if(tipBilgi) tipBilgi.style.color='#16a34a';
       if(tipHidden) tipHidden.value='EFATURA';
+      if(typeof faturaTipiButonGuncelle==='function') faturaTipiButonGuncelle('EFATURA');
     } else {
       // Mükellef değil → e-Arşiv
       if(sonucEl) sonucEl.innerHTML='<span style="color:#d97706">ℹ️ '+(r.mesaj||'Bulunamadı')+'</span>';
       if(aliasEl) aliasEl.value='';
-      if(tipBilgi) tipBilgi.innerHTML='📋 <b>e-Arşiv Fatura</b> olarak kesilecek';
+      if(tipBilgi) tipBilgi.innerHTML='📋 <b>e-Arşiv Fatura</b> olarak kesilecek (mükellef değil — manuel değiştirebilirsiniz)';
       if(tipBilgi) tipBilgi.style.color='#d97706';
       if(tipHidden) tipHidden.value='EARSIV';
+      if(typeof faturaTipiButonGuncelle==='function') faturaTipiButonGuncelle('EARSIV');
     }
   }).catch(function(err){
     if(btn){btn.disabled=false;btn.textContent='🔍 EDM\'den Sorgula';}
