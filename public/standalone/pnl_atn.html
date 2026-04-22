@@ -5604,10 +5604,33 @@ function saFaturaListenerBagla(){
 /* HARİCİ ÖDEME AL — nakit/kart/havale */
 /* ══ FATURA YÖNETİMİ ══ */
 var FATURALAR=[];
-try{FATURALAR=JSON.parse(localStorage.getItem('autonax_faturalar')||'[]');}catch(e){}
-function faturaKaydet(){try{localStorage.setItem('autonax_faturalar',JSON.stringify(FATURALAR));}catch(e){}}
+try{FATURALAR=JSON.parse(localStorage.getItem('autonax_faturalar')||'[]');}catch(e){console.error('Autonax fatura yükleme:',e)}
 
-function faturaSayfasiYukle(){faturaKPIGuncelle();faturaListeYukle();}
+/** localStorage'dan FATURALAR'ı yeniden yükle - sayfa yenilendiğinde veya dış değişiklik durumunda */
+function faturaStorageYukle(){
+  try{
+    var raw=localStorage.getItem('autonax_faturalar');
+    if(raw){
+      var parsed=JSON.parse(raw);
+      if(Array.isArray(parsed)) FATURALAR=parsed;
+    }
+  }catch(e){console.error('Autonax fatura storage yükleme:',e);}
+}
+
+function faturaKaydet(){
+  try{
+    localStorage.setItem('autonax_faturalar',JSON.stringify(FATURALAR));
+  }catch(e){
+    console.error('Autonax fatura kaydetme:',e);
+    toast('⚠️ Fatura kaydedilemedi: '+e.message,'red');
+  }
+}
+
+function faturaSayfasiYukle(){
+  faturaStorageYukle(); // Her sayfa yüklemesinde storage'dan tazele
+  faturaKPIGuncelle();
+  faturaListeYukle();
+}
 
 function faturaKPIGuncelle(){
   var el=document.getElementById('fatura-kpiler');if(!el)return;
