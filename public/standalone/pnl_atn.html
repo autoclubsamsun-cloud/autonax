@@ -6006,10 +6006,17 @@ function faturaEDMSorgu(){
       if(tipHidden) tipHidden.value='EFATURA';
       if(typeof faturaTipiButonGuncelle==='function') faturaTipiButonGuncelle('EFATURA');
     } else {
-      // Mükellef değil → e-Arşiv
-      if(sonucEl) sonucEl.innerHTML='<span style="color:#d97706">ℹ️ '+(r.mesaj||'Bulunamadı')+'</span>';
+      // Mükellef bulunamadı veya sorgu yapılamadı
+      var isTC=(no.length===11);
+      var mesajMetni=(r.mesaj||'Bulunamadı');
+      // TC için backend sorguyu desteklemiyorsa anlaşılır mesaj
+      if(isTC && mesajMetni.indexOf('sorgulama')>-1){
+        if(sonucEl) sonucEl.innerHTML='<span style="color:#d97706">ℹ️ TC ile otomatik sorgu yapılamadı. Müşteriye sorun: e-Fatura mükellefi mi? Aşağıdan <b>manuel seçim</b> yapın.</span>';
+      } else {
+        if(sonucEl) sonucEl.innerHTML='<span style="color:#d97706">ℹ️ '+mesajMetni+' — mükellef değilse e-Arşiv, mükellef ise aşağıdan e-Fatura seçin</span>';
+      }
       if(aliasEl) aliasEl.value='';
-      if(tipBilgi) tipBilgi.innerHTML='📋 <b>e-Arşiv Fatura</b> olarak kesilecek (mükellef değil — manuel değiştirebilirsiniz)';
+      if(tipBilgi) tipBilgi.innerHTML='📋 <b>e-Arşiv Fatura</b> olarak kesilecek (mükellef değilse — müşteri mükellef ise <b>"e-Fatura"</b> butonuna basın)';
       if(tipBilgi) tipBilgi.style.color='#d97706';
       if(tipHidden) tipHidden.value='EARSIV';
       if(typeof faturaTipiButonGuncelle==='function') faturaTipiButonGuncelle('EARSIV');
