@@ -9,8 +9,41 @@
   <meta name="description" content="Premium PPF kaplama ve seramik araç koruma hizmetleri.">
   <meta property="og:image" content="/uploads/logo/og-image.jpg">
   <meta property="og:title" content="Autonax — Premium Araç Koruma">
+  <meta property="og:description" content="Premium PPF kaplama ve seramik araç koruma hizmetleri.">
+  <meta property="og:site_name" content="Autonax">
+  <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.autonax.com.tr">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Autonax — Premium Araç Koruma">
+  <meta name="twitter:description" content="Premium PPF kaplama ve seramik araç koruma hizmetleri.">
   <title>Autonax — Premium Araç Koruma</title>
+  <script>
+  /* ══ ERKEN SEO UYGULAMASI ══
+   * localStorage'daki SITE_AYARLAR'ı sayfa render olmadan önce title/meta'ya uygula.
+   * Böylece kullanıcı tarayıcı sekmesinde başta yanlış başlık görüp sonra değişim görmez.
+   */
+  (function(){
+    try {
+      var raw = localStorage.getItem('autonax_site_v1');
+      if(!raw) return;
+      var sa = JSON.parse(raw);
+      var g = sa.genel || {};
+      var seo = sa.seo || {};
+      var yeniTitle = seo.metaTitle || g.metaTitle || g.siteAdi;
+      var yeniDesc = seo.metaDesc || g.metaDesc || g.siteAciklama;
+      if(yeniTitle) document.title = yeniTitle;
+      // Meta tag güncelleyici
+      var updateMeta = function(sel, attr, val){
+        if(!val) return;
+        var el = document.querySelector(sel);
+        if(el) el.setAttribute(attr, val);
+      };
+      updateMeta('meta[name="description"]', 'content', yeniDesc);
+      updateMeta('meta[property="og:title"]', 'content', yeniTitle);
+      updateMeta('meta[property="og:description"]', 'content', yeniDesc);
+    } catch(e){}
+  })();
+  </script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -4090,10 +4123,51 @@ function siteAyarlariniUygula(sa) {
   if(an.istat3Sayi && hsNums[2]) { hsNums[2].innerHTML = an.istat3Sayi.replace('+','') + '<em>+</em>'; }
   if(an.istat3Etiket && hsLbls[2]) { hsLbls[2].innerHTML = an.istat3Etiket; }
 
-  // 4. SEO — Title ve Meta
-  if(seo && seo.metaTitle) document.title = seo.metaTitle;
-  var metaDesc = document.querySelector('meta[name="description"]');
-  if(metaDesc && seo.metaDesc) metaDesc.setAttribute('content', seo.metaDesc);
+  // 4. SEO — Title ve Meta (siteAdi, metaTitle ve metaDesc'ten birleşik üretim)
+  (function(){
+    // Title öncelik sırası: seo.metaTitle > genel.metaTitle > genel.siteAdi > mevcut
+    var yeniTitle = '';
+    if(seo && seo.metaTitle) yeniTitle = seo.metaTitle;
+    else if(g.metaTitle) yeniTitle = g.metaTitle;
+    else if(g.siteAdi) yeniTitle = g.siteAdi + (g.siteAciklama ? ' — ' + g.siteAciklama : '');
+    if(yeniTitle) document.title = yeniTitle;
+
+    // Meta description: seo.metaDesc > genel.metaDesc > genel.siteAciklama
+    var yeniDesc = '';
+    if(seo && seo.metaDesc) yeniDesc = seo.metaDesc;
+    else if(g.metaDesc) yeniDesc = g.metaDesc;
+    else if(g.siteAciklama) yeniDesc = g.siteAciklama;
+
+    // <meta name="description">
+    var metaDesc = document.querySelector('meta[name="description"]');
+    if(!metaDesc){ metaDesc = document.createElement('meta'); metaDesc.name = 'description'; document.head.appendChild(metaDesc); }
+    if(yeniDesc) metaDesc.setAttribute('content', yeniDesc);
+
+    // Open Graph (sosyal paylaşım)
+    var ogTagUpdate = function(property, val){
+      if(!val) return;
+      var el = document.querySelector('meta[property="'+property+'"]');
+      if(!el){ el = document.createElement('meta'); el.setAttribute('property', property); document.head.appendChild(el); }
+      el.setAttribute('content', val);
+    };
+    if(yeniTitle) ogTagUpdate('og:title', yeniTitle);
+    if(yeniDesc) ogTagUpdate('og:description', yeniDesc);
+    if(g.siteAdi) ogTagUpdate('og:site_name', g.siteAdi);
+    if(g.domain) ogTagUpdate('og:url', (g.domain.indexOf('http')===0 ? g.domain : 'https://'+g.domain));
+    if(sa.gorunurluk && sa.gorunurluk.ogImageUrl) ogTagUpdate('og:image', sa.gorunurluk.ogImageUrl);
+
+    // Twitter Card
+    var twTagUpdate = function(name, val){
+      if(!val) return;
+      var el = document.querySelector('meta[name="'+name+'"]');
+      if(!el){ el = document.createElement('meta'); el.setAttribute('name', name); document.head.appendChild(el); }
+      el.setAttribute('content', val);
+    };
+    twTagUpdate('twitter:card', 'summary_large_image');
+    if(yeniTitle) twTagUpdate('twitter:title', yeniTitle);
+    if(yeniDesc) twTagUpdate('twitter:description', yeniDesc);
+    if(sa.gorunurluk && sa.gorunurluk.ogImageUrl) twTagUpdate('twitter:image', sa.gorunurluk.ogImageUrl);
+  })();
 
   // 5. LOGO — URL varsa görseli yükle, yoksa text kalsın
   var dlogo = document.querySelector('.dlogo');
@@ -4112,12 +4186,7 @@ function siteAyarlariniUygula(sa) {
     });
   }
 
-  // SEO title güncelle
-  if(sa.genel && sa.genel.metaTitle) document.title = sa.genel.metaTitle;
-  var metaDesc = document.querySelector('meta[name="description"]');
-  if(metaDesc && sa.genel && sa.genel.metaDesc) metaDesc.content = sa.genel.metaDesc;
-  var ogImg = document.querySelector('meta[property="og:image"]');
-  if(ogImg && sa.gorunurluk && sa.gorunurluk.ogImageUrl) ogImg.content = sa.gorunurluk.ogImageUrl;
+  // SEO update blocks moved above into unified SEO block
 
   // 6. MARKA KARTLARİ — dinamik güncelle
   if(sa.anaSayfa && sa.anaSayfa.markaKartlari && sa.anaSayfa.markaKartlari.length) {
