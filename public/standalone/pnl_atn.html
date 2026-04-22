@@ -7366,8 +7366,8 @@ window.onload=function(){
       setTimeout(function(){
         var sonSayfa=null;
         try{ sonSayfa=localStorage.getItem('autonax_son_sayfa'); }catch(e){}
-        if(sonSayfa && sonSayfa!=='dashboard' && document.getElementById('pg-'+sonSayfa) && typeof go==='function'){
-          go(sonSayfa);
+        if(sonSayfa && sonSayfa!=='dashboard' && document.getElementById('pg-'+sonSayfa) && typeof doPg==='function'){
+          doPg(sonSayfa);
         } else {
           dashboardYukle();
         }
