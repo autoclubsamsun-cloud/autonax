@@ -1,32 +1,19 @@
 /**
- * PayTR Direkt API Client
+ * PayTR Direkt API Client - DUZELTILMIS
+ *
+ * Duzeltme: Turkce karakter encoding sorunu (gecerli degisken adi)
+ * Duzeltme: card_type her zaman gonderilir (PayTR zorunlu tuttu)
  *
  * iFrame API'den farkli olarak kart bilgileri bizim form'dan alinir ve
  * PayTR'a POST edilir. PayTR 3D Secure sayfasina yonlendirir.
- *
- * Hash formulu (Direkt API):
- *   hash_str = merchant_id + user_ip + merchant_oid + email + payment_amount +
- *              payment_type + installment_count + currency + test_mode + non_3d
- *   paytr_token = base64(HMAC-SHA256(hash_str + merchant_salt, merchant_key))
- *
- * Bildirim hash formulu (callback):
- *   hash_str = merchant_oid + merchant_salt + status + total_amount
- *   hash = base64(HMAC-SHA256(hash_str, merchant_key))
  */
 
 import crypto from 'crypto';
 import { odemeAyariOku } from './ayarlar-okuyucu';
 
-// ─────────────────────────────────────────────────────────────────────────
-// PayTR Direkt API endpoint
-// ─────────────────────────────────────────────────────────────────────────
-
 const PAYTR_DIRECT_URL = 'https://www.paytr.com/odeme';
 
-// ─────────────────────────────────────────────────────────────────────────
 // Tipler
-// ─────────────────────────────────────────────────────────────────────────
-
 export interface SepetUrunu {
   ad: string;
   fiyat: number; // TL cinsinden (ornek: 100.50)
@@ -34,76 +21,42 @@ export interface SepetUrunu {
 }
 
 export interface DirectOdemeIstek {
-  /** Siparis benzersiz ID (bizim olusturdugumuz) */
   merchantOid: string;
-  /** Toplam tutar TL */
   tutar: number;
-  /** Musterinin email adresi */
   email: string;
-  /** Musterinin IP adresi */
   userIp: string;
-  /** Musterinin adi soyadi */
   musteriAdi: string;
-  /** Musterinin adresi */
   musteriAdres: string;
-  /** Musterinin telefonu */
   musteriTelefon: string;
-  /** Sepet - PayTR formatinda */
   sepet: SepetUrunu[];
-
-  /** Kart sahibi adi */
   ccOwner: string;
-  /** Kart numarasi (bosluksuz) */
   cardNumber: string;
-  /** Son kullanma ay (01-12) */
   expiryMonth: string;
-  /** Son kullanma yil (2 haneli - "26" icin 2026) */
   expiryYear: string;
-  /** CVV */
   cvv: string;
-
-  /** Taksit sayisi (0 = tek cekim, 2-12 = taksit) */
   installmentCount?: number;
-
-  /** Kart markasi (taksitli islem icin). Degerler: advantage, axess, combo, bonus, cardfinans, maximum, paraf, world, saglamkart */
   cardType?: string;
-
-  /** Opsiyonel not (musteri notu) */
   musteriNotu?: string;
 }
 
 export interface DirectOdemeYanit {
   basarili: boolean;
-  /** PayTR'dan gelen raw yanit */
   rawResponse?: string;
-  /** 3D Secure yonlendirme icin HTML (varsa) */
   html3ds?: string;
-  /** Sync mode yaniti varsa */
   status?: 'success' | 'failed';
   hata?: string;
   failedReasonCode?: string;
   failedReasonMsg?: string;
-  /** PayTR'a gonderilen merchant_oid */
   merchantOid: string;
 }
 
-// ─────────────────────────────────────────────────────────────────────────
 // Yardimcilar
-// ─────────────────────────────────────────────────────────────────────────
-
-/**
- * Sepeti PayTR formatina cevirir:
- * [[urun_adi, fiyat_str, adet], ...] -> base64(JSON)
- */
 function sepetiPayTRFormatinaCevir(sepet: SepetUrunu[]): string {
   const dizi = sepet.map((u) => [u.ad, u.fiyat.toFixed(2), u.adet]);
   const json = JSON.stringify(dizi);
   return Buffer.from(json).toString('base64');
 }
 
-/**
- * HMAC-SHA256 hash olusturur (Base64).
- */
 function hashOlustur(hashStr: string, merchantKey: string): string {
   return crypto
     .createHmac('sha256', merchantKey)
@@ -111,32 +64,50 @@ function hashOlustur(hashStr: string, merchantKey: string): string {
     .digest('base64');
 }
 
-/**
- * Tutari PayTR Direkt API formatina cevirir.
- * 
- * DIKKAT: Direkt API'de payment_amount TL cinsinden DECIMAL string olarak gonderilir.
- * Ornek: 100.50 TL -> "100.50"
- * 
- * NOT: iFrame API'de kurus formati kullanilir ama DIREKT API FARKLI!
- * PayTR resmi dokuman: https://dev.paytr.com/en/direkt-api/direkt-api-1-adim
- */
 function tutariPayTRFormatina(tutarTL: number): string {
   return tutarTL.toFixed(2);
 }
 
-// ─────────────────────────────────────────────────────────────────────────
-// PayTR Aktif mi kontrol
-// ─────────────────────────────────────────────────────────────────────────
+/**
+ * PayTR'nin kabul ettigi kart markalari.
+ * Eger musteri marka secmediyse PayTR'a bos string gidecegine,
+ * biz varsayilan olarak 'world' gondeririz (en yaygin).
+ */
+const GECERLI_KART_TIPLERI = [
+  'advantage', 'axess', 'combo', 'bonus', 'cardfinans',
+  'maximum', 'paraf', 'world', 'saglamkart'
+];
+
+/**
+ * Kart numarasinin ilk 6 hanesinden marka tahmini.
+ * PayTR BIN API'si baslangicta cagirilmazsa fallback olarak kullanilir.
+ */
+function kartTipiTahminEt(cardNumber: string): string {
+  const temiz = cardNumber.replace(/\D/g, '');
+  const bin = temiz.substring(0, 6);
+
+  // Bonus kartlar (Garanti, Deniz, ING)
+  if (/^(4824|4355|4539|5571|5300|5446)/.test(bin)) return 'bonus';
+  // World kartlar (Yapi Kredi, Vakifbank)
+  if (/^(4158|4544|5451|5522|5528)/.test(bin)) return 'world';
+  // Axess (Akbank)
+  if (/^(4531|4546|4506|5104|5115)/.test(bin)) return 'axess';
+  // Maximum (Is Bankasi)
+  if (/^(4258|4531|5127|5279|5313)/.test(bin)) return 'maximum';
+  // CardFinans (QNB Finansbank)
+  if (/^(4056|4172|4921|5140|5167)/.test(bin)) return 'cardfinans';
+  // Paraf (Halkbank)
+  if (/^(4028|4144|5186|5223|5352)/.test(bin)) return 'paraf';
+
+  // Varsayilan - en yaygin kabul edilen
+  return 'world';
+}
 
 export async function payTRAktifMi(): Promise<boolean> {
   const ayar = await odemeAyariOku();
   if (!ayar) return false;
   return !!ayar.paytrAktif;
 }
-
-// ─────────────────────────────────────────────────────────────────────────
-// ANA FONKSIYON: Direkt API ile odeme baslat
-// ─────────────────────────────────────────────────────────────────────────
 
 export async function directOdemeBaslat(
   istek: DirectOdemeIstek
@@ -164,20 +135,16 @@ export async function directOdemeBaslat(
   const merchantSalt = ayar.paytrMerchantSalt;
   const testMode = ayar.paytrTestMod ? '1' : '0';
 
-  // Tutari Direkt API formatina cevir (TL decimal string)
   const paymentAmount = tutariPayTRFormatina(istek.tutar);
-
-  // Sepeti encode et
   const userBasket = sepetiPayTRFormatinaCevir(istek.sepet);
 
-  // Taksit - 0 ise tek cekim
   const installmentCount = istek.installmentCount && istek.installmentCount > 1
     ? istek.installmentCount.toString()
     : '0';
 
   const paymentType = 'card';
   const currency = 'TL';
-  const non3d = '0'; // 3D Secure aktif (0 = 3DS var, 1 = non-3DS)
+  const non3d = '0';
 
   // Hash string olusumu
   const hashStr =
@@ -194,7 +161,22 @@ export async function directOdemeBaslat(
 
   const paytrToken = hashOlustur(hashStr + merchantSalt, merchantKey);
 
-  // POST form data olustur
+  // === CARD TYPE BELIRLEME (her zaman gonderilir) ===
+  let kartTipi = 'world'; // default
+  if (istek.cardType) {
+    const normalize = istek.cardType.toLowerCase().replace(/\s/g, '');
+    if (GECERLI_KART_TIPLERI.indexOf(normalize) >= 0) {
+      kartTipi = normalize;
+    }
+  }
+  // Eger musteri marka secmediyse kart numarasindan tahmin et
+  if (!istek.cardType || kartTipi === 'world') {
+    const tahmin = kartTipiTahminEt(istek.cardNumber);
+    if (GECERLI_KART_TIPLERI.indexOf(tahmin) >= 0) {
+      kartTipi = tahmin;
+    }
+  }
+
   const postData: Record<string, string> = {
     merchant_id: merchantId,
     user_ip: istek.userIp,
@@ -216,24 +198,25 @@ export async function directOdemeBaslat(
     paytr_token: paytrToken,
     installment_count: installmentCount,
 
-    // Direkt API - kart bilgileri
     cc_owner: istek.ccOwner,
-    card_number: istek.cardNumber.replace(/\s/g, ''), // boslukları sil
+    card_number: istek.cardNumber.replace(/\s/g, ''),
     expiry_month: istek.expiryMonth.padStart(2, '0'),
     expiry_year: istek.expiryYear.length === 4
       ? istek.expiryYear.slice(-2)
       : istek.expiryYear,
     cvv: istek.cvv,
+
+    // card_type HER ZAMAN gonderilir (PayTR zorunlu tuttu)
+    card_type: kartTipi,
   };
 
-  // card_type: PayTR taksit icin bekliyor (advantage, axess, bonus, cardfinans, maximum, paraf, world, saglamkart, combo)
-  if (istek.cardType) {
-    const geçerli = ['advantage', 'axess', 'combo', 'bonus', 'cardfinans', 'maximum', 'paraf', 'world', 'saglamkart'];
-    const normalize = istek.cardType.toLowerCase().replace(/\s/g, '');
-    if (geçerli.includes(normalize)) {
-      postData.card_type = normalize;
-    }
-  }
+  console.log('[PayTR Direct] Istek:', {
+    merchant_oid: istek.merchantOid,
+    payment_amount: paymentAmount,
+    installment_count: installmentCount,
+    card_type: kartTipi,
+    bin: istek.cardNumber.replace(/\s/g, '').substring(0, 6),
+  });
 
   try {
     const body = new URLSearchParams(postData).toString();
@@ -248,8 +231,6 @@ export async function directOdemeBaslat(
 
     const rawText = await response.text();
 
-    // PayTR yaniti HTML (3DS yonlendirme) veya JSON (sync_mode=1 ile hata) olabilir
-    // JSON olup olmadigini deneyerek anla
     let jsonResponse: {
       status?: string;
       reason?: string;
@@ -263,10 +244,8 @@ export async function directOdemeBaslat(
       // JSON parse edilemedi - muhtemelen HTML (3DS redirect)
     }
 
-    // JSON ise - hata var demek
     if (jsonResponse) {
       if (jsonResponse.status === 'success') {
-        // Sync mode'da basarili oldu (3DS disinda)
         return {
           basarili: true,
           status: 'success',
@@ -285,8 +264,6 @@ export async function directOdemeBaslat(
       };
     }
 
-    // JSON degilse - muhtemelen 3DS HTML'i dondu
-    // Bu HTML'i musteriye gosterecegiz (3DS banka ekrani)
     return {
       basarili: true,
       html3ds: rawText,
@@ -303,14 +280,6 @@ export async function directOdemeBaslat(
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────
-// Bildirim hash dogrulama
-// ─────────────────────────────────────────────────────────────────────────
-
-/**
- * PayTR'dan gelen callback'i dogrular.
- * hash = base64(HMAC-SHA256(merchant_oid + merchant_salt + status + total_amount, merchant_key))
- */
 export async function bildirimHashDogrula(params: {
   merchantOid: string;
   status: string;
@@ -329,10 +298,6 @@ export async function bildirimHashDogrula(params: {
   return expectedHash === params.hash;
 }
 
-// ─────────────────────────────────────────────────────────────────────────
-// Site URL yardimci
-// ─────────────────────────────────────────────────────────────────────────
-
 function getSiteUrl(): string {
   const url =
     process.env.NEXT_PUBLIC_SITE_URL ||
@@ -341,10 +306,6 @@ function getSiteUrl(): string {
   const clean = url.replace(/\/$/, '');
   return clean.startsWith('http') ? clean : `https://${clean}`;
 }
-
-// ─────────────────────────────────────────────────────────────────────────
-// Siparis ID olustur
-// ─────────────────────────────────────────────────────────────────────────
 
 export function siparisIdOlustur(): string {
   const zamanDamgasi = Date.now();
