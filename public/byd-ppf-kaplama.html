@@ -104,7 +104,7 @@
     } catch(e){}
 
     // 3. Backend API - asıl canlı kaynak
-    fetch('/api/ayarlar?_t='+Date.now(), {credentials:'same-origin'})
+    fetch('/api/ayarlar-public?_t='+Date.now())
       .then(function(r){ return r.json(); })
       .then(function(d){
         var markalarVerisi = (d && d.data && d.data.markalar_v1) || (d && d.markalar_v1) || null;

@@ -2518,8 +2518,8 @@ svg{display:block;flex-shrink:0}
           }
         } catch(e){}
 
-        // 2. Asıl kaynak: backend /api/ayarlar
-        fetch('/api/ayarlar?_t='+Date.now(), {credentials:'same-origin'})
+        // 2. Asıl kaynak: backend /api/ayarlar-public (giriş gerektirmez)
+        fetch('/api/ayarlar-public?_t='+Date.now())
           .then(function(r){ return r.json(); })
           .then(function(d){
             var depo = (d && d.data && d.data.markalar_v1) || (d && d.markalar_v1) || null;
@@ -5000,13 +5000,14 @@ function siteAyarlariniCek() {
     if(raw) siteAyarlariniUygula(JSON.parse(raw));
   } catch(e) {}
   
-  // Sonra API'den güncel verileri çek
-  fetch('/api/ayarlar')
+  // Sonra API'den güncel verileri çek (public endpoint - giriş gerektirmez)
+  fetch('/api/ayarlar-public')
     .then(function(r){ return r.json(); })
     .then(function(res){
       var sa = null;
-      if(res.success && res.site_ayarlar) {
-        sa = res.site_ayarlar; // Panel'den kaydedilmiş tam yapı
+      var siteAyar = res && res.data && res.data.site_ayarlar;
+      if(res.success && siteAyar) {
+        sa = siteAyar; // Panel'den kaydedilmiş tam yapı
       } else if(res.success && res.data) {
         // Eski basit yapıyı SITE_AYARLAR formatına dönüştür
         var data = res.data;
