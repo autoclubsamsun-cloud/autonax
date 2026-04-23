@@ -249,8 +249,9 @@ img{max-width:100%;height:auto;display:block}
 @media(max-width:768px){.topbar{font-size:10px}.topbar-info{gap:10px}}
 
 /* ══ HEADER ══ */
-.header{background:#fff;border-bottom:1px solid var(--bd);padding:14px 0;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.04)}
-.header .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.header{background:#fff;border-bottom:1px solid var(--bd);padding:14px 0;position:sticky;top:48px;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+@media(max-width:600px){.header{top:42px}}
+.header .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .logo{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:6px;color:var(--r);text-decoration:none;line-height:1}
 .logo:hover{color:var(--rd)}
 .breadcrumb{font-size:12px;color:var(--ink4);letter-spacing:.5px;text-transform:uppercase}
@@ -258,12 +259,12 @@ img{max-width:100%;height:auto;display:block}
 .breadcrumb a:hover{color:var(--r)}
 .breadcrumb-sep{margin:0 8px;color:var(--ink5)}
 .header-cta{display:flex;gap:10px;align-items:center}
-.header-btn{padding:10px 18px;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;cursor:pointer;transition:all .2s;border:none;white-space:nowrap}
+.header-btn{padding:10px 18px;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;cursor:pointer;transition:all .2s;border:none;white-space:nowrap;min-height:40px;touch-action:manipulation}
 .header-btn.primary{background:var(--r);color:#fff}
 .header-btn.primary:hover{background:var(--rd);transform:translateY(-1px)}
 .header-btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
 .header-btn.ghost:hover{background:var(--ink);color:#fff}
-@media(max-width:768px){.breadcrumb{display:none}.header-btn.ghost{display:none}.logo{font-size:24px;letter-spacing:4px}}
+@media(max-width:768px){.header-btn.ghost{display:none}.logo{font-size:24px;letter-spacing:4px}.breadcrumb{font-size:10.5px;letter-spacing:.3px;order:10;width:100%;flex-basis:100%;padding-top:8px;border-top:1px solid var(--bd);margin-top:4px}.breadcrumb-sep{margin:0 4px}.breadcrumb-home::before{font-size:12px}}
 
 /* ══ HERO ══ */
 .togg-hero{position:relative;background:linear-gradient(135deg,#0D0D0D 0%,#1A1A1A 70%,#2a0a0f 100%);color:#fff;padding:64px 0 80px;overflow:hidden}
@@ -276,13 +277,17 @@ img{max-width:100%;height:auto;display:block}
 .togg-hero-sub{font-size:17px;line-height:1.6;color:#ccc;margin-bottom:28px;max-width:540px}
 .togg-hero-sub b{color:#fff}
 .togg-hero-btns{display:flex;gap:12px;flex-wrap:wrap}
-.hero-cta{padding:14px 28px;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;cursor:pointer;transition:all .25s;border:none;display:inline-flex;align-items:center;gap:8px;text-decoration:none}
+.hero-cta{padding:14px 28px;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;cursor:pointer;transition:all .25s;border:none;display:inline-flex;align-items:center;gap:8px;text-decoration:none;min-height:48px;touch-action:manipulation}
 .hero-cta.primary{background:var(--r);color:#fff}
 .hero-cta.primary:hover{background:var(--rd);transform:translateY(-2px);box-shadow:0 8px 24px rgba(176,28,46,.4)}
 .hero-cta.wa{background:#25D366;color:#fff}
 .hero-cta.wa:hover{background:#1eb954;transform:translateY(-2px)}
 .togg-hero-r{position:relative}
-.togg-visual{aspect-ratio:4/3;background:linear-gradient(135deg,#1a1a1a,#0a0a0a);border-radius:20px;border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.togg-visual{aspect-ratio:4/3;background:linear-gradient(135deg,#1a1a1a,#0a0a0a);border-radius:20px;border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;transition:aspect-ratio .3s}
+/* Instagram Reel / TikTok için dikey format (9:16) */
+.togg-visual.togg-visual-reel{aspect-ratio:9/16;max-width:380px;margin:0 auto}
+@media(max-width:900px){.togg-visual.togg-visual-reel{max-width:300px}}
+@media(max-width:480px){.togg-visual.togg-visual-reel{max-width:260px}}
 .togg-visual::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 20px,rgba(255,255,255,.02) 20px,rgba(255,255,255,.02) 21px);pointer-events:none}
 .togg-visual img{width:100%;height:100%;object-fit:cover;border-radius:20px}
 .togg-placeholder{text-align:center;padding:30px}
@@ -325,11 +330,20 @@ img{max-width:100%;height:auto;display:block}
 .paket-price-note{font-size:11px;color:var(--ink4);margin-bottom:20px;text-transform:uppercase;letter-spacing:.5px}
 .paket-list{list-style:none;margin-bottom:24px;padding:0}
 .paket-list li{padding:7px 0;font-size:13px;color:var(--ink2);display:flex;align-items:flex-start;gap:8px}
-.paket-list li::before{content:"✓";color:var(--g);font-weight:700;flex-shrink:0;margin-top:1px}
-.paket-btn{width:100%;padding:12px;background:var(--ink);color:#fff;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;cursor:pointer;transition:all .2s}
-.paket-btn:hover{background:var(--r)}
-.paket.featured .paket-btn{background:var(--r)}
-.paket.featured .paket-btn:hover{background:var(--rd)}
+.paket-list li::before{content:"";width:16px;height:16px;flex-shrink:0;margin-top:2px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231a6b3c' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>") center/contain no-repeat}
+.paket-btn{padding:12px 14px;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1.2px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;min-height:44px;touch-action:manipulation;white-space:nowrap}
+.paket-btn svg{width:16px;height:16px;flex-shrink:0}
+.paket-btn-wa{background:#25D366;color:#fff}
+.paket-btn-wa:hover{background:#1ea855;transform:translateY(-2px);box-shadow:0 8px 20px rgba(37,211,102,.3)}
+.paket-btn-rdv{background:var(--r);color:#fff}
+.paket-btn-rdv:hover{background:var(--rd);transform:translateY(-2px);box-shadow:0 8px 20px rgba(176,28,46,.3)}
+.paket.featured .paket-btn-rdv{background:var(--ink)}
+.paket.featured .paket-btn-rdv:hover{background:#000}
+.paket-btn-grp{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+@media(max-width:480px){
+  .paket-btn-grp{grid-template-columns:1fr}
+  .paket-btn{font-size:12.5px;padding:13px 12px}
+}
 @media(max-width:900px){.paket-grid{grid-template-columns:1fr;gap:20px;max-width:420px;margin:0 auto}}
 
 /* ══ GALERİ ══ */
@@ -386,7 +400,7 @@ img{max-width:100%;height:auto;display:block}
 .rf-field{display:flex;flex-direction:column}
 .rf-field.full{grid-column:1/-1}
 .rf-lbl{font-size:11px;color:var(--ink4);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600}
-.rf-inp{width:100%;padding:12px 14px;border:1.5px solid var(--bd);border-radius:8px;font-family:'Outfit',sans-serif;font-size:14px;outline:none;transition:border-color .2s;background:#fff}
+.rf-inp{width:100%;padding:12px 14px;border:1.5px solid var(--bd);border-radius:8px;font-family:'Outfit',sans-serif;font-size:16px;outline:none;transition:border-color .2s;background:#fff;-webkit-appearance:none;appearance:none}
 .rf-inp:focus{border-color:var(--r)}
 .rf-submit{width:100%;padding:15px;background:var(--r);color:#fff;border:none;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;transition:all .2s;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:10px}
 .rf-submit:hover{background:var(--rd);transform:translateY(-1px);box-shadow:0 10px 28px rgba(176,28,46,.3)}
@@ -412,6 +426,234 @@ img{max-width:100%;height:auto;display:block}
 .wa-sticky svg{width:22px;height:22px;fill:#fff}
 @keyframes wapulse{0%,100%{box-shadow:0 10px 30px rgba(37,211,102,.4)}50%{box-shadow:0 10px 30px rgba(37,211,102,.6),0 0 0 10px rgba(37,211,102,.1)}}
 @media(max-width:600px){.wa-sticky span{display:none}.wa-sticky{padding:14px;border-radius:50%}}
+
+/* ══ ALT SAYFA BANNER (Animasyonlu - Dikkat Çekici, STICKY) ══ */
+.alt-banner{
+  position:sticky;top:0;z-index:500;
+  background:linear-gradient(90deg,var(--r) 0%,#d62e42 50%,var(--r) 100%);
+  background-size:200% 100%;
+  color:#fff;padding:12px 20px;
+  overflow:hidden;
+  animation:bannerShift 5s linear infinite;
+  box-shadow:0 2px 12px rgba(0,0,0,.15);
+}
+@keyframes bannerShift{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.alt-banner .wrap{display:flex;align-items:center;justify-content:center;gap:18px;font-size:13px;font-weight:500;flex-wrap:wrap}
+.alt-banner-ico{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:28px;height:28px;background:rgba(255,255,255,.2);
+  border-radius:50%;flex-shrink:0;
+  color:#fff;
+  animation:wiggle 2s ease-in-out infinite;
+}
+.alt-banner-ico svg{width:16px;height:16px}
+@keyframes wiggle{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+.alt-banner-txt{flex:1;min-width:0;text-align:center;line-height:1.4}
+.alt-banner-txt b{font-weight:700}
+.alt-banner-txt .mob{display:none}
+.alt-banner-txt .desk{display:inline}
+.alt-banner-btn{
+  background:#fff;color:var(--ink);padding:7px 16px;border-radius:20px;
+  font-weight:700;font-size:12px;white-space:nowrap;
+  border:none;cursor:pointer;letter-spacing:.5px;
+  text-decoration:none;display:inline-flex;align-items:center;gap:6px;
+  transition:all .2s;
+  animation:pulse 2s ease-in-out infinite;
+  flex-shrink:0;
+}
+.alt-banner-btn:hover{background:var(--ink);color:#fff;transform:translateX(4px)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.5)}50%{box-shadow:0 0 0 8px rgba(255,255,255,0)}}
+.alt-banner-btn svg{width:14px;height:14px;animation:arrowMove 1.5s ease-in-out infinite}
+@keyframes arrowMove{0%,100%{transform:translateX(0)}50%{transform:translateX(3px)}}
+/* Mobil: kısa tek satır, büyük dokunma alanı */
+@media(max-width:600px){
+  .alt-banner{padding:10px 12px}
+  .alt-banner .wrap{gap:8px;font-size:11.5px;flex-wrap:nowrap}
+  .alt-banner-ico{width:22px;height:22px}
+  .alt-banner-ico svg{width:13px;height:13px}
+  .alt-banner-txt{text-align:left;line-height:1.3}
+  .alt-banner-txt .desk{display:none}
+  .alt-banner-txt .mob{display:inline}
+  .alt-banner-btn{padding:7px 11px;font-size:10.5px;letter-spacing:.3px;min-height:34px}
+  .alt-banner-btn svg{width:11px;height:11px}
+}
+/* Çok küçük ekran: buton metni kısalt */
+@media(max-width:380px){
+  .alt-banner .wrap{gap:6px}
+  .alt-banner-txt{font-size:11px}
+  .alt-banner-btn{padding:6px 10px;font-size:10px}
+}
+
+/* ══ BREADCRUMB GÜÇLENDİRİLDİ ══ */
+.breadcrumb{font-size:13px;color:var(--ink4);letter-spacing:.5px;text-transform:uppercase;font-weight:600}
+.breadcrumb a{color:var(--ink4);transition:all .2s;display:inline-flex;align-items:center;gap:4px}
+.breadcrumb a:hover{color:var(--r);transform:translateY(-1px)}
+.breadcrumb-home{color:var(--r) !important;font-weight:700}
+.breadcrumb-home::before{content:"";display:inline-block;width:14px;height:14px;margin-right:6px;vertical-align:-2px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23B01C2E' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/><polyline points='9 22 9 12 15 12 15 22'/></svg>") center/contain no-repeat}
+.breadcrumb strong{color:var(--ink);font-weight:700}
+
+/* ══ DİĞER MARKALAR BÖLÜMÜ (animasyonlu) ══ */
+.diger-sec{background:linear-gradient(180deg,var(--bg) 0%,#fff 100%);padding:72px 0;position:relative;overflow:hidden}
+.diger-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;max-width:1200px;margin:32px auto 0}
+@media(max-width:768px){
+  .diger-sec{padding:48px 0}
+  .diger-grid{grid-template-columns:repeat(2,1fr);gap:10px;margin-top:24px}
+}
+@media(max-width:380px){
+  .diger-grid{grid-template-columns:1fr;gap:10px}
+}
+
+/* Reduced motion - kullanıcı animasyon istemiyorsa kapat */
+@media(prefers-reduced-motion: reduce){
+  .alt-banner{animation:none}
+  .alt-banner-ico{animation:none}
+  .alt-banner-btn{animation:none}
+  .alt-banner-btn svg{animation:none}
+  .wa-sticky{animation:none}
+  .diger-kart{opacity:1 !important;transform:none !important;animation:none !important}
+  .diger-kart:hover{transform:none !important}
+  *,*::before,*::after{animation-duration:.01s !important;transition-duration:.01s !important}
+}
+
+/* ══ MOBIL ALT TAB BAR (Desktop.html ile uyumlu) ══ */
+.mbnav{
+  display:none;position:fixed;bottom:0;left:0;right:0;
+  background:#fff;border-top:1px solid var(--bd);z-index:400;
+  height:60px;box-shadow:0 -4px 20px rgba(0,0,0,.08);
+  padding-bottom:env(safe-area-inset-bottom,0);
+}
+.mbnav-in{display:flex;height:60px;max-width:500px;margin:0 auto}
+.mbi{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  cursor:pointer;text-decoration:none;color:inherit;
+  transition:all .2s;min-height:44px;touch-action:manipulation;
+}
+.mbi svg{width:22px;height:22px;stroke:var(--ink4);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;transition:all .2s}
+.mbi span{font-size:10px;color:var(--ink4);font-weight:600;letter-spacing:.2px}
+.mbi:active{transform:scale(.92)}
+.mbi:hover svg{stroke:var(--r)}
+.mbi:hover span{color:var(--r)}
+.mbi.on svg{stroke:var(--r)}
+.mbi.on span{color:var(--r)}
+
+/* Orta büyük (PPF Paketleri) buton */
+.mbctr{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  cursor:pointer;margin-top:-14px;text-decoration:none;color:inherit;min-height:44px;
+  touch-action:manipulation;transition:all .2s;
+}
+.mbctr-btn{
+  width:48px;height:48px;background:var(--r);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;border:3px solid #fff;
+  box-shadow:0 6px 16px rgba(176,28,46,.35);
+  transition:all .25s;
+  animation:mbctrPulse 2.5s infinite;
+}
+.mbctr-btn svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round}
+.mbctr span{font-size:10px;color:var(--r);font-weight:700;letter-spacing:.3px}
+.mbctr:active .mbctr-btn{transform:scale(.9)}
+.mbctr:hover .mbctr-btn{transform:translateY(-2px) scale(1.05)}
+@keyframes mbctrPulse{
+  0%,100%{box-shadow:0 6px 16px rgba(176,28,46,.35)}
+  50%{box-shadow:0 6px 16px rgba(176,28,46,.5),0 0 0 8px rgba(176,28,46,.1)}
+}
+
+/* Mobilde göster */
+@media(max-width:900px){
+  .mbnav{display:block}
+  /* Content'ın alt bar'ın arkasında kalmaması için */
+  body{padding-bottom:60px}
+  /* Sticky WA butonu bar'ın üstüne */
+  .wa-sticky{bottom:72px}
+}
+
+/* Motion reduce - alt bar pulse kapat */
+@media(prefers-reduced-motion: reduce){
+  .mbctr-btn{animation:none}
+}
+.diger-kart{
+  background:#fff;border:2px solid var(--bd);border-radius:14px;
+  padding:20px;text-align:center;
+  transition:all .3s cubic-bezier(.25,.46,.45,.94);
+  cursor:pointer;position:relative;overflow:hidden;
+  text-decoration:none;color:inherit;
+  min-height:140px;
+  display:flex;flex-direction:column;justify-content:center;
+}
+@media(max-width:768px){
+  .diger-kart{padding:16px 12px;min-height:120px}
+  .diger-kart-icon{width:44px;height:44px;font-size:17px;margin-bottom:8px}
+  .diger-kart-ad{font-size:19px}
+  .diger-kart-sub{font-size:10px}
+  .diger-kart-ok{width:22px;height:22px;bottom:8px;right:8px}
+  .diger-kart-ok svg{width:11px;height:11px}
+}
+.diger-kart::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:4px;
+  background:var(--r);transform:scaleX(0);transform-origin:left;
+  transition:transform .3s;
+}
+.diger-kart:hover{
+  transform:translateY(-6px) scale(1.02);
+  border-color:var(--r);
+  box-shadow:0 20px 40px rgba(176,28,46,.15);
+}
+.diger-kart:hover::before{transform:scaleX(1)}
+.diger-kart-icon{
+  width:56px;height:56px;margin:0 auto 12px;
+  background:rgba(176,28,46,.08);color:var(--r);
+  border-radius:14px;display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;
+  transition:all .3s;
+}
+.diger-kart:hover .diger-kart-icon{
+  background:var(--r);color:#fff;transform:rotate(-5deg) scale(1.1);
+}
+.diger-kart-ad{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1.5px;color:var(--ink);margin-bottom:4px}
+.diger-kart-sub{font-size:11px;color:var(--ink4);text-transform:uppercase;letter-spacing:.5px}
+.diger-kart-ok{
+  position:absolute;bottom:12px;right:12px;
+  width:28px;height:28px;background:var(--ink);color:#fff;
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  opacity:0;transform:translateX(-8px);transition:all .3s;
+}
+.diger-kart:hover .diger-kart-ok{opacity:1;transform:translateX(0);background:var(--r)}
+.diger-kart-ok svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5}
+
+/* Zıplama animasyonu (giriş için - IntersectionObserver ile tetiklenecek) */
+.diger-kart{opacity:0;transform:translateY(30px)}
+.diger-kart.in-view{animation:kartZipla .6s cubic-bezier(.34,1.56,.64,1) forwards}
+.diger-kart.in-view:nth-child(1){animation-delay:.05s}
+.diger-kart.in-view:nth-child(2){animation-delay:.12s}
+.diger-kart.in-view:nth-child(3){animation-delay:.19s}
+.diger-kart.in-view:nth-child(4){animation-delay:.26s}
+.diger-kart.in-view:nth-child(5){animation-delay:.33s}
+.diger-kart.in-view:nth-child(6){animation-delay:.4s}
+.diger-kart.in-view:nth-child(7){animation-delay:.47s}
+@keyframes kartZipla{
+  0%{opacity:0;transform:translateY(30px) scale(.9)}
+  60%{opacity:1;transform:translateY(-8px) scale(1.05)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+
+/* Ana siteye dön büyük buton */
+.anasayfa-btn{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:16px 32px;background:var(--ink);color:#fff;
+  border-radius:50px;font-family:'Bebas Neue',sans-serif;
+  font-size:15px;letter-spacing:2px;text-decoration:none;
+  margin-top:28px;transition:all .3s;
+  box-shadow:0 8px 24px rgba(0,0,0,.15);
+}
+.anasayfa-btn:hover{
+  background:var(--r);transform:translateY(-3px);
+  box-shadow:0 12px 32px rgba(176,28,46,.3);
+}
+.anasayfa-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.5;transition:transform .3s}
+.anasayfa-btn:hover svg{transform:translateX(-4px)}
+@media(max-width:768px){
+  .anasayfa-btn{padding:14px 24px;font-size:13px;letter-spacing:1.2px;width:100%;justify-content:center;box-sizing:border-box}
+}
 
 /* ══ SVG ICON STILLERI ══ */
 .ic{width:1.2em;height:1.2em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;vertical-align:middle}
@@ -474,7 +716,28 @@ img{max-width:100%;height:auto;display:block}
   <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></symbol>
   <!-- Shield with check (güven) -->
   <symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></symbol>
+  <!-- Info / Lightbulb -->
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></symbol>
+  <!-- Home -->
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></symbol>
+  <!-- Lightbulb -->
+  <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7A5 5 0 0 1 10 19h4a5 5 0 0 1 2-4.3A7 7 0 0 0 12 2z"/></symbol>
 </svg>
+
+<!-- ══ ALT SAYFA BANNER (Animasyonlu) ══ -->
+<div class="alt-banner">
+  <div class="wrap">
+    <span class="alt-banner-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7A5 5 0 0 1 10 19h4a5 5 0 0 1 2-4.3A7 7 0 0 0 12 2z"/></svg></span>
+    <div class="alt-banner-txt">
+      <span class="desk">Bu bir <b class="marka-adi">TOGG'a</b> özel sayfasıdır. Tüm hizmetler için:</span>
+      <span class="mob"><b class="marka-adi">TOGG'a</b> özel sayfa — Tüm hizmetler:</span>
+    </div>
+    <a href="/" class="alt-banner-btn">
+      ANA SİTE
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </a>
+  </div>
+</div>
 
 <!-- ══ TOPBAR ══ -->
 <div class="topbar">
@@ -494,11 +757,11 @@ img{max-width:100%;height:auto;display:block}
   <div class="wrap">
     <a href="/" class="logo">AUTONAX</a>
     <nav class="breadcrumb">
-      <a href="/">Ana Sayfa</a>
+      <a href="/" class="breadcrumb-home">Ana Site</a>
       <span class="breadcrumb-sep">›</span>
       <a href="/">PPF Kaplama</a>
       <span class="breadcrumb-sep">›</span>
-      <strong style="color:var(--ink)">Togg PPF Kaplama</strong>
+      <strong>Togg PPF Kaplama</strong>
     </nav>
     <div class="header-cta">
       <a href="#randevu" class="header-btn ghost">Randevu</a>
@@ -832,6 +1095,26 @@ img{max-width:100%;height:auto;display:block}
   </div>
 </section>
 
+<!-- ══ DİĞER MARKALAR ══ -->
+<section class="sec diger-sec" id="diger-markalar">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-tag">Diğer Markalar</div>
+      <h2 class="sec-title">Başka Araç Markası mı?</h2>
+      <p class="sec-sub">Autonax olarak <b>tüm markalara</b> PPF kaplama hizmeti veriyoruz. Aracınıza özel sayfamıza göz atın</p>
+    </div>
+    <div class="diger-grid" id="diger-grid">
+      <!-- Dinamik: JS doldurur, "togg" yerine mevcut markayı dışarıda bırakır -->
+    </div>
+    <div style="text-align:center">
+      <a href="/" class="anasayfa-btn">
+        <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        TÜM HİZMETLER İÇİN ANA SİTE
+      </a>
+    </div>
+  </div>
+</section>
+
 <!-- ══ CTA ══ -->
 <section class="cta-sec">
   <div class="wrap">
@@ -912,10 +1195,19 @@ img{max-width:100%;height:auto;display:block}
   // Global render fonksiyonu - fetch sonrası da çağrılabilir
   window.__autonaxRender = function(){
     var marka = window.__AUTONAX_MARKA;
+
+    // Marka verisi yoksa bile Diğer Markalar ve banner render edilsin
     if(!marka){
-      console.log('[Autonax] Marka verisi yok ('+MARKA_KOD+'), default içerik gösteriliyor');
-      return;
+      console.log('[Autonax] Marka verisi yok ('+MARKA_KOD+'), default içerik + diğer markalar gösteriliyor');
+      // Minimal mock - sadece diğer markalar ve banner için
+      marka = {
+        ad: MARKA_KOD.charAt(0).toUpperCase()+MARKA_KOD.slice(1),
+        paketler: null, galeri: null, yorumlar: null, sss: null, heroMedya: null
+      };
     }
+
+    // Her render'da zorunlu: Alt sayfa banner ve diğer markalar grid çalışsın.
+    // Diğer alanlar (hero içerik, paketler vb.) sadece panel verisi varsa çalışır.
 
     try {
       // HERO
@@ -939,11 +1231,37 @@ img{max-width:100%;height:auto;display:block}
         if(pSub) pSub.innerHTML = marka.heroAciklama; // HTML izin veriliyor (b, br)
       }
 
-      // Hero fotoğraf
-      if(marka.heroFoto){
+      // Hero medya (video veya foto)
+      var hm = marka.heroMedya;
+      // Backward compat: eski heroFoto varsa kullan
+      if(!hm && marka.heroFoto) hm = { tip:'foto', url:marka.heroFoto, autoplay:false };
+
+      if(hm && hm.url){
         var heroVis = document.querySelector('.togg-visual');
         if(heroVis){
-          heroVis.innerHTML = '<img src="'+e(marka.heroFoto)+'" alt="'+e(marka.ad)+' PPF Kaplama" style="width:100%;height:100%;object-fit:cover;border-radius:20px">';
+          if(hm.tip === 'foto'){
+            heroVis.innerHTML = '<img src="'+e(hm.url)+'" alt="'+e(marka.ad)+' PPF Kaplama" style="width:100%;height:100%;object-fit:cover;border-radius:20px">';
+          } else {
+            // Video
+            var v = videoUrlParse(hm.url);
+            if(v){
+              var autoplayParam = hm.autoplay ? '1' : '0';
+              if(v.tur === 'youtube'){
+                // YouTube autoplay + mute + loop + playsinline
+                var ytEmbed = v.embed + '&autoplay='+autoplayParam+'&mute=1&loop=1&playlist='+v.id+'&controls=1&playsinline=1';
+                heroVis.innerHTML = '<iframe src="'+ytEmbed+'" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen style="width:100%;height:100%;border:0;border-radius:20px;background:#000"></iframe>';
+              } else if(v.tur === 'instagram'){
+                // Instagram embed - dikey format, tam boy
+                heroVis.classList.add('togg-visual-reel'); // dikey için farklı class
+                heroVis.innerHTML = '<iframe src="'+v.embed+'" allowfullscreen scrolling="no" loading="eager" style="width:100%;height:100%;border:0;border-radius:20px;background:#000"></iframe>';
+              } else if(v.tur === 'tiktok'){
+                heroVis.classList.add('togg-visual-reel');
+                heroVis.innerHTML = '<iframe src="'+v.embed+'" allowfullscreen loading="eager" style="width:100%;height:100%;border:0;border-radius:20px;background:#000"></iframe>';
+              } else if(v.tur === 'vimeo'){
+                heroVis.innerHTML = '<iframe src="'+v.embed+'?autoplay='+autoplayParam+'&muted=1&loop=1&background=1" allowfullscreen style="width:100%;height:100%;border:0;border-radius:20px;background:#000"></iframe>';
+              }
+            }
+          }
         }
       }
 
@@ -976,7 +1294,10 @@ img{max-width:100%;height:auto;display:block}
             });
             html += '</ul>';
             var waMsg = encodeURIComponent(marka.ad+' için '+p.ad+' fiyatı öğrenmek istiyorum');
-            html += '<a href="https://wa.me/905457277172?text='+waMsg+'" class="paket-btn" style="display:block;text-align:center;text-decoration:none">FİYAT AL</a>';
+            html += '<div class="paket-btn-grp">';
+            html += '<a href="https://wa.me/905457277172?text='+waMsg+'" class="paket-btn paket-btn-wa" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.7.1-.2.3-.8.9-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.2-.5-2.3-1.5-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.3-.4.1-.2 0-.3 0-.5-.1-.1-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.2.2 2.1 3.2 5.2 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.3zM12 2C6.5 2 2 6.5 2 12c0 1.9.5 3.7 1.5 5.3L2 22l4.9-1.5c1.5.8 3.2 1.3 5.1 1.3 5.5 0 10-4.5 10-10S17.5 2 12 2z"/></svg>FİYAT AL</a>';
+            html += '<a href="javascript:void(0)" onclick="paketRandevuAl(\''+MARKA_KOD+'\',\''+e(p.ad||'').replace(/\'/g,"&#39;")+'\',\''+e(p.fiyat||'').replace(/\'/g,"&#39;")+'\')" class="paket-btn paket-btn-rdv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>RANDEVU AL</a>';
+            html += '</div>';
             html += '</div>';
           });
           paketGrid.innerHTML = html;
@@ -1156,6 +1477,76 @@ img{max-width:100%;height:auto;display:block}
         ctaH2.innerHTML = marka.ad+'\'unuzu Koruma<em>Zamanı Geldi</em>';
       }
 
+      // Alt sayfa banner - marka adı güncelle (hem desk hem mob)
+      var bannerMarkaSpans = document.querySelectorAll('.alt-banner-txt .marka-adi');
+      if(bannerMarkaSpans && bannerMarkaSpans.length && marka.ad){
+        bannerMarkaSpans.forEach(function(sp){
+          sp.textContent = marka.ad + "'a";
+        });
+      }
+
+      // Diğer Markalar grid - tüm diğer markaları göster, mevcut olanı hariç tut
+      var digerGrid = document.getElementById('diger-grid');
+      if(digerGrid){
+        // Tüm markaları topla: önce api/localStorage'dan dene
+        var tumMarkalar = null;
+        try {
+          var raw = localStorage.getItem('autonax_markalar_v1');
+          if(raw){
+            tumMarkalar = JSON.parse(raw);
+          }
+        } catch(ex){}
+
+        if(!tumMarkalar || Object.keys(tumMarkalar).length === 0){
+          // Fallback: bilinen 7 marka
+          tumMarkalar = {
+            togg:   {ad:'Togg',   renk:'#e11d48'},
+            byd:    {ad:'BYD',    renk:'#0ea5e9'},
+            chery:  {ad:'Chery',  renk:'#f59e0b'},
+            toyota: {ad:'Toyota', renk:'#dc2626'},
+            tesla:  {ad:'Tesla',  renk:'#334155'},
+            mg:     {ad:'MG',     renk:'#b91c1c'},
+            jaecoo: {ad:'Jaecoo', renk:'#059669'}
+          };
+        }
+
+        var html = '';
+        Object.keys(tumMarkalar).forEach(function(kod){
+          if(kod === MARKA_KOD) return; // mevcut olanı hariç tut
+          var mi = tumMarkalar[kod];
+          if(!mi || mi.aktif === false) return;
+          html += '<a href="/'+kod+'-ppf-kaplama.html" class="diger-kart">';
+          html += '<div class="diger-kart-icon">'+e((mi.ad||kod).substring(0,3).toUpperCase())+'</div>';
+          html += '<div class="diger-kart-ad">'+e(mi.ad||kod)+'</div>';
+          html += '<div class="diger-kart-sub">PPF Kaplama</div>';
+          html += '<div class="diger-kart-ok"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>';
+          html += '</a>';
+        });
+        digerGrid.innerHTML = html;
+
+        // IntersectionObserver ile zıplama animasyonu tetikle
+        try {
+          if('IntersectionObserver' in window){
+            var observer = new IntersectionObserver(function(entries){
+              entries.forEach(function(entry){
+                if(entry.isIntersecting){
+                  entry.target.classList.add('in-view');
+                  observer.unobserve(entry.target);
+                }
+              });
+            }, { threshold: 0.15 });
+            digerGrid.querySelectorAll('.diger-kart').forEach(function(k){
+              observer.observe(k);
+            });
+          } else {
+            // Fallback: hepsini direkt göster
+            digerGrid.querySelectorAll('.diger-kart').forEach(function(k){ k.classList.add('in-view'); });
+          }
+        } catch(obsErr){
+          digerGrid.querySelectorAll('.diger-kart').forEach(function(k){ k.classList.add('in-view'); });
+        }
+      }
+
       console.log('[Autonax] Sayfa render edildi: '+marka.ad+' (kaynak: '+window.__AUTONAX_MARKA_KAYNAK+')');
     } catch(err){
       console.error('[Autonax] Render hatası:', err);
@@ -1165,6 +1556,30 @@ img{max-width:100%;height:auto;display:block}
 </script>
 
 <script>
+/* ══════════════════════════════════════════════════════════════════
+   PAKET RANDEVU - Ana siteye yönlendir
+   Kullanıcı "RANDEVU AL" basınca:
+   - Seçilen paket bilgisi localStorage'a yazılır
+   - Ana siteye gidilir (desktop.html) + #sepet hash
+   - desktop.html hash'i görürse openSepet() çağırır, paketi ekler
+════════════════════════════════════════════════════════════════════ */
+function paketRandevuAl(markaKod, paketAd, paketFiyat){
+  try {
+    var secim = {
+      marka: markaKod,
+      markaAd: (window.__AUTONAX_MARKA && window.__AUTONAX_MARKA.ad) || markaKod,
+      paket: paketAd || '',
+      fiyat: paketFiyat || '',
+      tarih: Date.now(),
+      kaynak: 'marka-sayfasi'
+    };
+    localStorage.setItem('autonax_marka_paket_secim', JSON.stringify(secim));
+  } catch(e){}
+
+  // Ana siteye #randevu hash'i ile git — desktop.html orada sepet/randevu akışı başlatır
+  window.location.href = '/?paket='+encodeURIComponent(markaKod)+'#randevu';
+}
+
 /* Randevu gönderim - WhatsApp'a yönlendirir (marka dinamik) */
 function faturaRandevuGonder(form){
   var fd = new FormData(form);
@@ -1187,6 +1602,34 @@ function faturaRandevuGonder(form){
   window.open('https://wa.me/905457277172?text=' + encodeURIComponent(mesaj), '_blank');
 }
 </script>
+
+<!-- ══ MOBİL BOTTOM NAV (ana siteye yönlendirir) ══ -->
+<div class="mbnav" aria-label="Mobil navigasyon">
+  <div class="mbnav-in">
+    <a class="mbi" href="/" aria-label="Ana sayfa">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Anasayfa</span>
+    </a>
+    <a class="mbi" href="/hesabim.html" aria-label="Garajım">
+      <svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/><path d="M7 9.5h2v2H7z"/><path d="M15 9.5h2v2h-2z"/></svg>
+      <span>Garajım</span>
+    </a>
+    <a class="mbctr mbi-ppf on" href="#paketler" aria-label="PPF Paketleri">
+      <div class="mbctr-btn">
+        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/></svg>
+      </div>
+      <span>PPF Paketleri</span>
+    </a>
+    <a class="mbi" href="/#sepet" aria-label="Sepet">
+      <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      <span>Sepet</span>
+    </a>
+    <a class="mbi" href="/hesabim.html" aria-label="Hesabım">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Hesabım</span>
+    </a>
+  </div>
+</div>
 
 </body>
 </html>
