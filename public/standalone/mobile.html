@@ -70,7 +70,9 @@ body{min-height:100vh;padding-bottom:96px;font-weight:400}
 .ic{display:block;color:currentColor}
 
 /* ═══ HEADER ═══ */
-.hdr{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--bd);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;height:56px}
+.hdr{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--bd);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;height:60px}
+.logo-wrap{display:flex;align-items:center;gap:6px;text-decoration:none;color:inherit}
+.logo-wrap img{max-height:40px}
 .logo{font-family:var(--font-display);font-size:28px;letter-spacing:3px;color:#000;line-height:1;display:flex;align-items:center}
 .logo em{color:var(--r);font-style:normal;transform:skewX(-8deg);display:inline-block}
 .logo-dot{width:6px;height:6px;border-radius:50%;background:var(--r);margin-left:4px;box-shadow:0 0 10px var(--r-glow);animation:logoDot 2s ease-in-out infinite}
@@ -91,11 +93,11 @@ body{min-height:100vh;padding-bottom:96px;font-weight:400}
 .profil-pp-img{width:100%;height:100%;border-radius:50%;background:var(--grad-red);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:26px;color:#fff;letter-spacing:1px;box-shadow:inset 0 0 20px rgba(0,0,0,.25)}
 .profil-check{position:absolute;bottom:-2px;right:-2px;width:24px;height:24px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.1)}
 .profil-check .ic{width:22px;height:22px}
-.profil-stats{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding-top:14px;text-align:center}
+.profil-stats{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding-top:6px;text-align:center}
 .profil-stat{cursor:pointer;padding:4px 0;transition:transform .15s}
 .profil-stat:active{transform:scale(.9)}
-.profil-stat b{display:block;font-size:19px;font-weight:700;letter-spacing:-.3px;color:var(--ink)}
-.profil-stat span{font-size:11.5px;color:var(--ink3);margin-top:2px;display:block}
+.profil-stat b{display:block;font-size:20px;font-weight:700;letter-spacing:-.3px;color:var(--ink);line-height:1.1}
+.profil-stat span{font-size:10px;color:var(--ink3);margin-top:3px;display:block;line-height:1.2;font-weight:500;text-transform:uppercase;letter-spacing:.3px}
 .profil-info{margin-top:14px}
 .profil-ad{font-size:14.5px;font-weight:600;display:flex;align-items:center;gap:5px;line-height:1.2;color:var(--ink)}
 .profil-ad .ic{width:16px;height:16px}
@@ -332,7 +334,11 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--r);outline-offset:2
 <body>
 
 <header class="hdr">
-  <div class="logo">AUTO<em>NAX</em><span class="logo-dot"></span></div>
+  <a href="/" class="logo-wrap" style="text-decoration:none;display:flex;align-items:center;gap:8px">
+    <img src="/uploads/logo/favicon.png" alt="Autonax" style="height:36px;width:auto;display:block" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    <div class="logo" style="display:none">AUTO<em>NAX</em></div>
+    <span class="logo-dot"></span>
+  </a>
   <div class="hdr-icons">
     <div class="hdr-btn" onclick="bildirimAc()">
       <svg class="ic"><use href="#ic-bell"/></svg>
@@ -344,7 +350,9 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--r);outline-offset:2
     </div>
     <div class="hdr-avatar" onclick="profilAc()">
       <div class="hdr-avatar-ic">
-        <div class="hdr-avatar-bg">AN</div>
+        <div class="hdr-avatar-bg" style="background:#fff;padding:3px">
+          <img src="/uploads/logo/favicon.png" alt="Autonax" style="width:100%;height:100%;object-fit:contain" onerror="this.parentNode.innerHTML='AN';this.parentNode.style.background='var(--grad-red)';this.parentNode.style.padding='0';this.parentNode.style.color='#fff'">
+        </div>
       </div>
     </div>
   </div>
@@ -354,14 +362,26 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--r);outline-offset:2
   <div class="profil-ust">
     <div class="profil-pp">
       <div class="profil-pp-inner">
-        <div class="profil-pp-img">AN</div>
+        <div class="profil-pp-img" style="background:#fff;padding:8px">
+          <img src="/uploads/logo/favicon.png" alt="Autonax" style="width:100%;height:100%;object-fit:contain;display:block" onerror="this.parentNode.innerHTML='AN';this.parentNode.style.background='var(--grad-red)';this.parentNode.style.padding='0';this.parentNode.style.color='#fff';this.parentNode.style.fontFamily='var(--font-display)';this.parentNode.style.fontSize='26px';this.parentNode.style.display='flex';this.parentNode.style.alignItems='center';this.parentNode.style.justifyContent='center'">
+        </div>
       </div>
       <div class="profil-check"><svg class="ic"><use href="#ic-check"/></svg></div>
     </div>
     <div class="profil-stats">
-      <div class="profil-stat"><b>247</b><span>Araç</span></div>
-      <div class="profil-stat" onclick="takipcilerAc()"><b>17.8K</b><span>Takipçi</span></div>
-      <div class="profil-stat"><b id="marka-sayisi">—</b><span>Marka</span></div>
+      <div class="profil-stat">
+        <b>1.200<span style="color:var(--r)">+</span></b>
+        <span>Tamamlanan<br>Komple Kaplama</span>
+      </div>
+      <div class="profil-stat">
+        <div style="color:var(--r);font-size:10px;letter-spacing:1.5px;line-height:1">★★★★★</div>
+        <b style="margin-top:3px">4.9</b>
+        <span>Müşteri<br>Puanı</span>
+      </div>
+      <div class="profil-stat">
+        <b>10<span style="color:var(--r)">+</span></b>
+        <span>Yıl<br>Deneyim</span>
+      </div>
     </div>
   </div>
   <div class="profil-info">
@@ -553,9 +573,6 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--r);outline-offset:2
       var m = depo[k];
       return m && m.aktif !== false;
     });
-
-    var markaSay = document.getElementById('marka-sayisi');
-    if(markaSay) markaSay.textContent = aktifler.length;
 
     var html = '';
     aktifler.forEach(function(kod, idx){
