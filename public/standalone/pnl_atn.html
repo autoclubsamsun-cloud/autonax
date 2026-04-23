@@ -2749,6 +2749,7 @@ function rdvRenkStyle(r){
   var p=r.tarih.split('.'),rGun=parseInt(p[0]),rAy=parseInt(p[1])-1,rYil=parseInt(p[2]);
   var rdvMs=new Date(rYil,rAy,rGun).getTime();
   var gecmis=rdvMs<=nowMs;
+  if(r.odendi&&r.islem)return{bg:'rgba(22,163,74,.07)',border:'3px solid #16A34A',tag:'onay',txt:'✓ Tamamlandı',ekBtn:false,online:!!r.onlineOdeme};
   if(r.onlineOdeme&&r.odendi)return{bg:'rgba(22,163,74,.07)',border:'3px solid #16A34A',tag:'onay',txt:'✓ Tamamlandı',ekBtn:false,online:true};
   if(gecmis&&r.islem)return{bg:'rgba(22,163,74,.07)',border:'3px solid #16A34A',tag:'onay',txt:'✓ Tamamlandı',ekBtn:false,online:false};
   if(gecmis&&!r.islem)return{bg:'rgba(176,28,46,.07)',border:'3px solid #B01C2E',tag:'iptal',txt:'✗ İşlem Yapılmadı',ekBtn:true,online:false};
