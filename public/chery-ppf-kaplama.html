@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="build-version" content="v2025-04-23-full">
 
   <!-- ══════════════════════════════════════════════════════════════════
        DİNAMİK MARKA RENDER (EN BAŞTA ÇALIŞIR)
@@ -352,6 +356,40 @@ img{max-width:100%;height:auto;display:block}
 .galeri-item{aspect-ratio:1;background:linear-gradient(135deg,#1a1a1a,#2a2a2a);border-radius:12px;overflow:hidden;position:relative;cursor:pointer;transition:transform .25s}
 .galeri-item:hover{transform:scale(1.02)}
 .galeri-item img{width:100%;height:100%;object-fit:cover}
+
+/* ══ VIDEO THUMBNAIL (temiz, platformdan bağımsız) ══ */
+.galeri-item .video-thumb{position:relative;overflow:hidden}
+.galeri-item .video-thumb::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.1) 0%,rgba(0,0,0,.55) 100%);z-index:1;pointer-events:none}
+.video-play-ikon{
+  position:relative;z-index:2;
+  width:58px;height:58px;
+  background:rgba(255,255,255,.95);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 24px rgba(0,0,0,.4),0 0 0 0 rgba(255,255,255,.5);
+  transition:transform .25s;
+  animation:videoPlayPulse 2.4s ease-in-out infinite;
+}
+.video-play-ikon svg{width:26px;height:26px;color:var(--r);margin-left:3px}
+@keyframes videoPlayPulse{
+  0%,100%{box-shadow:0 4px 24px rgba(0,0,0,.4),0 0 0 0 rgba(255,255,255,.4)}
+  50%{box-shadow:0 4px 24px rgba(0,0,0,.4),0 0 0 14px rgba(255,255,255,0)}
+}
+.galeri-item:hover .video-play-ikon{transform:scale(1.12)}
+.video-etiket{
+  position:absolute;bottom:10px;left:10px;z-index:2;
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(0,0,0,.6);backdrop-filter:blur(8px);
+  color:#fff;padding:4px 10px;border-radius:20px;
+  font-size:10.5px;font-weight:600;letter-spacing:.2px;
+}
+.video-etiket svg{flex-shrink:0}
+@media(max-width:768px){
+  .video-play-ikon{width:50px;height:50px}
+  .video-play-ikon svg{width:22px;height:22px}
+  .video-etiket{font-size:9.5px;padding:3px 8px;bottom:8px;left:8px}
+}
+
 .galeri-ph{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#555;text-align:center;padding:20px}
 .galeri-ph .i{font-size:36px;opacity:.4;margin-bottom:6px}
 .galeri-ph .t{font-size:11px;letter-spacing:1px;text-transform:uppercase}
@@ -513,6 +551,27 @@ img{max-width:100%;height:auto;display:block}
   .diger-kart{opacity:1 !important;transform:none !important;animation:none !important}
   .diger-kart:hover{transform:none !important}
   *,*::before,*::after{animation-duration:.01s !important;transition-duration:.01s !important}
+}
+
+/* Hero reel - Instagram/TikTok tıklama alanı */
+.hero-reel-link{transition:transform .3s}
+.hero-reel-link:hover{transform:scale(1.02)}
+.hero-reel-play{
+  width:84px;height:84px;background:rgba(255,255,255,.95);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 12px 40px rgba(0,0,0,.3),0 0 0 0 rgba(255,255,255,.4);
+  animation:heroReelPulse 2.5s ease-in-out infinite;
+  transition:transform .3s;
+}
+.hero-reel-play svg{width:36px;height:36px;margin-left:5px}
+.hero-reel-link:hover .hero-reel-play{transform:scale(1.1)}
+@keyframes heroReelPulse{
+  0%,100%{box-shadow:0 12px 40px rgba(0,0,0,.3),0 0 0 0 rgba(255,255,255,.5)}
+  50%{box-shadow:0 12px 40px rgba(0,0,0,.3),0 0 0 24px rgba(255,255,255,0)}
+}
+@media(max-width:600px){
+  .hero-reel-play{width:68px;height:68px}
+  .hero-reel-play svg{width:28px;height:28px}
 }
 
 /* ══ MOBIL ALT TAB BAR (Desktop.html ile uyumlu) ══ */
@@ -1247,16 +1306,29 @@ img{max-width:100%;height:auto;display:block}
             if(v){
               var autoplayParam = hm.autoplay ? '1' : '0';
               if(v.tur === 'youtube'){
-                // YouTube autoplay + mute + loop + playsinline
+                // YouTube autoplay + mute + loop — temiz gömer, kontroller sade
                 var ytEmbed = v.embed + '&autoplay='+autoplayParam+'&mute=1&loop=1&playlist='+v.id+'&controls=1&playsinline=1';
                 heroVis.innerHTML = '<iframe src="'+ytEmbed+'" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen style="width:100%;height:100%;border:0;border-radius:20px;background:#000"></iframe>';
               } else if(v.tur === 'instagram'){
-                // Instagram embed - dikey format, tam boy
-                heroVis.classList.add('togg-visual-reel'); // dikey için farklı class
-                heroVis.innerHTML = '<iframe src="'+v.embed+'" allowfullscreen scrolling="no" loading="eager" style="width:100%;height:100%;border:0;border-radius:20px;background:#000"></iframe>';
+                // Instagram Reel — embed UI çok karmaşık, büyük thumbnail + play → tıklayınca Instagram'a git
+                heroVis.classList.add('togg-visual-reel');
+                heroVis.innerHTML = '<a href="'+e(hm.url)+'" target="_blank" rel="noopener" class="hero-reel-link" style="display:block;width:100%;height:100%;background:linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);border-radius:20px;position:relative;overflow:hidden;text-decoration:none">'
+                  + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px">'
+                  + '<div class="hero-reel-play">'
+                  + '<svg viewBox="0 0 24 24" fill="#bc1888"><polygon points="8,5 21,12 8,19"/></svg>'
+                  + '</div>'
+                  + '<div style="color:#fff;font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;text-shadow:0 2px 8px rgba(0,0,0,.4)">REEL\'İ İZLE</div>'
+                  + '<div style="color:rgba(255,255,255,.9);font-size:11px;display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4" fill="none" stroke="#bc1888" stroke-width="2"/><circle cx="18" cy="6" r="1.2" fill="#bc1888"/></svg>@autoclubsamsunmerkez</div>'
+                  + '</div>'
+                  + '</a>';
               } else if(v.tur === 'tiktok'){
                 heroVis.classList.add('togg-visual-reel');
-                heroVis.innerHTML = '<iframe src="'+v.embed+'" allowfullscreen loading="eager" style="width:100%;height:100%;border:0;border-radius:20px;background:#000"></iframe>';
+                heroVis.innerHTML = '<a href="'+e(hm.url)+'" target="_blank" rel="noopener" style="display:block;width:100%;height:100%;background:linear-gradient(135deg,#25f4ee 0%,#000 50%,#fe2c55 100%);border-radius:20px;position:relative;overflow:hidden;text-decoration:none">'
+                  + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px">'
+                  + '<div class="hero-reel-play"><svg viewBox="0 0 24 24" fill="#fe2c55"><polygon points="8,5 21,12 8,19"/></svg></div>'
+                  + '<div style="color:#fff;font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px">TIKTOK VIDEOSU</div>'
+                  + '</div>'
+                  + '</a>';
               } else if(v.tur === 'vimeo'){
                 heroVis.innerHTML = '<iframe src="'+v.embed+'?autoplay='+autoplayParam+'&muted=1&loop=1&background=1" allowfullscreen style="width:100%;height:100%;border:0;border-radius:20px;background:#000"></iframe>';
               }
@@ -1332,21 +1404,45 @@ img{max-width:100%;height:auto;display:block}
           if(item.tip === 'foto'){
             gEl.innerHTML = '<img src="'+e(item.url)+'" alt="'+e(marka.ad)+' PPF Samsun '+(idx+1)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.outerHTML=\'<div style=&quot;color:#666;font-size:11px;text-align:center;padding:20px&quot;>Foto yüklenemedi</div>\'">';
           } else {
-            // Video — embed iframe
+            // Video — tüm türler için temiz thumbnail + play button (Instagram iframe'i çok karmaşık)
             var v = videoUrlParse(item.url);
             if(v){
-              // Instagram için özel: direkt embed büyük olur, önce thumbnail göster click ile aç
-              if(v.tur === 'instagram'){
-                gEl.innerHTML = '<iframe src="'+v.embed+'" allowfullscreen scrolling="no" loading="lazy" style="width:100%;height:100%;border:0;background:#000"></iframe>';
+              var bgStyle = '';
+              var etiket = '';
+              var etiketIkon = '';
+              if(v.tur === 'youtube'){
+                bgStyle = 'background:url('+e(v.thumb)+') center/cover,linear-gradient(135deg,#ff0000 0%,#c00 100%)';
+                etiket = 'YouTube';
+                etiketIkon = '<svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1c.5-1.9.5-5.8.5-5.8s0-3.9-.5-5.8zM9.5 15.5v-7l6 3.5-6 3.5z"/></svg>';
+              } else if(v.tur === 'instagram'){
+                bgStyle = 'background:linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)';
+                etiket = 'Instagram';
+                etiketIkon = '<svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4" fill="none" stroke="#fff" stroke-width="2"/><circle cx="18" cy="6" r="1.2" fill="#fff"/></svg>';
               } else if(v.tur === 'tiktok'){
-                gEl.innerHTML = '<iframe src="'+v.embed+'" allowfullscreen loading="lazy" style="width:100%;height:100%;border:0;background:#000"></iframe>';
+                bgStyle = 'background:linear-gradient(135deg,#25f4ee 0%,#000 50%,#fe2c55 100%)';
+                etiket = 'TikTok';
+                etiketIkon = '<svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px"><path d="M16 2h3c.3 2.4 2 4 4 4v3c-1.5 0-3-.4-4-1.2V15a6 6 0 1 1-6-6v3a3 3 0 1 0 3 3V2z"/></svg>';
+              } else if(v.tur === 'vimeo'){
+                bgStyle = 'background:linear-gradient(135deg,#1ab7ea 0%,#0c6b9e 100%)';
+                etiket = 'Vimeo';
+              }
+
+              // YouTube için thumbnail varsa click → yerel embed
+              if(v.tur === 'youtube' && v.thumb){
+                gEl.innerHTML = '<div class="video-thumb" onclick="this.outerHTML=\'<iframe src=&quot;'+e(v.embed)+'&autoplay=1&quot; allowfullscreen allow=&quot;autoplay; encrypted-media&quot; loading=&quot;lazy&quot; style=&quot;width:100%;height:100%;border:0&quot;></iframe>\'" style="width:100%;height:100%;'+bgStyle+';cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center">'
+                  + '<div class="video-play-ikon">'
+                  + '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="8,5 21,12 8,19" style="filter:drop-shadow(0 2px 8px rgba(0,0,0,.4))"/></svg>'
+                  + '</div>'
+                  + '<div class="video-etiket">'+etiketIkon+'<span>'+etiket+'</span></div>'
+                  + '</div>';
               } else {
-                // YouTube/Vimeo — thumbnail + click to play (performans için)
-                if(v.thumb){
-                  gEl.innerHTML = '<div class="video-thumb" data-embed="'+e(v.embed)+'" onclick="this.outerHTML=\'<iframe src=&quot;'+e(v.embed)+'&autoplay=1&quot; allowfullscreen allow=&quot;autoplay; encrypted-media&quot; loading=&quot;lazy&quot; style=&quot;width:100%;height:100%;border:0&quot;></iframe>\'" style="width:100%;height:100%;background:url('+e(v.thumb)+') center/cover;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center"><div style="width:60px;height:60px;background:rgba(255,255,255,.95);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#000;font-size:22px;box-shadow:0 4px 20px rgba(0,0,0,.5)">▶</div></div>';
-                } else {
-                  gEl.innerHTML = '<iframe src="'+v.embed+'" allowfullscreen loading="lazy" style="width:100%;height:100%;border:0;background:#000"></iframe>';
-                }
+                // Instagram/TikTok/Vimeo - tıklayınca harici tarafa git (embed kötü görünüyor)
+                gEl.innerHTML = '<a href="'+e(item.url)+'" target="_blank" rel="noopener" class="video-thumb" style="width:100%;height:100%;'+bgStyle+';cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;text-decoration:none">'
+                  + '<div class="video-play-ikon">'
+                  + '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="8,5 21,12 8,19" style="filter:drop-shadow(0 2px 8px rgba(0,0,0,.4))"/></svg>'
+                  + '</div>'
+                  + '<div class="video-etiket">'+etiketIkon+'<span>'+etiket+'\'da İzle</span></div>'
+                  + '</a>';
               }
             }
           }
