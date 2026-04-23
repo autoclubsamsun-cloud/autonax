@@ -13558,7 +13558,8 @@ function markaDefaultSablon(kod, ad){
     heroBaslik: ad.toUpperCase()+' İÇİN',
     heroBaslikKirmizi: 'PPF KAPLAMA',
     heroAciklama: ad+' araçlarını <b>10 yıl garantili premium TPU PPF</b> ile koruyun. Self-healing özellikli, taş vuruğu ve çiziklere karşı tam koruma. <b>Karadeniz\'in en büyük araç kaplama tesisinde</b> '+ad+'\'a özel paketler.',
-    heroFoto: '',
+    heroFoto: '', // deprecated - heroMedya kullan
+    heroMedya: { tip:'video', url:'', autoplay:true },
     ist1_n: '10', ist1_l: 'Yıl Garanti',
     ist2_n: '17K+', ist2_l: 'Takipçi',
     ist3_n: '200µ', ist3_l: 'TPU Film',
@@ -13991,6 +13992,47 @@ window.markaGaleriTipDegistir = function(idx, yeniTip){
   markaGaleriOnizlemeGuncelle(idx);
 };
 
+// ═══════════════ HERO MEDYA ═══════════════
+window.markaHeroOnizlemeGuncelle = function(){
+  var tipEl = document.querySelector('[data-hm-tip]');
+  var urlEl = document.querySelector('[data-hm-url]');
+  var prevEl = document.querySelector('[data-hm-preview]');
+  if(!tipEl || !urlEl || !prevEl) return;
+  prevEl.innerHTML = markaGaleriOnizle(tipEl.value, urlEl.value);
+};
+
+window.markaHeroTipDegistir = function(yeniTip){
+  var tipEl = document.querySelector('[data-hm-tip]');
+  var urlEl = document.querySelector('[data-hm-url]');
+  if(!tipEl || !urlEl) return;
+  tipEl.value = yeniTip;
+
+  // Buton stillerini güncelle
+  document.querySelectorAll('[data-hm-tip-btn]').forEach(function(b){
+    if(b.dataset.hmTipBtn === yeniTip){
+      b.style.background = 'var(--r)'; b.style.color = '#fff';
+    } else {
+      b.style.background = 'transparent'; b.style.color = 'var(--ink4)';
+    }
+  });
+
+  // Placeholder güncelle
+  if(yeniTip === 'video'){
+    urlEl.placeholder = 'https://instagram.com/reel/XXX/ veya YouTube Shorts';
+  } else {
+    urlEl.placeholder = '/uploads/'+MARKA_AKTIF_KOD+'-hero.jpg';
+  }
+
+  // Autoplay label'ı göster/gizle
+  var apLabel = document.querySelector('[data-hm-autoplay]');
+  if(apLabel && apLabel.parentElement){
+    apLabel.parentElement.style.display = (yeniTip === 'video' ? '' : 'none');
+  }
+
+  // Önizlemeyi yenile
+  markaHeroOnizlemeGuncelle();
+};
+
 
 function markaJSONYayinla(){
   var depo = markaDepoOku();
@@ -14149,9 +14191,40 @@ function markaTabSec(i){
     html += '<label class="mrk-lbl">Açıklama Metni (HTML kullanılabilir: &lt;b&gt;, &lt;br&gt;)</label>';
     html += '<textarea id="m-heroAciklama" class="mrk-ta" style="min-height:120px">'+escapeHTML(m.heroAciklama)+'</textarea>';
 
-    html += '<label class="mrk-lbl">Hero Fotoğraf URL</label>';
-    html += '<input id="m-heroFoto" value="'+escapeHTML(m.heroFoto||'')+'" placeholder="/uploads/togg-hero.jpg" class="mrk-inp">';
-    html += '<div style="font-size:11px;color:var(--ink4);margin-top:4px">💡 Fotoğrafı önce <code style="background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">public/uploads/</code> klasörüne koyun</div>';
+    // Hero Medya (Video/Foto) - Galeri kutusuyla aynı mantık
+    var hm = m.heroMedya || { tip:(m.heroFoto?'foto':'video'), url:(m.heroFoto||''), autoplay:true };
+    if(!hm.tip) hm.tip = 'video';
+    if(typeof hm.autoplay === 'undefined') hm.autoplay = true;
+
+    html += '<h4 style="font-family:Bebas Neue,sans-serif;font-size:15px;letter-spacing:1px;margin-top:24px;margin-bottom:8px;padding-top:14px;border-top:1px solid var(--bd)">🎬 Hero Medyası</h4>';
+    html += '<p style="font-size:12px;color:var(--ink4);margin-bottom:10px;line-height:1.5">Sayfanın en üstündeki büyük görsel. Instagram Reel/YouTube Shorts koyarsan <b>otomatik oynar</b>, müthiş ilk izlenim.</p>';
+
+    html += '<div class="mrk-foto-kutu" data-hm-kutu="1" style="max-width:520px">';
+    // Tip switcher
+    html += '<div style="display:flex;gap:4px;background:#e5e5e5;padding:3px;border-radius:6px;margin-bottom:8px">';
+    html += '<button type="button" data-hm-tip-btn="video" onclick="markaHeroTipDegistir(\'video\')" style="flex:1;padding:9px;border:none;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;background:'+(hm.tip==='video'?'var(--r)':'transparent')+';color:'+(hm.tip==='video'?'#fff':'var(--ink4)')+'">📹 VIDEO</button>';
+    html += '<button type="button" data-hm-tip-btn="foto" onclick="markaHeroTipDegistir(\'foto\')" style="flex:1;padding:9px;border:none;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;background:'+(hm.tip==='foto'?'var(--r)':'transparent')+';color:'+(hm.tip==='foto'?'#fff':'var(--ink4)')+'">🖼️ FOTO</button>';
+    html += '</div>';
+
+    // Önizleme (daha büyük - hero olduğu için)
+    html += '<div data-hm-preview class="mrk-foto-img" style="height:200px;background:#1a1a1a;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative">';
+    html += markaGaleriOnizle(hm.tip, hm.url);
+    html += '</div>';
+
+    // URL
+    if(hm.tip === 'video'){
+      html += '<input data-hm-url value="'+escapeHTML(hm.url)+'" placeholder="https://instagram.com/reel/XXX/ veya YouTube Shorts" class="mrk-inp" oninput="markaHeroOnizlemeGuncelle()">';
+    } else {
+      html += '<input data-hm-url value="'+escapeHTML(hm.url)+'" placeholder="/uploads/'+MARKA_AKTIF_KOD+'-hero.jpg" class="mrk-inp" oninput="markaHeroOnizlemeGuncelle()">';
+    }
+
+    // Autoplay seçeneği (sadece video için)
+    html += '<label style="display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px;background:#fafafa;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600"'+(hm.tip==='foto'?' data-hm-autoplay-hidden="1" style="display:none"':'')+'>';
+    html += '<input type="checkbox" data-hm-autoplay '+(hm.autoplay?'checked':'')+' style="width:18px;height:18px"> Otomatik oynat (sessiz, loop)</label>';
+
+    // Tip için gizli
+    html += '<input type="hidden" data-hm-tip value="'+escapeHTML(hm.tip)+'">';
+    html += '</div>';
 
     html += '<h4 style="font-family:Bebas Neue,sans-serif;font-size:15px;letter-spacing:1px;margin-top:24px;margin-bottom:8px;padding-top:14px;border-top:1px solid var(--bd)">📊 İstatistik Kutuları (3 Adet)</h4>';
     html += '<div class="mrk-ist-grid">';
@@ -14322,7 +14395,19 @@ function markaFormdanOku(){
   ayarE('m-heroBaslik','heroBaslik');
   ayarE('m-heroBaslikKirmizi','heroBaslikKirmizi');
   ayarE('m-heroAciklama','heroAciklama');
-  ayarE('m-heroFoto','heroFoto');
+  // Hero medya (video/foto)
+  var hmTipEl = document.querySelector('[data-hm-tip]');
+  var hmUrlEl = document.querySelector('[data-hm-url]');
+  var hmApEl = document.querySelector('[data-hm-autoplay]');
+  if(hmTipEl && hmUrlEl){
+    m.heroMedya = {
+      tip: hmTipEl.value || 'video',
+      url: hmUrlEl.value || '',
+      autoplay: hmApEl ? hmApEl.checked : true
+    };
+    // Backward compat: heroFoto'yu foto ise sync et
+    if(m.heroMedya.tip === 'foto') m.heroFoto = m.heroMedya.url;
+  }
   for(var j=1;j<=3;j++){
     ayarE('m-ist'+j+'_n','ist'+j+'_n');
     ayarE('m-ist'+j+'_l','ist'+j+'_l');
