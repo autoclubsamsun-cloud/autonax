@@ -2410,55 +2410,132 @@ svg{display:block;flex-shrink:0}
 
       </div>
 
-      <!-- ══ ARAÇ MARKALARINA GÖRE PPF ══ -->
+      <!-- ══ ARAÇ MARKALARINA GÖRE PPF (Panel'den dinamik) ══ -->
       <div style="margin-bottom:40px">
         <h2 style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;text-align:center;margin-bottom:20px;color:var(--ink)">Tüm Marka Araçlara PPF Kaplama</h2>
-        <p style="text-align:center;font-size:13px;line-height:1.7;color:var(--ink3);max-width:700px;margin:0 auto 24px">Samsun'da en çok tercih edilen yeni nesil araçlara özel PPF kaplama paketleri sunuyoruz. Yerli ve milli Togg'dan, elektrikli BYD'ye, popüler Chery SUV'lara kadar tüm marka araçlarınızı koruma altına alıyoruz.</p>
+        <p style="text-align:center;font-size:13px;line-height:1.7;color:var(--ink3);max-width:700px;margin:0 auto 24px">Samsun'da en çok tercih edilen yeni nesil araçlara özel PPF kaplama paketleri sunuyoruz. Aracınıza özel sayfamızda detaylı bilgilere ulaşabilirsiniz.</p>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+        <div id="marka-grid-dinamik" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+          <!-- Marka kartları JS ile panelden/backend'den dinamik yüklenir -->
 
-          <div id="togg-ppf-kaplama" style="background:#fff;padding:16px;border-radius:10px;border:1px solid var(--bd)">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--r);letter-spacing:1px;margin-bottom:6px">🇹🇷 TOGG PPF KAPLAMA</div>
+          <!-- Fallback — yüklenene kadar varsayılan 8 kart görünür -->
+          <a href="/togg-ppf-kaplama.html" class="marka-kart-static" style="background:#fff;padding:16px;border-radius:10px;border:1px solid var(--bd);text-decoration:none;color:inherit;transition:all .25s;display:block">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--r);letter-spacing:1px;margin-bottom:6px">TOGG PPF KAPLAMA</div>
             <p style="font-size:11px;line-height:1.6;color:var(--ink3)">Togg T10X ve T10F için özel TPU PPF paketleri. Yerli otomobilimizin boyasını ilk günkü gibi korur.</p>
-          </div>
+          </a>
 
-          <div id="byd-ppf-kaplama" style="background:#fff;padding:16px;border-radius:10px;border:1px solid var(--bd)">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--r);letter-spacing:1px;margin-bottom:6px">⚡ BYD PPF KAPLAMA</div>
+          <a href="/byd-ppf-kaplama.html" class="marka-kart-static" style="background:#fff;padding:16px;border-radius:10px;border:1px solid var(--bd);text-decoration:none;color:inherit;transition:all .25s;display:block">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--r);letter-spacing:1px;margin-bottom:6px">BYD PPF KAPLAMA</div>
             <p style="font-size:11px;line-height:1.6;color:var(--ink3)">BYD Seal, Atto 3 ve Song için PPF. Elektrikli ve hibrit araç sahiplerinin tercihi.</p>
-          </div>
+          </a>
 
-          <div id="chery-ppf-kaplama" style="background:#fff;padding:16px;border-radius:10px;border:1px solid var(--bd)">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--r);letter-spacing:1px;margin-bottom:6px">🚗 CHERY PPF KAPLAMA</div>
+          <a href="/chery-ppf-kaplama.html" class="marka-kart-static" style="background:#fff;padding:16px;border-radius:10px;border:1px solid var(--bd);text-decoration:none;color:inherit;transition:all .25s;display:block">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--r);letter-spacing:1px;margin-bottom:6px">CHERY PPF KAPLAMA</div>
             <p style="font-size:11px;line-height:1.6;color:var(--ink3)">Chery Tiggo 7, Tiggo 8, Omoda 5 ve Arrizo için PPF. Popüler SUV'lara koruma.</p>
-          </div>
+          </a>
 
-          <div id="toyota-ppf-kaplama" style="background:#fff;padding:16px;border-radius:10px;border:1px solid var(--bd)">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--r);letter-spacing:1px;margin-bottom:6px">🏆 TOYOTA PPF KAPLAMA</div>
+          <a href="/toyota-ppf-kaplama.html" class="marka-kart-static" style="background:#fff;padding:16px;border-radius:10px;border:1px solid var(--bd);text-decoration:none;color:inherit;transition:all .25s;display:block">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--r);letter-spacing:1px;margin-bottom:6px">TOYOTA PPF KAPLAMA</div>
             <p style="font-size:11px;line-height:1.6;color:var(--ink3)">Toyota Corolla, RAV4, C-HR için PPF. Hibrit ve benzinli modellere koruma.</p>
-          </div>
+          </a>
 
-          <div id="tesla-ppf-kaplama" style="background:#fff;padding:16px;border-radius:10px;border:1px solid var(--bd)">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--r);letter-spacing:1px;margin-bottom:6px">🔋 TESLA PPF KAPLAMA</div>
+          <a href="/tesla-ppf-kaplama.html" class="marka-kart-static" style="background:#fff;padding:16px;border-radius:10px;border:1px solid var(--bd);text-decoration:none;color:inherit;transition:all .25s;display:block">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--r);letter-spacing:1px;margin-bottom:6px">TESLA PPF KAPLAMA</div>
             <p style="font-size:11px;line-height:1.6;color:var(--ink3)">Tesla Model Y ve Model 3 için özel PPF paketleri. Premium elektrikli araç koruması.</p>
-          </div>
+          </a>
 
-          <div id="mg-ppf-kaplama" style="background:#fff;padding:16px;border-radius:10px;border:1px solid var(--bd)">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--r);letter-spacing:1px;margin-bottom:6px">🚙 MG PPF KAPLAMA</div>
+          <a href="/mg-ppf-kaplama.html" class="marka-kart-static" style="background:#fff;padding:16px;border-radius:10px;border:1px solid var(--bd);text-decoration:none;color:inherit;transition:all .25s;display:block">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--r);letter-spacing:1px;margin-bottom:6px">MG PPF KAPLAMA</div>
             <p style="font-size:11px;line-height:1.6;color:var(--ink3)">MG ZS ve HS için PPF kaplama. Yeni nesil SUV'lara özel paketler.</p>
-          </div>
+          </a>
 
-          <div id="jaecoo-ppf-kaplama" style="background:#fff;padding:16px;border-radius:10px;border:1px solid var(--bd)">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--r);letter-spacing:1px;margin-bottom:6px">🔝 JAECOO PPF KAPLAMA</div>
+          <a href="/jaecoo-ppf-kaplama.html" class="marka-kart-static" style="background:#fff;padding:16px;border-radius:10px;border:1px solid var(--bd);text-decoration:none;color:inherit;transition:all .25s;display:block">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--r);letter-spacing:1px;margin-bottom:6px">JAECOO PPF KAPLAMA</div>
             <p style="font-size:11px;line-height:1.6;color:var(--ink3)">Jaecoo 7 için PPF kaplama. Premium SUV deneyimine özel koruma.</p>
-          </div>
+          </a>
 
-          <div id="hyundai-ppf-kaplama" style="background:#fff;padding:16px;border-radius:10px;border:1px solid var(--bd)">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--r);letter-spacing:1px;margin-bottom:6px">🚘 HYUNDAI PPF KAPLAMA</div>
+          <a href="/hyundai-ppf-kaplama.html" class="marka-kart-static" style="background:#fff;padding:16px;border-radius:10px;border:1px solid var(--bd);text-decoration:none;color:inherit;transition:all .25s;display:block">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--r);letter-spacing:1px;margin-bottom:6px">HYUNDAI PPF KAPLAMA</div>
             <p style="font-size:11px;line-height:1.6;color:var(--ink3)">Hyundai Tucson, Kona, i20 için PPF. Popüler Kore markasına özel paketler.</p>
-          </div>
+          </a>
 
         </div>
       </div>
+
+      <!-- Dinamik marka grid doldurma scripti -->
+      <script>
+      (function(){
+        var MARKA_GRID_EL = document.getElementById('marka-grid-dinamik');
+        if(!MARKA_GRID_EL) return;
+
+        function kartHtml(kod, m){
+          var url = '/'+kod+'-ppf-kaplama.html';
+          var ad = m.ad || kod.toUpperCase();
+          // Kısa açıklama: seoDesc veya heroAciklama'dan üret
+          var aciklama = m.seoDesc || '';
+          if(aciklama.length > 120) aciklama = aciklama.substring(0,117) + '...';
+          if(!aciklama && m.heroAciklama){
+            aciklama = m.heroAciklama.replace(/<[^>]+>/g,'');
+            if(aciklama.length > 120) aciklama = aciklama.substring(0,117) + '...';
+          }
+          if(!aciklama) aciklama = ad + ' araçları için özel PPF kaplama paketleri.';
+
+          var safe = function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+
+          return '<a href="'+url+'" class="marka-kart-dinamik" style="background:#fff;padding:16px;border-radius:10px;border:1px solid var(--bd);text-decoration:none;color:inherit;transition:all .25s;display:block">'
+            + '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:16px;color:var(--r);letter-spacing:1px;margin-bottom:6px">'+safe(ad.toUpperCase())+' PPF KAPLAMA</div>'
+            + '<p style="font-size:11px;line-height:1.6;color:var(--ink3)">'+safe(aciklama)+'</p>'
+            + '</a>';
+        }
+
+        function gridDoldur(depo){
+          if(!depo || typeof depo !== 'object') return;
+          var kodlar = Object.keys(depo);
+          if(kodlar.length === 0) return;
+
+          // Aktif olmayan markaları gizle (isteğe bağlı alanı var mı kontrol et)
+          var aktifler = kodlar.filter(function(k){
+            var m = depo[k];
+            return m && m.aktif !== false; // aktif=true veya aktif yok ise göster
+          });
+          if(aktifler.length === 0) return;
+
+          var html = '';
+          aktifler.forEach(function(kod){
+            html += kartHtml(kod, depo[kod]);
+          });
+          MARKA_GRID_EL.innerHTML = html;
+        }
+
+        // 1. Önce localStorage (hızlı)
+        try {
+          var raw = localStorage.getItem('autonax_markalar_v1');
+          if(raw){
+            var depo = JSON.parse(raw);
+            if(depo && Object.keys(depo).length > 0){
+              gridDoldur(depo);
+            }
+          }
+        } catch(e){}
+
+        // 2. Asıl kaynak: backend /api/ayarlar
+        fetch('/api/ayarlar?_t='+Date.now(), {credentials:'same-origin'})
+          .then(function(r){ return r.json(); })
+          .then(function(d){
+            var depo = (d && d.data && d.data.markalar_v1) || (d && d.markalar_v1) || null;
+            if(depo) gridDoldur(depo);
+          })
+          .catch(function(){});
+      })();
+      </script>
+
+      <style>
+      .marka-kart-static:hover,.marka-kart-dinamik:hover{
+        border-color:var(--r)!important;
+        transform:translateY(-2px);
+        box-shadow:0 8px 20px rgba(176,28,46,.08);
+      }
+      </style>
 
       <!-- ══ HİZMET VERİLEN İLLER ══ -->
       <div style="margin-bottom:40px">
