@@ -28,6 +28,37 @@
     window.__AUTONAX_MARKA = null;
     window.__AUTONAX_MARKA_KAYNAK = 'default';
 
+    // Bilinen marka adları (ilk yüklemede banner'ı düzgün göstermek için)
+    var BILINEN_MARKA_ADLARI = {
+      togg: 'Togg', byd: 'BYD', chery: 'Chery', toyota: 'Toyota',
+      tesla: 'Tesla', mg: 'MG', jaecoo: 'Jaecoo',
+      hyundai: 'Hyundai', honda: 'Honda', volvo: 'Volvo',
+      mercedes: 'Mercedes', bmw: 'BMW', audi: 'Audi',
+      volkswagen: 'Volkswagen', porsche: 'Porsche', skoda: 'Skoda',
+      kia: 'Kia', peugeot: 'Peugeot', renault: 'Renault', ford: 'Ford'
+    };
+    var MARKA_ADI_ERKEN = BILINEN_MARKA_ADLARI[MARKA_KOD] ||
+      MARKA_KOD.charAt(0).toUpperCase() + MARKA_KOD.slice(1);
+
+    // Banner marka adını HEMEN güncelle (panel verisi beklemeden)
+    function bannerMarkaAdiGuncelle(){
+      var deskSpan = document.querySelector('.alt-banner-txt .desk .marka-adi');
+      var mobSpan = document.querySelector('.alt-banner-txt .mob .marka-adi');
+      var bulundu = false;
+      if(deskSpan){ deskSpan.textContent = MARKA_ADI_ERKEN + "'a"; bulundu = true; }
+      if(mobSpan){ mobSpan.textContent = MARKA_ADI_ERKEN + "'a özel sayfa"; bulundu = true; }
+      return bulundu;
+    }
+    // Hemen dene; olmazsa DOMContentLoaded'da dene
+    if(!bannerMarkaAdiGuncelle()){
+      if(document.readyState === 'loading'){
+        document.addEventListener('DOMContentLoaded', bannerMarkaAdiGuncelle);
+      } else {
+        // Bir sonraki tick'te dene
+        setTimeout(bannerMarkaAdiGuncelle, 0);
+      }
+    }
+
     // Early meta update fonksiyonu (marka yüklenince çağrılır)
     window.__autonaxEarlyMeta = function(marka){
       if(!marka) return;
@@ -354,6 +385,8 @@ img{max-width:100%;height:auto;display:block}
 .galeri-sec{background:var(--bg)}
 .galeri-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .galeri-item{aspect-ratio:1;background:linear-gradient(135deg,#1a1a1a,#2a2a2a);border-radius:12px;overflow:hidden;position:relative;cursor:pointer;transition:transform .25s}
+/* Instagram Reel / TikTok → dikey 9:16 format */
+.galeri-item.galeri-reel{aspect-ratio:9/16;max-width:100%}
 .galeri-item:hover{transform:scale(1.02)}
 .galeri-item img{width:100%;height:100%;object-fit:cover}
 
@@ -396,7 +429,16 @@ img{max-width:100%;height:auto;display:block}
 .galeri-ig{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:28px;padding:16px 24px;background:#fff;border:1px solid var(--bd);border-radius:12px;color:var(--ink);transition:all .2s}
 .galeri-ig:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
 .galeri-ig b{font-weight:700}
-@media(max-width:768px){.galeri-grid{grid-template-columns:repeat(2,1fr);gap:8px}}
+@media(max-width:768px){
+  .galeri-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  /* Reel içeriği varsa mobilde 1 kolon alt alta — Instagram stili */
+  .galeri-grid.has-reel{grid-template-columns:1fr;max-width:420px;margin:0 auto;gap:14px}
+}
+@media(max-width:480px){
+  .galeri-grid{grid-template-columns:1fr;max-width:380px;margin:0 auto;gap:12px}
+  .galeri-item{aspect-ratio:9/16}
+  .galeri-item:not(.galeri-reel):not(.galeri-video){aspect-ratio:4/3}
+}
 
 /* ══ YORUM ══ */
 .yorum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
@@ -788,8 +830,8 @@ img{max-width:100%;height:auto;display:block}
   <div class="wrap">
     <span class="alt-banner-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7A5 5 0 0 1 10 19h4a5 5 0 0 1 2-4.3A7 7 0 0 0 12 2z"/></svg></span>
     <div class="alt-banner-txt">
-      <span class="desk">Bu bir <b class="marka-adi">TOGG'a</b> özel sayfasıdır. Tüm hizmetler için:</span>
-      <span class="mob"><b class="marka-adi">TOGG'a</b> özel sayfa — Tüm hizmetler:</span>
+      <span class="desk">Bu bir <b class="marka-adi">araca</b> özel sayfasıdır. Tüm hizmetler için:</span>
+      <span class="mob"><b class="marka-adi">Özel sayfa</b> — Tüm hizmetler:</span>
     </div>
     <a href="/" class="alt-banner-btn">
       ANA SİTE
@@ -1306,29 +1348,15 @@ img{max-width:100%;height:auto;display:block}
             if(v){
               var autoplayParam = hm.autoplay ? '1' : '0';
               if(v.tur === 'youtube'){
-                // YouTube autoplay + mute + loop — temiz gömer, kontroller sade
                 var ytEmbed = v.embed + '&autoplay='+autoplayParam+'&mute=1&loop=1&playlist='+v.id+'&controls=1&playsinline=1';
                 heroVis.innerHTML = '<iframe src="'+ytEmbed+'" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen style="width:100%;height:100%;border:0;border-radius:20px;background:#000"></iframe>';
               } else if(v.tur === 'instagram'){
-                // Instagram Reel — embed UI çok karmaşık, büyük thumbnail + play → tıklayınca Instagram'a git
+                // Instagram Reel — gerçek embed iframe, dikey full
                 heroVis.classList.add('togg-visual-reel');
-                heroVis.innerHTML = '<a href="'+e(hm.url)+'" target="_blank" rel="noopener" class="hero-reel-link" style="display:block;width:100%;height:100%;background:linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);border-radius:20px;position:relative;overflow:hidden;text-decoration:none">'
-                  + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px">'
-                  + '<div class="hero-reel-play">'
-                  + '<svg viewBox="0 0 24 24" fill="#bc1888"><polygon points="8,5 21,12 8,19"/></svg>'
-                  + '</div>'
-                  + '<div style="color:#fff;font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;text-shadow:0 2px 8px rgba(0,0,0,.4)">REEL\'İ İZLE</div>'
-                  + '<div style="color:rgba(255,255,255,.9);font-size:11px;display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4" fill="none" stroke="#bc1888" stroke-width="2"/><circle cx="18" cy="6" r="1.2" fill="#bc1888"/></svg>@autoclubsamsunmerkez</div>'
-                  + '</div>'
-                  + '</a>';
+                heroVis.innerHTML = '<iframe src="'+v.embed+'" allowfullscreen allowtransparency="true" frameborder="0" scrolling="no" loading="eager" style="width:100%;height:100%;border:0;border-radius:20px;background:#000"></iframe>';
               } else if(v.tur === 'tiktok'){
                 heroVis.classList.add('togg-visual-reel');
-                heroVis.innerHTML = '<a href="'+e(hm.url)+'" target="_blank" rel="noopener" style="display:block;width:100%;height:100%;background:linear-gradient(135deg,#25f4ee 0%,#000 50%,#fe2c55 100%);border-radius:20px;position:relative;overflow:hidden;text-decoration:none">'
-                  + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px">'
-                  + '<div class="hero-reel-play"><svg viewBox="0 0 24 24" fill="#fe2c55"><polygon points="8,5 21,12 8,19"/></svg></div>'
-                  + '<div style="color:#fff;font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px">TIKTOK VIDEOSU</div>'
-                  + '</div>'
-                  + '</a>';
+                heroVis.innerHTML = '<iframe src="'+v.embed+'" allowfullscreen allow="autoplay" loading="eager" style="width:100%;height:100%;border:0;border-radius:20px;background:#000"></iframe>';
               } else if(v.tur === 'vimeo'){
                 heroVis.innerHTML = '<iframe src="'+v.embed+'?autoplay='+autoplayParam+'&muted=1&loop=1&background=1" allowfullscreen style="width:100%;height:100%;border:0;border-radius:20px;background:#000"></iframe>';
               }
@@ -1388,10 +1416,15 @@ img{max-width:100%;height:auto;display:block}
 
       // GALERİ — 6 medya (video veya foto)
       if(marka.galeri && marka.galeri.length){
+        var galGrid = document.querySelector('.galeri-grid');
         var galItems = document.querySelectorAll('.galeri-grid .galeri-item');
+        var reelVarMi = false;
         marka.galeri.forEach(function(item, idx){
           var gEl = galItems[idx];
           if(!gEl) return;
+
+          // Önceki class'ları temizle
+          gEl.classList.remove('galeri-video','galeri-reel');
 
           // Backward compat: eski string formatı → foto
           if(typeof item === 'string'){
@@ -1399,54 +1432,39 @@ img{max-width:100%;height:auto;display:block}
             return;
           }
 
-          if(!item || !item.url) return; // boş → default placeholder kalsın
+          if(!item || !item.url) return;
 
           if(item.tip === 'foto'){
             gEl.innerHTML = '<img src="'+e(item.url)+'" alt="'+e(marka.ad)+' PPF Samsun '+(idx+1)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.outerHTML=\'<div style=&quot;color:#666;font-size:11px;text-align:center;padding:20px&quot;>Foto yüklenemedi</div>\'">';
           } else {
-            // Video — tüm türler için temiz thumbnail + play button (Instagram iframe'i çok karmaşık)
+            // Video — embed iframe
             var v = videoUrlParse(item.url);
             if(v){
-              var bgStyle = '';
-              var etiket = '';
-              var etiketIkon = '';
-              if(v.tur === 'youtube'){
-                bgStyle = 'background:url('+e(v.thumb)+') center/cover,linear-gradient(135deg,#ff0000 0%,#c00 100%)';
-                etiket = 'YouTube';
-                etiketIkon = '<svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1c.5-1.9.5-5.8.5-5.8s0-3.9-.5-5.8zM9.5 15.5v-7l6 3.5-6 3.5z"/></svg>';
-              } else if(v.tur === 'instagram'){
-                bgStyle = 'background:linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)';
-                etiket = 'Instagram';
-                etiketIkon = '<svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4" fill="none" stroke="#fff" stroke-width="2"/><circle cx="18" cy="6" r="1.2" fill="#fff"/></svg>';
-              } else if(v.tur === 'tiktok'){
-                bgStyle = 'background:linear-gradient(135deg,#25f4ee 0%,#000 50%,#fe2c55 100%)';
-                etiket = 'TikTok';
-                etiketIkon = '<svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px"><path d="M16 2h3c.3 2.4 2 4 4 4v3c-1.5 0-3-.4-4-1.2V15a6 6 0 1 1-6-6v3a3 3 0 1 0 3 3V2z"/></svg>';
-              } else if(v.tur === 'vimeo'){
-                bgStyle = 'background:linear-gradient(135deg,#1ab7ea 0%,#0c6b9e 100%)';
-                etiket = 'Vimeo';
+              gEl.classList.add('galeri-video');
+              if(v.tur === 'instagram' || v.tur === 'tiktok'){
+                gEl.classList.add('galeri-reel');
+                reelVarMi = true;
               }
 
-              // YouTube için thumbnail varsa click → yerel embed
-              if(v.tur === 'youtube' && v.thumb){
-                gEl.innerHTML = '<div class="video-thumb" onclick="this.outerHTML=\'<iframe src=&quot;'+e(v.embed)+'&autoplay=1&quot; allowfullscreen allow=&quot;autoplay; encrypted-media&quot; loading=&quot;lazy&quot; style=&quot;width:100%;height:100%;border:0&quot;></iframe>\'" style="width:100%;height:100%;'+bgStyle+';cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center">'
-                  + '<div class="video-play-ikon">'
-                  + '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="8,5 21,12 8,19" style="filter:drop-shadow(0 2px 8px rgba(0,0,0,.4))"/></svg>'
-                  + '</div>'
-                  + '<div class="video-etiket">'+etiketIkon+'<span>'+etiket+'</span></div>'
+              if(v.tur === 'youtube'){
+                gEl.innerHTML = '<div class="yt-thumb" onclick="this.outerHTML=\'<iframe src=&quot;'+e(v.embed)+'&autoplay=1&quot; allowfullscreen allow=&quot;autoplay; encrypted-media&quot; loading=&quot;lazy&quot; style=&quot;width:100%;height:100%;border:0&quot;></iframe>\'" style="width:100%;height:100%;background:url('+e(v.thumb)+') center/cover;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center">'
+                  + '<div class="video-play-ikon"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="8,5 21,12 8,19"/></svg></div>'
                   + '</div>';
-              } else {
-                // Instagram/TikTok/Vimeo - tıklayınca harici tarafa git (embed kötü görünüyor)
-                gEl.innerHTML = '<a href="'+e(item.url)+'" target="_blank" rel="noopener" class="video-thumb" style="width:100%;height:100%;'+bgStyle+';cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;text-decoration:none">'
-                  + '<div class="video-play-ikon">'
-                  + '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="8,5 21,12 8,19" style="filter:drop-shadow(0 2px 8px rgba(0,0,0,.4))"/></svg>'
-                  + '</div>'
-                  + '<div class="video-etiket">'+etiketIkon+'<span>'+etiket+'\'da İzle</span></div>'
-                  + '</a>';
+              } else if(v.tur === 'instagram'){
+                gEl.innerHTML = '<iframe src="'+e(v.embed)+'" allowfullscreen allowtransparency="true" frameborder="0" scrolling="no" loading="lazy" style="width:100%;height:100%;border:0;background:#000"></iframe>';
+              } else if(v.tur === 'tiktok'){
+                gEl.innerHTML = '<iframe src="'+e(v.embed)+'" allowfullscreen allow="autoplay" loading="lazy" style="width:100%;height:100%;border:0;background:#000"></iframe>';
+              } else if(v.tur === 'vimeo'){
+                gEl.innerHTML = '<iframe src="'+e(v.embed)+'" allowfullscreen loading="lazy" style="width:100%;height:100%;border:0;background:#000"></iframe>';
               }
             }
           }
         });
+        // Reel varsa grid class ekle (mobilde 1 kolon alt alta görünsün)
+        if(galGrid){
+          if(reelVarMi) galGrid.classList.add('has-reel');
+          else galGrid.classList.remove('has-reel');
+        }
       }
 
       // Video URL parser (aynı panel'de kullanılanın site içi versiyonu)
@@ -1573,12 +1591,12 @@ img{max-width:100%;height:auto;display:block}
         ctaH2.innerHTML = marka.ad+'\'unuzu Koruma<em>Zamanı Geldi</em>';
       }
 
-      // Alt sayfa banner - marka adı güncelle (hem desk hem mob)
-      var bannerMarkaSpans = document.querySelectorAll('.alt-banner-txt .marka-adi');
-      if(bannerMarkaSpans && bannerMarkaSpans.length && marka.ad){
-        bannerMarkaSpans.forEach(function(sp){
-          sp.textContent = marka.ad + "'a";
-        });
+      // Alt sayfa banner - marka adı güncelle (desk/mob ayrı format)
+      var deskAdi = document.querySelector('.alt-banner-txt .desk .marka-adi');
+      var mobAdi = document.querySelector('.alt-banner-txt .mob .marka-adi');
+      if(marka.ad){
+        if(deskAdi) deskAdi.textContent = marka.ad + "'a";
+        if(mobAdi) mobAdi.textContent = marka.ad + "'a özel sayfa";
       }
 
       // Diğer Markalar grid - tüm diğer markaları göster, mevcut olanı hariç tut
