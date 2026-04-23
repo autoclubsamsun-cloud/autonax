@@ -904,15 +904,15 @@ img{max-width:100%;height:auto;display:block}
   </div>
 </section>
 
-<!-- ══ NEDEN TOGG PPF ══ -->
-<section class="sec">
+<!-- ══ NEDEN PPF (dinamik) ══ -->
+<section class="sec" id="neden-sec">
   <div class="wrap">
     <div class="sec-head">
       <div class="sec-tag">Neden PPF Kaplama?</div>
       <h2 class="sec-title">Togg'unuzu İlk Günkü Gibi Koruyun</h2>
       <p class="sec-sub">Yerli otomobilinizin değerini en iyi şekilde koruyan premium çözüm: TPU PPF kaplama</p>
     </div>
-    <div class="neden-grid">
+    <div class="neden-grid" id="neden-grid">
       <div class="neden-card">
         <div class="neden-icon"><svg><use href="#i-shield"/></svg></div>
         <div class="neden-t">Taş Vuruğu Koruması</div>
@@ -1038,12 +1038,13 @@ img{max-width:100%;height:auto;display:block}
   </div>
 </section>
 
-<!-- ══ YORUMLAR ══ -->
-<section class="sec" id="yorumlar">
+<!-- ══ YORUMLAR (dinamik) ══ -->
+<section class="sec" id="yorum-sec">
   <div class="wrap">
     <div class="sec-head">
       <div class="sec-tag">Müşteri Yorumları</div>
       <h2 class="sec-title">Togg Sahipleri Ne Diyor?</h2>
+      <p class="sec-sub">Karadeniz'in dört bir yanından gelen Togg sahiplerinin yorumları</p>
     </div>
     <div class="yorum-grid">
 
@@ -1087,12 +1088,13 @@ img{max-width:100%;height:auto;display:block}
   </div>
 </section>
 
-<!-- ══ SSS ══ -->
-<section class="sec sss-sec">
+<!-- ══ SSS (dinamik) ══ -->
+<section class="sec sss-sec" id="sss-sec">
   <div class="wrap">
     <div class="sec-head">
       <div class="sec-tag">Sık Sorulan Sorular</div>
       <h2 class="sec-title">Togg PPF Hakkında Her Şey</h2>
+      <p class="sec-sub">En çok sorulan soruların cevapları</p>
     </div>
     <div class="sss-list">
 
@@ -1585,10 +1587,76 @@ img{max-width:100%;height:auto;display:block}
         }
       });
 
-      // CTA başlığı
+      // ══ SECTION BAŞLIKLARI (tag + title + sub) ══
+      // Neden PPF Bölümü
+      var nedenSec = document.getElementById('neden-sec');
+      if(nedenSec){
+        var nTag = nedenSec.querySelector('.sec-tag');
+        var nTitle = nedenSec.querySelector('.sec-title');
+        var nSub = nedenSec.querySelector('.sec-sub');
+        if(nTag && marka.nedenTag) nTag.textContent = marka.nedenTag;
+        if(nTitle && marka.nedenBaslik) nTitle.textContent = marka.nedenBaslik;
+        if(nSub && marka.nedenAciklama) nSub.textContent = marka.nedenAciklama;
+      }
+
+      // Neden PPF Kartları (6 kart - dinamik render)
+      var nedenGrid = document.getElementById('neden-grid');
+      if(nedenGrid && marka.neden && marka.neden.length){
+        var nedenHtml = '';
+        marka.neden.forEach(function(n){
+          var ikon = n.ikon || 'i-shield';
+          nedenHtml += '<div class="neden-card">';
+          nedenHtml += '<div class="neden-icon"><svg><use href="#'+e(ikon)+'"/></svg></div>';
+          nedenHtml += '<div class="neden-t">'+e(n.baslik||'')+'</div>';
+          nedenHtml += '<div class="neden-d">'+e(n.aciklama||'')+'</div>';
+          nedenHtml += '</div>';
+        });
+        nedenGrid.innerHTML = nedenHtml;
+      }
+
+      // Paketler Bölümü başlık
+      var paketSec = document.querySelector('.paket-sec');
+      if(paketSec){
+        var pTag = paketSec.querySelector('.sec-tag');
+        var pTitle = paketSec.querySelector('.sec-title');
+        var pSub = paketSec.querySelector('.sec-sub');
+        if(pTag && marka.paketlerTag) pTag.textContent = marka.paketlerTag;
+        if(pTitle && marka.paketlerBaslik) pTitle.textContent = marka.paketlerBaslik;
+        if(pSub && marka.paketlerAciklama) pSub.textContent = marka.paketlerAciklama;
+      }
+
+      // Yorumlar Bölümü başlık
+      var yorumSec = document.getElementById('yorum-sec');
+      if(yorumSec){
+        var yTag = yorumSec.querySelector('.sec-tag');
+        var yTitle = yorumSec.querySelector('.sec-title');
+        var ySub = yorumSec.querySelector('.sec-sub');
+        if(yTag && marka.yorumTag) yTag.textContent = marka.yorumTag;
+        if(yTitle && marka.yorumBaslik) yTitle.textContent = marka.yorumBaslik;
+        if(ySub && marka.yorumAciklama) ySub.textContent = marka.yorumAciklama;
+      }
+
+      // SSS Bölümü başlık
+      var sssSec = document.getElementById('sss-sec');
+      if(sssSec){
+        var sTag = sssSec.querySelector('.sec-tag');
+        var sTitle = sssSec.querySelector('.sec-title');
+        var sSub = sssSec.querySelector('.sec-sub');
+        if(sTag && marka.sssTag) sTag.textContent = marka.sssTag;
+        if(sTitle && marka.sssBaslik) sTitle.textContent = marka.sssBaslik;
+        if(sSub && marka.sssAciklama) sSub.textContent = marka.sssAciklama;
+      }
+
+      // CTA başlığı + açıklama
       var ctaH2 = document.querySelector('.cta-sec h2');
-      if(ctaH2 && marka.ad){
-        ctaH2.innerHTML = marka.ad+'\'unuzu Koruma<em>Zamanı Geldi</em>';
+      if(ctaH2){
+        var baslik = marka.ctaBaslik || (marka.ad + '\'unuzu Koruma');
+        var kirmizi = marka.ctaBaslikKirmizi || 'Zamanı Geldi';
+        ctaH2.innerHTML = e(baslik) + '<em>' + e(kirmizi) + '</em>';
+      }
+      var ctaP = document.querySelector('.cta-sec p');
+      if(ctaP && marka.ctaAciklama){
+        ctaP.textContent = marka.ctaAciklama;
       }
 
       // Alt sayfa banner - marka adı güncelle (desk/mob ayrı format)

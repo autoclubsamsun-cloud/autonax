@@ -13563,6 +13563,31 @@ function markaDefaultSablon(kod, ad){
     ist1_n: '10', ist1_l: 'Yıl Garanti',
     ist2_n: '17K+', ist2_l: 'Takipçi',
     ist3_n: '200µ', ist3_l: 'TPU Film',
+    // Section başlıkları (tüm bölümler için)
+    nedenTag: 'Neden PPF Kaplama?',
+    nedenBaslik: ad+'\'unuzu İlk Günkü Gibi Koruyun',
+    nedenAciklama: 'Aracınızın değerini en iyi şekilde koruyan premium çözüm: TPU PPF kaplama',
+    paketlerTag: 'Fiyat Paketleri',
+    paketlerBaslik: ad+'\'a Özel PPF Paketleri',
+    paketlerAciklama: 'Bütçenize ve korumaya ihtiyacı olan bölgelere göre 3 farklı paket',
+    yorumTag: 'Müşteri Yorumları',
+    yorumBaslik: 'Gerçek '+ad+' Sahiplerinin Görüşleri',
+    yorumAciklama: 'Karadeniz\'in dört bir yanından gelen '+ad+' sahiplerinin yorumları',
+    sssTag: 'Sıkça Sorulan Sorular',
+    sssBaslik: ad+' PPF Hakkında Merak Edilenler',
+    sssAciklama: 'En çok sorulan soruların cevapları',
+    ctaBaslik: ad+'\'unuzu Koruma',
+    ctaBaslikKirmizi: 'Zamanı Geldi',
+    ctaAciklama: 'Ücretsiz keşif, şeffaf fiyatlandırma, 10 yıl yazılı garanti. Hemen bize ulaşın.',
+    // Neden PPF Kartları (6 kart)
+    neden: [
+      { ikon:'i-shield',   baslik:'Taş Vuruğu Koruması', aciklama:'Karadeniz yollarında sık karşılaşılan taş vuruğu hasarını %100 önler.' },
+      { ikon:'i-sparkles', baslik:'Self-Healing',         aciklama:'Küçük çizikler ısıyla birlikte kendi kendine kaybolur. Güneş ışığı bile iyileştirir.' },
+      { ikon:'i-sun',      baslik:'UV Işınlarından Koruma', aciklama:'Boya solmasını engeller. '+ad+'\'unuzun orijinal rengi yıllarca aynı kalır.' },
+      { ikon:'i-diamond',  baslik:'İkinci El Değer Koruma', aciklama:'Orijinal boyayı korur, aracınızın satış değerini %10-15 yüksek tutar.' },
+      { ikon:'i-droplet',  baslik:'Hidrofobik Yüzey',      aciklama:'Su kaydırma özelliği sayesinde yıkama kolaylığı, kir tutmaz.' },
+      { ikon:'i-lock',     baslik:'10 Yıl Garanti',        aciklama:'Yazılı garanti belgesi ile Autonax\'tan tam güvence. Samsun merkezli servis.' }
+    ],
     // Paketler
     paketler: [
       { ad:'KAPUT PPF', aciklama:'Ekonomik başlangıç paketi - en çok darbe alan bölge', fiyat:'FİYAT SOR', fiyatNot:'KDV Dahil · 10 yıl garanti', ozellikler:['Kaput (tam)','Ön tampon','Farlar','1 gün teslim','10 yıl garantili TPU film','Self-healing özellik'], featured:false },
@@ -14121,7 +14146,7 @@ function markaDuzenleYukle(kod){
 
   // Sekmeler
   html += '<div class="mrk-tabs">';
-  ['Genel ve SEO','Hero','Fiyatlar','Galeri','Yorumlar','SSS'].forEach(function(ad,i){
+  ['Genel ve SEO','Hero','Neden PPF','Fiyatlar','Galeri','Yorumlar','SSS','Kapanış'].forEach(function(ad,i){
     html += '<button class="mrk-tab '+(i===0?'on':'')+'" data-t="'+i+'" onclick="markaTabSec('+i+')">'+ad+'</button>';
   });
   html += '</div>';
@@ -14240,7 +14265,73 @@ function markaTabSec(i){
     html += '</div>';
   }
   else if(i===2){
-    // Paketler
+    // NEDEN PPF — 6 kart
+    html += '<div class="mrk-card">';
+    html += '<h3 style="font-family:Bebas Neue,sans-serif;letter-spacing:1px;font-size:18px;margin-bottom:4px">💡 Neden PPF Bölümü</h3>';
+    html += '<p style="font-size:12px;color:var(--ink4);margin-bottom:8px">Hero\'nun altındaki 6 kart. Avantajları anlatır.</p>';
+
+    html += '<label class="mrk-lbl">Üst Etiket (kırmızı küçük yazı)</label>';
+    html += '<input id="m-nedenTag" value="'+escapeHTML(m.nedenTag||'Neden PPF Kaplama?')+'" class="mrk-inp">';
+    html += '<label class="mrk-lbl">Ana Başlık</label>';
+    html += '<input id="m-nedenBaslik" value="'+escapeHTML(m.nedenBaslik||'')+'" class="mrk-inp">';
+    html += '<label class="mrk-lbl">Alt Açıklama</label>';
+    html += '<input id="m-nedenAciklama" value="'+escapeHTML(m.nedenAciklama||'')+'" class="mrk-inp">';
+    html += '</div>';
+
+    html += '<div class="mrk-liste-head">';
+    html += '<div style="flex:1;font-size:13px;color:var(--ink4)">6 adet özellik kartı. Her kart: ikon + başlık + açıklama.</div>';
+    html += '<button class="mrk-btn" onclick="markaNedenEkle()">+ Kart Ekle</button>';
+    html += '</div>';
+
+    // İkon seçenekleri
+    var ikonSecenekleri = [
+      {id:'i-shield', ad:'🛡️ Kalkan'},
+      {id:'i-sparkles', ad:'✨ Parıltı'},
+      {id:'i-sun', ad:'☀️ Güneş'},
+      {id:'i-diamond', ad:'💎 Elmas'},
+      {id:'i-droplet', ad:'💧 Damla'},
+      {id:'i-lock', ad:'🔒 Kilit'},
+      {id:'i-car', ad:'🚗 Araba'},
+      {id:'i-shield-check', ad:'✅ Onaylı Kalkan'},
+      {id:'i-flame', ad:'🔥 Alev'},
+      {id:'i-star', ad:'⭐ Yıldız'},
+      {id:'i-clock', ad:'🕐 Saat'},
+      {id:'i-check', ad:'✔️ Tik'}
+    ];
+
+    (m.neden||[]).forEach(function(n, idx){
+      html += '<div class="mrk-card" data-neden-idx="'+idx+'">';
+      html += '<div class="mrk-item-head">';
+      html += '<div class="mrk-item-title">KART '+(idx+1)+'</div>';
+      html += '<button class="mrk-btn-sil" onclick="markaNedenSil('+idx+')">Sil</button>';
+      html += '</div>';
+
+      html += '<label class="mrk-lbl">İkon</label>';
+      html += '<select data-n-ikon="'+idx+'" class="mrk-inp">';
+      ikonSecenekleri.forEach(function(opt){
+        html += '<option value="'+opt.id+'"'+(n.ikon===opt.id?' selected':'')+'>'+opt.ad+'</option>';
+      });
+      html += '</select>';
+
+      html += '<label class="mrk-lbl">Başlık</label>';
+      html += '<input data-n-baslik="'+idx+'" value="'+escapeHTML(n.baslik||'')+'" class="mrk-inp">';
+      html += '<label class="mrk-lbl">Açıklama</label>';
+      html += '<textarea data-n-aciklama="'+idx+'" class="mrk-ta">'+escapeHTML(n.aciklama||'')+'</textarea>';
+      html += '</div>';
+    });
+  }
+  else if(i===3){
+    // Paketler (başlık alanı + paket listesi)
+    html += '<div class="mrk-card">';
+    html += '<h3 style="font-family:Bebas Neue,sans-serif;letter-spacing:1px;font-size:18px;margin-bottom:4px">💰 Paketler Bölümü Başlığı</h3>';
+    html += '<label class="mrk-lbl">Üst Etiket</label>';
+    html += '<input id="m-paketlerTag" value="'+escapeHTML(m.paketlerTag||'Fiyat Paketleri')+'" class="mrk-inp">';
+    html += '<label class="mrk-lbl">Ana Başlık</label>';
+    html += '<input id="m-paketlerBaslik" value="'+escapeHTML(m.paketlerBaslik||'')+'" class="mrk-inp">';
+    html += '<label class="mrk-lbl">Alt Açıklama</label>';
+    html += '<input id="m-paketlerAciklama" value="'+escapeHTML(m.paketlerAciklama||'')+'" class="mrk-inp">';
+    html += '</div>';
+
     html += '<div class="mrk-liste-head">';
     html += '<div style="flex:1;font-size:13px;color:var(--ink4)">Her paket bir fiyat kartı. "Featured" işaretli paket ön plana çıkar.</div>';
     html += '<button class="mrk-btn" onclick="markaPaketEkle()">+ Paket Ekle</button>';
@@ -14268,7 +14359,7 @@ function markaTabSec(i){
       html += '</div>';
     });
   }
-  else if(i===3){
+  else if(i===4){
     // Galeri - Video/Foto hybrid
     html += '<div class="mrk-card">';
     html += '<h3 style="font-family:Bebas Neue,sans-serif;letter-spacing:1px;font-size:18px;margin-bottom:4px">🎬 Galeri (6 Video/Foto Kartı)</h3>';
@@ -14319,8 +14410,18 @@ function markaTabSec(i){
     html += '</div>';
     html += '</div>';
   }
-  else if(i===4){
-    // Yorumlar
+  else if(i===5){
+    // Yorumlar - başlık alanları + yorum listesi
+    html += '<div class="mrk-card">';
+    html += '<h3 style="font-family:Bebas Neue,sans-serif;letter-spacing:1px;font-size:18px;margin-bottom:4px">💬 Yorumlar Bölümü Başlığı</h3>';
+    html += '<label class="mrk-lbl">Üst Etiket</label>';
+    html += '<input id="m-yorumTag" value="'+escapeHTML(m.yorumTag||'Müşteri Yorumları')+'" class="mrk-inp">';
+    html += '<label class="mrk-lbl">Ana Başlık</label>';
+    html += '<input id="m-yorumBaslik" value="'+escapeHTML(m.yorumBaslik||'')+'" class="mrk-inp">';
+    html += '<label class="mrk-lbl">Alt Açıklama</label>';
+    html += '<input id="m-yorumAciklama" value="'+escapeHTML(m.yorumAciklama||'')+'" class="mrk-inp">';
+    html += '</div>';
+
     html += '<div class="mrk-liste-head">';
     html += '<div style="flex:1;font-size:13px;color:var(--ink4)">Müşteri yorumları. Güven oluşturur, satış artırır.</div>';
     html += '<button class="mrk-btn" onclick="markaYorumEkle()">+ Yorum Ekle</button>';
@@ -14345,8 +14446,18 @@ function markaTabSec(i){
       html += '</div>';
     });
   }
-  else if(i===5){
-    // SSS
+  else if(i===6){
+    // SSS - başlık alanları + liste
+    html += '<div class="mrk-card">';
+    html += '<h3 style="font-family:Bebas Neue,sans-serif;letter-spacing:1px;font-size:18px;margin-bottom:4px">❓ SSS Bölümü Başlığı</h3>';
+    html += '<label class="mrk-lbl">Üst Etiket</label>';
+    html += '<input id="m-sssTag" value="'+escapeHTML(m.sssTag||'Sıkça Sorulan Sorular')+'" class="mrk-inp">';
+    html += '<label class="mrk-lbl">Ana Başlık</label>';
+    html += '<input id="m-sssBaslik" value="'+escapeHTML(m.sssBaslik||'')+'" class="mrk-inp">';
+    html += '<label class="mrk-lbl">Alt Açıklama</label>';
+    html += '<input id="m-sssAciklama" value="'+escapeHTML(m.sssAciklama||'')+'" class="mrk-inp">';
+    html += '</div>';
+
     html += '<div class="mrk-liste-head">';
     html += '<div style="flex:1;font-size:13px;color:var(--ink4)"><b>SEO için çok önemli!</b> Google bu soruları arama sonuçlarında accordion olarak gösterebilir.</div>';
     html += '<button class="mrk-btn" onclick="markaSSSEkle()">+ Soru Ekle</button>';
@@ -14364,6 +14475,20 @@ function markaTabSec(i){
       html += '<textarea data-s-cevap="'+idx+'" class="mrk-ta" style="min-height:100px">'+escapeHTML(s.cevap)+'</textarea>';
       html += '</div>';
     });
+  }
+  else if(i===7){
+    // Kapanış / CTA
+    html += '<div class="mrk-card">';
+    html += '<h3 style="font-family:Bebas Neue,sans-serif;letter-spacing:1px;font-size:18px;margin-bottom:4px">🎯 Kapanış CTA (En Alt)</h3>';
+    html += '<p style="font-size:12px;color:var(--ink4);margin-bottom:8px">Sayfanın en altındaki siyah kırmızı çağrı bölümü.</p>';
+
+    html += '<label class="mrk-lbl">Ana Başlık (büyük yazı)</label>';
+    html += '<input id="m-ctaBaslik" value="'+escapeHTML(m.ctaBaslik||'')+'" class="mrk-inp">';
+    html += '<label class="mrk-lbl">Vurgu Kısmı (kırmızı italik)</label>';
+    html += '<input id="m-ctaBaslikKirmizi" value="'+escapeHTML(m.ctaBaslikKirmizi||'')+'" class="mrk-inp">';
+    html += '<label class="mrk-lbl">Açıklama Metni</label>';
+    html += '<textarea id="m-ctaAciklama" class="mrk-ta">'+escapeHTML(m.ctaAciklama||'')+'</textarea>';
+    html += '</div>';
   }
 
   document.getElementById('m-tab-icerik').innerHTML = html;
@@ -14413,7 +14538,28 @@ function markaFormdanOku(){
     ayarE('m-ist'+j+'_l','ist'+j+'_l');
   }
 
-  // Tab 2 — Paketler
+  // Tab 2 — Neden PPF (section başlığı + 6 kart)
+  ayarE('m-nedenTag','nedenTag');
+  ayarE('m-nedenBaslik','nedenBaslik');
+  ayarE('m-nedenAciklama','nedenAciklama');
+  var nEls = document.querySelectorAll('[data-neden-idx]');
+  if(nEls.length > 0){
+    if(!m.neden) m.neden = [];
+    nEls.forEach(function(nEl){
+      var idx = parseInt(nEl.dataset.nedenIdx);
+      if(!m.neden[idx]) m.neden[idx] = {};
+      var n = m.neden[idx];
+      var q = function(sel){ return nEl.querySelector(sel); };
+      if(q('[data-n-ikon]')) n.ikon = q('[data-n-ikon]').value;
+      if(q('[data-n-baslik]')) n.baslik = q('[data-n-baslik]').value;
+      if(q('[data-n-aciklama]')) n.aciklama = q('[data-n-aciklama]').value;
+    });
+  }
+
+  // Tab 3 — Paketler (section başlığı + paketler)
+  ayarE('m-paketlerTag','paketlerTag');
+  ayarE('m-paketlerBaslik','paketlerBaslik');
+  ayarE('m-paketlerAciklama','paketlerAciklama');
   var paketEls = document.querySelectorAll('[data-paket-idx]');
   if(paketEls.length > 0){
     paketEls.forEach(function(pEl){
@@ -14430,7 +14576,7 @@ function markaFormdanOku(){
     });
   }
 
-  // Tab 3 — Galeri (video/foto hybrid)
+  // Tab 4 — Galeri (video/foto hybrid)
   var gBasl = document.getElementById('m-galeriBaslik');
   if(gBasl) m.galeriBaslik = gBasl.value;
   var gAcik = document.getElementById('m-galeriAciklama');
@@ -14451,7 +14597,10 @@ function markaFormdanOku(){
     });
   }
 
-  // Tab 4 — Yorumlar
+  // Tab 5 — Yorumlar (section başlığı + yorumlar)
+  ayarE('m-yorumTag','yorumTag');
+  ayarE('m-yorumBaslik','yorumBaslik');
+  ayarE('m-yorumAciklama','yorumAciklama');
   var yEls = document.querySelectorAll('[data-yorum-idx]');
   if(yEls.length > 0){
     yEls.forEach(function(yEl){
@@ -14466,6 +14615,11 @@ function markaFormdanOku(){
     });
   }
 
+  // Tab 6 — SSS (section başlığı + sorular)
+  ayarE('m-sssTag','sssTag');
+  ayarE('m-sssBaslik','sssBaslik');
+  ayarE('m-sssAciklama','sssAciklama');
+
   // Tab 5 — SSS
   var sEls = document.querySelectorAll('[data-sss-idx]');
   if(sEls.length > 0){
@@ -14478,6 +14632,11 @@ function markaFormdanOku(){
       if(q('[data-s-cevap]')) s.cevap = q('[data-s-cevap]').value;
     });
   }
+
+  // Tab 7 — Kapanış CTA
+  ayarE('m-ctaBaslik','ctaBaslik');
+  ayarE('m-ctaBaslikKirmizi','ctaBaslikKirmizi');
+  ayarE('m-ctaAciklama','ctaAciklama');
 
   // Depoya yazma (tab switch sırasında persistent olsun, ama asıl "KAYDET" ile son yazılacak)
   depo[MARKA_AKTIF_KOD] = m;
@@ -14505,7 +14664,7 @@ function markaPaketEkle(){
   if(!m.paketler) m.paketler = [];
   m.paketler.push({ ad:'YENİ PAKET', aciklama:'Açıklama yazın', fiyat:'FİYAT SOR', fiyatNot:'KDV Dahil', ozellikler:['Özellik 1','Özellik 2'], featured:false });
   markaDepoYaz(depo, true);
-  markaTabSec(2);
+  markaTabSec(3);
 }
 function markaPaketSil(idx){
   if(!confirm('Paket '+(idx+1)+' silinecek. Emin misiniz?')) return;
@@ -14514,6 +14673,28 @@ function markaPaketSil(idx){
   var m = depo[MARKA_AKTIF_KOD];
   if(!m || !m.paketler) return;
   m.paketler.splice(idx,1);
+  markaDepoYaz(depo, true);
+  markaTabSec(3);
+}
+
+// Neden PPF kart ekle/sil (Tab 2)
+function markaNedenEkle(){
+  markaFormdanOku();
+  var depo = markaDepoOku();
+  var m = depo[MARKA_AKTIF_KOD];
+  if(!m) return;
+  if(!m.neden) m.neden = [];
+  m.neden.push({ ikon:'i-shield', baslik:'Yeni Özellik', aciklama:'Açıklama yazın...' });
+  markaDepoYaz(depo, true);
+  markaTabSec(2);
+}
+function markaNedenSil(idx){
+  if(!confirm('Kart '+(idx+1)+' silinecek. Emin misiniz?')) return;
+  markaFormdanOku();
+  var depo = markaDepoOku();
+  var m = depo[MARKA_AKTIF_KOD];
+  if(!m || !m.neden) return;
+  m.neden.splice(idx,1);
   markaDepoYaz(depo, true);
   markaTabSec(2);
 }
@@ -14527,7 +14708,7 @@ function markaYorumEkle(){
   if(!m.yorumlar) m.yorumlar = [];
   m.yorumlar.push({ ad:'Ad Soyad', bas:'AS', arac:(m.ad||'Araç')+' · Şehir', yorum:'Yorum metni...' });
   markaDepoYaz(depo, true);
-  markaTabSec(4);
+  markaTabSec(5);
 }
 function markaYorumSil(idx){
   if(!confirm('Yorum '+(idx+1)+' silinecek. Emin misiniz?')) return;
@@ -14537,7 +14718,7 @@ function markaYorumSil(idx){
   if(!m || !m.yorumlar) return;
   m.yorumlar.splice(idx,1);
   markaDepoYaz(depo, true);
-  markaTabSec(4);
+  markaTabSec(5);
 }
 
 // SSS ekle/sil
@@ -14549,7 +14730,7 @@ function markaSSSEkle(){
   if(!m.sss) m.sss = [];
   m.sss.push({ soru:'Yeni soru?', cevap:'Cevap metni...' });
   markaDepoYaz(depo, true);
-  markaTabSec(5);
+  markaTabSec(6);
 }
 function markaSSSSil(idx){
   if(!confirm('Soru '+(idx+1)+' silinecek. Emin misiniz?')) return;
@@ -14559,7 +14740,7 @@ function markaSSSSil(idx){
   if(!m || !m.sss) return;
   m.sss.splice(idx,1);
   markaDepoYaz(depo, true);
-  markaTabSec(5);
+  markaTabSec(6);
 }
 
 </script>
