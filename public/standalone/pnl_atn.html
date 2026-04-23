@@ -2013,14 +2013,14 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
       </div>
       <div class="mrk-info">
         <div class="mrk-info-metin">
-          <b style="color:var(--ink)">Nasıl çalışır?</b> Her marka için içerik (fotoğraf, fiyat, yorum, SSS) girin.
-          Kaydedince panel verisinde tutulur. Canlı siteye yansıtmak için <b style="color:var(--r)">YAYINLA</b> butonuna basın — JSON dosyası indirilir,
-          <code style="background:rgba(0,0,0,.05);padding:2px 6px;border-radius:4px">public/markalar.json</code> olarak push edersiniz.
+          <b style="color:var(--ink)">Nasıl çalışır?</b> Her değişiklik otomatik olarak sunucuya kaydedilir ☁️.
+          Canlı sayfalar (<code style="background:rgba(0,0,0,.05);padding:2px 6px;border-radius:4px">/togg-ppf-kaplama.html</code> vb.) 1-2 dakika içinde güncellenir.
+          Video için sadece YouTube/Instagram/TikTok linki yapıştırmanız yeterli.
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button onclick="markaYeniDialog()" class="mrk-btn">+ YENİ MARKA</button>
-          <button onclick="markaJSONCekSenkron()" class="mrk-btn-sec" title="Canlı siteden oku">🔄 SENKRON</button>
-          <button onclick="markaJSONYayinla()" class="mrk-btn-ink">📤 YAYINLA</button>
+          <button onclick="markaJSONCekSenkron()" class="mrk-btn-sec" title="Sunucudan yeniden oku">🔄 YENİLE</button>
+          <button onclick="markaJSONYayinla()" class="mrk-btn-sec" title="Yedek JSON indir">💾 YEDEK AL</button>
         </div>
       </div>
       <div id="marka-liste" class="mrk-grid">
@@ -13568,8 +13568,15 @@ function markaDefaultSablon(kod, ad){
       { ad:'ÖN 3\'LÜ PPF', aciklama:'En çok tercih edilen - optimum koruma/fiyat dengesi', fiyat:'FİYAT SOR', fiyatNot:'KDV Dahil · 10 yıl garanti', ozellikler:['Kaput (tam)','Ön çamurluklar','Ön tampon + farlar','Yan aynalar','2 gün teslim','Premium 200µ TPU film','Sertifikalı garanti belgesi'], featured:true },
       { ad:'KOMPLE PPF', aciklama:'Maksimum koruma - aracın tüm boyalı yüzeyi', fiyat:'FİYAT SOR', fiyatNot:'KDV Dahil · 10 yıl garanti', ozellikler:['Aracın TÜM boyalı yüzeyi','Kaput + çamurluklar + kapılar','Tamponlar + bagaj','Farlar + aynalar','3-5 gün teslim','En üst kalite 200µ+ TPU','Ömür boyu değer koruma'], featured:false }
     ],
-    // Galeri (6 foto)
-    galeri: ['','','','','',''],
+    // Galeri (6 kart - video veya foto)
+    galeri: [
+      { tip:'video', url:'' },
+      { tip:'video', url:'' },
+      { tip:'video', url:'' },
+      { tip:'foto',  url:'' },
+      { tip:'foto',  url:'' },
+      { tip:'foto',  url:'' }
+    ],
     galeriBaslik: ad+' Çalışmalarımız',
     galeriAciklama: 'Karadeniz bölgesinden '+ad+' sahiplerinin bize emanet ettiği araçlar',
     // Yorumlar
@@ -13601,15 +13608,56 @@ function markaDepoOku(){
   } catch(e){ return {}; }
 }
 
-// Depo yaz
-function markaDepoYaz(depo){
+// Depo yaz — localStorage + backend DB (otomatik sync)
+function markaDepoYaz(depo, sessizMi){
   try {
     localStorage.setItem(MARKA_STORAGE_KEY, JSON.stringify(depo));
+    // Backend'e de kaydet (arka planda, hata olursa sessiz)
+    markaBackendYaz(depo, sessizMi);
     return true;
   } catch(e){
     if(typeof toast==='function') toast('Kayıt hatası: localStorage dolu olabilir', 'red');
     return false;
   }
+}
+
+// Backend'e yaz (fire-and-forget + opsiyonel toast)
+var MARKA_BACKEND_DEBOUNCE_TIMER = null;
+function markaBackendYaz(depo, sessizMi){
+  // Debounce — 500ms içinde tekrar çağrılırsa bekle (arka arkaya tab geçişlerinde spam önle)
+  if(MARKA_BACKEND_DEBOUNCE_TIMER) clearTimeout(MARKA_BACKEND_DEBOUNCE_TIMER);
+  MARKA_BACKEND_DEBOUNCE_TIMER = setTimeout(function(){
+    MARKA_BACKEND_DEBOUNCE_TIMER = null;
+    fetch('/api/ayarlar', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ markalar_v1: depo }),
+      credentials: 'same-origin'
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d && d.success){
+        if(!sessizMi && typeof toast==='function') toast('☁️ Sunucuya senkron edildi','green');
+      } else {
+        if(!sessizMi && typeof toast==='function') toast('⚠️ Lokal kaydedildi (sunucu erişimsiz)','orange');
+      }
+    })
+    .catch(function(){
+      if(!sessizMi && typeof toast==='function') toast('⚠️ Lokal kaydedildi (sunucu offline)','orange');
+    });
+  }, 500);
+}
+
+// Backend'den oku ve localStorage ile birleştir
+function markaBackendOku(callback){
+  fetch('/api/ayarlar?_t='+Date.now(), {credentials:'same-origin'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      // /api/ayarlar formatı: {data: {...}, success:true} veya {markalar_v1: ...}
+      var veri = (d && d.data && d.data.markalar_v1) || (d && d.markalar_v1) || null;
+      if(callback) callback(veri);
+    })
+    .catch(function(){ if(callback) callback(null); });
 }
 
 // Varsayılan markaları yükle (ilk kullanımda)
@@ -13631,14 +13679,28 @@ function markaVarsayilanlariEkle(){
       eklendi++;
     }
   });
-  if(eklendi > 0) markaDepoYaz(depo);
+  if(eklendi > 0) markaDepoYaz(depo, true);
   return eklendi;
 }
 
 // Ana marka listesi sayfası
 function markaSayfalariYukle(){
-  // İlk açılışta varsayılanları yükle
-  markaVarsayilanlariEkle();
+  // İlk açılışta backend'den senkron (sessiz)
+  markaBackendOku(function(backendVeri){
+    if(backendVeri && typeof backendVeri === 'object' && Object.keys(backendVeri).length > 0){
+      // Backend'de veri var → localStorage'ı güncelle (merge etmiyoruz, overwrite - sunucu otorite)
+      try {
+        localStorage.setItem(MARKA_STORAGE_KEY, JSON.stringify(backendVeri));
+      } catch(e){}
+    }
+    // Sonra varsayılanları ekle (eksik markalar varsa)
+    markaVarsayilanlariEkle();
+    markaListeleRender();
+  });
+}
+
+// Sadece render (backend çağrısı olmadan)
+function markaListeleRender(){
   var depo = markaDepoOku();
   var liste = document.getElementById('marka-liste');
   if(!liste) return;
@@ -13652,7 +13714,11 @@ function markaSayfalariYukle(){
   var html = '';
   markalar.forEach(function(kod){
     var m = depo[kod];
-    var fotoSay = (m.galeri||[]).filter(function(f){return f;}).length;
+    var galeriItems = m.galeri || [];
+    var fotoSay = galeriItems.filter(function(f){
+      if(typeof f === 'string') return f;
+      return f && (f.url || f.foto);
+    }).length;
     var yorumSay = (m.yorumlar||[]).length;
     var paketSay = (m.paketler||[]).length;
     var url = '/'+kod+'-ppf-kaplama.html';
@@ -13668,7 +13734,7 @@ function markaSayfalariYukle(){
     html += '<div class="mrk-k-aciklama">'+escapeHTML((m.seoDesc||'').substring(0,90))+'...</div>';
     html += '<div class="mrk-k-rozetler">';
     html += '<span class="mrk-k-rozet mrk-k-rozet-r">📦 '+paketSay+' Paket</span>';
-    html += '<span class="mrk-k-rozet mrk-k-rozet-b">🖼️ '+fotoSay+'/6 Foto</span>';
+    html += '<span class="mrk-k-rozet mrk-k-rozet-b">🎬 '+fotoSay+'/6 Medya</span>';
     html += '<span class="mrk-k-rozet mrk-k-rozet-y">💬 '+yorumSay+' Yorum</span>';
     html += '</div>';
     html += '<div class="mrk-k-aksi">';
@@ -13798,13 +13864,138 @@ function markaOnizle(kod){
 }
 
 // ═══════════════════════════════════════════════════════════
-// JSON YAYINLA (indir) + SENKRON ET (canlıdan oku)
+// VIDEO URL PARSER + EMBED HELPER'LAR (Galeri için)
 // ═══════════════════════════════════════════════════════════
+
+// URL'den video türünü ve ID'sini çıkar
+// Dönüş: {tur: 'youtube'|'instagram'|'tiktok'|null, id: 'XXX', embed: 'https://...'}
+window.markaVideoParse = function(url){
+  if(!url) return null;
+  url = String(url).trim();
+
+  // YouTube: youtube.com/watch?v=XXX, youtu.be/XXX, youtube.com/shorts/XXX, youtube.com/embed/XXX
+  var m;
+  if(m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)){
+    return {
+      tur: 'youtube',
+      id: m[1],
+      embed: 'https://www.youtube.com/embed/' + m[1] + '?rel=0&modestbranding=1&playsinline=1',
+      thumb: 'https://img.youtube.com/vi/' + m[1] + '/hqdefault.jpg'
+    };
+  }
+
+  // Instagram Reel: instagram.com/reel/XXX/ (veya reels/)
+  if(m = url.match(/instagram\.com\/reels?\/([a-zA-Z0-9_-]+)/)){
+    return {
+      tur: 'instagram',
+      id: m[1],
+      embed: 'https://www.instagram.com/reel/' + m[1] + '/embed/',
+      thumb: null
+    };
+  }
+
+  // Instagram Post: instagram.com/p/XXX/
+  if(m = url.match(/instagram\.com\/p\/([a-zA-Z0-9_-]+)/)){
+    return {
+      tur: 'instagram',
+      id: m[1],
+      embed: 'https://www.instagram.com/p/' + m[1] + '/embed/',
+      thumb: null
+    };
+  }
+
+  // TikTok: tiktok.com/@user/video/XXX
+  if(m = url.match(/tiktok\.com\/(?:@[\w.-]+\/)?video\/(\d+)/)){
+    return {
+      tur: 'tiktok',
+      id: m[1],
+      embed: 'https://www.tiktok.com/embed/v2/' + m[1],
+      thumb: null
+    };
+  }
+
+  // Vimeo
+  if(m = url.match(/vimeo\.com\/(\d+)/)){
+    return {
+      tur: 'vimeo',
+      id: m[1],
+      embed: 'https://player.vimeo.com/video/' + m[1],
+      thumb: null
+    };
+  }
+
+  return null;
+};
+
+// Panelde galeri kutusunda önizleme HTML üret
+function markaGaleriOnizle(tip, url){
+  if(!url){
+    return '<div style="color:#666;font-size:11px;text-align:center;padding:10px">URL yapıştırın</div>';
+  }
+
+  if(tip === 'foto'){
+    return '<img src="'+url.replace(/"/g,'&quot;')+'" style="width:100%;height:100%;object-fit:cover" onerror="this.outerHTML=\'<div style=&quot;color:#c00;font-size:11px;text-align:center;padding:10px&quot;>Foto yüklenemedi</div>\'">';
+  }
+
+  // Video
+  var v = window.markaVideoParse(url);
+  if(!v){
+    return '<div style="color:#ffa500;font-size:11px;text-align:center;padding:10px">⚠️ Tanınmayan video linki</div>';
+  }
+
+  var etiket = v.tur.charAt(0).toUpperCase() + v.tur.slice(1);
+  if(v.thumb){
+    return '<div style="position:relative;width:100%;height:100%"><img src="'+v.thumb+'" style="width:100%;height:100%;object-fit:cover"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="width:44px;height:44px;background:rgba(255,255,255,.9);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#000;font-size:18px">▶</div></div><div style="position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.7);color:#fff;padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700">'+etiket+'</div></div>';
+  }
+
+  return '<div style="color:#25D366;font-size:11px;text-align:center;padding:10px"><div style="font-size:28px;margin-bottom:4px">▶</div>'+etiket+' video<br><span style="font-size:9px;color:#888">Site\'de embed olur</span></div>';
+}
+
+// Galeri kutusu önizleme güncelle (input'a yazarken canlı güncelle)
+window.markaGaleriOnizlemeGuncelle = function(idx){
+  var kutu = document.querySelector('[data-g-idx="'+idx+'"]');
+  if(!kutu) return;
+  var tipEl = kutu.querySelector('[data-g-tip]');
+  var urlEl = kutu.querySelector('[data-g-url]');
+  var prevEl = kutu.querySelector('[data-g-preview]');
+  if(!tipEl || !urlEl || !prevEl) return;
+  prevEl.innerHTML = markaGaleriOnizle(tipEl.value, urlEl.value);
+};
+
+// Galeri kutusu tip değiştir (Video ↔ Foto)
+window.markaGaleriTipDegistir = function(idx, yeniTip){
+  var kutu = document.querySelector('[data-g-idx="'+idx+'"]');
+  if(!kutu) return;
+  var tipEl = kutu.querySelector('[data-g-tip]');
+  var urlEl = kutu.querySelector('[data-g-url]');
+  if(!tipEl || !urlEl) return;
+  tipEl.value = yeniTip;
+
+  // Buton stillerini güncelle
+  kutu.querySelectorAll('[data-g-tip-btn]').forEach(function(b){
+    if(b.dataset.gTipBtn === yeniTip){
+      b.style.background = 'var(--r)'; b.style.color = '#fff';
+    } else {
+      b.style.background = 'transparent'; b.style.color = 'var(--ink4)';
+    }
+  });
+
+  // Placeholder metnini güncelle
+  if(yeniTip === 'video'){
+    urlEl.placeholder = 'YouTube/Instagram/TikTok linki yapıştırın';
+  } else {
+    urlEl.placeholder = '/uploads/'+MARKA_AKTIF_KOD+'-'+(idx+1)+'.jpg';
+  }
+
+  // Önizlemeyi yenile
+  markaGaleriOnizlemeGuncelle(idx);
+};
+
 
 function markaJSONYayinla(){
   var depo = markaDepoOku();
   if(Object.keys(depo).length === 0){
-    if(typeof toast==='function') toast('Yayınlanacak marka yok', 'red');
+    if(typeof toast==='function') toast('Yedeklenecek marka yok', 'red');
     return;
   }
 
@@ -13816,70 +14007,40 @@ function markaJSONYayinla(){
   };
   var jsonStr = JSON.stringify(yayin, null, 2);
 
-  // Dosya indirme
+  // Dosya indirme (yedek amaçlı)
   try {
     var blob = new Blob([jsonStr], { type:'application/json;charset=utf-8' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
-    a.download = 'markalar.json';
+    var tarih = new Date().toISOString().slice(0,10);
+    a.download = 'markalar-yedek-'+tarih+'.json';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     setTimeout(function(){ URL.revokeObjectURL(url); }, 100);
-
-    // Başarı modali
-    markaYayinlaBasariModal();
+    if(typeof toast==='function') toast('💾 Yedek dosya indirildi','green');
   } catch(e){
-    alert('JSON indirilemiyor: '+e.message);
+    alert('Yedek alınamıyor: '+e.message);
   }
 }
 
-function markaYayinlaBasariModal(){
-  var eski = document.getElementById('mrk-yayin-modal');
-  if(eski) eski.remove();
-
-  var bg = document.createElement('div');
-  bg.id = 'mrk-yayin-modal';
-  bg.className = 'mrk-modal-bg';
-  bg.innerHTML =
-    '<div class="mrk-modal" onclick="event.stopPropagation()" style="max-width:520px">'+
-      '<div class="mrk-modal-baslik">'+
-        '<h3>📤 JSON İNDİRİLDİ</h3>'+
-        '<button class="mrk-modal-kapat" onclick="document.getElementById(\'mrk-yayin-modal\').remove()" aria-label="Kapat">×</button>'+
-      '</div>'+
-      '<div class="mrk-modal-icerik">'+
-        '<p style="margin-bottom:14px;line-height:1.6;font-size:14px"><b style="color:var(--r)">markalar.json</b> dosyası indirildi. Şimdi bunu canlı siteye push edin:</p>'+
-        '<div style="background:#0d0d0d;color:#b5f0b5;padding:14px;border-radius:8px;font-family:monospace;font-size:12px;line-height:1.7;overflow-x:auto;white-space:nowrap">cd /d C:\\autonax && copy /Y &quot;%USERPROFILE%\\Downloads\\markalar.json&quot; &quot;public\\markalar.json&quot; && git add public/markalar.json && git commit -m &quot;markalar guncellendi&quot; && git push</div>'+
-        '<p style="margin-top:14px;font-size:13px;color:var(--ink4);line-height:1.6">Push sonrası Vercel 1-2 dakikada deploy eder. Canlı sayfalar (<code style="background:rgba(0,0,0,.05);padding:1px 5px;border-radius:3px">/togg-ppf-kaplama.html</code> vb.) otomatik yeni içeriği gösterir.</p>'+
-      '</div>'+
-      '<div class="mrk-modal-aksi">'+
-        '<button class="mrk-btn-sec" onclick="navigator.clipboard&amp;&amp;navigator.clipboard.writeText(this.previousElementSibling.previousElementSibling.querySelector(\'div[style*=monospace]\').textContent);if(typeof toast===\'function\')toast(\'Komut kopyalandı\',\'green\')">📋 KOMUTU KOPYALA</button>'+
-        '<button class="mrk-btn" onclick="document.getElementById(\'mrk-yayin-modal\').remove()">TAMAM</button>'+
-      '</div>'+
-    '</div>';
-  bg.onclick = function(){ bg.remove(); };
-  document.body.appendChild(bg);
-}
-
-// Canlı siteden JSON çek — başka cihazda yapılan değişiklikleri al
+// Sunucudan yeniden oku - başka cihazdan yapılan değişiklikleri al
 function markaJSONCekSenkron(){
-  if(!confirm('Canlı siteden (autonax.com.tr/markalar.json) veri çekilecek.\n\nMevcut localStorage verisi üzerine yazılacak. Devam edilsin mi?')) return;
-
-  fetch('/markalar.json?t='+Date.now(), { cache:'no-store' })
-    .then(function(r){
-      if(!r.ok) throw new Error('Dosya bulunamadı ('+r.status+')');
-      return r.json();
-    })
-    .then(function(data){
-      if(!data || !data.markalar){ throw new Error('Geçersiz JSON formatı'); }
-      markaDepoYaz(data.markalar);
-      if(typeof toast==='function') toast('Senkron başarılı: '+Object.keys(data.markalar).length+' marka yüklendi','green');
-      markaSayfalariYukle();
-    })
-    .catch(function(e){
-      alert('Senkron hatası: '+e.message+'\n\nCanlı sitede markalar.json dosyası olmayabilir. Önce YAYINLA yapıp push edin.');
-    });
+  if(typeof toast==='function') toast('☁️ Sunucudan yenileniyor...','blue');
+  markaBackendOku(function(backendVeri){
+    if(backendVeri && typeof backendVeri === 'object' && Object.keys(backendVeri).length > 0){
+      try {
+        localStorage.setItem(MARKA_STORAGE_KEY, JSON.stringify(backendVeri));
+        if(typeof toast==='function') toast('✓ '+Object.keys(backendVeri).length+' marka yenilendi','green');
+      } catch(e){
+        if(typeof toast==='function') toast('Lokal kayıt hatası','red');
+      }
+    } else {
+      if(typeof toast==='function') toast('⚠️ Sunucuda veri yok','orange');
+    }
+    markaListeleRender();
+  });
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -14035,29 +14196,51 @@ function markaTabSec(i){
     });
   }
   else if(i===3){
-    // Galeri
+    // Galeri - Video/Foto hybrid
     html += '<div class="mrk-card">';
-    html += '<h3 style="font-family:Bebas Neue,sans-serif;letter-spacing:1px;font-size:18px;margin-bottom:4px">🖼️ Galeri (6 Fotoğraf)</h3>';
-    html += '<p style="font-size:12px;color:var(--ink4);margin-bottom:14px">Fotoğrafları önce <code style="background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">public/uploads/</code> klasörüne koyun.</p>';
+    html += '<h3 style="font-family:Bebas Neue,sans-serif;letter-spacing:1px;font-size:18px;margin-bottom:4px">🎬 Galeri (6 Video/Foto Kartı)</h3>';
+    html += '<p style="font-size:12px;color:var(--ink4);margin-bottom:14px;line-height:1.6">Her kart için <b>Video</b> (YouTube/Instagram/TikTok linki) veya <b>Fotoğraf</b> URL seçin. Videolar otomatik embed olur, site performansı etkilenmez.</p>';
 
     html += '<label class="mrk-lbl">Galeri Başlığı</label>';
     html += '<input id="m-galeriBaslik" value="'+escapeHTML(m.galeriBaslik||'')+'" class="mrk-inp">';
     html += '<label class="mrk-lbl">Galeri Açıklaması</label>';
     html += '<input id="m-galeriAciklama" value="'+escapeHTML(m.galeriAciklama||'')+'" class="mrk-inp">';
 
-    html += '<h4 style="font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:1px;margin-top:20px;margin-bottom:10px;padding-top:14px;border-top:1px solid var(--bd)">Fotoğraflar</h4>';
+    html += '<h4 style="font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:1px;margin-top:20px;margin-bottom:10px;padding-top:14px;border-top:1px solid var(--bd)">6 Galeri Kartı</h4>';
 
     html += '<div class="mrk-galeri-grid">';
     for(var g=0;g<6;g++){
-      var mev = (m.galeri||[])[g] || '';
-      html += '<div class="mrk-foto-kutu">';
-      html += '<div class="mrk-foto-kutu-lbl">FOTOĞRAF '+(g+1)+'</div>';
-      if(mev){
-        html += '<img src="'+escapeHTML(mev)+'" class="mrk-foto-img" onerror="this.outerHTML=\'<div class=&quot;mrk-foto-ph&quot;>Foto yüklenemedi</div>\'">';
+      var item = (m.galeri||[])[g];
+      // Backward compat: eski string formatı → {tip:'foto', url:'X'}
+      if(typeof item === 'string'){ item = { tip:'foto', url:item }; }
+      if(!item) item = { tip:'video', url:'' };
+      var tip = item.tip || 'video';
+      var url = item.url || '';
+
+      html += '<div class="mrk-foto-kutu" data-g-idx="'+g+'">';
+      html += '<div class="mrk-foto-kutu-lbl">MEDYA '+(g+1)+'</div>';
+
+      // Tip switcher
+      html += '<div style="display:flex;gap:4px;background:#e5e5e5;padding:3px;border-radius:6px;margin-bottom:8px">';
+      html += '<button type="button" data-g-tip-btn="video" data-g-idx="'+g+'" onclick="markaGaleriTipDegistir('+g+',\'video\')" style="flex:1;padding:7px;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;background:'+(tip==='video'?'var(--r)':'transparent')+';color:'+(tip==='video'?'#fff':'var(--ink4)')+'">📹 VIDEO</button>';
+      html += '<button type="button" data-g-tip-btn="foto" data-g-idx="'+g+'" onclick="markaGaleriTipDegistir('+g+',\'foto\')" style="flex:1;padding:7px;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;background:'+(tip==='foto'?'var(--r)':'transparent')+';color:'+(tip==='foto'?'#fff':'var(--ink4)')+'">🖼️ FOTO</button>';
+      html += '</div>';
+
+      // Önizleme alanı
+      html += '<div data-g-preview="'+g+'" class="mrk-foto-img" style="height:140px;background:#1a1a1a;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative">';
+      html += markaGaleriOnizle(tip, url);
+      html += '</div>';
+
+      // URL input
+      if(tip === 'video'){
+        html += '<input data-g-url="'+g+'" value="'+escapeHTML(url)+'" placeholder="YouTube/Instagram/TikTok linki yapıştırın" class="mrk-inp" style="font-size:13px" oninput="markaGaleriOnizlemeGuncelle('+g+')">';
+        html += '<div style="font-size:10px;color:var(--ink4);margin-top:4px;line-height:1.4">Desteklenir: <b>youtube.com/shorts/XXX</b> · <b>youtu.be/XXX</b> · <b>instagram.com/reel/XXX/</b> · <b>instagram.com/p/XXX/</b> · <b>tiktok.com/.../video/XXX</b></div>';
       } else {
-        html += '<div class="mrk-foto-ph">Foto yok</div>';
+        html += '<input data-g-url="'+g+'" value="'+escapeHTML(url)+'" placeholder="/uploads/'+MARKA_AKTIF_KOD+'-'+(g+1)+'.jpg" class="mrk-inp" style="font-size:13px" oninput="markaGaleriOnizlemeGuncelle('+g+')">';
       }
-      html += '<input data-g-foto="'+g+'" value="'+escapeHTML(mev)+'" placeholder="/uploads/'+MARKA_AKTIF_KOD+'-'+(g+1)+'.jpg" class="mrk-inp" style="font-size:13px">';
+
+      // Tip için gizli input (formdanOku için)
+      html += '<input type="hidden" data-g-tip="'+g+'" value="'+escapeHTML(tip)+'">';
       html += '</div>';
     }
     html += '</div>';
@@ -14162,17 +14345,24 @@ function markaFormdanOku(){
     });
   }
 
-  // Tab 3 — Galeri
+  // Tab 3 — Galeri (video/foto hybrid)
   var gBasl = document.getElementById('m-galeriBaslik');
   if(gBasl) m.galeriBaslik = gBasl.value;
   var gAcik = document.getElementById('m-galeriAciklama');
   if(gAcik) m.galeriAciklama = gAcik.value;
-  var gFotoEls = document.querySelectorAll('[data-g-foto]');
-  if(gFotoEls.length > 0){
-    if(!m.galeri || m.galeri.length < 6) m.galeri = ['','','','','',''];
-    gFotoEls.forEach(function(gEl){
-      var idx = parseInt(gEl.dataset.gFoto);
-      m.galeri[idx] = gEl.value;
+  var gKutular = document.querySelectorAll('[data-g-idx]');
+  if(gKutular.length > 0){
+    if(!m.galeri || m.galeri.length < 6) m.galeri = [{tip:'video',url:''},{tip:'video',url:''},{tip:'video',url:''},{tip:'foto',url:''},{tip:'foto',url:''},{tip:'foto',url:''}];
+    var islenmis = {};
+    gKutular.forEach(function(kEl){
+      var idx = parseInt(kEl.dataset.gIdx);
+      if(isNaN(idx) || islenmis[idx]) return;
+      islenmis[idx] = true;
+      var urlEl = kEl.querySelector('[data-g-url]');
+      var tipEl = kEl.querySelector('[data-g-tip]');
+      if(urlEl && tipEl){
+        m.galeri[idx] = { tip: tipEl.value || 'video', url: urlEl.value || '' };
+      }
     });
   }
 
@@ -14206,7 +14396,7 @@ function markaFormdanOku(){
 
   // Depoya yazma (tab switch sırasında persistent olsun, ama asıl "KAYDET" ile son yazılacak)
   depo[MARKA_AKTIF_KOD] = m;
-  markaDepoYaz(depo);
+  markaDepoYaz(depo, true);
 }
 
 // Kaydet butonu
@@ -14215,8 +14405,8 @@ function markaKaydet(){
   var depo = markaDepoOku();
   if(depo[MARKA_AKTIF_KOD]){
     depo[MARKA_AKTIF_KOD].guncelleme = new Date().toISOString();
-    markaDepoYaz(depo);
-    if(typeof toast==='function') toast('Değişiklikler kaydedildi ✓', 'green');
+    markaDepoYaz(depo, false);
+    if(typeof toast==='function') toast('💾 Kaydedildi', 'green');
     else alert('Kaydedildi');
   }
 }
@@ -14229,7 +14419,7 @@ function markaPaketEkle(){
   if(!m) return;
   if(!m.paketler) m.paketler = [];
   m.paketler.push({ ad:'YENİ PAKET', aciklama:'Açıklama yazın', fiyat:'FİYAT SOR', fiyatNot:'KDV Dahil', ozellikler:['Özellik 1','Özellik 2'], featured:false });
-  markaDepoYaz(depo);
+  markaDepoYaz(depo, true);
   markaTabSec(2);
 }
 function markaPaketSil(idx){
@@ -14239,7 +14429,7 @@ function markaPaketSil(idx){
   var m = depo[MARKA_AKTIF_KOD];
   if(!m || !m.paketler) return;
   m.paketler.splice(idx,1);
-  markaDepoYaz(depo);
+  markaDepoYaz(depo, true);
   markaTabSec(2);
 }
 
@@ -14251,7 +14441,7 @@ function markaYorumEkle(){
   if(!m) return;
   if(!m.yorumlar) m.yorumlar = [];
   m.yorumlar.push({ ad:'Ad Soyad', bas:'AS', arac:(m.ad||'Araç')+' · Şehir', yorum:'Yorum metni...' });
-  markaDepoYaz(depo);
+  markaDepoYaz(depo, true);
   markaTabSec(4);
 }
 function markaYorumSil(idx){
@@ -14261,7 +14451,7 @@ function markaYorumSil(idx){
   var m = depo[MARKA_AKTIF_KOD];
   if(!m || !m.yorumlar) return;
   m.yorumlar.splice(idx,1);
-  markaDepoYaz(depo);
+  markaDepoYaz(depo, true);
   markaTabSec(4);
 }
 
@@ -14273,7 +14463,7 @@ function markaSSSEkle(){
   if(!m) return;
   if(!m.sss) m.sss = [];
   m.sss.push({ soru:'Yeni soru?', cevap:'Cevap metni...' });
-  markaDepoYaz(depo);
+  markaDepoYaz(depo, true);
   markaTabSec(5);
 }
 function markaSSSSil(idx){
@@ -14283,7 +14473,7 @@ function markaSSSSil(idx){
   var m = depo[MARKA_AKTIF_KOD];
   if(!m || !m.sss) return;
   m.sss.splice(idx,1);
-  markaDepoYaz(depo);
+  markaDepoYaz(depo, true);
   markaTabSec(5);
 }
 

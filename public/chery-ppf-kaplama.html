@@ -8,9 +8,10 @@
        DİNAMİK MARKA RENDER (EN BAŞTA ÇALIŞIR)
        URL'den marka kodunu okur (togg-ppf-kaplama.html → "togg"),
        Öncelik sırası:
-         1. /markalar.json (canlı sitedeki yayınlanan veri) ← production
-         2. localStorage.autonax_markalar_v1 ← panel çalıştırıldıysa
-         3. Default Togg içeriği ← fallback
+         1. /api/ayarlar (backend DB'deki markalar_v1) ← canlı veri
+         2. /markalar.json (static yedek) ← fallback
+         3. localStorage.autonax_markalar_v1 ← panel cache
+         4. Default Togg içeriği ← son fallback
        Sayfa tamamen render olduktan sonra tüm yerleri günceller.
   ══════════════════════════════════════════════════════════════════ -->
   <script>
@@ -44,40 +45,52 @@
       } catch(e){}
     };
 
-    // 2. Önce localStorage'a bak (hızlı başlangıç - önbellek)
+    // Veri yükleme fonksiyonu - her kaynak denediğinde
+    function markaVerisiYukle(marka, kaynak){
+      if(!marka) return false;
+      window.__AUTONAX_MARKA = marka;
+      window.__AUTONAX_MARKA_KAYNAK = kaynak;
+      window.__autonaxEarlyMeta(marka);
+      if(typeof window.__autonaxRender === 'function'){
+        window.__autonaxRender();
+      }
+      return true;
+    }
+
+    // 2. localStorage'a bak (anlık fallback)
     try {
       var raw = localStorage.getItem('autonax_markalar_v1');
       if(raw){
         var depo = JSON.parse(raw);
         if(depo && depo[MARKA_KOD]){
-          window.__AUTONAX_MARKA = depo[MARKA_KOD];
-          window.__AUTONAX_MARKA_KAYNAK = 'localStorage';
-          window.__autonaxEarlyMeta(depo[MARKA_KOD]);
+          markaVerisiYukle(depo[MARKA_KOD], 'localStorage');
         }
       }
     } catch(e){}
 
-    // 3. Asıl kaynak: canlı markalar.json (panel'den yayınlanmış)
-    // Sayfa render olurken arka planda fetch, varsa override eder
-    fetch('/markalar.json?t='+Date.now(), { cache:'no-store' })
-      .then(function(r){ if(!r.ok) throw 0; return r.json(); })
-      .then(function(data){
-        if(!data || !data.markalar || !data.markalar[MARKA_KOD]) return;
-        var jsonMarka = data.markalar[MARKA_KOD];
-        // Sadece localStorage'dakinden yeni ise override et
-        var mevcut = window.__AUTONAX_MARKA;
-        if(!mevcut || (jsonMarka.guncelleme && jsonMarka.guncelleme > (mevcut.guncelleme||''))){
-          window.__AUTONAX_MARKA = jsonMarka;
-          window.__AUTONAX_MARKA_KAYNAK = 'markalar.json';
-          window.__autonaxEarlyMeta(jsonMarka);
-          // Re-render et (DOMContentLoaded çoktan geçmiş olabilir)
-          if(typeof window.__autonaxRender === 'function'){
-            window.__autonaxRender();
-          }
+    // 3. Backend API - asıl canlı kaynak
+    fetch('/api/ayarlar?_t='+Date.now(), {credentials:'same-origin'})
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        var markalarVerisi = (d && d.data && d.data.markalar_v1) || (d && d.markalar_v1) || null;
+        if(markalarVerisi && markalarVerisi[MARKA_KOD]){
+          markaVerisiYukle(markalarVerisi[MARKA_KOD], 'api');
+          return 'ok';
         }
+        return null;
       })
-      .catch(function(){
-        // markalar.json yok → localStorage yedekte kalır (fallback)
+      .catch(function(){ return null; })
+      .then(function(result){
+        // API başarısızsa markalar.json'u dene (static yedek)
+        if(result === 'ok') return;
+        return fetch('/markalar.json?_t='+Date.now(), { cache:'no-store' })
+          .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+          .then(function(data){
+            if(data && data.markalar && data.markalar[MARKA_KOD]){
+              markaVerisiYukle(data.markalar[MARKA_KOD], 'markalar.json');
+            }
+          })
+          .catch(function(){});
       });
   })();
   </script>
@@ -980,16 +993,66 @@ img{max-width:100%;height:auto;display:block}
         if(galSub) galSub.textContent = marka.galeriAciklama;
       }
 
-      // GALERİ — 6 fotoğraf
+      // GALERİ — 6 medya (video veya foto)
       if(marka.galeri && marka.galeri.length){
         var galItems = document.querySelectorAll('.galeri-grid .galeri-item');
-        marka.galeri.forEach(function(foto, idx){
+        marka.galeri.forEach(function(item, idx){
           var gEl = galItems[idx];
           if(!gEl) return;
-          if(foto){
-            gEl.innerHTML = '<img src="'+e(foto)+'" alt="'+e(marka.ad)+' PPF Samsun '+(idx+1)+'" style="width:100%;height:100%;object-fit:cover">';
+
+          // Backward compat: eski string formatı → foto
+          if(typeof item === 'string'){
+            if(item) gEl.innerHTML = '<img src="'+e(item)+'" alt="'+e(marka.ad)+' PPF Samsun '+(idx+1)+'" style="width:100%;height:100%;object-fit:cover">';
+            return;
+          }
+
+          if(!item || !item.url) return; // boş → default placeholder kalsın
+
+          if(item.tip === 'foto'){
+            gEl.innerHTML = '<img src="'+e(item.url)+'" alt="'+e(marka.ad)+' PPF Samsun '+(idx+1)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.outerHTML=\'<div style=&quot;color:#666;font-size:11px;text-align:center;padding:20px&quot;>Foto yüklenemedi</div>\'">';
+          } else {
+            // Video — embed iframe
+            var v = videoUrlParse(item.url);
+            if(v){
+              // Instagram için özel: direkt embed büyük olur, önce thumbnail göster click ile aç
+              if(v.tur === 'instagram'){
+                gEl.innerHTML = '<iframe src="'+v.embed+'" allowfullscreen scrolling="no" loading="lazy" style="width:100%;height:100%;border:0;background:#000"></iframe>';
+              } else if(v.tur === 'tiktok'){
+                gEl.innerHTML = '<iframe src="'+v.embed+'" allowfullscreen loading="lazy" style="width:100%;height:100%;border:0;background:#000"></iframe>';
+              } else {
+                // YouTube/Vimeo — thumbnail + click to play (performans için)
+                if(v.thumb){
+                  gEl.innerHTML = '<div class="video-thumb" data-embed="'+e(v.embed)+'" onclick="this.outerHTML=\'<iframe src=&quot;'+e(v.embed)+'&autoplay=1&quot; allowfullscreen allow=&quot;autoplay; encrypted-media&quot; loading=&quot;lazy&quot; style=&quot;width:100%;height:100%;border:0&quot;></iframe>\'" style="width:100%;height:100%;background:url('+e(v.thumb)+') center/cover;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center"><div style="width:60px;height:60px;background:rgba(255,255,255,.95);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#000;font-size:22px;box-shadow:0 4px 20px rgba(0,0,0,.5)">▶</div></div>';
+                } else {
+                  gEl.innerHTML = '<iframe src="'+v.embed+'" allowfullscreen loading="lazy" style="width:100%;height:100%;border:0;background:#000"></iframe>';
+                }
+              }
+            }
           }
         });
+      }
+
+      // Video URL parser (aynı panel'de kullanılanın site içi versiyonu)
+      function videoUrlParse(url){
+        if(!url) return null;
+        url = String(url).trim();
+        var m;
+        if(m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)){
+          return { tur:'youtube', id:m[1], embed:'https://www.youtube.com/embed/'+m[1]+'?rel=0&modestbranding=1&playsinline=1', thumb:'https://img.youtube.com/vi/'+m[1]+'/hqdefault.jpg' };
+        }
+        if(m = url.match(/instagram\.com\/reels?\/([a-zA-Z0-9_-]+)/)){
+          return { tur:'instagram', id:m[1], embed:'https://www.instagram.com/reel/'+m[1]+'/embed/' };
+        }
+        if(m = url.match(/instagram\.com\/p\/([a-zA-Z0-9_-]+)/)){
+          return { tur:'instagram', id:m[1], embed:'https://www.instagram.com/p/'+m[1]+'/embed/' };
+        }
+        if(m = url.match(/tiktok\.com\/(?:@[\w.-]+\/)?video\/(\d+)/)){
+          return { tur:'tiktok', id:m[1], embed:'https://www.tiktok.com/embed/v2/'+m[1] };
+        }
+        if(m = url.match(/vimeo\.com\/(\d+)/)){
+          return { tur:'vimeo', id:m[1], embed:'https://player.vimeo.com/video/'+m[1] };
+        }
+        return null;
       }
 
       // YORUMLAR
