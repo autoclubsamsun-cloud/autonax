@@ -417,6 +417,22 @@ img{max-width:100%;height:auto;display:block}
   font-size:10.5px;font-weight:600;letter-spacing:.2px;
 }
 .video-etiket svg{flex-shrink:0}
+
+/* İzlenme rozeti - video üstünde sağ üst köşe */
+.video-izlenme{
+  position:absolute;top:10px;right:10px;z-index:3;
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(0,0,0,.75);backdrop-filter:blur(8px);
+  color:#fff;padding:5px 11px;border-radius:20px;
+  font-size:11px;font-weight:700;letter-spacing:.3px;
+  pointer-events:none;
+  box-shadow:0 2px 8px rgba(0,0,0,.3);
+}
+.video-izlenme svg{width:11px;height:11px;flex-shrink:0;fill:#fff}
+@media(max-width:768px){
+  .video-izlenme{font-size:10px;padding:4px 9px;top:8px;right:8px}
+  .video-izlenme svg{width:10px;height:10px}
+}
 @media(max-width:768px){
   .video-play-ikon{width:50px;height:50px}
   .video-play-ikon svg{width:22px;height:22px}
@@ -1416,11 +1432,13 @@ img{max-width:100%;height:auto;display:block}
         if(galSub) galSub.textContent = marka.galeriAciklama;
       }
 
-      // GALERİ — 6 medya (video veya foto)
+      // GALERİ — 6 medya (video veya foto) — boş olanlar gizlenir
       if(marka.galeri && marka.galeri.length){
         var galGrid = document.querySelector('.galeri-grid');
         var galItems = document.querySelectorAll('.galeri-grid .galeri-item');
         var reelVarMi = false;
+        var doluAdet = 0;
+
         marka.galeri.forEach(function(item, idx){
           var gEl = galItems[idx];
           if(!gEl) return;
@@ -1430,11 +1448,25 @@ img{max-width:100%;height:auto;display:block}
 
           // Backward compat: eski string formatı → foto
           if(typeof item === 'string'){
-            if(item) gEl.innerHTML = '<img src="'+e(item)+'" alt="'+e(marka.ad)+' PPF Samsun '+(idx+1)+'" style="width:100%;height:100%;object-fit:cover">';
+            if(item){
+              gEl.innerHTML = '<img src="'+e(item)+'" alt="'+e(marka.ad)+' PPF Samsun '+(idx+1)+'" style="width:100%;height:100%;object-fit:cover">';
+              gEl.style.display = '';
+              doluAdet++;
+            } else {
+              gEl.style.display = 'none';
+            }
             return;
           }
 
-          if(!item || !item.url) return;
+          // Boş kutu → gizle
+          if(!item || !item.url){
+            gEl.style.display = 'none';
+            return;
+          }
+
+          // Dolu → göster
+          gEl.style.display = '';
+          doluAdet++;
 
           if(item.tip === 'foto'){
             gEl.innerHTML = '<img src="'+e(item.url)+'" alt="'+e(marka.ad)+' PPF Samsun '+(idx+1)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.outerHTML=\'<div style=&quot;color:#666;font-size:11px;text-align:center;padding:20px&quot;>Foto yüklenemedi</div>\'">';
@@ -1448,24 +1480,40 @@ img{max-width:100%;height:auto;display:block}
                 reelVarMi = true;
               }
 
+              // İzlenme rozeti (opsiyonel)
+              var izlenmeRozet = '';
+              if(item.izlenme && item.izlenme.trim()){
+                izlenmeRozet = '<div class="video-izlenme"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span>'+e(item.izlenme)+'</span></div>';
+              }
+
+              var iframeKod = '';
               if(v.tur === 'youtube'){
-                gEl.innerHTML = '<div class="yt-thumb" onclick="this.outerHTML=\'<iframe src=&quot;'+e(v.embed)+'&autoplay=1&quot; allowfullscreen allow=&quot;autoplay; encrypted-media&quot; loading=&quot;lazy&quot; style=&quot;width:100%;height:100%;border:0&quot;></iframe>\'" style="width:100%;height:100%;background:url('+e(v.thumb)+') center/cover;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center">'
+                iframeKod = '<div class="yt-thumb" onclick="this.outerHTML=\'<iframe src=&quot;'+e(v.embed)+'&autoplay=1&quot; allowfullscreen allow=&quot;autoplay; encrypted-media&quot; loading=&quot;lazy&quot; style=&quot;width:100%;height:100%;border:0&quot;></iframe>\'" style="width:100%;height:100%;background:url('+e(v.thumb)+') center/cover;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center">'
                   + '<div class="video-play-ikon"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="8,5 21,12 8,19"/></svg></div>'
                   + '</div>';
               } else if(v.tur === 'instagram'){
-                gEl.innerHTML = '<iframe src="'+e(v.embed)+'" allowfullscreen allowtransparency="true" frameborder="0" scrolling="no" loading="lazy" style="width:100%;height:100%;border:0;background:#000"></iframe>';
+                iframeKod = '<iframe src="'+e(v.embed)+'" allowfullscreen allowtransparency="true" frameborder="0" scrolling="no" loading="lazy" style="width:100%;height:100%;border:0;background:#000"></iframe>';
               } else if(v.tur === 'tiktok'){
-                gEl.innerHTML = '<iframe src="'+e(v.embed)+'" allowfullscreen allow="autoplay" loading="lazy" style="width:100%;height:100%;border:0;background:#000"></iframe>';
+                iframeKod = '<iframe src="'+e(v.embed)+'" allowfullscreen allow="autoplay" loading="lazy" style="width:100%;height:100%;border:0;background:#000"></iframe>';
               } else if(v.tur === 'vimeo'){
-                gEl.innerHTML = '<iframe src="'+e(v.embed)+'" allowfullscreen loading="lazy" style="width:100%;height:100%;border:0;background:#000"></iframe>';
+                iframeKod = '<iframe src="'+e(v.embed)+'" allowfullscreen loading="lazy" style="width:100%;height:100%;border:0;background:#000"></iframe>';
               }
+
+              gEl.innerHTML = iframeKod + izlenmeRozet;
             }
           }
         });
+
         // Reel varsa grid class ekle (mobilde 1 kolon alt alta görünsün)
         if(galGrid){
           if(reelVarMi) galGrid.classList.add('has-reel');
           else galGrid.classList.remove('has-reel');
+
+          // Hiç dolu kutu yoksa tüm galeri section'ını gizle
+          var galeriSec = document.querySelector('.galeri-sec');
+          if(galeriSec){
+            galeriSec.style.display = (doluAdet === 0) ? 'none' : '';
+          }
         }
       }
 
@@ -1645,6 +1693,17 @@ img{max-width:100%;height:auto;display:block}
         if(sTag && marka.sssTag) sTag.textContent = marka.sssTag;
         if(sTitle && marka.sssBaslik) sTitle.textContent = marka.sssBaslik;
         if(sSub && marka.sssAciklama) sSub.textContent = marka.sssAciklama;
+      }
+
+      // Randevu Bölümü başlık
+      var randevuSec = document.getElementById('randevu');
+      if(randevuSec){
+        var rTag = randevuSec.querySelector('.sec-tag');
+        var rTitle = randevuSec.querySelector('.sec-title');
+        var rSub = randevuSec.querySelector('.sec-sub');
+        if(rTag && marka.randevuTag) rTag.textContent = marka.randevuTag;
+        if(rTitle && marka.randevuBaslik) rTitle.textContent = marka.randevuBaslik;
+        if(rSub && marka.randevuAciklama) rSub.textContent = marka.randevuAciklama;
       }
 
       // CTA başlığı + açıklama

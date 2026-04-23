@@ -13579,6 +13579,10 @@ function markaDefaultSablon(kod, ad){
     ctaBaslik: ad+'\'unuzu Koruma',
     ctaBaslikKirmizi: 'Zamanı Geldi',
     ctaAciklama: 'Ücretsiz keşif, şeffaf fiyatlandırma, 10 yıl yazılı garanti. Hemen bize ulaşın.',
+    // Randevu bölümü başlıkları
+    randevuTag: 'Randevu',
+    randevuBaslik: ad+'\'unuz İçin Ücretsiz Keşif',
+    randevuAciklama: 'Bilgilerinizi bırakın, 24 saat içinde size özel fiyat teklifi sunalım',
     // Neden PPF Kartları (6 kart)
     neden: [
       { ikon:'i-shield',   baslik:'Taş Vuruğu Koruması', aciklama:'Karadeniz yollarında sık karşılaşılan taş vuruğu hasarını %100 önler.' },
@@ -13594,14 +13598,14 @@ function markaDefaultSablon(kod, ad){
       { ad:'ÖN 3\'LÜ PPF', aciklama:'En çok tercih edilen - optimum koruma/fiyat dengesi', fiyat:'FİYAT SOR', fiyatNot:'KDV Dahil · 10 yıl garanti', ozellikler:['Kaput (tam)','Ön çamurluklar','Ön tampon + farlar','Yan aynalar','2 gün teslim','Premium 200µ TPU film','Sertifikalı garanti belgesi'], featured:true },
       { ad:'KOMPLE PPF', aciklama:'Maksimum koruma - aracın tüm boyalı yüzeyi', fiyat:'FİYAT SOR', fiyatNot:'KDV Dahil · 10 yıl garanti', ozellikler:['Aracın TÜM boyalı yüzeyi','Kaput + çamurluklar + kapılar','Tamponlar + bagaj','Farlar + aynalar','3-5 gün teslim','En üst kalite 200µ+ TPU','Ömür boyu değer koruma'], featured:false }
     ],
-    // Galeri (6 kart - video veya foto)
+    // Galeri (6 kart - video veya foto, her biri izlenme sayısı opsiyonel)
     galeri: [
-      { tip:'video', url:'' },
-      { tip:'video', url:'' },
-      { tip:'video', url:'' },
-      { tip:'foto',  url:'' },
-      { tip:'foto',  url:'' },
-      { tip:'foto',  url:'' }
+      { tip:'video', url:'', izlenme:'' },
+      { tip:'video', url:'', izlenme:'' },
+      { tip:'video', url:'', izlenme:'' },
+      { tip:'foto',  url:'', izlenme:'' },
+      { tip:'foto',  url:'', izlenme:'' },
+      { tip:'foto',  url:'', izlenme:'' }
     ],
     galeriBaslik: ad+' Çalışmalarımız',
     galeriAciklama: 'Karadeniz bölgesinden '+ad+' sahiplerinin bize emanet ettiği araçlar',
@@ -14399,6 +14403,9 @@ function markaTabSec(i){
       if(tip === 'video'){
         html += '<input data-g-url="'+g+'" value="'+escapeHTML(url)+'" placeholder="YouTube/Instagram/TikTok linki yapıştırın" class="mrk-inp" style="font-size:13px" oninput="markaGaleriOnizlemeGuncelle('+g+')">';
         html += '<div style="font-size:10px;color:var(--ink4);margin-top:4px;line-height:1.4">Desteklenir: <b>youtube.com/shorts/XXX</b> · <b>youtu.be/XXX</b> · <b>instagram.com/reel/XXX/</b> · <b>instagram.com/p/XXX/</b> · <b>tiktok.com/.../video/XXX</b></div>';
+        // İzlenme sayısı (opsiyonel rozet)
+        html += '<label class="mrk-lbl" style="margin-top:10px">İzlenme Sayısı <span style="color:var(--ink4);font-weight:400">(opsiyonel - video üstünde rozet)</span></label>';
+        html += '<input data-g-izlenme="'+g+'" value="'+escapeHTML(item.izlenme||'')+'" placeholder="Örn: 45.2K veya 128K izlenme" class="mrk-inp" style="font-size:13px">';
       } else {
         html += '<input data-g-url="'+g+'" value="'+escapeHTML(url)+'" placeholder="/uploads/'+MARKA_AKTIF_KOD+'-'+(g+1)+'.jpg" class="mrk-inp" style="font-size:13px" oninput="markaGaleriOnizlemeGuncelle('+g+')">';
       }
@@ -14477,7 +14484,19 @@ function markaTabSec(i){
     });
   }
   else if(i===7){
-    // Kapanış / CTA
+    // Kapanış / CTA + Randevu
+    html += '<div class="mrk-card">';
+    html += '<h3 style="font-family:Bebas Neue,sans-serif;letter-spacing:1px;font-size:18px;margin-bottom:4px">📅 Randevu Bölümü Başlığı</h3>';
+    html += '<p style="font-size:12px;color:var(--ink4);margin-bottom:8px">"Togg\'unuz İçin Ücretsiz Keşif" yazan bölüm.</p>';
+
+    html += '<label class="mrk-lbl">Üst Etiket</label>';
+    html += '<input id="m-randevuTag" value="'+escapeHTML(m.randevuTag||'Randevu')+'" class="mrk-inp">';
+    html += '<label class="mrk-lbl">Ana Başlık</label>';
+    html += '<input id="m-randevuBaslik" value="'+escapeHTML(m.randevuBaslik||'')+'" class="mrk-inp">';
+    html += '<label class="mrk-lbl">Alt Açıklama</label>';
+    html += '<input id="m-randevuAciklama" value="'+escapeHTML(m.randevuAciklama||'')+'" class="mrk-inp">';
+    html += '</div>';
+
     html += '<div class="mrk-card">';
     html += '<h3 style="font-family:Bebas Neue,sans-serif;letter-spacing:1px;font-size:18px;margin-bottom:4px">🎯 Kapanış CTA (En Alt)</h3>';
     html += '<p style="font-size:12px;color:var(--ink4);margin-bottom:8px">Sayfanın en altındaki siyah kırmızı çağrı bölümü.</p>';
@@ -14591,8 +14610,13 @@ function markaFormdanOku(){
       islenmis[idx] = true;
       var urlEl = kEl.querySelector('[data-g-url]');
       var tipEl = kEl.querySelector('[data-g-tip]');
+      var izlenmeEl = kEl.querySelector('[data-g-izlenme]');
       if(urlEl && tipEl){
-        m.galeri[idx] = { tip: tipEl.value || 'video', url: urlEl.value || '' };
+        m.galeri[idx] = {
+          tip: tipEl.value || 'video',
+          url: urlEl.value || '',
+          izlenme: izlenmeEl ? (izlenmeEl.value || '') : ''
+        };
       }
     });
   }
@@ -14633,7 +14657,10 @@ function markaFormdanOku(){
     });
   }
 
-  // Tab 7 — Kapanış CTA
+  // Tab 7 — Kapanış CTA + Randevu
+  ayarE('m-randevuTag','randevuTag');
+  ayarE('m-randevuBaslik','randevuBaslik');
+  ayarE('m-randevuAciklama','randevuAciklama');
   ayarE('m-ctaBaslik','ctaBaslik');
   ayarE('m-ctaBaslikKirmizi','ctaBaslikKirmizi');
   ayarE('m-ctaAciklama','ctaAciklama');
