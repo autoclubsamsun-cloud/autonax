@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="build-version" content="v2025-04-23-full">
+<meta name="build-version" content="v2026-04-23-ios-iframe">
 
   <!-- ══════════════════════════════════════════════════════════════════
        DİNAMİK MARKA RENDER (EN BAŞTA ÇALIŞIR)
@@ -318,7 +318,7 @@ img{max-width:100%;height:auto;display:block}
 .hero-cta.wa{background:#25D366;color:#fff}
 .hero-cta.wa:hover{background:#1eb954;transform:translateY(-2px)}
 .togg-hero-r{position:relative}
-.togg-visual{aspect-ratio:4/3;background:linear-gradient(135deg,#1a1a1a,#0a0a0a);border-radius:20px;border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;transition:aspect-ratio .3s}
+.togg-visual{background:linear-gradient(135deg,#1a1a1a,#0a0a0a);border-radius:20px;border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;height:420px}
 /* Instagram Reel / TikTok için dikey format (9:16) */
 .togg-visual.togg-visual-reel{height:580px;max-width:380px;margin:0 auto}
 @media(max-width:900px){.togg-visual.togg-visual-reel{max-width:300px;height:500px}}
@@ -392,6 +392,11 @@ img{max-width:100%;height:auto;display:block}
 .galeri-item img{display:block;width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0}
 /* iframe iOS fix: absolute + 100% (iOS height:100% hesaplama sorunu için) */
 .galeri-item iframe{display:block;width:100%;height:100%;border:0;position:absolute;top:0;left:0}
+
+/* Reel wrap - iframe + fallback gradient arka plan */
+.reel-wrap{position:absolute;top:0;left:0;width:100%;height:100%}
+.reel-wrap.reel-ig-bg{background:linear-gradient(135deg,#f09433 0%,#e6683c 20%,#dc2743 45%,#cc2366 70%,#bc1888 100%)}
+.reel-wrap.reel-tt-bg{background:linear-gradient(135deg,#25f4ee 0%,#000 50%,#fe2c55 100%)}
 
 /* ══ REEL KART (iOS-dostu, iframe yerine tıklanabilir kart) ══ */
 .reel-kart{
@@ -1471,23 +1476,18 @@ img{max-width:100%;height:auto;display:block}
               var autoplayParam = hm.autoplay ? '1' : '0';
               if(v.tur === 'youtube'){
                 var ytEmbed = v.embed + '&autoplay='+autoplayParam+'&mute=1&loop=1&playlist='+v.id+'&controls=1&playsinline=1';
-                heroVis.innerHTML = '<iframe src="'+ytEmbed+'" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen style="width:100%;height:100%;border:0;border-radius:20px;background:#000"></iframe>';
+                heroVis.innerHTML = '<iframe src="'+ytEmbed+'" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen style="width:100%;height:100%;border:0;border-radius:20px;background:#000;position:absolute;top:0;left:0"></iframe>';
               } else if(v.tur === 'instagram'){
-                // iOS'ta Instagram iframe'i boş gelebilir → tıklanabilir kart
+                // Instagram iframe + gradient fallback
                 heroVis.classList.add('togg-visual-reel');
-                heroVis.innerHTML = '<a href="'+e(hm.url)+'" target="_blank" rel="noopener" class="hero-reel-link hero-reel-ig">'
-                  + '<div class="hero-reel-play"><svg viewBox="0 0 24 24" fill="#fff"><polygon points="8,5 21,12 8,19"/></svg></div>'
-                  + '<div class="hero-reel-baslik">REEL\'İ İZLE</div>'
-                  + '<div class="hero-reel-kullanici"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:15px;height:15px"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="18" cy="6" r="1.3" fill="#fff"/></svg><span>@autoclubsamsunmerkez</span></div>'
-                  + '</a>';
+                heroVis.style.background = 'linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)';
+                heroVis.innerHTML = '<iframe src="'+e(v.embed)+'" allowfullscreen allowtransparency="true" frameborder="0" scrolling="no" allow="encrypted-media" style="width:100%;height:100%;border:0;border-radius:20px;background:transparent;position:absolute;top:0;left:0"></iframe>';
               } else if(v.tur === 'tiktok'){
                 heroVis.classList.add('togg-visual-reel');
-                heroVis.innerHTML = '<a href="'+e(hm.url)+'" target="_blank" rel="noopener" class="hero-reel-link hero-reel-tt">'
-                  + '<div class="hero-reel-play"><svg viewBox="0 0 24 24" fill="#fff"><polygon points="8,5 21,12 8,19"/></svg></div>'
-                  + '<div class="hero-reel-baslik">TIKTOK\'TA İZLE</div>'
-                  + '</a>';
+                heroVis.style.background = 'linear-gradient(135deg,#25f4ee 0%,#000 50%,#fe2c55 100%)';
+                heroVis.innerHTML = '<iframe src="'+e(v.embed)+'" allowfullscreen allow="autoplay; encrypted-media" style="width:100%;height:100%;border:0;border-radius:20px;background:transparent;position:absolute;top:0;left:0"></iframe>';
               } else if(v.tur === 'vimeo'){
-                heroVis.innerHTML = '<iframe src="'+v.embed+'?autoplay='+autoplayParam+'&muted=1&loop=1&background=1" allowfullscreen style="width:100%;height:100%;border:0;border-radius:20px;background:#000"></iframe>';
+                heroVis.innerHTML = '<iframe src="'+v.embed+'?autoplay='+autoplayParam+'&muted=1&loop=1&background=1" allowfullscreen style="width:100%;height:100%;border:0;border-radius:20px;background:#000;position:absolute;top:0;left:0"></iframe>';
               }
             }
           }
@@ -1603,18 +1603,16 @@ img{max-width:100%;height:auto;display:block}
                   + '<div class="video-play-ikon"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="8,5 21,12 8,19"/></svg></div>'
                   + '</div>';
               } else if(v.tur === 'instagram'){
-                // iOS'ta Instagram iframe bazen boş gelir → tıklanabilir kart
-                iframeKod = '<a href="'+e(item.url)+'" target="_blank" rel="noopener" class="reel-kart reel-ig">'
-                  + '<div class="reel-kart-play"><svg viewBox="0 0 24 24" fill="#fff"><polygon points="8,5 21,12 8,19"/></svg></div>'
-                  + '<div class="reel-kart-alt"><svg viewBox="0 0 24 24" fill="#fff" style="width:14px;height:14px"><rect x="2" y="2" width="20" height="20" rx="5" fill="none" stroke="#fff" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="#fff" stroke-width="2"/><circle cx="18" cy="6" r="1.3" fill="#fff"/></svg><span>INSTAGRAM\'DA İZLE</span></div>'
-                  + '</a>';
+                // Instagram iframe + fallback gradient arka plan (iOS iframe çökmezse bile görünür)
+                iframeKod = '<div class="reel-wrap reel-ig-bg">'
+                  + '<iframe src="'+e(v.embed)+'" allowfullscreen allowtransparency="true" frameborder="0" scrolling="no" allow="encrypted-media" style="width:100%;height:100%;border:0;position:absolute;top:0;left:0;background:transparent"></iframe>'
+                  + '</div>';
               } else if(v.tur === 'tiktok'){
-                iframeKod = '<a href="'+e(item.url)+'" target="_blank" rel="noopener" class="reel-kart reel-tt">'
-                  + '<div class="reel-kart-play"><svg viewBox="0 0 24 24" fill="#fff"><polygon points="8,5 21,12 8,19"/></svg></div>'
-                  + '<div class="reel-kart-alt"><svg viewBox="0 0 24 24" fill="#fff" style="width:14px;height:14px"><path d="M16 2h3c.3 2.4 2 4 4 4v3c-1.5 0-3-.4-4-1.2V15a6 6 0 1 1-6-6v3a3 3 0 1 0 3 3V2z"/></svg><span>TIKTOK\'TA İZLE</span></div>'
-                  + '</a>';
+                iframeKod = '<div class="reel-wrap reel-tt-bg">'
+                  + '<iframe src="'+e(v.embed)+'" allowfullscreen allow="autoplay; encrypted-media" style="width:100%;height:100%;border:0;position:absolute;top:0;left:0;background:transparent"></iframe>'
+                  + '</div>';
               } else if(v.tur === 'vimeo'){
-                iframeKod = '<iframe src="'+e(v.embed)+'" allowfullscreen loading="eager" style="width:100%;height:100%;border:0;background:#000;position:absolute;top:0;left:0"></iframe>';
+                iframeKod = '<iframe src="'+e(v.embed)+'" allowfullscreen style="width:100%;height:100%;border:0;background:#000;position:absolute;top:0;left:0"></iframe>';
               }
 
               gEl.innerHTML = iframeKod + izlenmeRozet;
