@@ -6255,11 +6255,36 @@ function adim_butce(){
       {icon:'✅', label:'₺15.000 – ₺25.000', val:'15-25k', badge:'Popüler'},
       {icon:'⭐', label:'₺25.000 – ₺40.000', val:'25-40k'},
     ] : butceOptsKomple();
+    
+    // Alt açıklama — Sadece garantiye uygun ürünleri listele
+    const yil = parseInt(R.s.garanti) || 4;
+    const uyumluUrunler = urunlerByYil(yil);
+    let aciklama = '';
+    if(R.akis!=='seramik'){
+      const tip = R.akis==='bolgesel' 
+        ? (R.s.bolgeler.includes('on3parca') ? 'on3' : 'kaput')
+        : 'full';
+      const al = uyumluUrunler.filter(u=>u.mensei.includes('🇩🇪') && u[tip]);
+      const us = uyumluUrunler.filter(u=>u.mensei.includes('🇺🇸') && u[tip]);
+      const alTxt = al.map(u=>{
+        const kod = Object.keys(URUNLER).find(k=>URUNLER[k]===u);
+        return `${kod}(${u.garanti}yıl)=${fiyatFmt(u[tip])}`;
+      }).join(' · ');
+      const usTxt = us.map(u=>{
+        const kod = Object.keys(URUNLER).find(k=>URUNLER[k]===u);
+        return `${kod}(${u.garanti}yıl)=${fiyatFmt(u[tip])}`;
+      }).join(' · ');
+      const parts = [];
+      if(alTxt) parts.push(`🇩🇪 Germany: ${alTxt}`);
+      if(usTxt) parts.push(`🇺🇸 USA: ${usTxt}`);
+      aciklama = parts.length ? `<br><small style="color:#888">${parts.join(' &nbsp;|&nbsp; ')}</small>` : '';
+    }
+    
     const bolgeMsg = R.akis==='bolgesel'
       ? (R.s.bolgeler.includes('on3parca')
-          ? 'Ön 3 Parça için <b>bütçe aralığı</b> seçin:<br><small style="color:#888">🇩🇪 CS190(4yıl)=₺13K · S75(6yıl)=₺15K &nbsp;|&nbsp; 🇺🇸 N7(8yıl)=₺17K · N8(10yıl)=₺20K</small>'
-          : 'Kaput için <b>bütçe aralığı</b> seçin:<br><small style="color:#888">🇩🇪 CS190(4yıl)=₺3K · S75(6yıl)=₺4K &nbsp;|&nbsp; 🇺🇸 N7(8yıl)=₺5K · N8(10yıl)=₺7K</small>')
-      : 'Son adım! 💰 Öngördüğünüz <b>bütçe aralığı</b> nedir?<br><small style="color:#888">🇩🇪 Germany: CS190(4yıl)=₺45K · S75(6yıl)=₺55K &nbsp;|&nbsp; 🇺🇸 USA: N7(8yıl)=₺65K · N8(10yıl)=₺70K · N9(12yıl)=₺90K</small>';
+          ? `Ön 3 Parça için <b>bütçe aralığı</b> seçin (${yil}+ yıl garantili ürünler):${aciklama}`
+          : `Kaput için <b>bütçe aralığı</b> seçin (${yil}+ yıl garantili ürünler):${aciklama}`)
+      : `Son adım! 💰 Öngördüğünüz <b>bütçe aralığı</b> nedir? <small style="color:#B01C2E;font-weight:700">(${yil}+ yıl garantili ürünler gösteriliyor)</small>${aciklama}`;
     addMsg('bot', bolgeMsg, opts);
   },800);
 }
@@ -6357,7 +6382,32 @@ const URUNLER = {
 function fiyatFmt(n){ return n ? '₺'+n.toLocaleString('tr-TR') : 'Fiyat için arayın'; }
 
 /* Garanti yılına göre ürün seç */
-function urunSec(yil){
+function urunSec(yil, butce){
+  // Kullanıcının seçtiği garanti + bütçe grubuna (almanya/usa) göre en uygun ürünü seç
+  // butce: 'almanya' veya 'usa' veya tanımsız
+  // yil: minimum garanti yılı
+  
+  // ADIM 1: Garantiye uygun ürünleri filtrele (yıl >= seçilen garanti)
+  const uyumlu = urunlerByYil(yil);
+  
+  // ADIM 2: Kullanıcı bütçe grubu seçtiyse, o gruba göre filtrele
+  if(butce==='almanya'){
+    const al = uyumlu.filter(u=>u.mensei.includes('🇩🇪'));
+    if(al.length){
+      // Germany grubundan garantisi en yüksek olanı seç (en iyi fiyat-performans)
+      return al.sort((a,b)=>b.garanti-a.garanti)[0];
+    }
+  }
+  if(butce==='usa'){
+    const us = uyumlu.filter(u=>u.mensei.includes('🇺🇸'));
+    if(us.length){
+      // USA grubundan, seçilen garanti yılına en yakın olanı seç (optimal)
+      // 4 yıl seçip USA seçmişse N7 (8yıl) uygun; 10 yıl seçmişse N8 uygun
+      return us.sort((a,b)=>Math.abs(a.garanti-yil)-Math.abs(b.garanti-yil))[0];
+    }
+  }
+  
+  // ADIM 3: Bütçe grubu yoksa veya grup boşsa — eski mantıkla garanti yılına göre seç
   if(yil<=4)  return URUNLER.CS190;
   if(yil<=6)  return URUNLER.S75;
   if(yil<=8)  return URUNLER.N7;
@@ -6365,26 +6415,66 @@ function urunSec(yil){
   return URUNLER.N9;
 }
 
-/* Bütçe butonları — URUNLER tablosundan otomatik */
+/* Bütçe butonları — URUNLER tablosundan otomatik
+ * KRİTİK: Kullanıcının seçtiği garanti yılına göre filtrelenir
+ * Örnek: 4 yıl seçildiyse → sadece 4 yıl ve üzeri garantili ürünler (hepsi aslında, çünkü en düşük 4 yıl)
+ *        8 yıl seçildiyse → 8 yıl ve üzeri (N7, N8, N9) — CS190 (4yıl) ve S75 (6yıl) dışlanır
+ * Bu sayede kullanıcı hem garanti hem bütçe seçerken mantıksız kombinasyon olmaz
+ */
+function urunlerByYil(yil){
+  // yil = kullanıcının seçtiği minimum garanti (R.s.garanti)
+  // Bu yıla EŞİT veya DAHA YÜKSEK garantili ürünleri döndür
+  const tumUrunler = [URUNLER.CS190, URUNLER.S75, URUNLER.N7, URUNLER.N8, URUNLER.N9];
+  return tumUrunler.filter(u => u.garanti >= yil);
+}
+
 function butceOptsBolgesel(tip){
-  const alan = Object.values(URUNLER).filter(u=>u[tip]!==null);
-  const al = alan.filter(u=>u.mensei.includes('🇩🇪'));
-  const us = alan.filter(u=>u.mensei.includes('🇺🇸'));
-  const alMin=Math.min(...al.map(u=>u[tip])), alMax=Math.max(...al.map(u=>u[tip]));
-  const usMin=Math.min(...us.map(u=>u[tip])), usMax=Math.max(...us.map(u=>u[tip]));
-  return [
-    {icon:'🇩🇪', label:fiyatFmt(alMin)+' – '+fiyatFmt(alMax), val:'almanya', badge:'Germany Grubu'},
-    {icon:'🇺🇸', label:fiyatFmt(usMin)+' – '+fiyatFmt(usMax), val:'usa',     badge:'USA Grubu'},
-  ];
+  const yil = parseInt(R.s.garanti) || 4;
+  const uyumlu = urunlerByYil(yil).filter(u => u[tip]!==null && u[tip]!==undefined);
+  const al = uyumlu.filter(u=>u.mensei.includes('🇩🇪'));
+  const us = uyumlu.filter(u=>u.mensei.includes('🇺🇸'));
+  const opts = [];
+  if(al.length){
+    const alMin=Math.min(...al.map(u=>u[tip])), alMax=Math.max(...al.map(u=>u[tip]));
+    opts.push({icon:'🇩🇪', label:fiyatFmt(alMin)+(alMin!==alMax?' – '+fiyatFmt(alMax):''), val:'almanya', badge:'Germany Grubu'});
+  }
+  if(us.length){
+    const usMin=Math.min(...us.map(u=>u[tip])), usMax=Math.max(...us.map(u=>u[tip]));
+    opts.push({icon:'🇺🇸', label:fiyatFmt(usMin)+(usMin!==usMax?' – '+fiyatFmt(usMax):''), val:'usa', badge:'USA Grubu'});
+  }
+  // Yedek: Hiçbir ürün yoksa (edge case) tüm ürünleri göster
+  if(!opts.length){
+    const alan = Object.values(URUNLER).filter(u=>u[tip]!==null && u[tip]!==undefined);
+    const alAll = alan.filter(u=>u.mensei.includes('🇩🇪'));
+    const usAll = alan.filter(u=>u.mensei.includes('🇺🇸'));
+    if(alAll.length) opts.push({icon:'🇩🇪', label:fiyatFmt(Math.min(...alAll.map(u=>u[tip])))+' – '+fiyatFmt(Math.max(...alAll.map(u=>u[tip]))), val:'almanya', badge:'Germany Grubu'});
+    if(usAll.length) opts.push({icon:'🇺🇸', label:fiyatFmt(Math.min(...usAll.map(u=>u[tip])))+' – '+fiyatFmt(Math.max(...usAll.map(u=>u[tip]))), val:'usa', badge:'USA Grubu'});
+  }
+  return opts;
 }
 
 function butceOptsKomple(){
-  const al=[URUNLER.CS190,URUNLER.S75].filter(u=>u.full);
-  const us=[URUNLER.N7,URUNLER.N8,URUNLER.N9].filter(u=>u.full);
-  return [
-    {icon:'🇩🇪', label:fiyatFmt(Math.min(...al.map(u=>u.full)))+' – '+fiyatFmt(Math.max(...al.map(u=>u.full))), val:'almanya', badge:'Germany Grubu'},
-    {icon:'🇺🇸', label:fiyatFmt(Math.min(...us.map(u=>u.full)))+' – '+fiyatFmt(Math.max(...us.map(u=>u.full))), val:'usa',     badge:'USA Grubu'},
-  ];
+  const yil = parseInt(R.s.garanti) || 4;
+  const uyumlu = urunlerByYil(yil).filter(u => u.full);
+  const al = uyumlu.filter(u=>u.mensei.includes('🇩🇪'));
+  const us = uyumlu.filter(u=>u.mensei.includes('🇺🇸'));
+  const opts = [];
+  if(al.length){
+    const alMin=Math.min(...al.map(u=>u.full)), alMax=Math.max(...al.map(u=>u.full));
+    opts.push({icon:'🇩🇪', label:fiyatFmt(alMin)+(alMin!==alMax?' – '+fiyatFmt(alMax):''), val:'almanya', badge:'Germany Grubu'});
+  }
+  if(us.length){
+    const usMin=Math.min(...us.map(u=>u.full)), usMax=Math.max(...us.map(u=>u.full));
+    opts.push({icon:'🇺🇸', label:fiyatFmt(usMin)+(usMin!==usMax?' – '+fiyatFmt(usMax):''), val:'usa', badge:'USA Grubu'});
+  }
+  // Yedek
+  if(!opts.length){
+    const alAll=[URUNLER.CS190,URUNLER.S75].filter(u=>u.full);
+    const usAll=[URUNLER.N7,URUNLER.N8,URUNLER.N9].filter(u=>u.full);
+    if(alAll.length) opts.push({icon:'🇩🇪', label:fiyatFmt(Math.min(...alAll.map(u=>u.full)))+' – '+fiyatFmt(Math.max(...alAll.map(u=>u.full))), val:'almanya', badge:'Germany Grubu'});
+    if(usAll.length) opts.push({icon:'🇺🇸', label:fiyatFmt(Math.min(...usAll.map(u=>u.full)))+' – '+fiyatFmt(Math.max(...usAll.map(u=>u.full))), val:'usa', badge:'USA Grubu'});
+  }
+  return opts;
 }
 
 function hesaplaOneri(){
@@ -6397,8 +6487,9 @@ function hesaplaOneri(){
     const sadecKaput = bolgeler.includes('kaput') && !bolgeler.includes('on3parca');
     const on3        = bolgeler.includes('on3parca');
     const tip        = on3 ? 'on3' : 'kaput';
-    // Ürün seçimi: garanti yılı öncelikli, bütçe grubu ikincil
-    const urun = urunSec(yil);
+    // Ürün seçimi: garanti yılı + bütçe grubu birlikte dikkate alınır
+    // Kullanıcı 4 yıl seçip USA grubunu seçtiyse N7 (8yıl) çıkar, Germany seçtiyse CS190 (4yıl)
+    const urun = urunSec(yil, butce);
     return {
       isim:`${urun.isim} — ${sadecKaput?'Sadece Kaput':'Ön 3 Parça'}`,
       rozet:urun.rozet,
