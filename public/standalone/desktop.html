@@ -5333,7 +5333,53 @@ const AuthManager = {
   },
   logout(){localStorage.removeItem(SESSION_KEY);},
   saveCart(items){localStorage.setItem(CART_KEY,JSON.stringify(items||[]));},
-  getCart(){try{return JSON.parse(localStorage.getItem(CART_KEY)||'[]');}catch(e){return [];}}
+  getCart(){try{return JSON.parse(localStorage.getItem(CART_KEY)||'[]');}catch(e){return [];}},
+  /**
+   * Kullanıcı profil bilgilerini günceller — hem session hem de autonax_users'da
+   * patch: { ad, soyad, tel, email, sehir, ... } gibi değişiklikler
+   * Sadece dolu/non-empty olan alanlar güncellenir (boş değer mevcut değeri silmez)
+   * Demo kullanıcılar güncellenmez (kalıcılık için).
+   */
+  updateUser(patch){
+    try{
+      const user = this.getUser();
+      if(!user) return {ok:false,hata:'Kullanıcı oturumu yok'};
+      if(!patch || typeof patch!=='object') return {ok:false,hata:'Geçersiz güncelleme'};
+      
+      const tempEmail = user.email||'';
+      // Patch'teki boş/null değerleri at (mevcut verileri silmesin)
+      const temiz = {};
+      Object.keys(patch).forEach(k=>{
+        const v = patch[k];
+        if(v!==null && v!==undefined && String(v).trim()!=='') temiz[k] = String(v).trim();
+      });
+      if(Object.keys(temiz).length===0) return {ok:true,user:user};
+      
+      // Session'ı güncelle (mevcut değerlerle birleştir)
+      const guncelUser = Object.assign({}, user, temiz);
+      // Avatar güncellemesi ad/soyad değişimiyle olabilir
+      if((temiz.ad||temiz.soyad) && !patch.avatar){
+        const ad2 = guncelUser.ad||'';
+        const soyad2 = guncelUser.soyad||'';
+        if(ad2) guncelUser.avatar = (ad2[0]+(soyad2?soyad2[0]:'')).toUpperCase();
+      }
+      localStorage.setItem(SESSION_KEY, JSON.stringify({user:guncelUser, time:Date.now()}));
+      
+      // autonax_users'daki kalıcı kaydı da güncelle (demo user değilse)
+      try{
+        const kayitlilar = JSON.parse(localStorage.getItem('autonax_users')||'{}');
+        if(kayitlilar[tempEmail]){
+          Object.assign(kayitlilar[tempEmail], temiz);
+          if(guncelUser.avatar) kayitlilar[tempEmail].avatar = guncelUser.avatar;
+          localStorage.setItem('autonax_users', JSON.stringify(kayitlilar));
+        }
+      }catch(e2){ /* demo user veya ilk kayıt — sorun değil */ }
+      
+      return {ok:true, user:guncelUser};
+    }catch(e){
+      return {ok:false, hata:'Güncelleme başarısız: '+e.message};
+    }
+  }
 };
 
 /* Auth UI güncelle */
@@ -7073,28 +7119,59 @@ function openSepet(){
   }
   mf.style.display = 'block'; // Form her zaman görünür (plaka şart)
   
-  // Giriş yapmışsa sadece iletişim alanlarını gizle, araç alanları görünsün
+  // Giriş yapmışsa user bilgilerini forma otomatik doldur
+  var currentUser = isLoggedIn ? AuthManager.getUser() : null;
+  
+  // Ad/Tel/Email alanlarına session'dan mevcut değerleri yaz
+  if(currentUser){
+    var adInp = document.getElementById('rdv-misafir-ad');
+    var telInp = document.getElementById('rdv-misafir-tel');
+    var emailInp = document.getElementById('rdv-misafir-email');
+    var userAdSoyad = ((currentUser.ad||'') + ' ' + (currentUser.soyad||'')).trim();
+    if(adInp && !adInp.value && userAdSoyad) adInp.value = userAdSoyad;
+    if(telInp && !telInp.value && currentUser.tel) telInp.value = currentUser.tel;
+    if(emailInp && !emailInp.value && currentUser.email) emailInp.value = currentUser.email;
+  }
+  
+  // Giriş yapmış ve bilgileri tam ise iletişim alanlarını gizle, sadece Araç Bilgileri göster
+  // Bilgilerden biri eksikse form'u tamamen aç
   var iletisimAlanlari = ['rdv-misafir-ad','rdv-misafir-tel','rdv-misafir-email'];
   var iletisimBaslik = mf.querySelector('div:first-child'); // "İletişim Bilgileriniz" başlığı
+  var girisLink = mf.querySelector('div[style*="border-top"]');
   
-  if(isLoggedIn){
-    // Başlığı "Araç Bilgileri" olarak güncelle ve iletişim kısmını gizle
+  // Kullanıcıda eksik zorunlu bilgi var mı kontrol et
+  var eksikBilgiVar = !currentUser || 
+    !(((currentUser.ad||'') + ' ' + (currentUser.soyad||'')).trim()) || 
+    !currentUser.tel;
+  
+  if(isLoggedIn && !eksikBilgiVar){
+    // Tam bilgi var → iletişim bölümünü gizle (profile'da kayıtlı, tekrar istemiyoruz)
     iletisimAlanlari.forEach(function(id){
       var el=document.getElementById(id);
       if(el) el.style.display='none';
     });
     if(iletisimBaslik) iletisimBaslik.style.display='none';
-    // Alt linki de gizle (giriş yapmış zaten)
-    var girisLink = mf.querySelector('div[style*="border-top"]');
     if(girisLink) girisLink.style.display='none';
   } else {
+    // Misafir VEYA giriş yapmış ama eksik bilgi var → form aç
     iletisimAlanlari.forEach(function(id){
       var el=document.getElementById(id);
       if(el) el.style.display='block';
     });
-    if(iletisimBaslik) iletisimBaslik.style.display='flex';
-    var girisLink = mf.querySelector('div[style*="border-top"]');
-    if(girisLink) girisLink.style.display='block';
+    if(iletisimBaslik){
+      iletisimBaslik.style.display='flex';
+      // Giriş yapmış ama eksik bilgi varsa başlık metnini güncelle
+      if(isLoggedIn){
+        // Sadece ikonu bul ve metni güncelle
+        var textNode = Array.from(iletisimBaslik.childNodes).find(n=>n.nodeType===3 || (n.tagName && !n.tagName.match(/SVG/i)));
+        // Basitçe başlığı değiştir - mevcut SVG'yi koru
+        var svgEl = iletisimBaslik.querySelector('svg');
+        iletisimBaslik.innerHTML = '';
+        if(svgEl) iletisimBaslik.appendChild(svgEl);
+        iletisimBaslik.appendChild(document.createTextNode('Bilgilerinizi Tamamlayın'));
+      }
+    }
+    if(girisLink) girisLink.style.display = isLoggedIn ? 'none' : 'block';
   }
 }
 function closeSepet(){ document.getElementById('sepet-ovl').classList.remove('show'); document.body.style.overflow=''; }
@@ -7117,16 +7194,19 @@ function sepetOde(){
   // Randevuyu /api/randevular'a gönder
   var hizmetler=SEPET.items.map(function(i){return i.isim;}).join(' + ');
   var toplam=SEPET.total();
-  // Giriş yapmamışsa misafir bilgilerini al
-  var loggedUser = (typeof AuthManager!=='undefined'&&AuthManager.currentUser) ? AuthManager.currentUser : null;
-  var musteriAd, musteriTel, musteriEmail, plaka, aracModel, not;
   
-  // Plaka, araç ve not her durumda misafir formundan alınır (giriş yapmış da olsa)
-  plaka = (document.getElementById('rdv-misafir-plaka')?.value||'').trim().toUpperCase();
-  aracModel = (document.getElementById('rdv-misafir-arac')?.value||'').trim();
-  not = (document.getElementById('rdv-misafir-not')?.value||'').trim();
+  // Giriş durumunu kontrol et (FIX: currentUser yerine getUser() kullan!)
+  var loggedUser = (typeof AuthManager!=='undefined' && AuthManager.getUser) ? AuthManager.getUser() : null;
   
-  // Robot'tan aktarım varsa ve araç boşsa, robot context'ini kullan
+  // Form alanlarından tüm değerleri al
+  var formAd = (document.getElementById('rdv-misafir-ad')?.value||'').trim();
+  var formTel = (document.getElementById('rdv-misafir-tel')?.value||'').trim();
+  var formEmail = (document.getElementById('rdv-misafir-email')?.value||'').trim();
+  var plaka = (document.getElementById('rdv-misafir-plaka')?.value||'').trim().toUpperCase();
+  var aracModel = (document.getElementById('rdv-misafir-arac')?.value||'').trim();
+  var not = (document.getElementById('rdv-misafir-not')?.value||'').trim();
+  
+  // Robot'tan aktarım varsa ve araç/not boşsa robot context'ini kullan
   if(!aracModel && SEPET.robotContext && SEPET.robotContext.arac){
     aracModel = SEPET.robotContext.arac;
   }
@@ -7134,51 +7214,90 @@ function sepetOde(){
     not = SEPET.robotContext.not;
   }
   
+  // Müşteri bilgilerini belirle — öncelik: form > login session
+  var musteriAd, musteriTel, musteriEmail;
+  var userAdSoyad = ''; // Dış scope - eksik alan hata mesajında da kullanılacak
+  
   if(loggedUser){
-    musteriAd = loggedUser.name||loggedUser.ad||'Müşteri';
-    musteriTel = loggedUser.phone||loggedUser.tel||'-';
-    musteriEmail = loggedUser.email||'';
-    // Giriş yapmışsa da plaka gerekli — yoksa uyarı ver
-    if(!plaka){
-      var mf = document.getElementById('rdv-misafir-form');
-      // Giriş yapmış olsa bile plaka alanını göster
-      if(mf){
-        mf.style.display='block';
-        // Sadece plaka alanını göster, diğerlerini gizle
-        ['rdv-misafir-ad','rdv-misafir-tel','rdv-misafir-email'].forEach(function(id){
-          var el=document.getElementById(id);
-          if(el) el.parentNode ? el.style.display='none' : null;
-        });
-      }
-      var plakaInp = document.getElementById('rdv-misafir-plaka');
-      if(plakaInp){ plakaInp.style.borderColor='#b01c2e'; plakaInp.focus(); }
-      return;
-    }
+    // Login'den gelen bilgiler + ad "Ad Soyad" birleşik olarak
+    userAdSoyad = ((loggedUser.ad||'') + ' ' + (loggedUser.soyad||'')).trim();
+    // Form doluysa form'u, değilse session'ı kullan
+    musteriAd = formAd || userAdSoyad || '';
+    musteriTel = formTel || loggedUser.tel || '';
+    musteriEmail = formEmail || loggedUser.email || '';
   } else {
-    // Misafir — bilgi formu göster
-    musteriAd = document.getElementById('rdv-misafir-ad')?.value?.trim();
-    musteriTel = document.getElementById('rdv-misafir-tel')?.value?.trim();
-    musteriEmail = document.getElementById('rdv-misafir-email')?.value?.trim();
-    if(!musteriAd||!musteriTel||!plaka){
-      // Misafir formu göster
-      var misafirForm = document.getElementById('rdv-misafir-form');
-      if(misafirForm){ misafirForm.style.display='block'; misafirForm.scrollIntoView({behavior:'smooth'}); }
-      // Boş alanları kırmızı yap
-      ['rdv-misafir-ad','rdv-misafir-tel','rdv-misafir-plaka'].forEach(function(id){
-        var el=document.getElementById(id);
-        if(el && !el.value.trim()) el.style.borderColor='#b01c2e';
-      });
-      var errEl=document.createElement('div');
-      errEl.style.cssText='color:#b01c2e;font-size:12px;font-weight:700;margin-top:8px;padding:8px;background:rgba(176,28,46,.08);border-radius:6px';
-      errEl.textContent='Lütfen Ad, Telefon ve Plaka alanlarını doldurun';
-      var existErr=document.getElementById('rdv-misafir-err');
-      if(existErr) existErr.remove();
-      errEl.id='rdv-misafir-err';
-      misafirForm?.appendChild(errEl);
-      return;
-    }
-    if(!musteriEmail) musteriEmail='-';
+    // Misafir — sadece form
+    musteriAd = formAd;
+    musteriTel = formTel;
+    musteriEmail = formEmail;
   }
+  
+  // Validasyon — eksik alanları tespit et
+  var eksikler = [];
+  if(!musteriAd) eksikler.push('Ad Soyad');
+  if(!musteriTel) eksikler.push('Telefon');
+  if(!plaka) eksikler.push('Plaka');
+  
+  if(eksikler.length){
+    // Form'u göster ve eksikleri kırmızıya boya
+    var misafirForm = document.getElementById('rdv-misafir-form');
+    if(misafirForm){ 
+      misafirForm.style.display='block'; 
+      // Tüm iletişim alanlarını aç (giriş yapmış olsa bile, çünkü eksik var)
+      ['rdv-misafir-ad','rdv-misafir-tel','rdv-misafir-email'].forEach(function(id){
+        var el=document.getElementById(id);
+        if(el) el.style.display='block';
+      });
+      var iletisimBaslik = misafirForm.querySelector('div:first-child');
+      if(iletisimBaslik) iletisimBaslik.style.display='flex';
+      misafirForm.scrollIntoView({behavior:'smooth', block:'center'}); 
+    }
+    if(!musteriAd){
+      var el=document.getElementById('rdv-misafir-ad');
+      if(el){ el.style.borderColor='#b01c2e'; el.focus(); if(loggedUser && userAdSoyad) el.value=userAdSoyad; }
+    }
+    if(!musteriTel){
+      var el2=document.getElementById('rdv-misafir-tel');
+      if(el2){ el2.style.borderColor='#b01c2e'; if(loggedUser && loggedUser.tel) el2.value=loggedUser.tel; }
+    }
+    if(!plaka){
+      var el3=document.getElementById('rdv-misafir-plaka');
+      if(el3){ el3.style.borderColor='#b01c2e'; }
+    }
+    // Önceki hatayı temizle, yenisini ekle
+    var existErr=document.getElementById('rdv-misafir-err');
+    if(existErr) existErr.remove();
+    var errEl=document.createElement('div');
+    errEl.style.cssText='color:#b01c2e;font-size:12px;font-weight:700;margin-top:10px;padding:10px;background:rgba(176,28,46,.08);border-radius:6px;border:1px solid rgba(176,28,46,.2)';
+    errEl.textContent='⚠ Lütfen şu alanları doldurun: '+eksikler.join(', ');
+    errEl.id='rdv-misafir-err';
+    misafirForm?.appendChild(errEl);
+    return;
+  }
+  
+  if(!musteriEmail) musteriEmail='-';
+  
+  // PROFIL OTOMATIK KAYDI — Giriş yapmışsa ve form'da yeni bilgi varsa profile ekle
+  if(loggedUser){
+    var profilePatch = {};
+    // Form'da dolu bir değer var + session'da yoksa veya farklıysa → kaydet
+    if(formAd && formAd !== ((loggedUser.ad||'')+' '+(loggedUser.soyad||'')).trim()){
+      // "Ad Soyad" formunu ad/soyad olarak ayır
+      var parts = formAd.split(/\s+/);
+      profilePatch.ad = parts[0] || loggedUser.ad || '';
+      profilePatch.soyad = parts.slice(1).join(' ') || loggedUser.soyad || '';
+    }
+    if(formTel && formTel !== (loggedUser.tel||'')) profilePatch.tel = formTel;
+    if(formEmail && formEmail!=='-' && formEmail !== (loggedUser.email||'')) profilePatch.email = formEmail;
+    
+    if(Object.keys(profilePatch).length > 0){
+      try{ 
+        AuthManager.updateUser(profilePatch); 
+        console.log('✓ Profil güncellendi:', Object.keys(profilePatch).join(', '));
+      }catch(e){ console.warn('Profil güncellenemedi:', e); }
+    }
+  }
+  
   var rdv={
     tarih: SEPET.secilenTarih.split('-').reverse().join('.'),
     saat: SEPET.secilenSaat,
