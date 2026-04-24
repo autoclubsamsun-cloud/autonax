@@ -2818,6 +2818,21 @@ function doRdvListele(){
     var borcOk=!_borcluFiltre||((r.odenenToplam||0)<(r.tutar||0)&&(r.tutar||0)>0);
     return ayOk&&gunOk&&durumOk&&aramaOk&&borcOk;
   });
+
+  // Sadece "Onaylı" filtresi aktifken: en son yapılan işlemden başla (yeniden eskiye)
+  // Diğer filtrelerde (Tümü/Bekleyen/Bugün/Borçlu/Sabitli) mevcut sıra korunur.
+  if(_rdvDurum==='onay'){
+    liste.sort(function(a,b){
+      // Tarihi ISO formatına çevir (YYYYMMDD) — string olarak doğru karşılaştırılabilir
+      var pa=(a.tarih||'').split('.'); // ["27","04","2026"]
+      var pb=(b.tarih||'').split('.');
+      var ta=(pa[2]||'')+(pa[1]||'')+(pa[0]||'')+(a.saat||'').replace(':','');
+      var tb=(pb[2]||'')+(pb[1]||'')+(pb[0]||'')+(b.saat||'').replace(':','');
+      if(tb!==ta) return tb>ta?1:-1; // Descending: yeni önce
+      return 0;
+    });
+  }
+
   var lbl=document.getElementById('rdv-sonuc');if(lbl)lbl.textContent=liste.length+' randevu';
   if(!liste.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:20px;color:#999">Sonuç bulunamadı</td></tr>';return;}
   tbody.innerHTML=liste.map(function(r,_i){
