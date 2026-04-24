@@ -2159,7 +2159,7 @@ svg{display:block;flex-shrink:0}
       <div class="tb-i"><svg viewBox="0 0 24 24" fill="none" stroke="#B01C2E" stroke-width="1.8" stroke-linecap="round" width="13" height="13"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.6 3.38 2 2 0 0 1 3.57 1.2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.06 6.06l.41-.41a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21 17z"/></svg>0850 305 20 55</div>
       <div class="tb-i"><svg viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="1.8" stroke-linecap="round" width="13" height="13"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>WhatsApp: 0552 310 40 55</div>
     </div>
-    <div class="tb-r"><div class="stars">★★★★★</div><span style="color:#666">4.9/5</span><a style="color:#888;cursor:pointer">Kurumsal</a><a style="color:#888;cursor:pointer">Blog</a><a style="color:#888;cursor:pointer">SSS</a></div>
+    <div class="tb-r"><div class="stars">★★★★★</div><span style="color:#666">4.5/5</span><a style="color:#888;cursor:pointer">Kurumsal</a><a style="color:#888;cursor:pointer">Blog</a><a style="color:#888;cursor:pointer">SSS</a></div>
   </div>
 </div>
 
@@ -2294,7 +2294,7 @@ svg{display:block;flex-shrink:0}
       <div class="hs-div"></div>
       <div class="hs">
         <div class="hs-stars" id="g-stars">★★★★★</div>
-        <div class="hs-n" id="g-rating">4.9</div>
+        <div class="hs-n" id="g-rating">4.5</div>
         <div class="hs-l">Müşteri Puanı<br><span id="g-count" style="color:#666;font-size:9px"></span></div>
       </div>
       <div class="hs-div"></div>
@@ -3511,7 +3511,7 @@ svg{display:block;flex-shrink:0}
           </div>
           <div class="sk-stat">
             <div class="sk-stat-ico"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
-            <div class="sk-stat-num">4.9/5.0</div>
+            <div class="sk-stat-num">4.5/5.0</div>
             <div class="sk-stat-lbl">Müşteri Puanı</div>
           </div>
           <div class="sk-stat">
@@ -3543,7 +3543,7 @@ svg{display:block;flex-shrink:0}
           </div>
           <div class="sk-google-info">
             <div class="sk-google-stars">
-              <span class="sk-google-num">4.9</span>
+              <span class="sk-google-num">4.5</span>
               <span class="sk-google-stars-inner">
                 <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                 <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -3552,7 +3552,7 @@ svg{display:block;flex-shrink:0}
                 <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               </span>
             </div>
-            <div class="sk-google-count"><strong id="sk-google-count-num">Google</strong> · 5 üzerinden değerlendirme</div>
+            <div class="sk-google-count"><strong id="sk-google-count-num">63 değerlendirme</strong> · Google'da 5 üzerinden 4.5</div>
           </div>
           <a href="#" class="sk-google-btn" onclick="acGoogleMaps();return false;" title="Google'da yorum yazın — 1 dakika sürer">
             <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
@@ -5317,7 +5317,7 @@ function cD(){document.getElementById("drw-ovl").classList.remove("on");document
   fetch(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${PLACE_ID}&fields=rating,user_ratings_total&key=${API_KEY}`)
     .then(r=>r.json()).then(data=>{
       if(!data.result)return;
-      const r=data.result, rating=r.rating?r.rating.toFixed(1):'4.9', count=r.user_ratings_total?r.user_ratings_total+'+ Yorum':'';
+      const r=data.result, rating=r.rating?r.rating.toFixed(1):'4.5', count=r.user_ratings_total?r.user_ratings_total+'+ Yorum':'';
       document.getElementById('g-rating').textContent=rating;
       document.getElementById('g-stars').textContent=rating>=4.5?'★★★★★':'★★★★☆';
       document.getElementById('g-count').textContent=count;
