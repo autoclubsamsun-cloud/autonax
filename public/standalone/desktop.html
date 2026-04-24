@@ -527,10 +527,10 @@ svg{display:block;flex-shrink:0}
 /* ══ HİZMETLER ══ */
 .svc-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;width:100%;align-items:start}
 .svc{
-  background:var(--w);border-radius:12px;border:1px solid var(--bd);
+  background:var(--w);border-radius:14px;border:1px solid var(--bd);
   overflow:hidden;cursor:pointer;
   transition:transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s, border-color .3s;
-  position:relative;
+  position:relative;display:flex;flex-direction:column;
 }
 .svc::before{
   content:'';position:absolute;inset:0;
@@ -541,7 +541,7 @@ svg{display:block;flex-shrink:0}
   content:'';position:absolute;bottom:0;left:0;right:0;height:3px;
   background:linear-gradient(90deg,var(--rd),var(--r),#FF3355);
   transform:scaleX(0);transform-origin:left;
-  transition:transform .35s cubic-bezier(.4,0,.2,1);
+  transition:transform .35s cubic-bezier(.4,0,.2,1);z-index:3;
 }
 .svc:hover{
   transform:translateY(-6px) scale(1.02);
@@ -550,25 +550,124 @@ svg{display:block;flex-shrink:0}
 }
 .svc:hover::before{opacity:1}
 .svc:hover::after{transform:scaleX(1)}
-.svc:hover .svc-img svg{stroke:rgba(176,28,46,.4);transform:scale(1.1);transition:transform .3s, stroke .3s}
+.svc:hover .svc-img svg.svc-placeholder{stroke:rgba(176,28,46,.35);transform:scale(1.08)}
 .svc:hover .svc-name{color:var(--r)}
-.svc:hover .svc-btn{background:var(--r);color:#fff}
+.svc:hover .svc-btn{background:var(--r);color:#fff;box-shadow:0 6px 18px rgba(176,28,46,.3)}
 .svc:active{transform:translateY(-3px) scale(1.01)}
 
-.svc-img{height:120px;background:var(--bg);display:flex;align-items:center;justify-content:center;position:relative;border-bottom:1px solid var(--bd);overflow:hidden;z-index:1}
+/* ── Görsel Alanı (zengin gradient + marka filigranı) ── */
+.svc-img{
+  height:140px;position:relative;overflow:hidden;z-index:1;
+  background:linear-gradient(135deg,#fafbfc 0%,#eef1f5 100%);
+  border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:center;
+}
 .svc-img::before{
   content:'';position:absolute;inset:0;
-  background:radial-gradient(circle at 50% 50%,rgba(176,28,46,.08) 0%,transparent 70%);
-  opacity:0;transition:opacity .3s;
+  background:
+    radial-gradient(circle at 80% 20%,rgba(176,28,46,.06) 0%,transparent 50%),
+    radial-gradient(circle at 20% 80%,rgba(30,30,40,.04) 0%,transparent 50%);
+  transition:opacity .3s;
 }
-.svc:hover .svc-img::before{opacity:1}
-.svc-img svg{width:48px;height:48px;stroke:var(--ink5);fill:none;stroke-width:1;stroke-linecap:round;transition:transform .3s, stroke .3s;position:relative;z-index:1}
-.svc-tag-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
-.svc-brand{font-size:10px;font-weight:800;color:var(--r);text-transform:uppercase;letter-spacing:1px}
-.svc-garanti{font-size:9px;font-weight:700;background:rgba(176,28,46,.08);color:var(--r);padding:2px 7px;border-radius:8px;border:1px solid rgba(176,28,46,.2);white-space:nowrap}
-.svc-yapistikan{display:flex;align-items:center;gap:4px;font-size:9px;font-weight:700;padding:3px 8px;border-radius:5px;margin-top:5px;margin-bottom:6px;width:fit-content}
-.svc-yapistikan.ashland{background:#E8F0FE;color:#1a56db;border:1px solid #c3d5fc}
-.svc-yapistikan.henkel{background:#FFF3E0;color:#e65100;border:1px solid #ffcc80}
+/* USA kartları için mavi-kırmızı tema */
+.svc.svc-us .svc-img{background:linear-gradient(135deg,#f5f8ff 0%,#fff5f5 100%)}
+.svc.svc-us .svc-img::after{
+  content:'';position:absolute;top:-30%;right:-30%;width:80%;height:80%;
+  background:radial-gradient(circle,rgba(30,60,175,.08) 0%,transparent 60%);
+  pointer-events:none;
+}
+/* Germany kartları için sarı-siyah tema */
+.svc.svc-de .svc-img{background:linear-gradient(135deg,#fffcf0 0%,#fafafa 100%)}
+.svc.svc-de .svc-img::after{
+  content:'';position:absolute;top:-30%;right:-30%;width:80%;height:80%;
+  background:radial-gradient(circle,rgba(255,206,0,.1) 0%,transparent 60%);
+  pointer-events:none;
+}
+/* Renkli (special) kartlar */
+.svc.svc-renkli .svc-img{
+  background:linear-gradient(135deg,#ffe4ec 0%,#e4f1ff 50%,#fff4d6 100%);
+}
+
+.svc-placeholder{width:56px;height:56px;stroke:var(--ink5);fill:none;stroke-width:1;stroke-linecap:round;transition:transform .35s cubic-bezier(.34,1.56,.64,1), stroke .3s;position:relative;z-index:1;opacity:.55}
+
+/* Gerçek ürün fotoğrafı */
+.svc-img img{width:100%;height:100%;object-fit:cover;position:relative;z-index:1}
+
+/* Köşe rozeti — önceki emoji'li rozet, yeni SVG + metin yapısı */
+.svc-bdg{
+  position:absolute;top:10px;right:10px;
+  display:inline-flex;align-items:center;gap:4px;
+  background:var(--r);color:#fff;
+  font-size:10px;font-weight:800;
+  padding:5px 9px;border-radius:6px;
+  text-transform:uppercase;letter-spacing:.6px;
+  z-index:2;box-shadow:0 3px 10px rgba(176,28,46,.3);
+}
+.svc-bdg svg{width:12px;height:12px;color:#fff}
+.svc-bdg.bdg-success{background:#16A34A;box-shadow:0 3px 10px rgba(22,163,74,.3)}
+.svc-bdg.bdg-germany{background:#1a1a1a;box-shadow:0 3px 10px rgba(0,0,0,.3)}
+.svc-bdg.bdg-germany svg{color:#FFCE00}
+.svc-bdg.bdg-eko{background:#0891b2;box-shadow:0 3px 10px rgba(8,145,178,.3)}
+.svc-bdg.bdg-premium{background:linear-gradient(135deg,#FFD700 0%,#FFA500 100%);color:#3a2500;box-shadow:0 3px 10px rgba(255,165,0,.4)}
+.svc-bdg.bdg-premium svg{color:#3a2500}
+.svc-bdg.bdg-renkli{background:linear-gradient(135deg,#ec4899 0%,#8b5cf6 100%);box-shadow:0 3px 10px rgba(236,72,153,.35)}
+
+/* Bayrak filigran (sol alt köşe görselin) */
+.svc-flag-wm{
+  position:absolute;left:10px;bottom:10px;z-index:2;
+  width:32px;height:22px;border-radius:3px;overflow:hidden;
+  box-shadow:0 2px 6px rgba(0,0,0,.15);
+  opacity:.92;
+}
+.svc-flag-wm svg{width:100%;height:100%;display:block}
+
+/* ── Gövde ── */
+.svc-body{padding:14px 15px 15px;position:relative;z-index:1;display:flex;flex-direction:column;flex:1}
+
+.svc-tag-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:6px}
+.svc-brand{font-size:10px;font-weight:800;color:var(--r);text-transform:uppercase;letter-spacing:1.2px;white-space:nowrap}
+.svc-garanti{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:10px;font-weight:800;
+  background:rgba(176,28,46,.09);color:var(--r);
+  padding:3px 8px;border-radius:10px;
+  border:1px solid rgba(176,28,46,.2);
+  white-space:nowrap;
+}
+.svc-garanti svg{width:11px;height:11px;color:var(--r)}
+
+.svc-name{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1.2px;color:var(--ink);margin-bottom:8px;transition:color .2s;line-height:1.1}
+
+/* Özellikler listesi (eski sub yerine) */
+.svc-feats{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;min-height:60px}
+.svc-feat{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--ink3);font-weight:600}
+.svc-feat svg{width:13px;height:13px;color:var(--r);flex-shrink:0}
+.svc-feat strong{color:var(--ink);font-weight:700}
+
+/* Fiyat — büyütüldü */
+.svc-price{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:28px;color:var(--r);
+  line-height:1;letter-spacing:.5px;
+  margin-top:auto;margin-bottom:2px;
+}
+.svc-price-label{font-size:9px;color:var(--ink5);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:2px;display:block}
+.svc-old{font-size:13px;color:var(--ink5);text-decoration:line-through;margin-left:6px;font-family:'Outfit',sans-serif;vertical-align:middle;font-weight:500}
+
+/* Buton — daha belirgin, dokunmatik dostu (min 44px) */
+.svc-btn{
+  width:100%;background:#fff;
+  border:1.5px solid var(--r);color:var(--r);
+  border-radius:8px;
+  padding:11px 0;min-height:44px;
+  font-family:'Bebas Neue',sans-serif;font-size:13.5px;letter-spacing:1.8px;
+  cursor:pointer;margin-top:10px;
+  transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.svc-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.svc-btn:active{transform:scale(.97)}
+
 /* ══ SLIDER ══ */
 .slider-wrap{position:relative;overflow:hidden}
 .slider-track{display:flex;gap:12px;transition:transform .38s cubic-bezier(.4,0,.2,1);will-change:transform}
@@ -585,15 +684,10 @@ svg{display:block;flex-shrink:0}
 .slider-dots{display:flex;justify-content:center;gap:6px;margin-top:10px}
 .slider-dot{width:6px;height:6px;border-radius:50%;background:var(--bd);cursor:pointer;transition:.2s}
 .slider-dot.act{background:var(--r);width:18px;border-radius:3px}
-.svc-yapistikan svg{flex-shrink:0}
-.svc-bdg{position:absolute;top:9px;right:9px;background:var(--r);color:#fff;font-size:10px;font-weight:700;padding:3px 7px;border-radius:3px;text-transform:uppercase;z-index:2}
-.svc-body{padding:13px 14px;position:relative;z-index:1}
-.svc-name{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:var(--ink);margin-bottom:3px;transition:color .2s}
+
+/* Geriye dönük uyumluluk — eski svc-sub ve svc-yapistikan görünmez olsun (HTML'de varsa) */
 .svc-sub{font-size:12px;color:var(--ink4);line-height:1.5;margin-bottom:8px;min-height:32px}
-.svc-price{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--r)}
-.svc-old{font-size:11px;color:var(--ink5);text-decoration:line-through;margin-left:4px;font-family:'Outfit',sans-serif;vertical-align:middle}
-.svc-btn{width:100%;background:none;border:1.5px solid var(--r);color:var(--r);border-radius:6px;padding:8px 0;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;cursor:pointer;margin-top:9px;transition:background .2s, color .2s, transform .15s}
-.svc-btn:active{transform:scale(.97)}
+.svc-yapistikan{display:none}
 
 /* ══ MARKA PAKETLER ══ */
 .brand-sec{background:var(--w);border-radius:12px;border:1px solid var(--bd);padding:20px 22px}
@@ -967,8 +1061,19 @@ svg{display:block;flex-shrink:0}
   .sh-more{font-size:11px;font-weight:700;padding:6px 14px;letter-spacing:0;white-space:nowrap;flex-shrink:0;border:1.5px solid rgba(176,28,46,.3);border-radius:20px;color:var(--r)}
   .svc-grid{grid-template-columns:repeat(2,1fr)}
   .svc-sub{min-height:unset}
-  .svc-garanti{font-size:8px;white-space:normal}
-  .svc-tag-row{flex-wrap:wrap;gap:2px}
+  .svc-garanti{font-size:9px;padding:2px 6px;white-space:nowrap}
+  .svc-tag-row{flex-wrap:wrap;gap:3px}
+  .svc-img{height:120px}
+  .svc-placeholder{width:44px;height:44px}
+  .svc-body{padding:12px 12px 13px}
+  .svc-name{font-size:15px}
+  .svc-feats{min-height:56px}
+  .svc-feat{font-size:11px}
+  .svc-price{font-size:24px}
+  .svc-btn{padding:12px 0;font-size:12.5px;min-height:44px}
+  .svc-bdg{font-size:9px;padding:4px 7px;top:8px;right:8px}
+  .svc-bdg svg{width:10px;height:10px}
+  .svc-flag-wm{width:28px;height:20px;left:8px;bottom:8px}
   .slider-track .svc{flex:0 0 calc(50% - 6px);min-width:0}
   .brand-sec{padding:14px 14px}
   .bpkg-grid{grid-template-columns:1fr 1fr}
@@ -1689,6 +1794,98 @@ svg{display:block;flex-shrink:0}
 </head>
 <body>
 
+<!-- ══ SVG SPRITE — Rozet ikonları ve bayraklar (tek tanım, her yerde <use> ile çağrılır) ══ -->
+<svg width="0" height="0" style="position:absolute;visibility:hidden" aria-hidden="true">
+  <defs>
+    <!-- USA Bayrağı -->
+    <symbol id="ic-flag-us" viewBox="0 0 30 20">
+      <rect width="30" height="20" fill="#fff"/>
+      <g fill="#B22234">
+        <rect y="0" width="30" height="1.54"/>
+        <rect y="3.08" width="30" height="1.54"/>
+        <rect y="6.15" width="30" height="1.54"/>
+        <rect y="9.23" width="30" height="1.54"/>
+        <rect y="12.31" width="30" height="1.54"/>
+        <rect y="15.38" width="30" height="1.54"/>
+        <rect y="18.46" width="30" height="1.54"/>
+      </g>
+      <rect width="12" height="10.77" fill="#3C3B6E"/>
+      <g fill="#fff">
+        <circle cx="2" cy="1.8" r=".5"/><circle cx="4.5" cy="1.8" r=".5"/><circle cx="7" cy="1.8" r=".5"/><circle cx="9.5" cy="1.8" r=".5"/>
+        <circle cx="3.2" cy="3.4" r=".5"/><circle cx="5.7" cy="3.4" r=".5"/><circle cx="8.2" cy="3.4" r=".5"/>
+        <circle cx="2" cy="5" r=".5"/><circle cx="4.5" cy="5" r=".5"/><circle cx="7" cy="5" r=".5"/><circle cx="9.5" cy="5" r=".5"/>
+        <circle cx="3.2" cy="6.6" r=".5"/><circle cx="5.7" cy="6.6" r=".5"/><circle cx="8.2" cy="6.6" r=".5"/>
+        <circle cx="2" cy="8.2" r=".5"/><circle cx="4.5" cy="8.2" r=".5"/><circle cx="7" cy="8.2" r=".5"/><circle cx="9.5" cy="8.2" r=".5"/>
+      </g>
+      <rect width="30" height="20" fill="none" stroke="#ccc" stroke-width=".4"/>
+    </symbol>
+    <!-- Almanya Bayrağı -->
+    <symbol id="ic-flag-de" viewBox="0 0 30 20">
+      <rect y="0" width="30" height="6.67" fill="#000"/>
+      <rect y="6.67" width="30" height="6.67" fill="#DD0000"/>
+      <rect y="13.33" width="30" height="6.67" fill="#FFCE00"/>
+      <rect width="30" height="20" fill="none" stroke="#ccc" stroke-width=".4"/>
+    </symbol>
+    <!-- Yıldız (Popüler) -->
+    <symbol id="ic-star" viewBox="0 0 24 24">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="currentColor" stroke="none"/>
+    </symbol>
+    <!-- Check (Başlangıç) -->
+    <symbol id="ic-check" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" fill="currentColor" stroke="none"/>
+      <polyline points="8 12 11 15 16 9" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <!-- Taç (Maksimum / Premium) -->
+    <symbol id="ic-crown" viewBox="0 0 24 24">
+      <path d="M3 18h18l-2-10-4 3-3-5-3 5-4-3z" fill="currentColor" stroke="none"/>
+      <rect x="3" y="19" width="18" height="2" fill="currentColor" stroke="none"/>
+    </symbol>
+    <!-- Dolar (Ekonomik) -->
+    <symbol id="ic-dollar" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" fill="currentColor" stroke="none"/>
+      <text x="12" y="17" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="14" font-weight="900" fill="#fff">₺</text>
+    </symbol>
+    <!-- Palet (Renkli) -->
+    <symbol id="ic-palette" viewBox="0 0 24 24">
+      <path d="M12 3a9 9 0 0 0 0 18c1 0 1.7-.7 1.7-1.6 0-.4-.2-.8-.4-1.1-.2-.3-.4-.7-.4-1.1 0-.9.7-1.6 1.6-1.6H17a5 5 0 0 0 5-5c0-4.4-4.5-7.6-10-7.6z" fill="currentColor" stroke="none"/>
+      <circle cx="7" cy="11" r="1.2" fill="#fff"/>
+      <circle cx="10" cy="7" r="1.2" fill="#fff"/>
+      <circle cx="15" cy="7" r="1.2" fill="#fff"/>
+      <circle cx="17" cy="11" r="1.2" fill="#fff"/>
+    </symbol>
+    <!-- Kalkan (Garanti) -->
+    <symbol id="ic-shield" viewBox="0 0 24 24">
+      <path d="M12 2L4 5v6c0 5 3.5 9.6 8 10.8 4.5-1.2 8-5.8 8-10.8V5l-8-3z" fill="currentColor" stroke="none"/>
+      <polyline points="8 12 11 15 16 9" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <!-- Şimşek (Self-Healing) -->
+    <symbol id="ic-bolt" viewBox="0 0 24 24">
+      <polygon points="13 2 3 14 10 14 8 22 20 9 13 9 15 2" fill="currentColor" stroke="none"/>
+    </symbol>
+    <!-- Damla (Hidrofobik/Hidrofilik) -->
+    <symbol id="ic-drop" viewBox="0 0 24 24">
+      <path d="M12 2s-7 8-7 13a7 7 0 0 0 14 0c0-5-7-13-7-13z" fill="currentColor" stroke="none"/>
+    </symbol>
+    <!-- Cetvel (Mikron/Kalınlık) -->
+    <symbol id="ic-ruler" viewBox="0 0 24 24">
+      <rect x="2" y="9" width="20" height="6" rx="1" fill="currentColor" stroke="none"/>
+      <g stroke="#fff" stroke-width="1.4" stroke-linecap="round">
+        <line x1="6" y1="9" x2="6" y2="12"/>
+        <line x1="10" y1="9" x2="10" y2="13"/>
+        <line x1="14" y1="9" x2="14" y2="12"/>
+        <line x1="18" y1="9" x2="18" y2="13"/>
+      </g>
+    </symbol>
+    <!-- Takvim (Randevu) -->
+    <symbol id="ic-calendar" viewBox="0 0 24 24">
+      <rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+      <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/>
+      <line x1="8" y1="3" x2="8" y2="7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <line x1="16" y1="3" x2="16" y2="7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </symbol>
+  </defs>
+</svg>
+
 <!-- DRAWER -->
 <div id="drw-ovl">
   <div id="drw">
@@ -1886,58 +2083,54 @@ svg{display:block;flex-shrink:0}
       <button class="slider-btn prev" onclick="slPrev('sl-one')" id="sl-one-p" disabled><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <button class="slider-btn next" onclick="slNext('sl-one')" id="sl-one-n"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
       <div class="slider-track" id="sl-one-t">
-      <div class="svc">
-        <div class="svc-img"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><div class="svc-bdg">⭐ Popüler</div></div>
+      <div class="svc svc-us">
+        <div class="svc-img"><svg class="svc-placeholder" viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5 3.5 9.6 8 10.8 4.5-1.2 8-5.8 8-10.8V5l-8-3z" fill="none" stroke="currentColor"/><polyline points="8 12 11 15 16 9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="svc-flag-wm"><svg><use href="#ic-flag-us"/></svg></div><div class="svc-bdg "><svg><use href="#ic-star"/></svg> Popüler</div></div>
         <div class="svc-body">
-          <div class="svc-tag-row"><span class="svc-brand">NiDOJP N8</span><span class="svc-garanti">10 Yıl Garanti</span></div>
+          <div class="svc-tag-row"><span class="svc-brand">NiDOJP N8</span><span class="svc-garanti"><svg><use href="#ic-shield"/></svg>10 Yıl Garanti</span></div>
           <div class="svc-name">220 Mikron TPU PPF</div>
-          <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofilik · USA</div>
-          <div class="svc-yapistikan ashland"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇺🇸 Ashland Yapışkan · USA</div>
+          <div class="svc-feats"><div class="svc-feat"><svg><use href="#ic-ruler"/></svg><span><strong>220 Mikron</strong> kalınlık</span></div><div class="svc-feat"><svg><use href="#ic-bolt"/></svg><span>Hidrofilik · Parlak</span></div><div class="svc-feat"><svg style="width:14px;height:10px;border-radius:1px"><use href="#ic-flag-us"/></svg><span><strong>USA</strong> üretim</span></div></div>
           <div class="svc-price"><span data-urun-id="N8" data-fiyat-tip="full">₺70.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('N8','full')">Randevu Al</button>
+          <button class="svc-btn" onclick="urunDetayAc('N8','full')"><svg><use href="#ic-calendar"/></svg>Randevu Al</button>
         </div>
       </div>
-      <div class="svc">
-        <div class="svc-img"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><div class="svc-bdg">✅ Başlangıç</div></div>
+      <div class="svc svc-us">
+        <div class="svc-img"><svg class="svc-placeholder" viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5 3.5 9.6 8 10.8 4.5-1.2 8-5.8 8-10.8V5l-8-3z" fill="none" stroke="currentColor"/><polyline points="8 12 11 15 16 9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="svc-flag-wm"><svg><use href="#ic-flag-us"/></svg></div><div class="svc-bdg bdg-success"><svg><use href="#ic-check"/></svg> Başlangıç</div></div>
         <div class="svc-body">
-          <div class="svc-tag-row"><span class="svc-brand">NiDOJP N7</span><span class="svc-garanti">8 Yıl Garanti</span></div>
+          <div class="svc-tag-row"><span class="svc-brand">NiDOJP N7</span><span class="svc-garanti"><svg><use href="#ic-shield"/></svg>8 Yıl Garanti</span></div>
           <div class="svc-name">200 Mikron TPU PPF</div>
-          <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofobik · USA</div>
-          <div class="svc-yapistikan ashland"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇺🇸 Ashland Yapışkan · USA</div>
+          <div class="svc-feats"><div class="svc-feat"><svg><use href="#ic-ruler"/></svg><span><strong>200 Mikron</strong> kalınlık</span></div><div class="svc-feat"><svg><use href="#ic-bolt"/></svg><span>Hidrofobik · Parlak</span></div><div class="svc-feat"><svg style="width:14px;height:10px;border-radius:1px"><use href="#ic-flag-us"/></svg><span><strong>USA</strong> üretim</span></div></div>
           <div class="svc-price"><span data-urun-id="N7" data-fiyat-tip="full">₺65.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('N7','full')">Randevu Al</button>
+          <button class="svc-btn" onclick="urunDetayAc('N7','full')"><svg><use href="#ic-calendar"/></svg>Randevu Al</button>
         </div>
       </div>
-      <div class="svc">
-        <div class="svc-img"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><div class="svc-bdg">🇩🇪 Germany</div></div>
+      <div class="svc svc-de">
+        <div class="svc-img"><svg class="svc-placeholder" viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5 3.5 9.6 8 10.8 4.5-1.2 8-5.8 8-10.8V5l-8-3z" fill="none" stroke="currentColor"/><polyline points="8 12 11 15 16 9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="svc-flag-wm"><svg><use href="#ic-flag-de"/></svg></div><div class="svc-bdg bdg-germany"><svg><use href="#ic-flag-de"/></svg> Germany</div></div>
         <div class="svc-body">
-          <div class="svc-tag-row"><span class="svc-brand">NiDOJP S75</span><span class="svc-garanti">6 Yıl Garanti</span></div>
+          <div class="svc-tag-row"><span class="svc-brand">NiDOJP S75</span><span class="svc-garanti"><svg><use href="#ic-shield"/></svg>6 Yıl Garanti</span></div>
           <div class="svc-name">200 Mikron TPU PPF</div>
-          <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofilik · Alman</div>
-          <div class="svc-yapistikan henkel"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇩🇪 Henkel Yapışkan · Alman</div>
+          <div class="svc-feats"><div class="svc-feat"><svg><use href="#ic-ruler"/></svg><span><strong>200 Mikron</strong> kalınlık</span></div><div class="svc-feat"><svg><use href="#ic-bolt"/></svg><span>Hidrofilik · Parlak</span></div><div class="svc-feat"><svg style="width:14px;height:10px;border-radius:1px"><use href="#ic-flag-de"/></svg><span><strong>Almanya</strong> üretim</span></div></div>
           <div class="svc-price"><span data-urun-id="S75" data-fiyat-tip="full">₺55.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('S75','full')">Randevu Al</button>
+          <button class="svc-btn" onclick="urunDetayAc('S75','full')"><svg><use href="#ic-calendar"/></svg>Randevu Al</button>
         </div>
       </div>
-      <div class="svc">
-        <div class="svc-img"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><div class="svc-bdg">💡 Ekonomik</div></div>
+      <div class="svc svc-de">
+        <div class="svc-img"><svg class="svc-placeholder" viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5 3.5 9.6 8 10.8 4.5-1.2 8-5.8 8-10.8V5l-8-3z" fill="none" stroke="currentColor"/><polyline points="8 12 11 15 16 9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="svc-flag-wm"><svg><use href="#ic-flag-de"/></svg></div><div class="svc-bdg bdg-eko"><svg><use href="#ic-dollar"/></svg> Ekonomik</div></div>
         <div class="svc-body">
-          <div class="svc-tag-row"><span class="svc-brand">NiDOJP CS190</span><span class="svc-garanti">4 Yıl Garanti</span></div>
+          <div class="svc-tag-row"><span class="svc-brand">NiDOJP CS190</span><span class="svc-garanti"><svg><use href="#ic-shield"/></svg>4 Yıl Garanti</span></div>
           <div class="svc-name">200 Mikron TPU PPF EKO</div>
-          <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofilik · Alman</div>
-          <div class="svc-yapistikan henkel"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇩🇪 Henkel Yapışkan · Alman</div>
+          <div class="svc-feats"><div class="svc-feat"><svg><use href="#ic-ruler"/></svg><span><strong>200 Mikron</strong> kalınlık</span></div><div class="svc-feat"><svg><use href="#ic-bolt"/></svg><span>Hidrofilik · Parlak</span></div><div class="svc-feat"><svg style="width:14px;height:10px;border-radius:1px"><use href="#ic-flag-de"/></svg><span><strong>Almanya</strong> üretim</span></div></div>
           <div class="svc-price"><span data-urun-id="CS190" data-fiyat-tip="full">₺45.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('CS190','full')">Randevu Al</button>
+          <button class="svc-btn" onclick="urunDetayAc('CS190','full')"><svg><use href="#ic-calendar"/></svg>Randevu Al</button>
         </div>
       </div>
       <div class="svc">
-        <div class="svc-img"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg></div>
+        <div class="svc-img"><svg class="svc-placeholder" viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5 3.5 9.6 8 10.8 4.5-1.2 8-5.8 8-10.8V5l-8-3z" fill="none" stroke="currentColor"/><polyline points="8 12 11 15 16 9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <div class="svc-body">
-          <div class="svc-tag-row"><span class="svc-brand">Seramik</span><span class="svc-garanti">Aynı Gün</span></div>
+          <div class="svc-tag-row"><span class="svc-brand">Seramik</span><span class="svc-garanti"><svg><use href="#ic-shield"/></svg>Aynı Gün</span></div>
           <div class="svc-name">Nano Seramik Kaplama</div>
-          <div class="svc-sub">UV Koruma · Kir İticilik · Parlaklık · Aynı Gün Teslim</div>
+          <div class="svc-feats"><div class="svc-feat"><svg><use href="#ic-bolt"/></svg><span>Self-Healing</span></div></div>
           <div class="svc-price">₺12.000</div>
-          <button class="svc-btn">Randevu Al</button>
+          <button class="svc-btn" onclick="return false"><svg><use href="#ic-calendar"/></svg>Randevu Al</button>
         </div>
       </div>
       </div><!-- /slider-track -->
@@ -1946,85 +2139,78 @@ svg{display:block;flex-shrink:0}
 
         <div id="bolum-ppf" class="sh"><div class="sh-left"><div class="sh-eyebrow">🇺🇸 Amerikan Ürünü · Nidojp</div><h2>PPF Kaplama TPU (USA)</h2></div><div class="sh-right"><div class="sh-more">Tümünü Gör <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div></div>
     <div class="svc-grid">
-      <div class="svc">
-        <div class="svc-img"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><div class="svc-bdg">✅ Başlangıç</div></div>
+      <div class="svc svc-us">
+        <div class="svc-img"><svg class="svc-placeholder" viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5 3.5 9.6 8 10.8 4.5-1.2 8-5.8 8-10.8V5l-8-3z" fill="none" stroke="currentColor"/><polyline points="8 12 11 15 16 9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="svc-flag-wm"><svg><use href="#ic-flag-us"/></svg></div><div class="svc-bdg bdg-success"><svg><use href="#ic-check"/></svg> Başlangıç</div></div>
         <div class="svc-body">
-          <div class="svc-tag-row"><span class="svc-brand">NiDOJP N7</span><span class="svc-garanti">8 Yıl Garanti</span></div>
+          <div class="svc-tag-row"><span class="svc-brand">NiDOJP N7</span><span class="svc-garanti"><svg><use href="#ic-shield"/></svg>8 Yıl Garanti</span></div>
           <div class="svc-name">200 Mikron TPU PPF</div>
-          <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofobik · USA</div>
-          <div class="svc-yapistikan ashland"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇺🇸 Ashland Yapışkan · USA</div>
+          <div class="svc-feats"><div class="svc-feat"><svg><use href="#ic-ruler"/></svg><span><strong>200 Mikron</strong> kalınlık</span></div><div class="svc-feat"><svg><use href="#ic-bolt"/></svg><span>Hidrofobik · Parlak</span></div><div class="svc-feat"><svg style="width:14px;height:10px;border-radius:1px"><use href="#ic-flag-us"/></svg><span><strong>USA</strong> üretim</span></div></div>
           <div class="svc-price"><span data-urun-id="N7" data-fiyat-tip="full">₺65.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('N7','full')">Randevu Al</button>
+          <button class="svc-btn" onclick="urunDetayAc('N7','full')"><svg><use href="#ic-calendar"/></svg>Randevu Al</button>
         </div>
       </div>
-      <div class="svc">
-        <div class="svc-img"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><div class="svc-bdg">⭐ Popüler</div></div>
+      <div class="svc svc-us">
+        <div class="svc-img"><svg class="svc-placeholder" viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5 3.5 9.6 8 10.8 4.5-1.2 8-5.8 8-10.8V5l-8-3z" fill="none" stroke="currentColor"/><polyline points="8 12 11 15 16 9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="svc-flag-wm"><svg><use href="#ic-flag-us"/></svg></div><div class="svc-bdg "><svg><use href="#ic-star"/></svg> Popüler</div></div>
         <div class="svc-body">
-          <div class="svc-tag-row"><span class="svc-brand">NiDOJP N8</span><span class="svc-garanti">10 Yıl Garanti</span></div>
+          <div class="svc-tag-row"><span class="svc-brand">NiDOJP N8</span><span class="svc-garanti"><svg><use href="#ic-shield"/></svg>10 Yıl Garanti</span></div>
           <div class="svc-name">220 Mikron TPU PPF</div>
-          <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofilik · USA</div>
-          <div class="svc-yapistikan ashland"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇺🇸 Ashland Yapışkan · USA</div>
+          <div class="svc-feats"><div class="svc-feat"><svg><use href="#ic-ruler"/></svg><span><strong>220 Mikron</strong> kalınlık</span></div><div class="svc-feat"><svg><use href="#ic-bolt"/></svg><span>Hidrofilik · Parlak</span></div><div class="svc-feat"><svg style="width:14px;height:10px;border-radius:1px"><use href="#ic-flag-us"/></svg><span><strong>USA</strong> üretim</span></div></div>
           <div class="svc-price"><span data-urun-id="N8" data-fiyat-tip="full">₺70.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('N8','full')">Randevu Al</button>
+          <button class="svc-btn" onclick="urunDetayAc('N8','full')"><svg><use href="#ic-calendar"/></svg>Randevu Al</button>
         </div>
       </div>
-      <div class="svc">
-        <div class="svc-img"><svg viewBox="0 0 24 24"><path d="M2 20h20M4 20l2-8 6 4 6-4 2 8"/><circle cx="12" cy="8" r="2"/></svg><div class="svc-bdg">👑 Maksimum</div></div>
+      <div class="svc svc-us">
+        <div class="svc-img"><svg class="svc-placeholder" viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5 3.5 9.6 8 10.8 4.5-1.2 8-5.8 8-10.8V5l-8-3z" fill="none" stroke="currentColor"/><polyline points="8 12 11 15 16 9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="svc-flag-wm"><svg><use href="#ic-flag-us"/></svg></div><div class="svc-bdg bdg-premium"><svg><use href="#ic-crown"/></svg> Maksimum</div></div>
         <div class="svc-body">
-          <div class="svc-tag-row"><span class="svc-brand">NiDOJP N9</span><span class="svc-garanti">12 Yıl Garanti</span></div>
+          <div class="svc-tag-row"><span class="svc-brand">NiDOJP N9</span><span class="svc-garanti"><svg><use href="#ic-shield"/></svg>12 Yıl Garanti</span></div>
           <div class="svc-name">250 Mikron TPU PPF</div>
-          <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofobik · USA</div>
-          <div class="svc-yapistikan ashland"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇺🇸 Ashland Yapışkan · USA</div>
+          <div class="svc-feats"><div class="svc-feat"><svg><use href="#ic-ruler"/></svg><span><strong>250 Mikron</strong> kalınlık</span></div><div class="svc-feat"><svg><use href="#ic-bolt"/></svg><span>Hidrofobik · Parlak</span></div><div class="svc-feat"><svg style="width:14px;height:10px;border-radius:1px"><use href="#ic-flag-us"/></svg><span><strong>USA</strong> üretim</span></div></div>
           <div class="svc-price"><span data-urun-id="N9" data-fiyat-tip="full">₺90.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('N9','full')">Randevu Al</button>
+          <button class="svc-btn" onclick="urunDetayAc('N9','full')"><svg><use href="#ic-calendar"/></svg>Randevu Al</button>
         </div>
       </div>
-      <div class="svc">
-        <div class="svc-img"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><div class="svc-bdg">🌈 Renkli</div></div>
+      <div class="svc svc-us svc-renkli">
+        <div class="svc-img"><svg class="svc-placeholder" viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5 3.5 9.6 8 10.8 4.5-1.2 8-5.8 8-10.8V5l-8-3z" fill="none" stroke="currentColor"/><polyline points="8 12 11 15 16 9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="svc-flag-wm"><svg><use href="#ic-flag-us"/></svg></div><div class="svc-bdg bdg-renkli"><svg><use href="#ic-palette"/></svg> Renkli</div></div>
         <div class="svc-body">
-          <div class="svc-tag-row"><span class="svc-brand">NiDOJP Renkli</span><span class="svc-garanti">5 Yıl Garanti</span></div>
+          <div class="svc-tag-row"><span class="svc-brand">NiDOJP Renkli</span><span class="svc-garanti"><svg><use href="#ic-shield"/></svg>5 Yıl Garanti</span></div>
           <div class="svc-name">200 Mikron Renkli TPU</div>
-          <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofobik · USA</div>
-          <div class="svc-yapistikan ashland"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇺🇸 Ashland Yapışkan · USA</div>
+          <div class="svc-feats"><div class="svc-feat"><svg><use href="#ic-ruler"/></svg><span><strong>200 Mikron</strong> kalınlık</span></div><div class="svc-feat"><svg><use href="#ic-bolt"/></svg><span>Hidrofobik · Parlak</span></div><div class="svc-feat"><svg style="width:14px;height:10px;border-radius:1px"><use href="#ic-flag-us"/></svg><span><strong>USA</strong> üretim</span></div></div>
           <div class="svc-price"><span data-urun-id="RENKLI" data-fiyat-tip="full">₺180.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('RENKLI','full')">Randevu Al</button>
+          <button class="svc-btn" onclick="urunDetayAc('RENKLI','full')"><svg><use href="#ic-calendar"/></svg>Randevu Al</button>
         </div>
       </div>
     </div>
 
         <div class="sh"><div class="sh-left"><div class="sh-eyebrow">🇩🇪 Alman Ürünü · Ekonomik</div><h2>PPF Kaplama TPU (Germany)</h2></div><div class="sh-right"><div class="sh-more">Tümünü Gör <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div></div>
     <div class="svc-grid">
-      <div class="svc">
-        <div class="svc-img"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><div class="svc-bdg">💡 Ekonomik</div></div>
+      <div class="svc svc-de">
+        <div class="svc-img"><svg class="svc-placeholder" viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5 3.5 9.6 8 10.8 4.5-1.2 8-5.8 8-10.8V5l-8-3z" fill="none" stroke="currentColor"/><polyline points="8 12 11 15 16 9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="svc-flag-wm"><svg><use href="#ic-flag-de"/></svg></div><div class="svc-bdg bdg-eko"><svg><use href="#ic-dollar"/></svg> Ekonomik</div></div>
         <div class="svc-body">
-          <div class="svc-tag-row"><span class="svc-brand">NiDOJP CS190</span><span class="svc-garanti">4 Yıl Garanti</span></div>
+          <div class="svc-tag-row"><span class="svc-brand">NiDOJP CS190</span><span class="svc-garanti"><svg><use href="#ic-shield"/></svg>4 Yıl Garanti</span></div>
           <div class="svc-name">200 Mikron TPU PPF EKO</div>
-          <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofilik · Alman</div>
-          <div class="svc-yapistikan henkel"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇩🇪 Henkel Yapışkan · Alman</div>
+          <div class="svc-feats"><div class="svc-feat"><svg><use href="#ic-ruler"/></svg><span><strong>200 Mikron</strong> kalınlık</span></div><div class="svc-feat"><svg><use href="#ic-bolt"/></svg><span>Hidrofilik · Parlak</span></div><div class="svc-feat"><svg style="width:14px;height:10px;border-radius:1px"><use href="#ic-flag-de"/></svg><span><strong>Almanya</strong> üretim</span></div></div>
           <div class="svc-price"><span data-urun-id="CS190" data-fiyat-tip="full">₺45.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('CS190','full')">Randevu Al</button>
+          <button class="svc-btn" onclick="urunDetayAc('CS190','full')"><svg><use href="#ic-calendar"/></svg>Randevu Al</button>
         </div>
       </div>
-      <div class="svc">
-        <div class="svc-img"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><div class="svc-bdg">🇩🇪 Germany</div></div>
+      <div class="svc svc-de">
+        <div class="svc-img"><svg class="svc-placeholder" viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5 3.5 9.6 8 10.8 4.5-1.2 8-5.8 8-10.8V5l-8-3z" fill="none" stroke="currentColor"/><polyline points="8 12 11 15 16 9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="svc-flag-wm"><svg><use href="#ic-flag-de"/></svg></div><div class="svc-bdg bdg-germany"><svg><use href="#ic-flag-de"/></svg> Germany</div></div>
         <div class="svc-body">
-          <div class="svc-tag-row"><span class="svc-brand">NiDOJP S75</span><span class="svc-garanti">6 Yıl Garanti</span></div>
+          <div class="svc-tag-row"><span class="svc-brand">NiDOJP S75</span><span class="svc-garanti"><svg><use href="#ic-shield"/></svg>6 Yıl Garanti</span></div>
           <div class="svc-name">200 Mikron TPU PPF</div>
-          <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofilik · Alman</div>
-          <div class="svc-yapistikan henkel"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇩🇪 Henkel Yapışkan · Alman</div>
+          <div class="svc-feats"><div class="svc-feat"><svg><use href="#ic-ruler"/></svg><span><strong>200 Mikron</strong> kalınlık</span></div><div class="svc-feat"><svg><use href="#ic-bolt"/></svg><span>Hidrofilik · Parlak</span></div><div class="svc-feat"><svg style="width:14px;height:10px;border-radius:1px"><use href="#ic-flag-de"/></svg><span><strong>Almanya</strong> üretim</span></div></div>
           <div class="svc-price"><span data-urun-id="S75" data-fiyat-tip="full">₺55.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('S75','full')">Randevu Al</button>
+          <button class="svc-btn" onclick="urunDetayAc('S75','full')"><svg><use href="#ic-calendar"/></svg>Randevu Al</button>
         </div>
       </div>
-      <div class="svc">
-        <div class="svc-img"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><div class="svc-bdg">🆕 Yeni</div></div>
+      <div class="svc svc-de">
+        <div class="svc-img"><svg class="svc-placeholder" viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5 3.5 9.6 8 10.8 4.5-1.2 8-5.8 8-10.8V5l-8-3z" fill="none" stroke="currentColor"/><polyline points="8 12 11 15 16 9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="svc-flag-wm"><svg><use href="#ic-flag-de"/></svg></div><div class="svc-bdg "><svg><use href="#ic-star"/></svg> Yeni</div></div>
         <div class="svc-body">
-          <div class="svc-tag-row"><span class="svc-brand">NiDOJP S85</span><span class="svc-garanti">8 Yıl · 🇩🇪</span></div>
+          <div class="svc-tag-row"><span class="svc-brand">NiDOJP S85</span><span class="svc-garanti"><svg><use href="#ic-shield"/></svg>8 Yıl · 🇩🇪</span></div>
           <div class="svc-name">220 Mikron TPU PPF</div>
-          <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofilik · Alman</div>
-          <div class="svc-yapistikan henkel"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇩🇪 Henkel Yapışkan · Alman</div>
+          <div class="svc-feats"><div class="svc-feat"><svg><use href="#ic-ruler"/></svg><span><strong>220 Mikron</strong> kalınlık</span></div><div class="svc-feat"><svg><use href="#ic-bolt"/></svg><span>Hidrofilik · Parlak</span></div><div class="svc-feat"><svg style="width:14px;height:10px;border-radius:1px"><use href="#ic-flag-de"/></svg><span><strong>Almanya</strong> üretim</span></div></div>
           <div class="svc-price">Fiyat İçin Arayın</div>
-          <button class="svc-btn">Bilgi Al</button>
+          <button class="svc-btn" onclick="return false"><svg><use href="#ic-calendar"/></svg>Randevu Al</button>
         </div>
       </div>
     </div>
@@ -2042,62 +2228,50 @@ svg{display:block;flex-shrink:0}
     <div class="svc-grid">
 
       <!-- N8 USA 10 Yıl — Ön 3 Parça -->
-      <div class="svc">
-        <div class="svc-img">
-          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
-          <div class="svc-bdg">⭐ Popüler</div>
-        </div>
+      <div class="svc svc-us">
+        <div class="svc-img"><svg class="svc-placeholder" viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5 3.5 9.6 8 10.8 4.5-1.2 8-5.8 8-10.8V5l-8-3z" fill="none" stroke="currentColor"/><polyline points="8 12 11 15 16 9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="svc-flag-wm"><svg><use href="#ic-flag-us"/></svg></div><div class="svc-bdg "><svg><use href="#ic-star"/></svg> Popüler</div></div>
         <div class="svc-body">
-          <div class="svc-tag-row"><span class="svc-brand">NiDOJP N8 · USA</span><span class="svc-garanti">10 Yıl Garanti</span></div>
+          <div class="svc-tag-row"><span class="svc-brand">NiDOJP N8 · USA</span><span class="svc-garanti"><svg><use href="#ic-shield"/></svg>10 Yıl Garanti</span></div>
           <div class="svc-name">220 Mikron TPU — Ön 3 Parça</div>
-          <div class="svc-sub">Kaput · Sağ/Sol Ön Çamurluk · Farlar · USA · ~3 Saat</div>
+          <div class="svc-feats"><div class="svc-feat"><svg><use href="#ic-ruler"/></svg><span><strong>220 Mikron</strong> kalınlık</span></div><div class="svc-feat"><svg><use href="#ic-bolt"/></svg><span>Self-Healing</span></div><div class="svc-feat"><svg style="width:14px;height:10px;border-radius:1px"><use href="#ic-flag-us"/></svg><span><strong>USA</strong> üretim</span></div></div>
           <div class="svc-price"><span data-urun-id="N8" data-fiyat-tip="on3">₺20.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('N8','on3')">Randevu Al</button>
+          <button class="svc-btn" onclick="urunDetayAc('N8','on3')"><svg><use href="#ic-calendar"/></svg>Randevu Al</button>
         </div>
       </div>
 
       <!-- N7 USA 8 Yıl — Ön 3 Parça -->
-      <div class="svc">
-        <div class="svc-img">
-          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
-          <div class="svc-bdg">✅ Başlangıç</div>
-        </div>
+      <div class="svc svc-us">
+        <div class="svc-img"><svg class="svc-placeholder" viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5 3.5 9.6 8 10.8 4.5-1.2 8-5.8 8-10.8V5l-8-3z" fill="none" stroke="currentColor"/><polyline points="8 12 11 15 16 9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="svc-flag-wm"><svg><use href="#ic-flag-us"/></svg></div><div class="svc-bdg bdg-success"><svg><use href="#ic-check"/></svg> Başlangıç</div></div>
         <div class="svc-body">
-          <div class="svc-tag-row"><span class="svc-brand">NiDOJP N7 · USA</span><span class="svc-garanti">8 Yıl Garanti</span></div>
+          <div class="svc-tag-row"><span class="svc-brand">NiDOJP N7 · USA</span><span class="svc-garanti"><svg><use href="#ic-shield"/></svg>8 Yıl Garanti</span></div>
           <div class="svc-name">200 Mikron TPU — Ön 3 Parça</div>
-          <div class="svc-sub">Kaput · Sağ/Sol Ön Çamurluk · Farlar · USA · ~3 Saat</div>
+          <div class="svc-feats"><div class="svc-feat"><svg><use href="#ic-ruler"/></svg><span><strong>200 Mikron</strong> kalınlık</span></div><div class="svc-feat"><svg><use href="#ic-bolt"/></svg><span>Self-Healing</span></div><div class="svc-feat"><svg style="width:14px;height:10px;border-radius:1px"><use href="#ic-flag-us"/></svg><span><strong>USA</strong> üretim</span></div></div>
           <div class="svc-price"><span data-urun-id="N7" data-fiyat-tip="on3">₺17.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('N7','on3')">Randevu Al</button>
+          <button class="svc-btn" onclick="urunDetayAc('N7','on3')"><svg><use href="#ic-calendar"/></svg>Randevu Al</button>
         </div>
       </div>
 
       <!-- S75 Germany 5 Yıl — Ön 3 Parça -->
-      <div class="svc">
-        <div class="svc-img">
-          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
-          <div class="svc-bdg">🇩🇪 Germany</div>
-        </div>
+      <div class="svc svc-de">
+        <div class="svc-img"><svg class="svc-placeholder" viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5 3.5 9.6 8 10.8 4.5-1.2 8-5.8 8-10.8V5l-8-3z" fill="none" stroke="currentColor"/><polyline points="8 12 11 15 16 9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="svc-flag-wm"><svg><use href="#ic-flag-de"/></svg></div><div class="svc-bdg bdg-germany"><svg><use href="#ic-flag-de"/></svg> Germany</div></div>
         <div class="svc-body">
-          <div class="svc-tag-row"><span class="svc-brand">NiDOJP S75 · 🇩🇪</span><span class="svc-garanti">5 Yıl Garanti</span></div>
+          <div class="svc-tag-row"><span class="svc-brand">NiDOJP S75 · 🇩🇪</span><span class="svc-garanti"><svg><use href="#ic-shield"/></svg>5 Yıl Garanti</span></div>
           <div class="svc-name">200 Mikron TPU — Ön 3 Parça</div>
-          <div class="svc-sub">Kaput · Sağ/Sol Ön Çamurluk · Farlar · Alman · ~3 Saat</div>
+          <div class="svc-feats"><div class="svc-feat"><svg><use href="#ic-ruler"/></svg><span><strong>200 Mikron</strong> kalınlık</span></div><div class="svc-feat"><svg><use href="#ic-bolt"/></svg><span>Self-Healing</span></div><div class="svc-feat"><svg style="width:14px;height:10px;border-radius:1px"><use href="#ic-flag-de"/></svg><span><strong>Almanya</strong> üretim</span></div></div>
           <div class="svc-price"><span data-urun-id="S75" data-fiyat-tip="on3">₺15.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('S75','on3')">Randevu Al</button>
+          <button class="svc-btn" onclick="urunDetayAc('S75','on3')"><svg><use href="#ic-calendar"/></svg>Randevu Al</button>
         </div>
       </div>
 
       <!-- CS75 Germany EKO 3 Yıl — Ön 3 Parça -->
-      <div class="svc">
-        <div class="svc-img">
-          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
-          <div class="svc-bdg">💡 EKO</div>
-        </div>
+      <div class="svc svc-de">
+        <div class="svc-img"><svg class="svc-placeholder" viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5 3.5 9.6 8 10.8 4.5-1.2 8-5.8 8-10.8V5l-8-3z" fill="none" stroke="currentColor"/><polyline points="8 12 11 15 16 9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="svc-flag-wm"><svg><use href="#ic-flag-de"/></svg></div><div class="svc-bdg bdg-eko"><svg><use href="#ic-dollar"/></svg> EKO</div></div>
         <div class="svc-body">
-          <div class="svc-tag-row"><span class="svc-brand">NiDOJP CS75 · 🇩🇪</span><span class="svc-garanti">3 Yıl Garanti</span></div>
+          <div class="svc-tag-row"><span class="svc-brand">NiDOJP CS75 · 🇩🇪</span><span class="svc-garanti"><svg><use href="#ic-shield"/></svg>3 Yıl Garanti</span></div>
           <div class="svc-name">200 Mikron TPU EKO — Ön 3 Parça</div>
-          <div class="svc-sub">Kaput · Sağ/Sol Ön Çamurluk · Farlar · Alman · ~3 Saat</div>
+          <div class="svc-feats"><div class="svc-feat"><svg><use href="#ic-ruler"/></svg><span><strong>200 Mikron</strong> kalınlık</span></div><div class="svc-feat"><svg><use href="#ic-bolt"/></svg><span>Self-Healing</span></div><div class="svc-feat"><svg style="width:14px;height:10px;border-radius:1px"><use href="#ic-flag-de"/></svg><span><strong>Almanya</strong> üretim</span></div></div>
           <div class="svc-price"><span data-urun-id="CS190" data-fiyat-tip="on3">₺13.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('CS190','on3')">Randevu Al</button>
+          <button class="svc-btn" onclick="urunDetayAc('CS190','on3')"><svg><use href="#ic-calendar"/></svg>Randevu Al</button>
         </div>
       </div>
 
@@ -2115,48 +2289,44 @@ svg{display:block;flex-shrink:0}
       </div>
     </div>
     <div class="svc-grid">
-      <div class="svc">
-        <div class="svc-img"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><div class="svc-bdg">⭐ Popüler</div></div>
+      <div class="svc svc-us">
+        <div class="svc-img"><svg class="svc-placeholder" viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5 3.5 9.6 8 10.8 4.5-1.2 8-5.8 8-10.8V5l-8-3z" fill="none" stroke="currentColor"/><polyline points="8 12 11 15 16 9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="svc-flag-wm"><svg><use href="#ic-flag-us"/></svg></div><div class="svc-bdg "><svg><use href="#ic-star"/></svg> Popüler</div></div>
         <div class="svc-body">
-          <div class="svc-tag-row"><span class="svc-brand">NiDOJP N8 · USA</span><span class="svc-garanti">10 Yıl Garanti</span></div>
+          <div class="svc-tag-row"><span class="svc-brand">NiDOJP N8 · USA</span><span class="svc-garanti"><svg><use href="#ic-shield"/></svg>10 Yıl Garanti</span></div>
           <div class="svc-name">220 Mikron TPU — Kaput</div>
-          <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofilik · USA · ~1,5 Saat</div>
-          <div class="svc-yapistikan ashland"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇺🇸 Ashland Yapışkan · USA</div>
+          <div class="svc-feats"><div class="svc-feat"><svg><use href="#ic-ruler"/></svg><span><strong>220 Mikron</strong> kalınlık</span></div><div class="svc-feat"><svg><use href="#ic-bolt"/></svg><span>Hidrofilik · Parlak</span></div><div class="svc-feat"><svg style="width:14px;height:10px;border-radius:1px"><use href="#ic-flag-us"/></svg><span><strong>USA</strong> üretim</span></div></div>
           <div class="svc-price"><span data-urun-id="N8" data-fiyat-tip="kaput">₺7.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('N8','kaput')">Randevu Al</button>
+          <button class="svc-btn" onclick="urunDetayAc('N8','kaput')"><svg><use href="#ic-calendar"/></svg>Randevu Al</button>
         </div>
       </div>
-      <div class="svc">
-        <div class="svc-img"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><div class="svc-bdg">✅ Başlangıç</div></div>
+      <div class="svc svc-us">
+        <div class="svc-img"><svg class="svc-placeholder" viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5 3.5 9.6 8 10.8 4.5-1.2 8-5.8 8-10.8V5l-8-3z" fill="none" stroke="currentColor"/><polyline points="8 12 11 15 16 9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="svc-flag-wm"><svg><use href="#ic-flag-us"/></svg></div><div class="svc-bdg bdg-success"><svg><use href="#ic-check"/></svg> Başlangıç</div></div>
         <div class="svc-body">
-          <div class="svc-tag-row"><span class="svc-brand">NiDOJP N7 · USA</span><span class="svc-garanti">8 Yıl Garanti</span></div>
+          <div class="svc-tag-row"><span class="svc-brand">NiDOJP N7 · USA</span><span class="svc-garanti"><svg><use href="#ic-shield"/></svg>8 Yıl Garanti</span></div>
           <div class="svc-name">200 Mikron TPU — Kaput</div>
-          <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofobik · USA · ~1,5 Saat</div>
-          <div class="svc-yapistikan ashland"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇺🇸 Ashland Yapışkan · USA</div>
+          <div class="svc-feats"><div class="svc-feat"><svg><use href="#ic-ruler"/></svg><span><strong>200 Mikron</strong> kalınlık</span></div><div class="svc-feat"><svg><use href="#ic-bolt"/></svg><span>Hidrofobik · Parlak</span></div><div class="svc-feat"><svg style="width:14px;height:10px;border-radius:1px"><use href="#ic-flag-us"/></svg><span><strong>USA</strong> üretim</span></div></div>
           <div class="svc-price"><span data-urun-id="N7" data-fiyat-tip="kaput">₺5.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('N7','kaput')">Randevu Al</button>
+          <button class="svc-btn" onclick="urunDetayAc('N7','kaput')"><svg><use href="#ic-calendar"/></svg>Randevu Al</button>
         </div>
       </div>
-      <div class="svc">
-        <div class="svc-img"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><div class="svc-bdg">🇩🇪 Germany</div></div>
+      <div class="svc svc-de">
+        <div class="svc-img"><svg class="svc-placeholder" viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5 3.5 9.6 8 10.8 4.5-1.2 8-5.8 8-10.8V5l-8-3z" fill="none" stroke="currentColor"/><polyline points="8 12 11 15 16 9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="svc-flag-wm"><svg><use href="#ic-flag-de"/></svg></div><div class="svc-bdg bdg-germany"><svg><use href="#ic-flag-de"/></svg> Germany</div></div>
         <div class="svc-body">
-          <div class="svc-tag-row"><span class="svc-brand">NiDOJP S75 · 🇩🇪</span><span class="svc-garanti">5 Yıl Garanti</span></div>
+          <div class="svc-tag-row"><span class="svc-brand">NiDOJP S75 · 🇩🇪</span><span class="svc-garanti"><svg><use href="#ic-shield"/></svg>5 Yıl Garanti</span></div>
           <div class="svc-name">200 Mikron TPU — Kaput</div>
-          <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofilik · Alman · ~1,5 Saat</div>
-          <div class="svc-yapistikan henkel"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇩🇪 Henkel Yapışkan · Alman</div>
+          <div class="svc-feats"><div class="svc-feat"><svg><use href="#ic-ruler"/></svg><span><strong>200 Mikron</strong> kalınlık</span></div><div class="svc-feat"><svg><use href="#ic-bolt"/></svg><span>Hidrofilik · Parlak</span></div><div class="svc-feat"><svg style="width:14px;height:10px;border-radius:1px"><use href="#ic-flag-de"/></svg><span><strong>Almanya</strong> üretim</span></div></div>
           <div class="svc-price"><span data-urun-id="S75" data-fiyat-tip="kaput">₺4.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('S75','kaput')">Randevu Al</button>
+          <button class="svc-btn" onclick="urunDetayAc('S75','kaput')"><svg><use href="#ic-calendar"/></svg>Randevu Al</button>
         </div>
       </div>
-      <div class="svc">
-        <div class="svc-img"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><div class="svc-bdg">💡 EKO</div></div>
+      <div class="svc svc-de">
+        <div class="svc-img"><svg class="svc-placeholder" viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5 3.5 9.6 8 10.8 4.5-1.2 8-5.8 8-10.8V5l-8-3z" fill="none" stroke="currentColor"/><polyline points="8 12 11 15 16 9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="svc-flag-wm"><svg><use href="#ic-flag-de"/></svg></div><div class="svc-bdg bdg-eko"><svg><use href="#ic-dollar"/></svg> EKO</div></div>
         <div class="svc-body">
-          <div class="svc-tag-row"><span class="svc-brand">NiDOJP CS75 · 🇩🇪</span><span class="svc-garanti">3 Yıl Garanti</span></div>
+          <div class="svc-tag-row"><span class="svc-brand">NiDOJP CS75 · 🇩🇪</span><span class="svc-garanti"><svg><use href="#ic-shield"/></svg>3 Yıl Garanti</span></div>
           <div class="svc-name">200 Mikron TPU EKO — Kaput</div>
-          <div class="svc-sub">%100 TPU · Ultra Parlak · Self-Healing · Hidrofilik · Alman · ~1,5 Saat</div>
-          <div class="svc-yapistikan henkel"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>🇩🇪 Henkel Yapışkan · Alman</div>
+          <div class="svc-feats"><div class="svc-feat"><svg><use href="#ic-ruler"/></svg><span><strong>200 Mikron</strong> kalınlık</span></div><div class="svc-feat"><svg><use href="#ic-bolt"/></svg><span>Hidrofilik · Parlak</span></div><div class="svc-feat"><svg style="width:14px;height:10px;border-radius:1px"><use href="#ic-flag-de"/></svg><span><strong>Almanya</strong> üretim</span></div></div>
           <div class="svc-price"><span data-urun-id="CS190" data-fiyat-tip="kaput">₺3.000</span></div>
-          <button class="svc-btn" onclick="urunDetayAc('CS190','kaput')">Randevu Al</button>
+          <button class="svc-btn" onclick="urunDetayAc('CS190','kaput')"><svg><use href="#ic-calendar"/></svg>Randevu Al</button>
         </div>
       </div>
     </div>
