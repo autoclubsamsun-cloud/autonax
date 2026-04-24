@@ -2669,14 +2669,399 @@ svg{display:block;flex-shrink:0}
       <div><div class="ft-logo">AUTONAX</div><div class="ft-desc">Türkiye'nin premium PPF kaplama ve seramik araç koruma merkezi. XPEL, 3M ve Llumar yetkili uygulama noktası.</div><div class="ft-soc"><div class="soc"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></div><div class="soc"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></div><div class="soc"><svg viewBox="0 0 24 24"><path d="M21 2H3v16l4-4h14V2z"/></svg></div></div></div>
       <div class="ft-col"><h4>Hizmetler</h4><a href="#ppf-kaplama">PPF Kaplama</a><a href="#seramik-kaplama">Seramik Kaplama</a><a href="#hizmetler">Cam Filmi</a><a href="#hizmetler">Detailing</a><a href="#hizmetler">Boya Koruma</a></div>
       <div class="ft-col"><h4>Müşteri</h4><a href="/hesabim.html">Garajım</a><a href="/hesabim.html">Garanti Belgelerim</a><a href="/hesabim.html">Siparişlerim</a><a href="/hesabim.html">Faturalarım</a><a href="/hesabim.html">Randevu Takip</a></div>
-      <div class="ft-col"><h4>Kurumsal</h4><a href="#hakkimizda">Hakkımızda</a><a href="#blog">Blog</a><a href="#sss">SSS</a><a href="#kvkk">KVKK</a><a href="#iletisim">İletişim</a></div>
+      <div class="ft-col"><h4>Kurumsal</h4><a href="#hakkimizda">Hakkımızda</a><a href="#blog">Blog</a><a href="#sss">SSS</a><a href="#" onclick="acKVKK();return false;">KVKK</a><a href="#iletisim">İletişim</a></div>
     </div>
     <div class="ft-bot">
       <span>© 2025 Autonax — Tüm hakları saklıdır.</span>
-      <div style="display:flex;gap:14px"><a href="#kvkk">KVKK</a><a href="#cerez">Çerez Politikası</a><a href="#kosullar">Kullanım Koşulları</a></div>
+      <div style="display:flex;gap:14px"><a href="#" onclick="acKVKK();return false;">KVKK</a><a href="#" onclick="acCerez();return false;">Çerez Politikası</a><a href="#" onclick="acKosullar();return false;">Kullanım Koşulları</a></div>
     </div>
   </div>
 </div>
+
+<!-- ══ KVKK / ÇEREZ / KOŞULLAR MODAL SİSTEMİ ══ -->
+<style>
+.yasal-ovl{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:99998;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.yasal-ovl.acik{display:flex}
+.yasal-kutu{background:#fff;max-width:760px;width:100%;max-height:86vh;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(0,0,0,.5);animation:yasalIn .25s ease-out}
+@keyframes yasalIn{from{opacity:0;transform:translateY(20px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.yasal-head{background:var(--ink1);color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.yasal-head h3{margin:0;font-size:18px;font-weight:700;letter-spacing:.3px}
+.yasal-kapat{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.yasal-kapat:hover{background:rgba(255,255,255,.2)}
+.yasal-body{padding:24px 28px;overflow-y:auto;line-height:1.65;color:#2c3036;font-size:14px}
+.yasal-body h4{color:var(--r);margin:18px 0 8px;font-size:15px;font-weight:700}
+.yasal-body h4:first-child{margin-top:0}
+.yasal-body p{margin:0 0 10px}
+.yasal-body ul{margin:6px 0 12px;padding-left:22px}
+.yasal-body li{margin-bottom:5px}
+.yasal-body strong{color:var(--ink1)}
+.yasal-body a{color:var(--r);text-decoration:underline}
+.yasal-body .ybox{background:#f9fafb;border:1px solid var(--bd);border-radius:10px;padding:12px 14px;margin:10px 0}
+.yasal-body table{border-collapse:collapse;width:100%;margin:10px 0;font-size:13px}
+.yasal-body th,.yasal-body td{border:1px solid var(--bd);padding:8px 10px;text-align:left;vertical-align:top}
+.yasal-body th{background:#f5f5f5;font-weight:700}
+.yasal-foot{padding:14px 24px;border-top:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-shrink:0;background:#fafbfc;font-size:12px;color:var(--ink3)}
+.yasal-foot-btn{padding:9px 20px;background:var(--r);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px}
+.yasal-foot-btn:hover{background:#9d1a28}
+
+/* Çerez Onay Banner */
+#cerez-banner{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:3px solid var(--r);padding:18px 22px;z-index:99997;box-shadow:0 -6px 28px rgba(0,0,0,.18);display:none;align-items:center;gap:16px;flex-wrap:wrap}
+#cerez-banner.acik{display:flex;animation:cbIn .4s ease-out}
+@keyframes cbIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.cb-icon{font-size:32px;flex-shrink:0}
+.cb-metin{flex:1;min-width:240px;font-size:13px;color:#2c3036;line-height:1.5}
+.cb-metin strong{color:var(--ink1);font-weight:700}
+.cb-metin a{color:var(--r);text-decoration:underline;cursor:pointer}
+.cb-btns{display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0}
+.cb-btn{padding:9px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid transparent;letter-spacing:.3px;white-space:nowrap}
+.cb-btn.cb-kabul{background:var(--r);color:#fff;border-color:var(--r)}
+.cb-btn.cb-kabul:hover{background:#9d1a28}
+.cb-btn.cb-sadece{background:#fff;color:var(--ink1);border-color:var(--bd)}
+.cb-btn.cb-sadece:hover{background:#f5f5f5}
+.cb-btn.cb-detay{background:transparent;color:var(--ink3);border-color:transparent;text-decoration:underline}
+@media(max-width:640px){
+  #cerez-banner{padding:14px 16px;gap:10px}
+  .cb-icon{font-size:26px}
+  .cb-metin{font-size:12px;min-width:100%}
+  .cb-btn{flex:1;text-align:center;padding:10px 12px}
+  .yasal-kutu{max-height:92vh}
+  .yasal-body{padding:18px 20px;font-size:13px}
+  .yasal-head{padding:14px 18px}
+  .yasal-head h3{font-size:16px}
+}
+</style>
+
+<!-- ÇEREZ ONAY BANNER -->
+<div id="cerez-banner">
+  <div class="cb-icon">🍪</div>
+  <div class="cb-metin">
+    <strong>Çerez (Cookie) Kullanımı.</strong> Sitemiz size daha iyi hizmet sunabilmek için çerezler kullanmaktadır. Sitemizi kullanmaya devam ederek <a onclick="acCerez()">Çerez Politikamızı</a> ve <a onclick="acKVKK()">KVKK Aydınlatma Metnini</a> kabul etmiş sayılırsınız.
+  </div>
+  <div class="cb-btns">
+    <button class="cb-btn cb-sadece" onclick="cerezKabul(false)">Sadece Gerekli</button>
+    <button class="cb-btn cb-kabul" onclick="cerezKabul(true)">Tümünü Kabul Et</button>
+  </div>
+</div>
+
+<!-- KVKK MODAL -->
+<div class="yasal-ovl" id="yasal-kvkk" onclick="if(event.target===this)kapatYasal('kvkk')">
+  <div class="yasal-kutu">
+    <div class="yasal-head">
+      <h3>🔒 KVKK Aydınlatma Metni</h3>
+      <button class="yasal-kapat" onclick="kapatYasal('kvkk')">×</button>
+    </div>
+    <div class="yasal-body">
+      <div class="ybox" style="border-left:3px solid var(--r)">
+        <strong>Veri Sorumlusu:</strong> AutoClub Samsun Merkez (Autonax)<br>
+        <strong>Adres:</strong> Samsun, Türkiye<br>
+        <strong>İletişim:</strong> <span id="kvkk-tel">-</span> · <span id="kvkk-mail">-</span><br>
+        <strong>Web:</strong> www.autonax.com.tr<br>
+        <small style="color:#888">Son güncelleme: <span id="kvkk-tarih"></span></small>
+      </div>
+
+      <h4>1. Giriş ve Amaç</h4>
+      <p>6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") kapsamında, kişisel verileriniz <strong>AutoClub Samsun Merkez</strong> ("Şirket", "Autonax", "Biz") tarafından "Veri Sorumlusu" sıfatıyla aşağıda açıklandığı üzere işlenebilecektir. Bu aydınlatma metni, kişisel verilerinizin nasıl toplandığını, işlendiğini ve korunduğunu size açıklamak için hazırlanmıştır.</p>
+
+      <h4>2. İşlenen Kişisel Veriler</h4>
+      <p>Şirketimiz, hizmetlerimizden faydalanmanız sürecinde aşağıdaki kişisel verilerinizi işleyebilir:</p>
+      <ul>
+        <li><strong>Kimlik Bilgileri:</strong> Ad, soyad</li>
+        <li><strong>İletişim Bilgileri:</strong> Telefon numarası, e-posta adresi, adres</li>
+        <li><strong>Araç Bilgileri:</strong> Plaka, marka, model, yıl, VIN/şase numarası, kilometre bilgisi</li>
+        <li><strong>Finansal Bilgiler:</strong> Ödeme tutarı, ödeme yöntemi, fatura bilgileri, kredi kartı son 4 hanesi (tam kart bilgisi saklanmaz)</li>
+        <li><strong>İşlem Bilgileri:</strong> Yapılan hizmetler, tarihler, garanti bilgileri, randevu kayıtları</li>
+        <li><strong>Dijital Bilgiler:</strong> IP adresi, tarayıcı tipi, cihaz bilgileri, çerez verileri, site kullanım istatistikleri</li>
+      </ul>
+
+      <h4>3. Kişisel Verilerin İşlenme Amaçları</h4>
+      <p>Kişisel verileriniz aşağıdaki amaçlarla işlenir:</p>
+      <ul>
+        <li>Randevu oluşturma, takibi ve hizmet sunumunun gerçekleştirilmesi</li>
+        <li>Sözleşmeden doğan yükümlülüklerin yerine getirilmesi (garanti belgesi düzenleme, fatura kesme)</li>
+        <li>Müşteri ilişkilerinin yönetimi ve iletişim kurulması</li>
+        <li>Hizmet kalitesinin geliştirilmesi ve müşteri memnuniyeti araştırmaları</li>
+        <li>Yasal yükümlülüklerin yerine getirilmesi (Vergi Mevzuatı, Ticaret Kanunu vb.)</li>
+        <li>Bilgi güvenliğinin sağlanması ve dolandırıcılığın önlenmesi</li>
+        <li>Site istatistiklerinin tutulması ve deneyimin iyileştirilmesi</li>
+        <li>Pazarlama faaliyetleri (yalnızca açık rıza verilmesi halinde)</li>
+      </ul>
+
+      <h4>4. Kişisel Verilerin Aktarılması</h4>
+      <p>Kişisel verileriniz; yasal zorunluluklar nedeniyle yetkili kamu kurumlarına, iş ortaklarımıza (ödeme altyapı sağlayıcıları, SMS/e-posta gönderim hizmeti, muhasebe yazılımı sağlayıcısı), iş birliği yaptığımız bankalara ve resmi makamların talepleri doğrultusunda aktarılabilir. Yurtdışına veri aktarımı yapılmamaktadır.</p>
+
+      <h4>5. Kişisel Verilerin Toplanma Yöntemi ve Hukuki Sebebi</h4>
+      <p>Kişisel verileriniz;</p>
+      <ul>
+        <li>Web sitesi üzerinden (randevu formları, iletişim formları, üyelik işlemleri)</li>
+        <li>Telefon ve WhatsApp görüşmeleri aracılığıyla</li>
+        <li>Atölyemize gelişinizde yüz yüze</li>
+        <li>Çerezler ve benzeri teknolojilerle</li>
+      </ul>
+      <p>fiziki ve/veya elektronik ortamda toplanmaktadır. Bu veriler; KVKK'nın 5. ve 6. maddelerinde düzenlenen <strong>sözleşmenin kurulması ve ifası</strong>, <strong>hukuki yükümlülüğün yerine getirilmesi</strong>, <strong>meşru menfaat</strong> ve <strong>açık rıza</strong> hukuki sebeplerine dayanılarak işlenmektedir.</p>
+
+      <h4>6. KVKK Madde 11 Kapsamındaki Haklarınız</h4>
+      <p>Kişisel veri sahibi olarak aşağıdaki haklara sahipsiniz:</p>
+      <ul>
+        <li>Kişisel verilerinizin işlenip işlenmediğini öğrenme</li>
+        <li>Kişisel verileriniz işlenmişse buna ilişkin bilgi talep etme</li>
+        <li>Kişisel verilerinizin işlenme amacını ve bunların amacına uygun kullanılıp kullanılmadığını öğrenme</li>
+        <li>Yurt içinde veya yurt dışında kişisel verilerinizin aktarıldığı üçüncü kişileri bilme</li>
+        <li>Kişisel verilerinizin eksik veya yanlış işlenmiş olması hâlinde bunların düzeltilmesini isteme</li>
+        <li>Kanunun 7. maddesinde öngörülen şartlar çerçevesinde kişisel verilerinizin silinmesini veya yok edilmesini isteme</li>
+        <li>İşlenen verilerinizin münhasıran otomatik sistemler vasıtasıyla analiz edilmesi suretiyle aleyhinize bir sonucun ortaya çıkmasına itiraz etme</li>
+        <li>Kişisel verilerinizin kanuna aykırı olarak işlenmesi sebebiyle zarara uğramanız hâlinde zararın giderilmesini talep etme</li>
+      </ul>
+
+      <h4>7. Başvuru Yöntemi</h4>
+      <p>Yukarıdaki haklarınızı kullanmak için taleplerinizi; <strong><span id="kvkk-mail2">-</span></strong> e-posta adresine veya <strong><span id="kvkk-tel2">-</span></strong> telefon numarası üzerinden bizimle paylaşabilirsiniz. Başvurunuz en geç 30 gün içinde yanıtlanacaktır.</p>
+
+      <h4>8. Değişiklikler</h4>
+      <p>Bu aydınlatma metni güncel yasal mevzuat çerçevesinde güncellenebilir. Güncel metne her zaman web sitemizden ulaşabilirsiniz.</p>
+
+      <div class="ybox" style="margin-top:18px;background:#fff7ed;border-color:#fbbf24">
+        <small><strong>⚠️ Yasal Uyarı:</strong> Bu metin Autonax için hazırlanmış bir taslaktır. Yayınlamadan önce bir avukata danışılması önerilir. Şirket bilgilerinin (VKN, Mersis, tam adres) eklenmesi gerekmektedir.</small>
+      </div>
+    </div>
+    <div class="yasal-foot">
+      <span>KVKK Aydınlatma Metni</span>
+      <button class="yasal-foot-btn" onclick="kapatYasal('kvkk')">Anladım, Kapat</button>
+    </div>
+  </div>
+</div>
+
+<!-- ÇEREZ POLİTİKASI MODAL -->
+<div class="yasal-ovl" id="yasal-cerez" onclick="if(event.target===this)kapatYasal('cerez')">
+  <div class="yasal-kutu">
+    <div class="yasal-head">
+      <h3>🍪 Çerez (Cookie) Politikası</h3>
+      <button class="yasal-kapat" onclick="kapatYasal('cerez')">×</button>
+    </div>
+    <div class="yasal-body">
+      <h4>1. Çerez Nedir?</h4>
+      <p>Çerezler, bir web sitesini ziyaret ettiğinizde tarayıcınız aracılığıyla bilgisayarınıza veya mobil cihazınıza kaydedilen küçük metin dosyalarıdır. Çerezler sayesinde site, sizi tanır ve tercihlerinizi hatırlar.</p>
+
+      <h4>2. Hangi Çerezleri Kullanıyoruz?</h4>
+      <table>
+        <thead><tr><th>Çerez Türü</th><th>Amaç</th><th>Süre</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Zorunlu Çerezler</strong></td><td>Sepet, giriş oturumu, çerez onayınızın hatırlanması gibi sitenin çalışması için gereken temel fonksiyonlar</td><td>Oturum / 1 yıl</td></tr>
+          <tr><td><strong>Performans Çerezleri</strong></td><td>Site istatistikleri (sayfa görüntülenme, kullanıcı davranışı) — anonim veri toplar</td><td>2 yıl</td></tr>
+          <tr><td><strong>İşlevsellik Çerezleri</strong></td><td>Dil tercihi, bölge seçimi, kullanıcı arayüzü ayarları</td><td>1 yıl</td></tr>
+          <tr><td><strong>Pazarlama Çerezleri</strong></td><td>Size ilgili reklamlar göstermek için (yalnızca onayınız varsa)</td><td>1 yıl</td></tr>
+        </tbody>
+      </table>
+
+      <h4>3. Üçüncü Taraf Çerezler</h4>
+      <p>Sitemiz aşağıdaki üçüncü taraf hizmetleri kullanabilir:</p>
+      <ul>
+        <li><strong>Google Analytics:</strong> Site kullanım istatistikleri</li>
+        <li><strong>PayTR / Ödeme Sağlayıcıları:</strong> Güvenli ödeme işlemleri</li>
+        <li><strong>Google Maps:</strong> Konum gösterimi</li>
+        <li><strong>WhatsApp Business:</strong> İletişim entegrasyonu</li>
+      </ul>
+
+      <h4>4. Çerez Tercihlerinizi Nasıl Yönetebilirsiniz?</h4>
+      <p>Çerez tercihlerinizi istediğiniz zaman değiştirebilirsiniz:</p>
+      <ul>
+        <li>Sitemize ilk girişte çıkan çerez banner'ından</li>
+        <li>Tarayıcınızın ayarlarından (Chrome, Firefox, Safari, Edge)</li>
+        <li>Aşağıdaki butonla çerez tercihlerinizi sıfırlayabilirsiniz</li>
+      </ul>
+      <div class="ybox">
+        <strong>Tarayıcı Ayarlarından Çerez Kontrolü:</strong>
+        <ul style="margin:8px 0 0">
+          <li>Chrome: Ayarlar → Gizlilik ve güvenlik → Çerezler</li>
+          <li>Firefox: Ayarlar → Gizlilik ve Güvenlik → Çerezler</li>
+          <li>Safari: Tercihler → Gizlilik → Çerezleri Yönet</li>
+          <li>Edge: Ayarlar → Çerezler ve site izinleri</li>
+        </ul>
+      </div>
+
+      <h4>5. Çerez Devre Dışı Bırakma Etkisi</h4>
+      <p>Zorunlu çerezleri devre dışı bırakırsanız site bazı özelliklerini düzgün çalıştıramayabilir (sepet, giriş vb.). Performans ve pazarlama çerezlerini devre dışı bırakmak sitenin çalışmasını engellemez.</p>
+
+      <h4>6. Değişiklikler</h4>
+      <p>Bu Çerez Politikası zaman zaman güncellenebilir. Güncel politikaya bu sayfadan ulaşabilirsiniz.</p>
+
+      <div class="ybox" style="margin-top:18px;background:#fff7ed;border-color:#fbbf24">
+        <small><strong>⚠️ Yasal Uyarı:</strong> Bu metin Autonax için hazırlanmış bir taslaktır. Kullandığınız çerezlerin tam listesi için geliştiricinize veya avukatınıza danışın.</small>
+      </div>
+    </div>
+    <div class="yasal-foot">
+      <div style="display:flex;gap:8px">
+        <button class="cb-btn cb-sadece" onclick="cerezSifirla()" style="padding:8px 14px">🔄 Çerez Tercihlerini Sıfırla</button>
+      </div>
+      <button class="yasal-foot-btn" onclick="kapatYasal('cerez')">Kapat</button>
+    </div>
+  </div>
+</div>
+
+<!-- KULLANIM KOŞULLARI MODAL -->
+<div class="yasal-ovl" id="yasal-kosullar" onclick="if(event.target===this)kapatYasal('kosullar')">
+  <div class="yasal-kutu">
+    <div class="yasal-head">
+      <h3>📋 Kullanım Koşulları</h3>
+      <button class="yasal-kapat" onclick="kapatYasal('kosullar')">×</button>
+    </div>
+    <div class="yasal-body">
+      <h4>1. Kabul</h4>
+      <p>Autonax web sitesini (www.autonax.com.tr) kullanarak aşağıdaki koşulları kabul etmiş sayılırsınız. Koşulları kabul etmiyorsanız, lütfen siteyi kullanmayın.</p>
+
+      <h4>2. Hizmet Kapsamı</h4>
+      <p>Autonax; araç koruma çözümleri (PPF kaplama, seramik kaplama, cam filmi, detailing, boya koruma vb.) sunan bir hizmet sağlayıcıdır. Hizmetler fiziki olarak AutoClub Samsun Merkez atölyesinde sunulmaktadır.</p>
+
+      <h4>3. Randevu ve İptal</h4>
+      <ul>
+        <li>Randevular online sistem veya telefon yoluyla oluşturulabilir</li>
+        <li>Randevu iptalleri, randevu tarihinden en az 24 saat öncesinde bildirilmelidir</li>
+        <li>Son dakika iptallerinde veya gelmeme (no-show) durumunda hizmet bedelinin bir kısmı tahsil edilebilir</li>
+        <li>Atölyemiz, araç teslim alındıktan sonra tahmini teslim tarihini müşteriye bildirir</li>
+      </ul>
+
+      <h4>4. Ödeme Koşulları</h4>
+      <ul>
+        <li>Ödemeler nakit, kredi kartı veya banka havalesi ile yapılabilir</li>
+        <li>Online ödemeler PayTR güvencesiyle gerçekleştirilir</li>
+        <li>Taksitli ödemelerde bankanın komisyon oranları geçerlidir</li>
+        <li>Fatura düzenlenmesi için kimlik/vergi bilgileri talep edilebilir</li>
+      </ul>
+
+      <h4>5. Garanti</h4>
+      <ul>
+        <li>Tüm PPF kaplama hizmetlerimizde ürün markasına göre belirli bir süre garantimiz bulunmaktadır</li>
+        <li>Garanti süresi hizmet alındığında müşteriye yazılı olarak bildirilir</li>
+        <li>Garanti; hatalı kullanım, fiziksel darbe, kimyasal temas vb. durumlarda geçersizdir</li>
+        <li>Garanti kapsamındaki sorunlar ücretsiz giderilir</li>
+      </ul>
+
+      <h4>6. Fikri Mülkiyet Hakları</h4>
+      <p>Web sitesinde yer alan tüm metin, görsel, logo, tasarım ve yazılım unsurları Autonax'a veya lisans verenlerine aittir. İzinsiz kullanım, kopyalama ve dağıtım yasaktır.</p>
+
+      <h4>7. Sorumluluk Sınırlaması</h4>
+      <p>Autonax, aşağıdaki durumlardan sorumlu tutulamaz:</p>
+      <ul>
+        <li>Müşterinin beyan ettiği araç bilgilerinin yanlış olması</li>
+        <li>Üçüncü taraf hizmetlerden kaynaklanan aksaklıklar (ödeme altyapısı, SMS hizmeti vb.)</li>
+        <li>Mücbir sebepler (doğal afet, grev, salgın hastalık vb.)</li>
+        <li>Müşterinin, sonrası hatalı kullanımından doğan hasarlar</li>
+      </ul>
+
+      <h4>8. Değişiklikler</h4>
+      <p>Autonax, bu kullanım koşullarını önceden haber vermeksizin değiştirme hakkını saklı tutar. Güncel koşullar siteye giriş yapıldığı anda geçerlidir.</p>
+
+      <h4>9. Uygulanacak Hukuk ve Yetki</h4>
+      <p>İşbu Kullanım Koşulları'nın uygulanmasında Türkiye Cumhuriyeti hukuku geçerli olacaktır. Doğabilecek uyuşmazlıklarda <strong>Samsun Mahkemeleri ve İcra Daireleri</strong> yetkilidir.</p>
+
+      <h4>10. İletişim</h4>
+      <p>Kullanım koşullarına ilişkin sorularınız için bizimle iletişime geçebilirsiniz:</p>
+      <div class="ybox">
+        <strong>AutoClub Samsun Merkez (Autonax)</strong><br>
+        Telefon: <span id="kosul-tel">-</span><br>
+        E-posta: <span id="kosul-mail">-</span><br>
+        Web: www.autonax.com.tr
+      </div>
+
+      <div class="ybox" style="margin-top:18px;background:#fff7ed;border-color:#fbbf24">
+        <small><strong>⚠️ Yasal Uyarı:</strong> Bu metin Autonax için hazırlanmış bir taslaktır. Yayınlamadan önce bir avukata danışılması önerilir.</small>
+      </div>
+    </div>
+    <div class="yasal-foot">
+      <span>Son güncelleme: <span id="kosul-tarih"></span></span>
+      <button class="yasal-foot-btn" onclick="kapatYasal('kosullar')">Anladım, Kapat</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ ÇEREZ + YASAL MODAL SİSTEMİ ══
+(function(){
+  var CEREZ_KEY = 'autonax_cerez_onay_v1';
+  var SURUM = '1.0'; // Metin güncellenirse arttırın, kullanıcı tekrar onaylar
+
+  // Tarih ekle
+  try {
+    var bugun = new Date().toLocaleDateString('tr-TR',{year:'numeric',month:'long',day:'numeric'});
+    var tarihElleri = document.querySelectorAll('#kvkk-tarih, #kosul-tarih');
+    tarihElleri.forEach(function(el){ el.textContent = bugun; });
+  } catch(e){}
+
+  // Panel'den iletişim bilgisi al
+  function iletisimDoldur(){
+    try {
+      var sa = window.SITE_AYARLAR || {};
+      var tel = (sa.genel && sa.genel.tel1) ? sa.genel.tel1 : '-';
+      var mail = (sa.genel && sa.genel.email) ? sa.genel.email : '-';
+      document.querySelectorAll('#kvkk-tel, #kvkk-tel2, #kosul-tel').forEach(function(el){ el.textContent = tel; });
+      document.querySelectorAll('#kvkk-mail, #kvkk-mail2, #kosul-mail').forEach(function(el){ el.textContent = mail; });
+    } catch(e){}
+  }
+
+  // Modal aç/kapat
+  window.acKVKK = function(){ iletisimDoldur(); document.getElementById('yasal-kvkk').classList.add('acik'); document.body.style.overflow='hidden'; };
+  window.acCerez = function(){ document.getElementById('yasal-cerez').classList.add('acik'); document.body.style.overflow='hidden'; };
+  window.acKosullar = function(){ iletisimDoldur(); document.getElementById('yasal-kosullar').classList.add('acik'); document.body.style.overflow='hidden'; };
+  window.kapatYasal = function(tip){
+    document.getElementById('yasal-'+tip).classList.remove('acik');
+    // Başka modal açık kalabilir
+    if(!document.querySelector('.yasal-ovl.acik')) document.body.style.overflow='';
+  };
+
+  // ESC ile kapat
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){
+      document.querySelectorAll('.yasal-ovl.acik').forEach(function(el){
+        el.classList.remove('acik');
+      });
+      document.body.style.overflow='';
+    }
+  });
+
+  // Çerez banner kontrolü
+  function cerezKontrol(){
+    try {
+      var onay = JSON.parse(localStorage.getItem(CEREZ_KEY) || 'null');
+      if(!onay || onay.surum !== SURUM){
+        // Onay yok veya sürüm eski → banner göster
+        setTimeout(function(){
+          document.getElementById('cerez-banner').classList.add('acik');
+        }, 800); // Site yüklendikten 0.8sn sonra göster
+      }
+    } catch(e){
+      setTimeout(function(){
+        document.getElementById('cerez-banner').classList.add('acik');
+      }, 800);
+    }
+  }
+
+  window.cerezKabul = function(hepsi){
+    try {
+      localStorage.setItem(CEREZ_KEY, JSON.stringify({
+        surum: SURUM,
+        tarih: new Date().toISOString(),
+        zorunlu: true,
+        performans: hepsi,
+        pazarlama: hepsi,
+        islevsellik: hepsi
+      }));
+    } catch(e){}
+    document.getElementById('cerez-banner').classList.remove('acik');
+  };
+
+  window.cerezSifirla = function(){
+    try { localStorage.removeItem(CEREZ_KEY); } catch(e){}
+    if(confirm('Çerez tercihleriniz sıfırlandı. Sayfayı yenileyerek yeniden seçim yapabilirsiniz. Sayfa yenilensin mi?')){
+      location.reload();
+    }
+  };
+
+  // Başlat
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', cerezKontrol);
+  } else {
+    cerezKontrol();
+  }
+})();
+</script>
 
 
 
@@ -4942,15 +5327,15 @@ function siteAyarlariniUygula(sa) {
       'hakkimizda':'#hakkimizda',
       'hakkımda':'#hakkimizda',
       'blog':'#blog',
-      'kvkk':'#kvkk',
-      'gizlilik':'#kvkk',
-      'çerez politikası':'#cerez',
-      'cerez politikasi':'#cerez',
-      'çerez':'#cerez',
-      'cerez':'#cerez',
-      'kullanım koşulları':'#kosullar',
-      'kullanim kosullari':'#kosullar',
-      'koşullar':'#kosullar',
+      'kvkk':'javascript:acKVKK();void(0)',
+      'gizlilik':'javascript:acKVKK();void(0)',
+      'çerez politikası':'javascript:acCerez();void(0)',
+      'cerez politikasi':'javascript:acCerez();void(0)',
+      'çerez':'javascript:acCerez();void(0)',
+      'cerez':'javascript:acCerez();void(0)',
+      'kullanım koşulları':'javascript:acKosullar();void(0)',
+      'kullanim kosullari':'javascript:acKosullar();void(0)',
+      'koşullar':'javascript:acKosullar();void(0)',
       // İletişim
       'iletişim':_telNo?('tel:+'+_telNo):'#iletisim',
       'iletisim':_telNo?('tel:+'+_telNo):'#iletisim',
