@@ -700,19 +700,8 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
             <div class="kart-title">Yaklaşan Randevu</div>
           </div>
           <div class="kart-body">
-            <div class="rdv-kart">
-              <div class="rdv-tarih">
-                <div class="rdv-gun">15</div>
-                <div class="rdv-ay">NİSAN</div>
-              </div>
-              <div class="rdv-body">
-                <div class="rdv-isim">NiDOJP N8 220 Mikron PPF</div>
-                <div class="rdv-plaka">34 ABC 123 — BMW 5 Serisi</div>
-              </div>
-              <div>
-                <div class="rdv-saat">10:00</div>
-                <div class="rdv-status onay" style="margin-top:4px">Onaylı</div>
-              </div>
+            <div id="son-rdv-kart">
+              <div style="padding:14px;text-align:center;color:var(--ink4);font-size:12px;background:var(--bg);border-radius:10px">Yaklaşan randevunuz yok</div>
             </div>
             <button class="btn-secondary" style="width:100%;margin-top:8px;font-size:12px;padding:9px" onclick="goster('randevular')">Tüm Randevular →</button>
           </div>
@@ -803,37 +792,20 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
         <div class="page-title">Randevular</div>
         <div class="page-sub">Geçmiş ve yaklaşan randevularınız.</div>
       </div>
-      <div class="kart">
-        <div class="kart-head">
-          <div class="kart-title">Yaklaşan</div>
-        </div>
-        <div class="kart-body">
-          <div class="rdv-kart">
-            <div class="rdv-tarih"><div class="rdv-gun">15</div><div class="rdv-ay">NİSAN</div></div>
-            <div class="rdv-body">
-              <div class="rdv-isim">NiDOJP N8 220 Mikron PPF — Full Araç</div>
-              <div class="rdv-plaka">34 ABC 123 — BMW 5 Serisi</div>
-            </div>
-            <div><div class="rdv-saat">10:00</div><div class="rdv-status onay" style="margin-top:4px">Onaylı</div></div>
-          </div>
-          <button class="btn-secondary" style="font-size:11px;padding:8px 16px;margin-top:4px">Randevuyu İptal Et</button>
-        </div>
-      </div>
-      <div class="kart" style="margin-top:16px">
-        <div class="kart-head"><div class="kart-title">Geçmiş Randevular</div></div>
-        <div class="kart-body">
-          <div class="rdv-kart" style="opacity:.6">
-            <div class="rdv-tarih" style="background:#888"><div class="rdv-gun">15</div><div class="rdv-ay">MART</div></div>
-            <div class="rdv-body">
-              <div class="rdv-isim">N8 PPF + Nano Seramik Kombo</div>
-              <div class="rdv-plaka">34 ABC 123 — BMW 5 Serisi</div>
-            </div>
-            <div><div class="rdv-saat">08:00</div><div class="rdv-status tamam" style="margin-top:4px">Tamamlandı</div></div>
+      <!-- Dinamik olarak rdvListeGoster() tarafından doldurulur -->
+      <div id="rdv-yaklasan-wrap"></div>
+      <div id="rdv-gecmis-wrap" style="margin-top:16px"></div>
+      <div id="rdv-bos-wrap" style="display:none">
+        <div class="kart">
+          <div class="kart-body" style="text-align:center;padding:30px 20px">
+            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#ccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 10px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <div style="font-size:14px;color:var(--ink3);font-weight:600;margin-bottom:4px">Henüz randevunuz yok</div>
+            <div style="font-size:12px;color:var(--ink4);margin-bottom:14px">İlk randevunuzu alarak başlayın</div>
           </div>
         </div>
       </div>
       <div style="margin-top:16px;text-align:center">
-        <a href="#" onclick="event.preventDefault();geriDon()" class="btn-primary" style="display:inline-block;text-decoration:none">+ Yeni Randevu Al</a>
+        <a href="/standalone/desktop.html" class="btn-primary" style="display:inline-block;text-decoration:none">+ Yeni Randevu Al</a>
       </div>
     </div>
 
@@ -1114,12 +1086,13 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 <script>
 /* ════════════════════════════════════════════════════
    AUTONAX AUTH SİSTEMİ — Hesabım Panel
+   desktop.html ile birebir uyumlu — session paylaşımlı
 ════════════════════════════════════════════════════ */
 const SESSION_KEY = 'autonax_session';
 const CART_KEY    = 'autonax_cart';
+const RDV_KEY     = 'autonax_randevular'; // Müşteri randevuları localStorage anahtarı
 
 const DEMO_USERS = {
-
   'test@autonax.com':{sifre:'test123',ad:'Zeynep',soyad:'Kaya',tel:'0544 987 65 43',sehir:'İstanbul',avatar:'ZK',puan:350,seviye:'Bronz',uye_tarih:'15.06.2024',araclar:[{plaka:'34KY001',marka:'Toyota',model:'Corolla',yil:'2023',tarih:'01.09.2024',puan:0,hizmetler:[{isim:'NiDOJP CS190 200 Mikron PPF',tur:'ppf',tarih:'01.09.2024',garantiYil:4,fiyat:45000}]}]}
 };
 
@@ -1134,19 +1107,186 @@ const AuthManager = {
     }catch(e){return null;}
   },
   login(email,sifre){
+    var girdi=(email||'').trim();
+    var telNormalize=function(t){return (t||'').replace(/[\s\-\(\)]/g,'');};
+    var isTel=/^[0-9\s\-\(\)+]{7,15}$/.test(girdi) || girdi.startsWith('05') || girdi.startsWith('+90');
+    var u=null; var foundEmail='';
+    if(isTel){
+      var telKey=telNormalize(girdi);
+      for(var e in DEMO_USERS){
+        if(telNormalize(DEMO_USERS[e].tel)===telKey){u=DEMO_USERS[e];foundEmail=e;break;}
+      }
+      if(!u){
+        try{var kayitlilar=JSON.parse(localStorage.getItem('autonax_users')||'{}');
+        for(var e2 in kayitlilar){
+          if(telNormalize(kayitlilar[e2].tel)===telKey){u=kayitlilar[e2];foundEmail=e2;break;}
+        }}catch(ex){}
+      }
+    } else {
+      foundEmail=girdi.toLowerCase();
+      u=DEMO_USERS[foundEmail];
+      if(!u){
+        try{var kayitlilar2=JSON.parse(localStorage.getItem('autonax_users')||'{}');u=kayitlilar2[foundEmail];}catch(ex2){}
+      }
+    }
+    if(!u||u.sifre!==sifre) return {ok:false,hata:'E-posta/telefon veya şifre hatalı.'};
+    var user={email:foundEmail,ad:u.ad,soyad:u.soyad,tel:u.tel,sehir:u.sehir||'',avatar:u.avatar,puan:u.puan||0,seviye:u.seviye||'Bronz',uye_tarih:u.uye_tarih};
+    localStorage.setItem(SESSION_KEY,JSON.stringify({user:user,time:Date.now()}));
+    localStorage.setItem('garaj_araclar',JSON.stringify(u.araclar||[]));
+    return {ok:true,user:user};
+  },
+  register(ad,soyad,tel,email,sifre){
+    if(!ad||!email||!sifre) return {ok:false,hata:'Tüm alanları doldurun.'};
+    if(sifre.length<6) return {ok:false,hata:'Şifre en az 6 karakter olmalı.'};
     email=(email||'').toLowerCase().trim();
-    const u=DEMO_USERS[email];
-    if(!u||u.sifre!==sifre) return {ok:false,hata:'E-posta veya şifre hatalı.'};
-    const user={email,ad:u.ad,soyad:u.soyad,tel:u.tel,sehir:u.sehir,avatar:u.avatar,puan:u.puan,seviye:u.seviye,uye_tarih:u.uye_tarih};
-    localStorage.setItem(SESSION_KEY,JSON.stringify({user,time:Date.now()}));
-    localStorage.setItem('garaj_araclar',JSON.stringify(u.araclar));
-    return {ok:true,user};
+    var telNormalize=function(t){return (t||'').replace(/[\s\-\(\)]/g,'');};
+    var telKey=telNormalize(tel);
+    if(DEMO_USERS[email]) return {ok:false,hata:'Bu e-posta adresi zaten kayıtlı.'};
+    if(telKey){
+      for(var e in DEMO_USERS){
+        if(telNormalize(DEMO_USERS[e].tel)===telKey) return {ok:false,hata:'Bu telefon numarası zaten kayıtlı.'};
+      }
+    }
+    var kayitlilar={}; try{kayitlilar=JSON.parse(localStorage.getItem('autonax_users')||'{}');}catch(ex){}
+    if(kayitlilar[email]) return {ok:false,hata:'Bu e-posta adresi zaten kayıtlı.'};
+    if(telKey){
+      for(var e2 in kayitlilar){
+        if(telNormalize(kayitlilar[e2].tel)===telKey) return {ok:false,hata:'Bu telefon numarası zaten kayıtlı.'};
+      }
+    }
+    var user={email:email,ad:ad,soyad:soyad,tel:tel,sehir:'',avatar:(ad[0]+(soyad?soyad[0]:'')).toUpperCase(),puan:0,seviye:'Bronz',uye_tarih:new Date().toLocaleDateString('tr-TR')};
+    kayitlilar[email]={sifre:sifre,ad:ad,soyad:soyad,tel:tel,sehir:'',avatar:user.avatar,puan:0,seviye:'Bronz',uye_tarih:user.uye_tarih,araclar:[]};
+    localStorage.setItem('autonax_users',JSON.stringify(kayitlilar));
+    localStorage.setItem(SESSION_KEY,JSON.stringify({user:user,time:Date.now()}));
+    localStorage.setItem('garaj_araclar',JSON.stringify([]));
+    return {ok:true,user:user};
   },
   logout(){
     localStorage.removeItem(SESSION_KEY);
     geriDon();
   },
-  getCart(){try{return JSON.parse(localStorage.getItem(CART_KEY)||'[]');}catch(e){return[];}}
+  saveCart(items){localStorage.setItem(CART_KEY,JSON.stringify(items||[]));},
+  getCart(){try{return JSON.parse(localStorage.getItem(CART_KEY)||'[]');}catch(e){return [];}},
+  updateUser(patch){
+    try{
+      const user = this.getUser();
+      if(!user) return {ok:false,hata:'Kullanıcı oturumu yok'};
+      if(!patch || typeof patch!=='object') return {ok:false,hata:'Geçersiz güncelleme'};
+      const tempEmail = user.email||'';
+      const temiz = {};
+      Object.keys(patch).forEach(k=>{
+        const v = patch[k];
+        if(v!==null && v!==undefined && String(v).trim()!=='') temiz[k] = String(v).trim();
+      });
+      if(Object.keys(temiz).length===0) return {ok:true,user:user};
+      const guncelUser = Object.assign({}, user, temiz);
+      if((temiz.ad||temiz.soyad) && !patch.avatar){
+        const ad2 = guncelUser.ad||'';
+        const soyad2 = guncelUser.soyad||'';
+        if(ad2) guncelUser.avatar = (ad2[0]+(soyad2?soyad2[0]:'')).toUpperCase();
+      }
+      localStorage.setItem(SESSION_KEY, JSON.stringify({user:guncelUser, time:Date.now()}));
+      try{
+        const kayitlilar = JSON.parse(localStorage.getItem('autonax_users')||'{}');
+        if(kayitlilar[tempEmail]){
+          Object.assign(kayitlilar[tempEmail], temiz);
+          if(guncelUser.avatar) kayitlilar[tempEmail].avatar = guncelUser.avatar;
+          localStorage.setItem('autonax_users', JSON.stringify(kayitlilar));
+        }
+      }catch(e2){}
+      return {ok:true, user:guncelUser};
+    }catch(e){
+      return {ok:false, hata:'Güncelleme başarısız: '+e.message};
+    }
+  }
+};
+
+/* ════════════════════════════════
+   RANDEVU YÖNETİMİ (localStorage tabanlı — desktop.html ile ortak)
+═══════════════════════════════════ */
+const RdvManager = {
+  // Tüm randevuları oku (tüm kullanıcılar dahil, panel için)
+  // autonax_randevular (müşteri panelinden) ve autonax_randevular_v1 (admin panel kayıtları)
+  // birleştirilir, ID duplikeleri atılır
+  getAll(){
+    try{
+      var a = JSON.parse(localStorage.getItem(RDV_KEY)||'[]');
+      var b = JSON.parse(localStorage.getItem('autonax_randevular_v1')||'[]');
+      var merged = a.concat(b);
+      // ID'ye göre dedupe
+      var seen = {};
+      var result = [];
+      merged.forEach(function(r){
+        var id = r.id || (r.tarih+'|'+r.saat+'|'+r.tel);
+        if(!seen[id]){ seen[id]=true; result.push(r); }
+      });
+      return result;
+    }catch(e){ return []; }
+  },
+  // Mevcut kullanıcının randevularını oku (email ile filtreleme)
+  getMine(){
+    const user = AuthManager.getUser();
+    if(!user) return [];
+    return this.getAll().filter(r=>
+      (r.email && r.email===user.email) ||
+      (r.tel && (r.tel||'').replace(/[\s\-]/g,'')===(user.tel||'').replace(/[\s\-]/g,''))
+    );
+  },
+  // Yeni randevu ekle (desktop.html'den çağrılır)
+  add(rdv){
+    if(!rdv.id) rdv.id = 'rdv-'+Date.now()+'-'+Math.random().toString(36).slice(2,6);
+    if(!rdv.olusturma) rdv.olusturma = new Date().toISOString();
+    try{
+      var a = JSON.parse(localStorage.getItem(RDV_KEY)||'[]');
+      a.unshift(rdv);
+      localStorage.setItem(RDV_KEY, JSON.stringify(a));
+      // Panel (pnl_atn.html) için v1 key'e de yaz
+      var b = JSON.parse(localStorage.getItem('autonax_randevular_v1')||'[]');
+      b.unshift(rdv);
+      localStorage.setItem('autonax_randevular_v1', JSON.stringify(b));
+    }catch(e){ console.warn('Randevu ekleme hatası:',e); }
+    return rdv;
+  },
+  // Randevu güncelle (durum değişimi vs)
+  update(id, patch){
+    var updated = null;
+    // Her iki key'de de güncelle
+    ['autonax_randevular','autonax_randevular_v1'].forEach(function(key){
+      try{
+        var list = JSON.parse(localStorage.getItem(key)||'[]');
+        var idx = list.findIndex(function(r){return r.id===id;});
+        if(idx>=0){
+          list[idx] = Object.assign({}, list[idx], patch);
+          localStorage.setItem(key, JSON.stringify(list));
+          updated = list[idx];
+        }
+      }catch(e){ console.warn('Randevu güncelleme hatası:',e); }
+    });
+    return updated;
+  },
+  // Randevu iptal (durum='iptal')
+  cancel(id){
+    return this.update(id, {durum:'iptal', iptalTarih: new Date().toISOString()});
+  },
+  // İstatistikler
+  stats(){
+    const mine = this.getMine();
+    const bugun = new Date().toISOString().slice(0,10);
+    return {
+      toplam: mine.length,
+      yaklasan: mine.filter(r=>{
+        if(r.durum==='iptal'||r.durum==='tamam') return false;
+        const t = (r.tarih||'').split('.').reverse().join('-');
+        return t >= bugun;
+      }).length,
+      gecmis: mine.filter(r=>{
+        if(r.durum==='tamam') return true;
+        const t = (r.tarih||'').split('.').reverse().join('-');
+        return t < bugun;
+      }).length,
+      bekleyen: mine.filter(r=>r.durum==='bekl'||r.durum==='bekliyor'||!r.durum).length
+    };
+  }
 };
 
 /* ══ VERİ ══ */
@@ -1167,6 +1307,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
   }
   kullaniciGoster();
   aracListesiGoster();
+  dashboardYenile(); // Randevu istatistikleri + son randevu kartı
   document.querySelector('.hbg-mob').style.display = window.innerWidth <= 767 ? 'block' : 'none';
   window.addEventListener('resize', ()=>{
     document.querySelector('.hbg-mob').style.display = window.innerWidth <= 767 ? 'block' : 'none';
@@ -1178,16 +1319,17 @@ window.addEventListener('DOMContentLoaded', ()=>{
 
 function kullaniciGoster(){
   const ad = kullanici?.ad || 'Misafir';
+  const soyad = kullanici?.soyad || '';
+  const tam = (ad + (soyad ? ' ' + soyad : '')).trim();
   const email = kullanici?.email || 'Giriş yapılmadı';
-  document.getElementById('hdr-name').textContent = ad;
+  document.getElementById('hdr-name').textContent = tam;
   document.getElementById('hdr-email').textContent = email;
-  document.getElementById('hdr-avatar').textContent = ad[0]?.toUpperCase()||'?';
+  document.getElementById('hdr-avatar').textContent = kullanici?.avatar || (ad[0]?.toUpperCase()||'?');
   document.getElementById('pg-title').textContent = 'Hoşgeldiniz, '+ad+' 👋';
-  // Profil alanları
+  // Profil alanları — desktop.html ile uyumlu: ad ve soyad AYRI field
   if(kullanici){
-    const [fn='',ln=''] = (kullanici.ad||'').split(' ');
-    document.getElementById('p-ad').value = fn;
-    document.getElementById('p-soyad').value = ln;
+    document.getElementById('p-ad').value = ad;
+    document.getElementById('p-soyad').value = soyad;
     document.getElementById('p-email').value = kullanici.email||'';
     document.getElementById('p-tel').value = kullanici.tel||'';
   }
@@ -1209,6 +1351,8 @@ function goster(id){
 
   // Tab'a ozel yukleme
   if(id==='odemelerim') odemelerimYukle();
+  if(id==='randevular') rdvListeGoster();
+  if(id==='anasayfa') dashboardYenile();
 
   // FAB sayfa bazlı güncelle
   if(typeof fabGuncelleH==='function') fabGuncelleH(id);
@@ -1471,6 +1615,155 @@ function aracSil(plaka){
   aracListesiGoster();
 }
 
+/* ════════════════════════════════
+   RANDEVU LİSTESİ — localStorage'dan oku, dinamik render
+═══════════════════════════════════ */
+function _rdvDateCompare(tarih){
+  // "DD.MM.YYYY" formatını compare için ISO'ya çevir
+  if(!tarih) return '';
+  var parts = tarih.split('.');
+  if(parts.length!==3) return tarih;
+  return parts[2]+'-'+parts[1]+'-'+parts[0];
+}
+
+function _aylar(){ return ['OCA','ŞUB','MAR','NİS','MAY','HAZ','TEM','AĞU','EYL','EKİ','KAS','ARA']; }
+
+function _rdvStatusBadge(r){
+  var durum = (r.durum||'bekl').toLowerCase();
+  if(durum==='onay'||durum==='onaylandi'||durum==='onaylı') return '<div class="rdv-status onay">Onaylı</div>';
+  if(durum==='tamam'||durum==='tamamlandi') return '<div class="rdv-status tamam">Tamamlandı</div>';
+  if(durum==='iptal'||durum==='iptal_edildi') return '<div class="rdv-status" style="background:#fee;color:#b91c1c;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700">İptal</div>';
+  return '<div class="rdv-status" style="background:#fff3cd;color:#856404;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700">Bekliyor</div>';
+}
+
+function _rdvKartHtml(r, pastMode){
+  var tarih = r.tarih || '';
+  var saat = r.saat || '—';
+  var parts = tarih.split('.');
+  var gun = parts[0] || '—';
+  var ayIdx = parts.length>=2 ? (parseInt(parts[1],10)-1) : -1;
+  var ayStr = (ayIdx>=0 && ayIdx<12) ? _aylar()[ayIdx] : '';
+  var bgStyle = pastMode ? 'style="opacity:.6"' : '';
+  var tarihBg = pastMode ? 'style="background:#888"' : '';
+  var isim = r.hizmet || 'Randevu';
+  var plaka = r.plaka || '';
+  var arac = r.arac || '';
+  var plakaText = (plaka ? plaka+(arac&&arac!=='—'?' — '+arac : '') : (arac||'—'));
+  var iptalBtn = (!pastMode && (r.durum||'bekl')!=='iptal' && (r.durum||'bekl')!=='tamam') 
+    ? '<button class="btn-secondary" onclick="rdvIptalEt(\''+r.id+'\')" style="font-size:11px;padding:8px 16px;margin-top:6px;width:100%">Randevuyu İptal Et</button>' 
+    : '';
+  return '<div class="rdv-kart" '+bgStyle+'>'
+    +'<div class="rdv-tarih" '+tarihBg+'><div class="rdv-gun">'+gun+'</div><div class="rdv-ay">'+ayStr+'</div></div>'
+    +'<div class="rdv-body">'
+      +'<div class="rdv-isim">'+_esc(isim)+'</div>'
+      +'<div class="rdv-plaka">'+_esc(plakaText)+'</div>'
+      +(r.not ? '<div style="font-size:10px;color:var(--ink4);margin-top:4px;font-style:italic">📝 '+_esc(r.not)+'</div>' : '')
+    +'</div>'
+    +'<div><div class="rdv-saat">'+saat+'</div>'+_rdvStatusBadge(r)+'</div>'
+    +'</div>'
+    +iptalBtn;
+}
+
+function _esc(s){
+  if(s===null||s===undefined) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function rdvListeGoster(){
+  var mine = RdvManager.getMine();
+  var bugun = new Date().toISOString().slice(0,10);
+  
+  var yaklasan = [];
+  var gecmis = [];
+  mine.forEach(function(r){
+    var t = _rdvDateCompare(r.tarih);
+    var durum = (r.durum||'bekl').toLowerCase();
+    if(durum==='tamam' || durum==='iptal' || t < bugun){
+      gecmis.push(r);
+    } else {
+      yaklasan.push(r);
+    }
+  });
+  
+  // Tarihe göre sırala
+  yaklasan.sort(function(a,b){ return _rdvDateCompare(a.tarih).localeCompare(_rdvDateCompare(b.tarih)); });
+  gecmis.sort(function(a,b){ return _rdvDateCompare(b.tarih).localeCompare(_rdvDateCompare(a.tarih)); });
+  
+  var yaklasanWrap = document.getElementById('rdv-yaklasan-wrap');
+  var gecmisWrap = document.getElementById('rdv-gecmis-wrap');
+  var bosWrap = document.getElementById('rdv-bos-wrap');
+  
+  if(!mine.length){
+    if(yaklasanWrap) yaklasanWrap.innerHTML = '';
+    if(gecmisWrap) gecmisWrap.innerHTML = '';
+    if(bosWrap) bosWrap.style.display = 'block';
+    return;
+  }
+  if(bosWrap) bosWrap.style.display = 'none';
+  
+  if(yaklasanWrap){
+    if(yaklasan.length){
+      yaklasanWrap.innerHTML = '<div class="kart"><div class="kart-head"><div class="kart-title">Yaklaşan ('+yaklasan.length+')</div></div><div class="kart-body">'
+        + yaklasan.map(function(r){ return _rdvKartHtml(r, false); }).join('')
+        + '</div></div>';
+    } else {
+      yaklasanWrap.innerHTML = '<div class="kart"><div class="kart-head"><div class="kart-title">Yaklaşan</div></div><div class="kart-body"><div style="text-align:center;padding:16px;color:var(--ink4);font-size:12px">Yaklaşan randevunuz yok</div></div></div>';
+    }
+  }
+  if(gecmisWrap){
+    if(gecmis.length){
+      gecmisWrap.innerHTML = '<div class="kart"><div class="kart-head"><div class="kart-title">Geçmiş ('+gecmis.length+')</div></div><div class="kart-body">'
+        + gecmis.slice(0,10).map(function(r){ return _rdvKartHtml(r, true); }).join('')
+        + '</div></div>';
+    } else {
+      gecmisWrap.innerHTML = '';
+    }
+  }
+}
+
+function rdvIptalEt(id){
+  if(!confirm('Randevuyu iptal etmek istediğinizden emin misiniz?')) return;
+  RdvManager.cancel(id);
+  rdvListeGoster();
+  dashboardYenile();
+  // Bildirim
+  var bil=document.createElement('div');
+  bil.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#16A34A;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.2)';
+  bil.textContent='✓ Randevu iptal edildi';
+  document.body.appendChild(bil);
+  setTimeout(function(){bil.remove();},2500);
+}
+
+/* ═══ Ana sayfa istatistiklerini güncelle ═══ */
+function dashboardYenile(){
+  try{
+    var stats = RdvManager.stats();
+    // Yaklaşan randevu sayısı
+    var statRdv = document.getElementById('stat-randevu');
+    if(statRdv) statRdv.textContent = stats.yaklasan;
+    // Badge sayısı
+    var rdvBadge = document.getElementById('rdv-badge');
+    if(rdvBadge) rdvBadge.textContent = stats.yaklasan > 0 ? stats.yaklasan : '';
+    
+    // Son randevu kartını ana sayfaya yerleştir
+    var sonRdvEl = document.getElementById('son-rdv-kart');
+    if(sonRdvEl){
+      var mine = RdvManager.getMine();
+      var bugun = new Date().toISOString().slice(0,10);
+      var sonraki = mine.filter(function(r){
+        if(r.durum==='iptal'||r.durum==='tamam') return false;
+        return _rdvDateCompare(r.tarih) >= bugun;
+      }).sort(function(a,b){ return _rdvDateCompare(a.tarih).localeCompare(_rdvDateCompare(b.tarih)); })[0];
+      
+      if(sonraki){
+        sonRdvEl.innerHTML = _rdvKartHtml(sonraki, false);
+      } else {
+        sonRdvEl.innerHTML = '<div style="padding:14px;text-align:center;color:var(--ink4);font-size:12px;background:var(--bg);border-radius:10px">Yaklaşan randevunuz yok</div>';
+      }
+    }
+  }catch(e){ console.warn('dashboardYenile:', e); }
+}
+
 function aracListesiGoster(){
   document.getElementById('stat-arac').textContent = araclar.length;
   document.getElementById('garaj-badge').textContent = araclar.length;
@@ -1530,14 +1823,32 @@ function aracListesiGoster(){
 
 /* ══ PROFİL ══ */
 function profilKaydet(){
-  if(!kullanici) kullanici={};
-  kullanici.ad  = (document.getElementById('p-ad').value+' '+document.getElementById('p-soyad').value).trim();
-  kullanici.email = document.getElementById('p-email').value;
-  kullanici.tel = document.getElementById('p-tel').value;
-  const sess=JSON.parse(localStorage.getItem(SESSION_KEY)||'{}');
-    if(sess.user){sess.user={...sess.user,...kullanici};localStorage.setItem(SESSION_KEY,JSON.stringify(sess));}
-  kullaniciGoster();
-  alert('Profil güncellendi!');
+  var ad = (document.getElementById('p-ad').value||'').trim();
+  var soyad = (document.getElementById('p-soyad').value||'').trim();
+  var email = (document.getElementById('p-email').value||'').trim();
+  var tel = (document.getElementById('p-tel').value||'').trim();
+  
+  if(!ad){ alert('Ad alanı zorunludur'); return; }
+  
+  var res = AuthManager.updateUser({
+    ad: ad,
+    soyad: soyad,
+    email: email,
+    tel: tel
+  });
+  
+  if(res && res.ok){
+    kullanici = AuthManager.getUser();
+    kullaniciGoster();
+    // Başarı bildirimi
+    var bil=document.createElement('div');
+    bil.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#16A34A;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.2)';
+    bil.textContent='✓ Profil güncellendi';
+    document.body.appendChild(bil);
+    setTimeout(function(){bil.remove();},2500);
+  } else {
+    alert(res?.hata || 'Profil güncellenemedi');
+  }
 }
 
 /* ══ SİDEBAR MOBİL ══ */
