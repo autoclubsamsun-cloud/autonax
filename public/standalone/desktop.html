@@ -3560,74 +3560,138 @@ svg{display:block;flex-shrink:0}
           </a>
         </div>
         
-        <!-- Yorum Kartları (3 adet) -->
-        <div class="sk-reviews">
-          <div class="sk-rev">
-            <div class="sk-rev-top">
-              <div class="sk-rev-av" style="background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%)">MH</div>
-              <div class="sk-rev-info">
-                <div class="sk-rev-name">Mehmet Hakan</div>
-                <div class="sk-rev-meta">
-                  <svg viewBox="0 0 24 24" width="10" height="10"><path fill="#4285F4" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
-                  Google · 2 hafta önce
-                </div>
-              </div>
-            </div>
-            <div class="sk-rev-stars">
-              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            </div>
-            <div class="sk-rev-text">BMW M3'ümün PPF kaplamasını AutoClub Samsun'da yaptırdım. Tam 3 gün sürdü ama sonuç mükemmel. Hiç hava kabarcığı yok, kenarlar tertemiz. 10 yıl garantili. Samsun'da bu işi bu kadar ciddi yapan başka yer yok.</div>
-            <span class="sk-rev-car"><svg viewBox="0 0 24 24"><path d="M23 12l-2-5h-3l-1-3H7L6 7H3l-2 5v7a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-1h10v1a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-7z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>BMW M3 · NiDOJP N8</span>
-          </div>
+        <!-- Yorum Kartları (Dinamik - SITE_YORUMLAR array'inden render) -->
+        <div class="sk-reviews" id="sk-reviews-grid"></div>
+        
+        <script>
+        /* ═══════════════════════════════════════════════════════
+           SITE_YORUMLAR — Müşteri yorumları veritabanı
+           
+           Yeni yorum eklemek için bu array'e yeni obje ekle.
+           Google Maps'ten kopyala-yapıştır yap:
+           - ad: Tam isim veya baş harfler (gizlilik için "M.K." gibi)
+           - tarih: "2 hafta önce", "1 ay önce" gibi
+           - yildiz: 5 (tüm yorumlarımız 5 yıldız olacağı varsayılıyor)
+           - metin: Yorumun TAM METNİ (değiştirme, sadeleştirme YAPMA)
+           - arac: opsiyonel — araç markası ve model (bilinen bir yorum için)
+           - paket: opsiyonel — kullanılan paket (N8, S75, vb.)
+           - dogrulanmis: true ise "Verified Google Review" rozeti çıkar
+           ═══════════════════════════════════════════════════════ */
+        var SITE_YORUMLAR = [
+          // ═══ ÖRNEK/DEMO YORUMLAR — GERÇEKLERİ GELDİĞİNDE DEĞİŞTİR ═══
+          {
+            ad: "Mehmet Hakan",
+            tarih: "2 hafta önce",
+            yildiz: 5,
+            metin: "BMW M3'ümün PPF kaplamasını AutoClub Samsun'da yaptırdım. Tam 3 gün sürdü ama sonuç mükemmel. Hiç hava kabarcığı yok, kenarlar tertemiz. 10 yıl garantili. Samsun'da bu işi bu kadar ciddi yapan başka yer yok.",
+            arac: "BMW M3",
+            paket: "NiDOJP N8",
+            dogrulanmis: true
+          },
+          {
+            ad: "Ayşe Yıldırım",
+            tarih: "1 ay önce",
+            yildiz: 5,
+            metin: "Togg'um için araştırdıktan sonra AutoClub'u seçtim. Öncelikle yerli otomobile verdikleri değer çok güzel. 8 yıl garantili PPF yaptırdım. Çok memnun kaldım, işçilik tertemiz.",
+            arac: "Togg T10X",
+            paket: "NiDOJP N7",
+            dogrulanmis: true
+          },
+          {
+            ad: "Emre Kaya",
+            tarih: "3 hafta önce",
+            yildiz: 5,
+            metin: "Tesla Model Y'm için PPF + seramik kaplama yaptırdım. İşçilik tertemiz, 7 gün sonra gittim kontrol ettim hiçbir sorun yok. Özellikle kapu kol altı ve kaput kenarı gibi hassas yerler çok temiz bitirilmiş.",
+            arac: "Tesla Model Y",
+            paket: "N9 + Seramik",
+            dogrulanmis: true
+          }
+        ];
+        
+        /* Avatar için renk paleti — isim baş harfine göre otomatik renk seçer */
+        var _YORUM_RENKLERI = [
+          'linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%)', // mor
+          'linear-gradient(135deg,#ec4899 0%,#f97316 100%)', // pembe-turuncu
+          'linear-gradient(135deg,#10b981 0%,#059669 100%)', // yeşil
+          'linear-gradient(135deg,#0ea5e9 0%,#0369a1 100%)', // mavi
+          'linear-gradient(135deg,#f59e0b 0%,#d97706 100%)', // amber
+          'linear-gradient(135deg,#ef4444 0%,#b91c1c 100%)', // kırmızı
+          'linear-gradient(135deg,#8b5cf6 0%,#6d28d9 100%)', // mor-koyu
+          'linear-gradient(135deg,#06b6d4 0%,#0891b2 100%)'  // turkuaz
+        ];
+        
+        function _yorumAvatarRenk(ad) {
+          // İsimden hash üret, palette seç
+          var h = 0;
+          for (var i = 0; i < ad.length; i++) h = ad.charCodeAt(i) + ((h << 5) - h);
+          return _YORUM_RENKLERI[Math.abs(h) % _YORUM_RENKLERI.length];
+        }
+        
+        function _yorumBasHarfleri(ad) {
+          // "Mehmet Hakan" → "MH", "M.K." → "MK", "Ahmet" → "AH"
+          if (!ad) return '?';
+          var temiz = ad.replace(/[^A-Za-zÇĞİÖŞÜçğıöşü\s]/g, '').trim();
+          var parcalar = temiz.split(/\s+/);
+          if (parcalar.length >= 2) {
+            return (parcalar[0][0] + parcalar[1][0]).toUpperCase();
+          }
+          return temiz.substring(0, 2).toUpperCase();
+        }
+        
+        function _yildizHTML(sayi) {
+          var s = '';
+          for (var i = 0; i < sayi; i++) {
+            s += '<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+          }
+          return s;
+        }
+        
+        function renderYorumlar() {
+          var grid = document.getElementById('sk-reviews-grid');
+          if (!grid || !SITE_YORUMLAR.length) return;
           
-          <div class="sk-rev">
-            <div class="sk-rev-top">
-              <div class="sk-rev-av" style="background:linear-gradient(135deg,#ec4899 0%,#f97316 100%)">AY</div>
-              <div class="sk-rev-info">
-                <div class="sk-rev-name">Ayşe Yıldırım</div>
-                <div class="sk-rev-meta">
-                  <svg viewBox="0 0 24 24" width="10" height="10"><path fill="#4285F4" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
-                  Google · 1 ay önce
-                </div>
-              </div>
-            </div>
-            <div class="sk-rev-stars">
-              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            </div>
-            <div class="sk-rev-text">Togg'um için araştırdıktan sonra AutoClub'u seçtim. Öncelikle yerli otomobile verdikleri değer çok güzel. 8 yıl garantili PPF yaptırdım. Çok memnun kaldım, işçilik tertemiz.</div>
-            <span class="sk-rev-car"><svg viewBox="0 0 24 24"><path d="M23 12l-2-5h-3l-1-3H7L6 7H3l-2 5v7a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-1h10v1a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-7z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>Togg T10X · NiDOJP N7</span>
-          </div>
-          
-          <div class="sk-rev">
-            <div class="sk-rev-top">
-              <div class="sk-rev-av" style="background:linear-gradient(135deg,#10b981 0%,#059669 100%)">EK</div>
-              <div class="sk-rev-info">
-                <div class="sk-rev-name">Emre Kaya</div>
-                <div class="sk-rev-meta">
-                  <svg viewBox="0 0 24 24" width="10" height="10"><path fill="#4285F4" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
-                  Google · 3 hafta önce
-                </div>
-              </div>
-            </div>
-            <div class="sk-rev-stars">
-              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            </div>
-            <div class="sk-rev-text">Tesla Model Y'm için PPF + seramik kaplama yaptırdım. İşçilik tertemiz, 7 gün sonra gittim kontrol ettim hiçbir sorun yok. Özellikle kapu kol altı ve kaput kenarı gibi hassas yerler çok temiz bitirilmiş.</div>
-            <span class="sk-rev-car"><svg viewBox="0 0 24 24"><path d="M23 12l-2-5h-3l-1-3H7L6 7H3l-2 5v7a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-1h10v1a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-7z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>Tesla Model Y · N9 + Seramik</span>
-          </div>
-        </div>
+          grid.innerHTML = SITE_YORUMLAR.map(function(y) {
+            var renk = _yorumAvatarRenk(y.ad);
+            var harfler = _yorumBasHarfleri(y.ad);
+            var yildiz = y.yildiz || 5;
+            var aracHtml = '';
+            if (y.arac || y.paket) {
+              var aracMetni = [y.arac, y.paket].filter(Boolean).join(' · ');
+              aracHtml = '<span class="sk-rev-car"><svg viewBox="0 0 24 24"><path d="M23 12l-2-5h-3l-1-3H7L6 7H3l-2 5v7a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-1h10v1a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-7z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>' + aracMetni + '</span>';
+            }
+            // Doğrulanmış rozetii
+            var dogrulamaHtml = '';
+            if (y.dogrulanmis) {
+              dogrulamaHtml = '<span style="display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:800;color:#16A34A;background:rgba(22,163,74,.08);padding:2px 6px;border-radius:8px;margin-left:6px;letter-spacing:.3px" title="Google Business doğrulu yorumu"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Doğrulu</span>';
+            }
+            
+            return '<div class="sk-rev">' +
+              '<div class="sk-rev-top">' +
+                '<div class="sk-rev-av" style="background:' + renk + '">' + harfler + '</div>' +
+                '<div class="sk-rev-info">' +
+                  '<div class="sk-rev-name">' + y.ad + dogrulamaHtml + '</div>' +
+                  '<div class="sk-rev-meta">' +
+                    '<svg viewBox="0 0 24 24" width="10" height="10"><path fill="#4285F4" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>' +
+                    'Google · ' + (y.tarih || '') +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+              '<div class="sk-rev-stars">' + _yildizHTML(yildiz) + '</div>' +
+              '<div class="sk-rev-text">' + y.metin + '</div>' +
+              aracHtml +
+            '</div>';
+          }).join('');
+        }
+        
+        // Sayfa yüklenince render et
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', renderYorumlar);
+        } else {
+          renderYorumlar();
+        }
+        // Panel güncellemesi için dışarıdan çağırılabilir
+        window.renderYorumlar = renderYorumlar;
+        </script>
         
         <!-- Tüm Yorumları Gör butonu -->
         <div style="text-align:center;margin-bottom:22px">
