@@ -3409,7 +3409,7 @@ svg{display:block;flex-shrink:0}
       .sk-rev-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
       .sk-rev-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:17px;color:#fff;letter-spacing:.5px;flex-shrink:0}
       .sk-rev-info{flex:1;min-width:0}
-      .sk-rev-name{font-weight:700;font-size:13px;color:var(--ink);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .sk-rev-name{font-weight:700;font-size:13px;color:var(--ink);line-height:1.3;display:flex;flex-wrap:wrap;align-items:center;gap:4px;row-gap:2px}
       .sk-rev-meta{font-size:10.5px;color:var(--ink4);font-weight:600;margin-top:1px;display:flex;align-items:center;gap:4px}
       .sk-rev-stars{display:inline-flex;gap:1px;margin-bottom:8px}
       .sk-rev-stars svg{width:13px;height:13px;color:#FBBF24;fill:#FBBF24}
@@ -3552,7 +3552,7 @@ svg{display:block;flex-shrink:0}
                 <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               </span>
             </div>
-            <div class="sk-google-count"><strong>127 değerlendirme</strong> · Google'da 5 üzerinden 4.9</div>
+            <div class="sk-google-count"><strong id="sk-google-count-num">Google</strong> · 5 üzerinden değerlendirme</div>
           </div>
           <a href="#" class="sk-google-btn" onclick="acGoogleMaps();return false;" title="Google'da yorum yazın — 1 dakika sürer">
             <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
@@ -3578,34 +3578,53 @@ svg{display:block;flex-shrink:0}
            - dogrulanmis: true ise "Verified Google Review" rozeti çıkar
            ═══════════════════════════════════════════════════════ */
         var SITE_YORUMLAR = [
-          // ═══ ÖRNEK/DEMO YORUMLAR — GERÇEKLERİ GELDİĞİNDE DEĞİŞTİR ═══
+          // ═══ GERÇEK GOOGLE YORUMLARI — AutoClub Samsun Merkez ═══
           {
-            ad: "Mehmet Hakan",
-            tarih: "2 hafta önce",
+            ad: "Oktay Yıldız",
+            tarih: "4 ay önce",
             yildiz: 5,
-            metin: "BMW M3'ümün PPF kaplamasını AutoClub Samsun'da yaptırdım. Tam 3 gün sürdü ama sonuç mükemmel. Hiç hava kabarcığı yok, kenarlar tertemiz. 10 yıl garantili. Samsun'da bu işi bu kadar ciddi yapan başka yer yok.",
-            arac: "BMW M3",
-            paket: "NiDOJP N8",
+            metin: "Autoclub ailesine ordudan ulaştık öncelikle misafirperverliklerinden dolayı çok teşekkür ediyorum öyle samimi ve güler yüzlü insanlardı ki yapılan işçilikten önce bu çok önemli işçilik kısmına gelinirse gözünüz kapalı aracınızı teslim edebilirsiniz abilerimizin kardeşlerimizin ellerine sağlık çok teşekkür ederiz",
             dogrulanmis: true
           },
           {
-            ad: "Ayşe Yıldırım",
-            tarih: "1 ay önce",
+            ad: "Yakup Kandaz",
+            tarih: "4 ay önce",
             yildiz: 5,
-            metin: "Togg'um için araştırdıktan sonra AutoClub'u seçtim. Öncelikle yerli otomobile verdikleri değer çok güzel. 8 yıl garantili PPF yaptırdım. Çok memnun kaldım, işçilik tertemiz.",
-            arac: "Togg T10X",
-            paket: "NiDOJP N7",
+            metin: "Dostluğun, arkadaşlığın, muhabbetin, misafirperverliğin ve kaliteli hizmetin için çok teşekkür ederim. İşten ziyade oturup muhabbet edip çayını içebileceğim bir dostum oldu. Tebrik ve teşekkür ediyorum.",
             dogrulanmis: true
           },
           {
-            ad: "Emre Kaya",
+            ad: "Volkan Aygun",
             tarih: "3 hafta önce",
             yildiz: 5,
-            metin: "Tesla Model Y'm için PPF + seramik kaplama yaptırdım. İşçilik tertemiz, 7 gün sonra gittim kontrol ettim hiçbir sorun yok. Özellikle kapu kol altı ve kaput kenarı gibi hassas yerler çok temiz bitirilmiş.",
-            arac: "Tesla Model Y",
-            paket: "N9 + Seramik",
+            metin: "Güler yüzlü insanlar",
+            yerelRehber: true,
             dogrulanmis: true
-          }
+          },
+          // Ekstra yorumlar (istersen aktive et, şimdilik yorum satırında):
+          // {
+          //   ad: "Murat Baş",
+          //   tarih: "2 hafta önce",
+          //   yildiz: 5,
+          //   metin: "Kaliteli hizmet arayanların noktası.",
+          //   dogrulanmis: true
+          // },
+          // {
+          //   ad: "Murat Çongara",
+          //   tarih: "4 hafta önce",
+          //   yildiz: 5,
+          //   metin: "★★★★★",
+          //   yerelRehber: true,
+          //   dogrulanmis: true
+          // },
+          // {
+          //   ad: "Furkan Coşkun",
+          //   tarih: "1 ay önce",
+          //   yildiz: 5,
+          //   metin: "★★★★★",
+          //   yerelRehber: true,
+          //   dogrulanmis: true
+          // }
         ];
         
         /* Avatar için renk paleti — isim baş harfine göre otomatik renk seçer */
@@ -3659,17 +3678,22 @@ svg{display:block;flex-shrink:0}
               var aracMetni = [y.arac, y.paket].filter(Boolean).join(' · ');
               aracHtml = '<span class="sk-rev-car"><svg viewBox="0 0 24 24"><path d="M23 12l-2-5h-3l-1-3H7L6 7H3l-2 5v7a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-1h10v1a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-7z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>' + aracMetni + '</span>';
             }
-            // Doğrulanmış rozetii
+            // Doğrulanmış rozet
             var dogrulamaHtml = '';
             if (y.dogrulanmis) {
               dogrulamaHtml = '<span style="display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:800;color:#16A34A;background:rgba(22,163,74,.08);padding:2px 6px;border-radius:8px;margin-left:6px;letter-spacing:.3px" title="Google Business doğrulu yorumu"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Doğrulu</span>';
+            }
+            // Yerel Rehber rozeti (Google Local Guide)
+            var yerelRehberHtml = '';
+            if (y.yerelRehber) {
+              yerelRehberHtml = '<span style="display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:800;color:#1a56db;background:rgba(26,86,219,.08);padding:2px 6px;border-radius:8px;margin-left:4px;letter-spacing:.3px" title="Google Yerel Rehber"><svg viewBox="0 0 24 24" width="10" height="10" fill="#1a56db" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Yerel Rehber</span>';
             }
             
             return '<div class="sk-rev">' +
               '<div class="sk-rev-top">' +
                 '<div class="sk-rev-av" style="background:' + renk + '">' + harfler + '</div>' +
                 '<div class="sk-rev-info">' +
-                  '<div class="sk-rev-name">' + y.ad + dogrulamaHtml + '</div>' +
+                  '<div class="sk-rev-name">' + y.ad + dogrulamaHtml + yerelRehberHtml + '</div>' +
                   '<div class="sk-rev-meta">' +
                     '<svg viewBox="0 0 24 24" width="10" height="10"><path fill="#4285F4" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>' +
                     'Google · ' + (y.tarih || '') +
