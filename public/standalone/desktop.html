@@ -2466,11 +2466,16 @@ svg{display:block;flex-shrink:0}
     .cmp-chip.act{background:var(--r);color:#fff;border-color:var(--r);box-shadow:0 4px 10px rgba(176,28,46,.25)}
     
     /* Tablo konteyner — mobilde yatay scroll */
-    .cmp-tabwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -22px;padding:0 22px 6px}
+    .cmp-tabwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -22px;padding:0 22px 6px;position:relative;scroll-behavior:smooth}
     .cmp-tabwrap::-webkit-scrollbar{height:6px}
     .cmp-tabwrap::-webkit-scrollbar-track{background:transparent}
     .cmp-tabwrap::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
     .cmp-tabwrap::-webkit-scrollbar-thumb:hover{background:var(--ink4)}
+    
+    /* Mobilde scroll hint — kullanıcı sağa kaydırabileceğini anlasın */
+    .cmp-scroll-hint{display:none;position:absolute;right:0;top:0;bottom:6px;width:40px;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.9) 70%,#fff 100%);pointer-events:none;z-index:5}
+    .cmp-scroll-hint::after{content:'›';position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:24px;font-weight:800;color:var(--r);animation:cmpSwipe 1.4s ease-in-out infinite}
+    @keyframes cmpSwipe{0%,100%{transform:translateY(-50%) translateX(0)}50%{transform:translateY(-50%) translateX(-5px)}}
     
     /* Tablo */
     .cmp-tab{width:100%;border-collapse:separate;border-spacing:0;min-width:640px}
@@ -2524,14 +2529,42 @@ svg{display:block;flex-shrink:0}
     @media(max-width:900px){
       .cmp-wrap{padding:16px 14px}
       .cmp-tabwrap{margin:0 -14px;padding:0 14px 6px}
+      .cmp-scroll-hint{display:block}
       .cmp-title{font-size:22px}
-      .cmp-tab{min-width:600px}
+      .cmp-tab{min-width:540px}
+      .cmp-filt{gap:4px;padding:8px 10px}
+      .cmp-filt-lbl{font-size:9.5px;padding:4px 0}
+      .cmp-chip{padding:5px 10px;font-size:10.5px}
     }
     @media(max-width:600px){
-      .cmp-prod{padding:10px 6px 8px !important;min-width:92px}
-      .cmp-prod-isim{font-size:12px}
-      .cmp-v-big{font-size:14px}
-      .cmp-tab th,.cmp-tab td{padding:8px 6px;font-size:11.5px}
+      .cmp-wrap{padding:14px 12px;border-radius:10px}
+      .cmp-tabwrap{margin:0 -12px;padding:0 12px 6px}
+      .cmp-title{font-size:19px;letter-spacing:1px}
+      .cmp-desc{font-size:12px}
+      /* Mobilde özellik başlıklarını sola yapıştır - sticky */
+      .cmp-tab{min-width:480px}
+      .cmp-tab th.cmp-lbl,.cmp-tab td.cmp-lbl{position:sticky;left:0;background:#fff;z-index:3;border-right:1px solid var(--bd);min-width:78px;padding:7px 8px;font-size:9.5px}
+      .cmp-tab thead th.cmp-lbl{background:#fafbfc;z-index:4}
+      .cmp-tab tbody tr:hover td.cmp-lbl{background:#fff}
+      .cmp-prod{padding:8px 5px 7px !important;min-width:80px}
+      .cmp-prod-isim{font-size:11px}
+      .cmp-prod-alt{font-size:8.5px}
+      .cmp-prod-rozet{font-size:8px;padding:2px 5px}
+      .cmp-prod-rozet svg{width:9px;height:9px}
+      .cmp-v-big{font-size:13px}
+      .cmp-v-med{font-size:11px}
+      .cmp-v-small{font-size:10px}
+      .cmp-tab th,.cmp-tab td{padding:7px 5px;font-size:11px}
+      .cmp-sec-btn{padding:7px 4px;font-size:10.5px;letter-spacing:.8px}
+      .cmp-sec-btn svg{width:10px;height:10px}
+      .cmp-flag{width:18px;height:12px}
+      .cmp-tip{padding:10px 12px;font-size:11.5px;gap:8px}
+      .cmp-tip-ico{width:24px;height:24px}
+      .cmp-tip-ico svg{width:14px;height:14px}
+    }
+    @media(max-width:400px){
+      .cmp-tab{min-width:430px}
+      .cmp-prod{min-width:70px}
     }
     </style>
 
@@ -2561,11 +2594,12 @@ svg{display:block;flex-shrink:0}
       </div>
 
       <!-- Tablo (JS render) -->
-      <div class="cmp-tabwrap">
+      <div class="cmp-tabwrap" id="cmp-tabwrap">
         <table class="cmp-tab" id="cmp-tab">
           <thead id="cmp-thead"></thead>
           <tbody id="cmp-tbody"></tbody>
         </table>
+        <div class="cmp-scroll-hint" id="cmp-scroll-hint"></div>
       </div>
 
       <!-- Öneri kutusu -->
@@ -2625,7 +2659,7 @@ svg{display:block;flex-shrink:0}
         }
         
         // Ürünleri filtrele
-        var siraliIds = ['CS190','S75','S85','N7','N8','N9','RENKLI'];
+        var siraliIds = ['CS190','S75','S85','N7','N8','N9'];
         var filtered = siraliIds
           .map(function(id){ return {id:id, u:URUNLER[id]}; })
           .filter(function(x){ 
@@ -2670,15 +2704,6 @@ svg{display:block;flex-shrink:0}
         });
         fRow += '</tr>';
         rows.push(fRow);
-        
-        // 34 Plaka
-        var f34Row = '<tr><td class="cmp-lbl" style="text-align:left">34 Plaka</td>';
-        filtered.forEach(function(x){
-          var f = x.u.fiyat_34;
-          f34Row += '<td><span class="cmp-v-med">' + (f ? '₺' + (f/1000).toFixed(0) + 'K' : '—') + '</span></td>';
-        });
-        f34Row += '</tr>';
-        rows.push(f34Row);
         
         // Ön 3 Parça
         var on3Row = '<tr><td class="cmp-lbl" style="text-align:left">Ön 3 Parça</td>';
@@ -2773,6 +2798,20 @@ svg{display:block;flex-shrink:0}
         chip.classList.add('act');
         cmpRender();
       });
+      
+      // Scroll hint - kullanıcı scroll yapınca gizle
+      var tabwrap = document.getElementById('cmp-tabwrap');
+      var hint = document.getElementById('cmp-scroll-hint');
+      if (tabwrap && hint) {
+        tabwrap.addEventListener('scroll', function(){
+          if (tabwrap.scrollLeft > 20) {
+            hint.style.opacity = '0';
+            hint.style.transition = 'opacity .3s';
+          } else {
+            hint.style.opacity = '1';
+          }
+        });
+      }
       
       // Sayfa yüklendiğinde render
       if (document.readyState === 'loading') {
@@ -3416,10 +3455,49 @@ svg{display:block;flex-shrink:0}
         .sk-cert-grid{grid-template-columns:1fr;gap:10px}
         .sk-trust{grid-template-columns:1fr 1fr;gap:8px}
       }
-      @media(max-width:500px){
-        .sk-stat-num{font-size:22px}
-        .sk-google{flex-direction:column;text-align:center;padding:14px}
+      @media(max-width:600px){
+        .sk-wrap{padding:0;margin-bottom:20px}
+        .sk-stats{padding:14px 10px;gap:4px;border-radius:10px;margin-bottom:14px}
+        .sk-stat{padding:4px 2px}
+        .sk-stat-ico{width:28px;height:28px;margin-bottom:5px}
+        .sk-stat-ico svg{width:15px;height:15px}
+        .sk-stat-num{font-size:19px;margin-bottom:2px}
+        .sk-stat-lbl{font-size:9px;letter-spacing:.8px;line-height:1.2}
+        .sk-eyebrow{font-size:9.5px;padding:3px 10px;letter-spacing:1.1px}
+        .sk-eyebrow svg{width:11px;height:11px}
+        .sk-title{font-size:19px;letter-spacing:.8px}
+        .sk-desc{font-size:11.5px;padding:0 8px}
+        .sk-head{margin-bottom:12px}
+        .sk-google{flex-direction:column;text-align:center;padding:14px;gap:10px;border-radius:10px}
         .sk-google-info{text-align:center}
+        .sk-google-logo svg{width:28px;height:28px}
+        .sk-google-num{font-size:20px}
+        .sk-google-count{font-size:11px}
+        .sk-google-btn{width:100%;justify-content:center;padding:11px 18px;font-size:13px;min-height:44px}
+        .sk-google-btn svg{width:15px;height:15px}
+        .sk-rev{padding:13px;border-radius:10px}
+        .sk-rev-av{width:36px;height:36px;font-size:15px}
+        .sk-rev-name{font-size:12.5px}
+        .sk-rev-meta{font-size:10px}
+        .sk-rev-text{font-size:12px;line-height:1.55}
+        .sk-rev-car{font-size:10px;padding:2px 7px}
+        .sk-cert{padding:14px 12px;gap:10px;border-radius:10px}
+        .sk-cert-logo{width:48px;height:48px;border-radius:8px}
+        .sk-cert-logo-txt{font-size:13px}
+        .sk-cert-baslik{font-size:14px}
+        .sk-cert-alt{font-size:10px}
+        .sk-cert-badge{font-size:9px;padding:2px 6px}
+        .sk-cert-title{font-size:17px}
+        .sk-cert-desc{font-size:10.5px}
+        .sk-trust-item{padding:10px 12px;gap:8px;border-radius:8px}
+        .sk-trust-ico{width:28px;height:28px;border-radius:7px}
+        .sk-trust-ico svg{width:14px;height:14px}
+        .sk-trust-baslik{font-size:11px}
+        .sk-trust-alt{font-size:9.5px}
+      }
+      @media(max-width:400px){
+        .sk-stat-num{font-size:17px}
+        .sk-stat-lbl{font-size:8.5px}
       }
       </style>
       
@@ -3476,9 +3554,9 @@ svg{display:block;flex-shrink:0}
             </div>
             <div class="sk-google-count"><strong>127 değerlendirme</strong> · Google'da 5 üzerinden 4.9</div>
           </div>
-          <a href="#" class="sk-google-btn" onclick="acGoogleMaps();return false;">
+          <a href="#" class="sk-google-btn" onclick="acGoogleMaps();return false;" title="Google'da yorum yazın — 1 dakika sürer">
             <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-            Google'da Yorum Yaz
+            Yorum Yaz
           </a>
         </div>
         
@@ -3502,7 +3580,7 @@ svg{display:block;flex-shrink:0}
               <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             </div>
-            <div class="sk-rev-text">BMW M3'ümün PPF kaplamasını Autonax'ta yaptırdım. Tam 3 gün sürdü ama sonuç mükemmel. Hiç hava kabarcığı yok, kenarlar tertemiz. 10 yıl garantili. Samsun'da bu işi bu kadar ciddi yapan başka yer yok.</div>
+            <div class="sk-rev-text">BMW M3'ümün PPF kaplamasını AutoClub Samsun'da yaptırdım. Tam 3 gün sürdü ama sonuç mükemmel. Hiç hava kabarcığı yok, kenarlar tertemiz. 10 yıl garantili. Samsun'da bu işi bu kadar ciddi yapan başka yer yok.</div>
             <span class="sk-rev-car"><svg viewBox="0 0 24 24"><path d="M23 12l-2-5h-3l-1-3H7L6 7H3l-2 5v7a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-1h10v1a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-7z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>BMW M3 · NiDOJP N8</span>
           </div>
           
@@ -3524,7 +3602,7 @@ svg{display:block;flex-shrink:0}
               <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             </div>
-            <div class="sk-rev-text">Togg'um için araştırdıktan sonra Autonax'ı seçtim. Öncelikle yerli otomobile verdikleri değer çok güzel. 8 yıl garantili PPF yaptırdım. Çok memnun kaldım, işçilik tertemiz.</div>
+            <div class="sk-rev-text">Togg'um için araştırdıktan sonra AutoClub'u seçtim. Öncelikle yerli otomobile verdikleri değer çok güzel. 8 yıl garantili PPF yaptırdım. Çok memnun kaldım, işçilik tertemiz.</div>
             <span class="sk-rev-car"><svg viewBox="0 0 24 24"><path d="M23 12l-2-5h-3l-1-3H7L6 7H3l-2 5v7a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-1h10v1a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-7z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>Togg T10X · NiDOJP N7</span>
           </div>
           
@@ -3549,6 +3627,15 @@ svg{display:block;flex-shrink:0}
             <div class="sk-rev-text">Tesla Model Y'm için PPF + seramik kaplama yaptırdım. İşçilik tertemiz, 7 gün sonra gittim kontrol ettim hiçbir sorun yok. Özellikle kapu kol altı ve kaput kenarı gibi hassas yerler çok temiz bitirilmiş.</div>
             <span class="sk-rev-car"><svg viewBox="0 0 24 24"><path d="M23 12l-2-5h-3l-1-3H7L6 7H3l-2 5v7a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-1h10v1a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-7z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>Tesla Model Y · N9 + Seramik</span>
           </div>
+        </div>
+        
+        <!-- Tüm Yorumları Gör butonu -->
+        <div style="text-align:center;margin-bottom:22px">
+          <a href="#" onclick="acTumYorumlar();return false;" style="display:inline-flex;align-items:center;gap:8px;padding:11px 22px;background:#fff;border:1.5px solid var(--bd);color:var(--ink);text-decoration:none;border-radius:10px;font-size:13px;font-weight:700;letter-spacing:.3px;transition:all .2s;cursor:pointer">
+            <svg viewBox="0 0 48 48" style="width:18px;height:18px"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
+            Google'da Tüm Yorumları Gör
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </a>
         </div>
         
         <!-- Sertifikalar -->
@@ -3619,16 +3706,28 @@ svg{display:block;flex-shrink:0}
       </div>
       
       <script>
-      // Google Maps yorum yaz sayfasına yönlendir
+      // Google Maps yorum sistemi
       function acGoogleMaps(){
-        // Önce panel'deki Google Maps URL'sini kontrol et
+        // Panel'den özelleştirilmiş URL varsa onu kullan
         var sa = window.SITE_AYARLAR || {};
-        var mapsUrl = (sa.sosyal && sa.sosyal.googleMaps) ? sa.sosyal.googleMaps : '';
-        if (!mapsUrl) {
-          // Varsayılan: Google'da arat
-          mapsUrl = 'https://www.google.com/maps/search/?api=1&query=Autonax+Samsun';
+        var yorumYazUrl = (sa.sosyal && sa.sosyal.googleYorumYaz) ? sa.sosyal.googleYorumYaz : '';
+        
+        // Varsayılan: arama linki (kullanıcı işletmeyi bulup yorum yazar)
+        if (!yorumYazUrl) {
+          yorumYazUrl = 'https://www.google.com/search?q=AutoClub+Samsun+Merkez+Canik';
         }
-        window.open(mapsUrl, '_blank', 'noopener');
+        window.open(yorumYazUrl, '_blank', 'noopener');
+      }
+      
+      function acTumYorumlar(){
+        // Tüm yorumları Google Maps'te göster
+        var sa = window.SITE_AYARLAR || {};
+        var yorumlarUrl = (sa.sosyal && sa.sosyal.googleMaps) ? sa.sosyal.googleMaps : '';
+        
+        if (!yorumlarUrl) {
+          yorumlarUrl = 'https://www.google.com/search?q=AutoClub+Samsun+Merkez+Canik+yorumlar';
+        }
+        window.open(yorumlarUrl, '_blank', 'noopener');
       }
       </script>
 
