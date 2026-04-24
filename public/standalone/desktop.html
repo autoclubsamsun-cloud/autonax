@@ -2518,8 +2518,8 @@ svg{display:block;flex-shrink:0}
           }
         } catch(e){}
 
-        // 2. Asıl kaynak: backend /api/ayarlar-public (giriş gerektirmez)
-        fetch('/api/ayarlar-public?_t='+Date.now())
+        // 2. Asıl kaynak: backend /api/ayarlar
+        fetch('/api/ayarlar?_t='+Date.now(), {credentials:'same-origin'})
           .then(function(r){ return r.json(); })
           .then(function(d){
             var depo = (d && d.data && d.data.markalar_v1) || (d && d.markalar_v1) || null;
@@ -2659,18 +2659,21 @@ svg{display:block;flex-shrink:0}
 
 </div><!-- /main -->
 
+<!-- Footer linklerinin hedefleri (boş anchor'lar — ileride içerik eklenecek) -->
+<span id="hakkimizda"></span><span id="blog"></span><span id="kvkk"></span><span id="cerez"></span><span id="kosullar"></span><span id="iletisim"></span><span id="hizmetler"></span>
+
 <!-- FOOTER -->
 <div class="footer">
   <div class="wrap">
     <div class="ft-grid">
       <div><div class="ft-logo">AUTONAX</div><div class="ft-desc">Türkiye'nin premium PPF kaplama ve seramik araç koruma merkezi. XPEL, 3M ve Llumar yetkili uygulama noktası.</div><div class="ft-soc"><div class="soc"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></div><div class="soc"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></div><div class="soc"><svg viewBox="0 0 24 24"><path d="M21 2H3v16l4-4h14V2z"/></svg></div></div></div>
-      <div class="ft-col"><h4>Hizmetler</h4><a>PPF Kaplama</a><a>Seramik Kaplama</a><a>Cam Filmi</a><a>Detailing</a><a>Boya Koruma</a></div>
-      <div class="ft-col"><h4>Müşteri</h4><a>Garajım</a><a>Garanti Belgelerim</a><a>Siparişlerim</a><a>Faturalarım</a><a>Randevu Takip</a></div>
-      <div class="ft-col"><h4>Kurumsal</h4><a>Hakkımızda</a><a>Blog</a><a>SSS</a><a>KVKK</a><a>İletişim</a></div>
+      <div class="ft-col"><h4>Hizmetler</h4><a href="#ppf-kaplama">PPF Kaplama</a><a href="#seramik-kaplama">Seramik Kaplama</a><a href="#hizmetler">Cam Filmi</a><a href="#hizmetler">Detailing</a><a href="#hizmetler">Boya Koruma</a></div>
+      <div class="ft-col"><h4>Müşteri</h4><a href="/hesabim.html">Garajım</a><a href="/hesabim.html">Garanti Belgelerim</a><a href="/hesabim.html">Siparişlerim</a><a href="/hesabim.html">Faturalarım</a><a href="/hesabim.html">Randevu Takip</a></div>
+      <div class="ft-col"><h4>Kurumsal</h4><a href="#hakkimizda">Hakkımızda</a><a href="#blog">Blog</a><a href="#sss">SSS</a><a href="#kvkk">KVKK</a><a href="#iletisim">İletişim</a></div>
     </div>
     <div class="ft-bot">
       <span>© 2025 Autonax — Tüm hakları saklıdır.</span>
-      <div style="display:flex;gap:14px"><a>KVKK</a><a>Çerez Politikası</a><a>Kullanım Koşulları</a></div>
+      <div style="display:flex;gap:14px"><a href="#kvkk">KVKK</a><a href="#cerez">Çerez Politikası</a><a href="#kosullar">Kullanım Koşulları</a></div>
     </div>
   </div>
 </div>
@@ -4897,8 +4900,85 @@ function siteAyarlariniUygula(sa) {
     }
   }
 
-  // 8. FOOTER — dinamik güncelle
+  // 8. FOOTER — dinamik güncelle + AKILLI URL HARITASI
   if(sa.footer) {
+    // Link adı → URL haritası (case-insensitive, Türkçe karakter esnek)
+    var _telNo = (sa.genel && sa.genel.tel1) ? sa.genel.tel1.replace(/[^0-9]/g,'') : '';
+    var _waNo = (sa.genel && sa.genel.whatsapp) ? sa.genel.whatsapp.replace(/[^0-9]/g,'') : _telNo;
+    var _email = (sa.genel && sa.genel.email) ? sa.genel.email : '';
+    var LINK_URL_MAP = {
+      // Hizmetler
+      'ppf kaplama':'#ppf-kaplama',
+      'ppf':'#ppf-kaplama',
+      'seramik kaplama':'#seramik-kaplama',
+      'seramik':'#seramik-kaplama',
+      'cam filmi':'#hizmetler',
+      'detailing':'#hizmetler',
+      'boya koruma':'#hizmetler',
+      'boya':'#hizmetler',
+      // Müşteri sayfası
+      'garajım':'/hesabim.html',
+      'garajim':'/hesabim.html',
+      'garanti belgelerim':'/hesabim.html',
+      'garanti':'/hesabim.html',
+      'siparişlerim':'/hesabim.html',
+      'siparislerim':'/hesabim.html',
+      'siparişler':'/hesabim.html',
+      'faturalarım':'/hesabim.html',
+      'faturalarim':'/hesabim.html',
+      'faturalar':'/hesabim.html',
+      'randevu takip':'/hesabim.html',
+      'randevu':'/hesabim.html',
+      'randevularım':'/hesabim.html',
+      'hesabım':'/hesabim.html',
+      'hesabim':'/hesabim.html',
+      'giriş yap':'/hesabim.html',
+      'giris yap':'/hesabim.html',
+      // Kurumsal
+      'sss':'#sss',
+      's.s.s.':'#sss',
+      'sıkça sorulan sorular':'#sss',
+      'hakkımızda':'#hakkimizda',
+      'hakkimizda':'#hakkimizda',
+      'hakkımda':'#hakkimizda',
+      'blog':'#blog',
+      'kvkk':'#kvkk',
+      'gizlilik':'#kvkk',
+      'çerez politikası':'#cerez',
+      'cerez politikasi':'#cerez',
+      'çerez':'#cerez',
+      'cerez':'#cerez',
+      'kullanım koşulları':'#kosullar',
+      'kullanim kosullari':'#kosullar',
+      'koşullar':'#kosullar',
+      // İletişim
+      'iletişim':_telNo?('tel:+'+_telNo):'#iletisim',
+      'iletisim':_telNo?('tel:+'+_telNo):'#iletisim',
+      'telefon':_telNo?('tel:+'+_telNo):'#iletisim',
+      'ara':_telNo?('tel:+'+_telNo):'#iletisim',
+      'whatsapp':_waNo?('https://wa.me/'+_waNo):'#iletisim',
+      'wa':_waNo?('https://wa.me/'+_waNo):'#iletisim',
+      'email':_email?('mailto:'+_email):'#iletisim',
+      'e-posta':_email?('mailto:'+_email):'#iletisim',
+      'mail':_email?('mailto:'+_email):'#iletisim'
+    };
+    function _footerUrl(linkMetin){
+      if(!linkMetin) return '#';
+      // Önce URL/href gibi görünüyorsa direkt kullan
+      var t=(''+linkMetin).trim();
+      if(/^(https?:\/\/|\/|#|tel:|mailto:|https?:)/i.test(t)) return t;
+      // Haritadan ara (lowercase)
+      var key=t.toLowerCase().trim();
+      if(LINK_URL_MAP[key]) return LINK_URL_MAP[key];
+      // Parçalı eşleşme dene (örn "PPF Kaplama 2023" → ppf)
+      for(var k in LINK_URL_MAP){
+        if(key.indexOf(k)!==-1) return LINK_URL_MAP[k];
+      }
+      // Eşleşme yoksa # — link ölü gözükmez, tıklanabilir kalır
+      return '#';
+    }
+    function _esc(s){return (''+s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
     var ftEl = document.querySelector('.footer .ft-grid');
     if(ftEl) {
       var ftDesc = sa.footer.aciklama || '';
@@ -4921,8 +5001,12 @@ function siteAyarlariniUygula(sa) {
       }
 
       var sutunHTML = ftSutunlar.map(function(s){
-        var linkler = (s.linkler||[]).map(function(l){ return '<a>'+l+'</a>'; }).join('');
-        return '<div class="ft-col"><h4>'+s.baslik+'</h4>'+linkler+'</div>';
+        var linkler = (s.linkler||[]).map(function(l){
+          var url=_footerUrl(l);
+          var ext=/^https?:/i.test(url)?' target="_blank" rel="noopener"':'';
+          return '<a href="'+_esc(url)+'"'+ext+' style="cursor:pointer">'+_esc(l)+'</a>';
+        }).join('');
+        return '<div class="ft-col"><h4>'+_esc(s.baslik)+'</h4>'+linkler+'</div>';
       }).join('');
 
       ftEl.innerHTML = '<div><div class="ft-logo">AUTONAX</div><div class="ft-desc">'+ftDesc+'</div>'+ftSosHTML+'</div>' + sutunHTML;
@@ -4930,7 +5014,11 @@ function siteAyarlariniUygula(sa) {
     // Copyright ve alt linkler
     var ftBot = document.querySelector('.footer .ft-bot');
     if(ftBot) {
-      var altLinkler = (sa.footer.altLinkler||[]).map(function(l){ return '<a>'+l+'</a>'; }).join('');
+      var altLinkler = (sa.footer.altLinkler||[]).map(function(l){
+        var url=_footerUrl(l);
+        var ext=/^https?:/i.test(url)?' target="_blank" rel="noopener"':'';
+        return '<a href="'+_esc(url)+'"'+ext+' style="cursor:pointer">'+_esc(l)+'</a>';
+      }).join('');
       ftBot.innerHTML = '<span>'+(sa.footer.copyright||'')+'</span><div style="display:flex;gap:14px">'+altLinkler+'</div>';
     }
   }
@@ -5000,14 +5088,13 @@ function siteAyarlariniCek() {
     if(raw) siteAyarlariniUygula(JSON.parse(raw));
   } catch(e) {}
   
-  // Sonra API'den güncel verileri çek (public endpoint - giriş gerektirmez)
-  fetch('/api/ayarlar-public')
+  // Sonra API'den güncel verileri çek
+  fetch('/api/ayarlar')
     .then(function(r){ return r.json(); })
     .then(function(res){
       var sa = null;
-      var siteAyar = res && res.data && res.data.site_ayarlar;
-      if(res.success && siteAyar) {
-        sa = siteAyar; // Panel'den kaydedilmiş tam yapı
+      if(res.success && res.site_ayarlar) {
+        sa = res.site_ayarlar; // Panel'den kaydedilmiş tam yapı
       } else if(res.success && res.data) {
         // Eski basit yapıyı SITE_AYARLAR formatına dönüştür
         var data = res.data;
