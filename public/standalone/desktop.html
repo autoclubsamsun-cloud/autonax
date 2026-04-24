@@ -2445,8 +2445,347 @@ svg{display:block;flex-shrink:0}
       </div>
     </div>
 
-    <!-- ÖN 3 PARÇA BÖLÜMÜ -->
-    <div class="sh" style="margin-top:8px">
+    <!-- ═══════════════════════════════════════════════════════
+         KARŞILAŞTIRMA TABLOSU — "Hangisi Bana Uygun?"
+         ═══════════════════════════════════════════════════════ -->
+    <style>
+    .cmp-wrap{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:20px 22px;margin-top:16px;position:relative;overflow:hidden}
+    .cmp-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--rd),var(--r),#FF3355)}
+    .cmp-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px;gap:12px;flex-wrap:wrap}
+    .cmp-head-l{flex:1;min-width:240px}
+    .cmp-eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:800;color:var(--r);letter-spacing:1.4px;text-transform:uppercase;margin-bottom:4px}
+    .cmp-eyebrow svg{width:13px;height:13px;color:var(--r)}
+    .cmp-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1.2px;color:var(--ink);line-height:1.1}
+    .cmp-desc{font-size:13px;color:var(--ink3);margin-top:5px;line-height:1.5}
+    
+    /* Filtre şeridi */
+    .cmp-filt{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px;background:#f8fafc;border:1px solid var(--bd);border-radius:10px;margin-bottom:14px}
+    .cmp-filt-lbl{font-size:10px;font-weight:800;color:var(--ink3);letter-spacing:1px;text-transform:uppercase;padding:6px 0;margin-right:6px;white-space:nowrap}
+    .cmp-chip{padding:6px 12px;border-radius:16px;font-size:11.5px;font-weight:700;cursor:pointer;transition:all .15s;background:#fff;border:1.5px solid var(--bd);color:var(--ink3);white-space:nowrap}
+    .cmp-chip:hover{border-color:rgba(176,28,46,.4);color:var(--r)}
+    .cmp-chip.act{background:var(--r);color:#fff;border-color:var(--r);box-shadow:0 4px 10px rgba(176,28,46,.25)}
+    
+    /* Tablo konteyner — mobilde yatay scroll */
+    .cmp-tabwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -22px;padding:0 22px 6px}
+    .cmp-tabwrap::-webkit-scrollbar{height:6px}
+    .cmp-tabwrap::-webkit-scrollbar-track{background:transparent}
+    .cmp-tabwrap::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
+    .cmp-tabwrap::-webkit-scrollbar-thumb:hover{background:var(--ink4)}
+    
+    /* Tablo */
+    .cmp-tab{width:100%;border-collapse:separate;border-spacing:0;min-width:640px}
+    .cmp-tab th,.cmp-tab td{padding:10px 11px;text-align:center;vertical-align:middle;font-size:12.5px;border-bottom:1px solid var(--bd)}
+    .cmp-tab tbody tr:hover td{background:rgba(176,28,46,.02)}
+    .cmp-tab th{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;color:var(--ink);font-weight:400;background:#fafbfc;position:sticky;top:0;z-index:2}
+    .cmp-tab th.cmp-lbl{text-align:left;color:var(--ink3);font-size:10px;letter-spacing:1.2px;font-weight:800;font-family:'Outfit',sans-serif;text-transform:uppercase}
+    
+    /* Ürün başlık hücresi */
+    .cmp-prod{position:relative;padding:14px 10px 10px !important;min-width:108px}
+    .cmp-prod-rozet{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:800;padding:3px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:.6px;background:var(--r);color:#fff;margin-bottom:4px;white-space:nowrap}
+    .cmp-prod-rozet svg{width:10px;height:10px;color:#fff}
+    .cmp-prod-rozet.bdg-success{background:#16A34A}
+    .cmp-prod-rozet.bdg-germany{background:#1a1a1a}
+    .cmp-prod-rozet.bdg-germany svg{color:#FFCE00}
+    .cmp-prod-rozet.bdg-eko{background:#0891b2}
+    .cmp-prod-rozet.bdg-premium{background:linear-gradient(135deg,#FFD700 0%,#FFA500 100%);color:#3a2500}
+    .cmp-prod-rozet.bdg-premium svg{color:#3a2500}
+    .cmp-prod-rozet.bdg-renkli{background:linear-gradient(135deg,#ec4899 0%,#8b5cf6 100%)}
+    .cmp-prod-isim{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.8px;color:var(--ink);line-height:1.1;margin-top:3px}
+    .cmp-prod-alt{font-size:9px;color:var(--ink4);font-weight:700;letter-spacing:.5px;margin-top:2px;text-transform:uppercase}
+    
+    /* Sütun vurguları */
+    .cmp-tab th.cmp-highlight{background:linear-gradient(180deg,rgba(176,28,46,.1) 0%,#fafbfc 100%);position:relative}
+    .cmp-tab th.cmp-highlight::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--r)}
+    
+    /* Hücre içeriği */
+    .cmp-v-big{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:.6px;color:var(--r);line-height:1}
+    .cmp-v-med{font-weight:700;color:var(--ink);font-size:12.5px}
+    .cmp-v-small{font-size:11px;color:var(--ink4);font-weight:600}
+    .cmp-flag{display:inline-block;width:22px;height:15px;border-radius:2px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.12);vertical-align:middle}
+    .cmp-flag svg{width:100%;height:100%;display:block}
+    .cmp-yes{color:#16A34A;font-weight:800}
+    .cmp-no{color:#94a3b8}
+    .cmp-yes svg,.cmp-no svg{width:16px;height:16px}
+    
+    /* Seçim butonu */
+    .cmp-sec-btn{width:100%;padding:8px 6px;background:#fff;border:1.5px solid var(--r);color:var(--r);border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1.2px;cursor:pointer;transition:all .2s;margin-top:4px;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+    .cmp-sec-btn:hover{background:var(--r);color:#fff;transform:translateY(-1px);box-shadow:0 4px 10px rgba(176,28,46,.25)}
+    .cmp-sec-btn svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    
+    /* Boş durum */
+    .cmp-empty{text-align:center;padding:40px 20px;color:var(--ink4);font-size:13px}
+    
+    /* Öneri kutusu */
+    .cmp-tip{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:linear-gradient(135deg,rgba(176,28,46,.04) 0%,rgba(176,28,46,.08) 100%);border:1px solid rgba(176,28,46,.15);border-radius:10px;margin-top:14px;font-size:12px;color:var(--ink2);line-height:1.5}
+    .cmp-tip-ico{flex-shrink:0;width:28px;height:28px;background:var(--r);border-radius:50%;display:flex;align-items:center;justify-content:center}
+    .cmp-tip-ico svg{width:16px;height:16px;color:#fff;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .cmp-tip strong{color:var(--r)}
+    
+    @media(max-width:900px){
+      .cmp-wrap{padding:16px 14px}
+      .cmp-tabwrap{margin:0 -14px;padding:0 14px 6px}
+      .cmp-title{font-size:22px}
+      .cmp-tab{min-width:600px}
+    }
+    @media(max-width:600px){
+      .cmp-prod{padding:10px 6px 8px !important;min-width:92px}
+      .cmp-prod-isim{font-size:12px}
+      .cmp-v-big{font-size:14px}
+      .cmp-tab th,.cmp-tab td{padding:8px 6px;font-size:11.5px}
+    }
+    </style>
+
+    <div class="cmp-wrap" id="cmp-wrap">
+      <div class="cmp-head">
+        <div class="cmp-head-l">
+          <div class="cmp-eyebrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Karşılaştırma · Hangisi Bana Uygun?
+          </div>
+          <h2 class="cmp-title">TÜM PPF PAKETLERİNİ KARŞILAŞTIRIN</h2>
+          <div class="cmp-desc">Fiyat, garanti, kalınlık ve menşei açısından farkları tek tabloda görün. İhtiyacınıza en uygun paketi seçin.</div>
+        </div>
+      </div>
+
+      <!-- Filtre şeridi -->
+      <div class="cmp-filt" id="cmp-filt">
+        <span class="cmp-filt-lbl">Menşei:</span>
+        <button class="cmp-chip act" data-filt="mensei" data-val="hepsi">Hepsi</button>
+        <button class="cmp-chip" data-filt="mensei" data-val="usa">🇺🇸 USA</button>
+        <button class="cmp-chip" data-filt="mensei" data-val="alman">🇩🇪 Almanya</button>
+        <span class="cmp-filt-lbl" style="margin-left:10px">Bütçe:</span>
+        <button class="cmp-chip act" data-filt="butce" data-val="hepsi">Hepsi</button>
+        <button class="cmp-chip" data-filt="butce" data-val="eko">Ekonomik (&lt;50K)</button>
+        <button class="cmp-chip" data-filt="butce" data-val="orta">Orta (50-80K)</button>
+        <button class="cmp-chip" data-filt="butce" data-val="premium">Premium (80K+)</button>
+      </div>
+
+      <!-- Tablo (JS render) -->
+      <div class="cmp-tabwrap">
+        <table class="cmp-tab" id="cmp-tab">
+          <thead id="cmp-thead"></thead>
+          <tbody id="cmp-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Öneri kutusu -->
+      <div class="cmp-tip">
+        <div class="cmp-tip-ico"><svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m0 16v1m-9-9H2m19 0h-1m-2.121-6.879l-.707.707M6.828 6.828l-.707-.707m12.728 12.728l-.707-.707M6.828 17.172l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg></div>
+        <div>
+          <strong>Satış rekoru: NiDOJP N8 (Popüler)</strong> — 10 yıl garanti, 220 mikron kalınlık ve ideal fiyat-performans oranı ile müşterilerimizin birinci tercihi. Günlük kullanımdan premium araçlara kadar ideal koruma.
+        </div>
+      </div>
+    </div>
+
+    <script>
+    (function(){
+      // Karşılaştırma tablosu — URUNLER sözlüğüyle senkronize
+      // Sayfa yüklendiğinde ve her filtre değişiminde yeniden render
+      function cmpRender(){
+        var filtMensei = document.querySelector('.cmp-chip.act[data-filt="mensei"]')?.dataset.val || 'hepsi';
+        var filtButce = document.querySelector('.cmp-chip.act[data-filt="butce"]')?.dataset.val || 'hepsi';
+        
+        // URUNLER global olmayabilir daha yüklenmemiş — kontrol et
+        if (typeof URUNLER === 'undefined') {
+          setTimeout(cmpRender, 100);
+          return;
+        }
+        
+        // Rozet ikonu ve class'ı belirle
+        var rozetMap = [
+          ['POPÜLER','ic-star',''],
+          ['BAŞLANGIÇ','ic-check','bdg-success'],
+          ['GERMANY','ic-flag-de','bdg-germany'],
+          ['EKONOMİK','ic-dollar','bdg-eko'],
+          ['MAKSİMUM','ic-crown','bdg-premium'],
+          ['RENKLİ','ic-palette','bdg-renkli']
+        ];
+        function getRozetInfo(rozetStr){
+          if(!rozetStr) return {ikon:'ic-star', cls:'', metin:'YENİ'};
+          var up = rozetStr.toUpperCase();
+          for(var i=0;i<rozetMap.length;i++){
+            if(up.indexOf(rozetMap[i][0])!==-1){
+              return {ikon:rozetMap[i][1], cls:rozetMap[i][2], metin:rozetMap[i][0]};
+            }
+          }
+          return {ikon:'ic-star', cls:'', metin:'YENİ'};
+        }
+        
+        function getMensei(u){
+          if(u.mensei && u.mensei.indexOf('Alman')!==-1) return 'alman';
+          if(u.mensei && (u.mensei.indexOf('USA')!==-1 || u.mensei.indexOf('Amerik')!==-1)) return 'usa';
+          return 'usa';
+        }
+        
+        function getButce(fiyat){
+          if(!fiyat) return 'orta';
+          if(fiyat < 50000) return 'eko';
+          if(fiyat < 80000) return 'orta';
+          return 'premium';
+        }
+        
+        // Ürünleri filtrele
+        var siraliIds = ['CS190','S75','S85','N7','N8','N9','RENKLI'];
+        var filtered = siraliIds
+          .map(function(id){ return {id:id, u:URUNLER[id]}; })
+          .filter(function(x){ 
+            if(!x.u) return false;
+            var f = x.u.full || x.u.tutar || 0;
+            if(filtMensei !== 'hepsi' && getMensei(x.u) !== filtMensei) return false;
+            if(filtButce !== 'hepsi' && getButce(f) !== filtButce) return false;
+            return true;
+          });
+        
+        var thead = document.getElementById('cmp-thead');
+        var tbody = document.getElementById('cmp-tbody');
+        
+        if (filtered.length === 0) {
+          thead.innerHTML = '';
+          tbody.innerHTML = '<tr><td class="cmp-empty" colspan="8">Bu filtrelere uygun paket bulunamadı. Filtreyi genişletin.</td></tr>';
+          return;
+        }
+        
+        // Header
+        var theadHTML = '<tr><th class="cmp-lbl">Özellik</th>';
+        filtered.forEach(function(x){
+          var r = getRozetInfo(x.u.rozet);
+          var highlight = (x.id === 'N8') ? ' cmp-highlight' : '';
+          theadHTML += '<th class="cmp-prod' + highlight + '">' +
+            '<div class="cmp-prod-rozet ' + r.cls + '"><svg><use href="#' + r.ikon + '"/></svg>' + r.metin + '</div>' +
+            '<div class="cmp-prod-isim">' + x.id + '</div>' +
+            '<div class="cmp-prod-alt">' + (x.u.mikron || '') + '</div>' +
+            '</th>';
+        });
+        theadHTML += '</tr>';
+        thead.innerHTML = theadHTML;
+        
+        // Rows
+        var rows = [];
+        
+        // Fiyat (Tam Araç)
+        var fRow = '<tr><td class="cmp-lbl" style="text-align:left">Tam Araç</td>';
+        filtered.forEach(function(x){
+          var f = x.u.full;
+          fRow += '<td>' + (f ? '<span class="cmp-v-big">₺' + (f/1000).toFixed(0) + 'K</span>' : '<span class="cmp-v-small">—</span>') + '</td>';
+        });
+        fRow += '</tr>';
+        rows.push(fRow);
+        
+        // 34 Plaka
+        var f34Row = '<tr><td class="cmp-lbl" style="text-align:left">34 Plaka</td>';
+        filtered.forEach(function(x){
+          var f = x.u.fiyat_34;
+          f34Row += '<td><span class="cmp-v-med">' + (f ? '₺' + (f/1000).toFixed(0) + 'K' : '—') + '</span></td>';
+        });
+        f34Row += '</tr>';
+        rows.push(f34Row);
+        
+        // Ön 3 Parça
+        var on3Row = '<tr><td class="cmp-lbl" style="text-align:left">Ön 3 Parça</td>';
+        filtered.forEach(function(x){
+          var f = x.u.on3;
+          on3Row += '<td><span class="cmp-v-med">' + (f ? '₺' + (f/1000).toFixed(0) + 'K' : '—') + '</span></td>';
+        });
+        on3Row += '</tr>';
+        rows.push(on3Row);
+        
+        // Kaput
+        var kaputRow = '<tr><td class="cmp-lbl" style="text-align:left">Kaput</td>';
+        filtered.forEach(function(x){
+          var f = x.u.kaput;
+          kaputRow += '<td><span class="cmp-v-med">' + (f ? '₺' + (f/1000).toFixed(1) + 'K' : '—') + '</span></td>';
+        });
+        kaputRow += '</tr>';
+        rows.push(kaputRow);
+        
+        // Garanti
+        var garRow = '<tr><td class="cmp-lbl" style="text-align:left">Garanti</td>';
+        filtered.forEach(function(x){
+          garRow += '<td><span class="cmp-v-big" style="font-size:15px">' + (x.u.garanti || '—') + (x.u.garanti ? ' Yıl' : '') + '</span></td>';
+        });
+        garRow += '</tr>';
+        rows.push(garRow);
+        
+        // Kalınlık (Mikron)
+        var mikRow = '<tr><td class="cmp-lbl" style="text-align:left">Kalınlık</td>';
+        filtered.forEach(function(x){
+          mikRow += '<td><span class="cmp-v-med">' + (x.u.mikron || '—') + '</span></td>';
+        });
+        mikRow += '</tr>';
+        rows.push(mikRow);
+        
+        // Menşei (Bayrak)
+        var menRow = '<tr><td class="cmp-lbl" style="text-align:left">Menşei</td>';
+        filtered.forEach(function(x){
+          var m = getMensei(x.u);
+          var flagId = m === 'alman' ? 'ic-flag-de' : 'ic-flag-us';
+          var ad = m === 'alman' ? 'Almanya' : 'USA';
+          menRow += '<td><span class="cmp-flag"><svg><use href="#' + flagId + '"/></svg></span> <span class="cmp-v-small" style="margin-left:4px">' + ad + '</span></td>';
+        });
+        menRow += '</tr>';
+        rows.push(menRow);
+        
+        // Yapışkan
+        var yapRow = '<tr><td class="cmp-lbl" style="text-align:left">Yapışkan</td>';
+        filtered.forEach(function(x){
+          var m = getMensei(x.u);
+          var yap = m === 'alman' ? 'Henkel' : 'Ashland';
+          yapRow += '<td><span class="cmp-v-small">' + yap + '</span></td>';
+        });
+        yapRow += '</tr>';
+        rows.push(yapRow);
+        
+        // Self-Healing
+        var shRow = '<tr><td class="cmp-lbl" style="text-align:left">Self-Healing</td>';
+        filtered.forEach(function(x){
+          shRow += '<td><span class="cmp-yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></td>';
+        });
+        shRow += '</tr>';
+        rows.push(shRow);
+        
+        // UV Koruma
+        var uvRow = '<tr><td class="cmp-lbl" style="text-align:left">UV Koruma</td>';
+        filtered.forEach(function(x){
+          uvRow += '<td><span class="cmp-yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></td>';
+        });
+        uvRow += '</tr>';
+        rows.push(uvRow);
+        
+        // Buton satırı
+        var btnRow = '<tr><td class="cmp-lbl" style="text-align:left">&nbsp;</td>';
+        filtered.forEach(function(x){
+          btnRow += '<td><button class="cmp-sec-btn" onclick="urunDetayAc(\'' + x.id + '\',\'full\')"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>İNCELE</button></td>';
+        });
+        btnRow += '</tr>';
+        rows.push(btnRow);
+        
+        tbody.innerHTML = rows.join('');
+      }
+      
+      // Filtre tıklamaları
+      document.getElementById('cmp-filt').addEventListener('click', function(e){
+        var chip = e.target.closest('.cmp-chip');
+        if (!chip) return;
+        var filtTipi = chip.dataset.filt;
+        document.querySelectorAll('.cmp-chip[data-filt="' + filtTipi + '"]').forEach(function(c){
+          c.classList.remove('act');
+        });
+        chip.classList.add('act');
+        cmpRender();
+      });
+      
+      // Sayfa yüklendiğinde render
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', cmpRender);
+      } else {
+        cmpRender();
+      }
+      // Panel fiyat güncellemesi sonrası tekrar render
+      window.cmpRender = cmpRender;
+    })();
+    </script>
+
+        <div class="sh" style="margin-top:8px">
       <div class="sh-left">
         <div class="sh-eyebrow">🎯 Bölgesel PPF · Kaput + Ön İki Çamurluk + Farlar</div>
         <h2>Ön 3 Parça TPU PPF Kaplama</h2>
@@ -2986,6 +3325,312 @@ svg{display:block;flex-shrink:0}
 
         </div>
       </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           FAZ 4 — SOSYAL KANIT (İstatistik + Yorumlar + Sertifikalar)
+           ═══════════════════════════════════════════════════════ -->
+      <style>
+      .sk-wrap{max-width:1100px;margin:0 auto 30px;padding:0}
+      
+      /* İstatistik barı */
+      .sk-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;background:linear-gradient(135deg,#1a1a1a 0%,#2c0d14 100%);border-radius:14px;padding:24px 22px;margin-bottom:22px;position:relative;overflow:hidden}
+      .sk-stats::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--rd),var(--r),#FF3355)}
+      .sk-stat{text-align:center;color:#fff;position:relative;padding:8px 4px}
+      .sk-stat + .sk-stat::before{content:'';position:absolute;left:0;top:10%;bottom:10%;width:1px;background:rgba(255,255,255,.1)}
+      .sk-stat-ico{width:36px;height:36px;background:rgba(255,255,255,.08);border-radius:10px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:8px}
+      .sk-stat-ico svg{width:20px;height:20px;color:#fff;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+      .sk-stat-num{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;line-height:1;color:#fff;margin-bottom:4px;text-shadow:0 2px 8px rgba(0,0,0,.3)}
+      .sk-stat-lbl{font-size:10.5px;font-weight:700;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:1.2px;line-height:1.3}
+      
+      /* Başlık */
+      .sk-head{text-align:center;margin-bottom:18px}
+      .sk-eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:800;color:var(--r);letter-spacing:1.4px;text-transform:uppercase;margin-bottom:4px;padding:4px 12px;background:rgba(176,28,46,.08);border-radius:14px}
+      .sk-eyebrow svg{width:13px;height:13px;color:var(--r)}
+      .sk-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1.2px;color:var(--ink);line-height:1.1;margin-bottom:6px}
+      .sk-desc{font-size:13px;color:var(--ink3);max-width:560px;margin:0 auto;line-height:1.5}
+      
+      /* Google özeti */
+      .sk-google{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;padding:16px;background:#fff;border:1px solid var(--bd);border-radius:14px;margin-bottom:16px}
+      .sk-google-logo{flex-shrink:0}
+      .sk-google-logo svg{width:32px;height:32px}
+      .sk-google-info{text-align:left}
+      .sk-google-stars{display:flex;align-items:center;gap:6px;margin-bottom:2px}
+      .sk-google-stars-inner{display:inline-flex;gap:1px}
+      .sk-google-stars-inner svg{width:16px;height:16px;color:#FBBF24;fill:#FBBF24}
+      .sk-google-num{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--ink);letter-spacing:.5px}
+      .sk-google-count{font-size:12px;color:var(--ink3);font-weight:600}
+      .sk-google-btn{padding:10px 18px;background:#4285F4;color:#fff;border-radius:8px;font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all .2s;white-space:nowrap}
+      .sk-google-btn:hover{background:#1a73e8;transform:translateY(-1px);box-shadow:0 4px 12px rgba(66,133,244,.3)}
+      .sk-google-btn svg{width:14px;height:14px;fill:#fff}
+      
+      /* Yorumlar */
+      .sk-reviews{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+      .sk-rev{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:16px;position:relative;transition:all .25s;display:flex;flex-direction:column}
+      .sk-rev:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.06);border-color:rgba(176,28,46,.25)}
+      .sk-rev-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+      .sk-rev-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:17px;color:#fff;letter-spacing:.5px;flex-shrink:0}
+      .sk-rev-info{flex:1;min-width:0}
+      .sk-rev-name{font-weight:700;font-size:13px;color:var(--ink);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .sk-rev-meta{font-size:10.5px;color:var(--ink4);font-weight:600;margin-top:1px;display:flex;align-items:center;gap:4px}
+      .sk-rev-stars{display:inline-flex;gap:1px;margin-bottom:8px}
+      .sk-rev-stars svg{width:13px;height:13px;color:#FBBF24;fill:#FBBF24}
+      .sk-rev-text{font-size:12.5px;color:var(--ink2);line-height:1.55;flex:1}
+      .sk-rev-car{display:inline-flex;align-items:center;gap:4px;margin-top:10px;font-size:10.5px;font-weight:700;color:var(--r);background:rgba(176,28,46,.06);padding:3px 8px;border-radius:10px;width:fit-content}
+      .sk-rev-car svg{width:11px;height:11px;color:var(--r);fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+      
+      /* Sertifikalar */
+      .sk-certs{background:linear-gradient(135deg,#fafbfc 0%,#f1f5f9 100%);border:1px solid var(--bd);border-radius:14px;padding:20px 22px;margin-bottom:16px}
+      .sk-cert-head{text-align:center;margin-bottom:14px}
+      .sk-cert-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--ink);margin-bottom:4px}
+      .sk-cert-desc{font-size:11.5px;color:var(--ink3);font-weight:600}
+      .sk-cert-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+      .sk-cert{background:#fff;border:1.5px solid var(--bd);border-radius:12px;padding:18px 14px;display:flex;align-items:center;gap:12px;transition:all .2s;position:relative;overflow:hidden}
+      .sk-cert::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--cert-c1,#B01C2E) 0%,var(--cert-c2,#3C3B6E) 100%)}
+      .sk-cert:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,.06);border-color:rgba(176,28,46,.3)}
+      .sk-cert.c-nidojp{--cert-c1:#B22234;--cert-c2:#3C3B6E}
+      .sk-cert.c-ashland{--cert-c1:#1a56db;--cert-c2:#B22234}
+      .sk-cert.c-henkel{--cert-c1:#000;--cert-c2:#FFCE00}
+      .sk-cert-logo{width:56px;height:56px;flex-shrink:0;background:#fff;border:1px solid var(--bd);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+      .sk-cert-logo-txt{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.8px;color:var(--ink);text-align:center;line-height:1}
+      .sk-cert-body{flex:1;min-width:0}
+      .sk-cert-baslik{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--ink);letter-spacing:.8px;line-height:1;margin-bottom:3px}
+      .sk-cert-alt{font-size:10.5px;color:var(--ink3);font-weight:600;margin-bottom:6px}
+      .sk-cert-badge{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:800;color:#15803d;background:rgba(22,163,74,.1);padding:3px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:.5px}
+      .sk-cert-badge svg{width:11px;height:11px;color:#15803d;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+      
+      /* Güven sinyalleri */
+      .sk-trust{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+      .sk-trust-item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#fff;border:1px solid var(--bd);border-radius:10px}
+      .sk-trust-ico{width:32px;height:32px;background:rgba(176,28,46,.08);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+      .sk-trust-ico svg{width:16px;height:16px;color:var(--r);fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+      .sk-trust-txt{flex:1;min-width:0}
+      .sk-trust-baslik{font-size:12px;font-weight:800;color:var(--ink);line-height:1.2}
+      .sk-trust-alt{font-size:10.5px;color:var(--ink4);font-weight:600;margin-top:1px}
+      
+      /* Mobil */
+      @media(max-width:900px){
+        .sk-stats{grid-template-columns:1fr 1fr;gap:8px;padding:18px 14px}
+        .sk-stat + .sk-stat::before{display:none}
+        .sk-reviews{grid-template-columns:1fr;gap:10px}
+        .sk-certs{padding:16px 14px}
+        .sk-cert-grid{grid-template-columns:1fr;gap:10px}
+        .sk-trust{grid-template-columns:1fr 1fr;gap:8px}
+      }
+      @media(max-width:500px){
+        .sk-stat-num{font-size:22px}
+        .sk-google{flex-direction:column;text-align:center;padding:14px}
+        .sk-google-info{text-align:center}
+      }
+      </style>
+      
+      <div class="sk-wrap">
+        <!-- İstatistik Barı -->
+        <div class="sk-stats">
+          <div class="sk-stat">
+            <div class="sk-stat-ico"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+            <div class="sk-stat-num" data-sk-num="1200">1.200+</div>
+            <div class="sk-stat-lbl">Memnun Müşteri</div>
+          </div>
+          <div class="sk-stat">
+            <div class="sk-stat-ico"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+            <div class="sk-stat-num">4.9/5.0</div>
+            <div class="sk-stat-lbl">Müşteri Puanı</div>
+          </div>
+          <div class="sk-stat">
+            <div class="sk-stat-ico"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <div class="sk-stat-num">10+ Yıl</div>
+            <div class="sk-stat-lbl">Karadeniz Tecrübesi</div>
+          </div>
+          <div class="sk-stat">
+            <div class="sk-stat-ico"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+            <div class="sk-stat-num">17.7K</div>
+            <div class="sk-stat-lbl">Instagram Takipçi</div>
+          </div>
+        </div>
+        
+        <!-- Başlık -->
+        <div class="sk-head">
+          <div class="sk-eyebrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Müşteri Yorumları
+          </div>
+          <h2 class="sk-title">MÜŞTERİLERİMİZ NE DİYOR?</h2>
+          <div class="sk-desc">Autonax'ı tercih eden 1200+ müşterimizin deneyimleri. Tüm yorumlarımız Google Maps üzerinden doğrulanabilir.</div>
+        </div>
+        
+        <!-- Google Puanı + CTA -->
+        <div class="sk-google">
+          <div class="sk-google-logo">
+            <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
+          </div>
+          <div class="sk-google-info">
+            <div class="sk-google-stars">
+              <span class="sk-google-num">4.9</span>
+              <span class="sk-google-stars-inner">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </span>
+            </div>
+            <div class="sk-google-count"><strong>127 değerlendirme</strong> · Google'da 5 üzerinden 4.9</div>
+          </div>
+          <a href="#" class="sk-google-btn" onclick="acGoogleMaps();return false;">
+            <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            Google'da Yorum Yaz
+          </a>
+        </div>
+        
+        <!-- Yorum Kartları (3 adet) -->
+        <div class="sk-reviews">
+          <div class="sk-rev">
+            <div class="sk-rev-top">
+              <div class="sk-rev-av" style="background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%)">MH</div>
+              <div class="sk-rev-info">
+                <div class="sk-rev-name">Mehmet Hakan</div>
+                <div class="sk-rev-meta">
+                  <svg viewBox="0 0 24 24" width="10" height="10"><path fill="#4285F4" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+                  Google · 2 hafta önce
+                </div>
+              </div>
+            </div>
+            <div class="sk-rev-stars">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <div class="sk-rev-text">BMW M3'ümün PPF kaplamasını Autonax'ta yaptırdım. Tam 3 gün sürdü ama sonuç mükemmel. Hiç hava kabarcığı yok, kenarlar tertemiz. 10 yıl garantili. Samsun'da bu işi bu kadar ciddi yapan başka yer yok.</div>
+            <span class="sk-rev-car"><svg viewBox="0 0 24 24"><path d="M23 12l-2-5h-3l-1-3H7L6 7H3l-2 5v7a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-1h10v1a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-7z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>BMW M3 · NiDOJP N8</span>
+          </div>
+          
+          <div class="sk-rev">
+            <div class="sk-rev-top">
+              <div class="sk-rev-av" style="background:linear-gradient(135deg,#ec4899 0%,#f97316 100%)">AY</div>
+              <div class="sk-rev-info">
+                <div class="sk-rev-name">Ayşe Yıldırım</div>
+                <div class="sk-rev-meta">
+                  <svg viewBox="0 0 24 24" width="10" height="10"><path fill="#4285F4" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+                  Google · 1 ay önce
+                </div>
+              </div>
+            </div>
+            <div class="sk-rev-stars">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <div class="sk-rev-text">Togg'um için araştırdıktan sonra Autonax'ı seçtim. Öncelikle yerli otomobile verdikleri değer çok güzel. 8 yıl garantili PPF yaptırdım. Çok memnun kaldım, işçilik tertemiz.</div>
+            <span class="sk-rev-car"><svg viewBox="0 0 24 24"><path d="M23 12l-2-5h-3l-1-3H7L6 7H3l-2 5v7a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-1h10v1a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-7z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>Togg T10X · NiDOJP N7</span>
+          </div>
+          
+          <div class="sk-rev">
+            <div class="sk-rev-top">
+              <div class="sk-rev-av" style="background:linear-gradient(135deg,#10b981 0%,#059669 100%)">EK</div>
+              <div class="sk-rev-info">
+                <div class="sk-rev-name">Emre Kaya</div>
+                <div class="sk-rev-meta">
+                  <svg viewBox="0 0 24 24" width="10" height="10"><path fill="#4285F4" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+                  Google · 3 hafta önce
+                </div>
+              </div>
+            </div>
+            <div class="sk-rev-stars">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <div class="sk-rev-text">Tesla Model Y'm için PPF + seramik kaplama yaptırdım. İşçilik tertemiz, 7 gün sonra gittim kontrol ettim hiçbir sorun yok. Özellikle kapu kol altı ve kaput kenarı gibi hassas yerler çok temiz bitirilmiş.</div>
+            <span class="sk-rev-car"><svg viewBox="0 0 24 24"><path d="M23 12l-2-5h-3l-1-3H7L6 7H3l-2 5v7a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-1h10v1a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-7z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>Tesla Model Y · N9 + Seramik</span>
+          </div>
+        </div>
+        
+        <!-- Sertifikalar -->
+        <div class="sk-certs">
+          <div class="sk-cert-head">
+            <div class="sk-cert-title">YETKİLİ UYGULAMA NOKTASI</div>
+            <div class="sk-cert-desc">Kullandığımız ürünlerin tüm sertifikaları resmi ve doğrulanabilirdir</div>
+          </div>
+          <div class="sk-cert-grid">
+            <div class="sk-cert c-nidojp">
+              <div class="sk-cert-logo"><div class="sk-cert-logo-txt">NiDOJP<br><span style="font-size:9px;font-family:'Outfit',sans-serif;font-weight:700;color:var(--ink4);letter-spacing:1px">USA PPF</span></div></div>
+              <div class="sk-cert-body">
+                <div class="sk-cert-baslik">NIDOJP</div>
+                <div class="sk-cert-alt">USA TPU PPF Üreticisi</div>
+                <span class="sk-cert-badge"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Yetkili Uygulayıcı</span>
+              </div>
+            </div>
+            <div class="sk-cert c-ashland">
+              <div class="sk-cert-logo"><div class="sk-cert-logo-txt">Ashland<br><span style="font-size:9px;font-family:'Outfit',sans-serif;font-weight:700;color:var(--ink4);letter-spacing:1px">USA YAPIŞKAN</span></div></div>
+              <div class="sk-cert-body">
+                <div class="sk-cert-baslik">ASHLAND</div>
+                <div class="sk-cert-alt">Premium Yapışkan Sistem</div>
+                <span class="sk-cert-badge"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Resmi Partner</span>
+              </div>
+            </div>
+            <div class="sk-cert c-henkel">
+              <div class="sk-cert-logo"><div class="sk-cert-logo-txt">Henkel<br><span style="font-size:9px;font-family:'Outfit',sans-serif;font-weight:700;color:var(--ink4);letter-spacing:1px">ALMANYA</span></div></div>
+              <div class="sk-cert-body">
+                <div class="sk-cert-baslik">HENKEL</div>
+                <div class="sk-cert-alt">Alman Yapışkan Teknolojisi</div>
+                <span class="sk-cert-badge"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Resmi Partner</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Güven Sinyalleri -->
+        <div class="sk-trust">
+          <div class="sk-trust-item">
+            <div class="sk-trust-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div class="sk-trust-txt">
+              <div class="sk-trust-baslik">Hızlı Randevu</div>
+              <div class="sk-trust-alt">2-3 gün içinde başla</div>
+            </div>
+          </div>
+          <div class="sk-trust-item">
+            <div class="sk-trust-ico"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="8 12 11 15 16 9"/></svg></div>
+            <div class="sk-trust-txt">
+              <div class="sk-trust-baslik">12 Yıla Kadar</div>
+              <div class="sk-trust-alt">Üretici Garantisi</div>
+            </div>
+          </div>
+          <div class="sk-trust-item">
+            <div class="sk-trust-ico"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+            <div class="sk-trust-txt">
+              <div class="sk-trust-baslik">Online Takip</div>
+              <div class="sk-trust-alt">Hesabım panelinden</div>
+            </div>
+          </div>
+          <div class="sk-trust-item">
+            <div class="sk-trust-ico"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+            <div class="sk-trust-txt">
+              <div class="sk-trust-baslik">Samsun Merkez</div>
+              <div class="sk-trust-alt">Karadeniz'in Uzmanı</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <script>
+      // Google Maps yorum yaz sayfasına yönlendir
+      function acGoogleMaps(){
+        // Önce panel'deki Google Maps URL'sini kontrol et
+        var sa = window.SITE_AYARLAR || {};
+        var mapsUrl = (sa.sosyal && sa.sosyal.googleMaps) ? sa.sosyal.googleMaps : '';
+        if (!mapsUrl) {
+          // Varsayılan: Google'da arat
+          mapsUrl = 'https://www.google.com/maps/search/?api=1&query=Autonax+Samsun';
+        }
+        window.open(mapsUrl, '_blank', 'noopener');
+      }
+      </script>
 
       <!-- ══ SIKÇA SORULAN SORULAR (FAQ) ══ -->
       <div id="sss" style="max-width:860px;margin:0 auto;margin-bottom:24px">
