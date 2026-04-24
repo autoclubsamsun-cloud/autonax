@@ -6680,13 +6680,13 @@ function gosterOneri(){
    MERKEZİ FİYAT TABLOSU — Burası değişince her yer değişir
 ════════════════════════════════════════════════════ */
 const URUNLER = {
-  CS190: { isim:'NiDOJP CS190 200 Mikron TPU PPF EKO', mikron:'200 Mikron', garanti:4,  rozet:'💡 EKONOMİK',       mensei:'🇩🇪 Alman Ürünü · Henkel Yapışkan',     full:45000,  fiyat_34:36000,  on3:13000, kaput:3000 },
-  S75:   { isim:'NiDOJP S75 200 Mikron TPU PPF',       mikron:'200 Mikron', garanti:6,  rozet:'🇩🇪 GERMANY',       mensei:'🇩🇪 Alman Ürünü · Henkel Yapışkan',     full:55000,  fiyat_34:44000,  on3:15000, kaput:4000 },
-  S85:   { isim:'NiDOJP S85 220 Mikron TPU PPF',       mikron:'220 Mikron', garanti:8,  rozet:'🇩🇪 GERMANY 8 YIL', mensei:'🇩🇪 Alman Ürünü · Henkel Yapışkan',     full:null,   fiyat_34:null,   on3:null,  kaput:null },
-  N7:    { isim:'NiDOJP N7 200 Mikron TPU PPF',        mikron:'200 Mikron', garanti:8,  rozet:'✅ BAŞLANGIÇ',       mensei:'🇺🇸 Amerikan Ürünü · Ashland Yapışkan', full:65000,  fiyat_34:50000,  on3:17000, kaput:5000 },
-  N8:    { isim:'NiDOJP N8 220 Mikron TPU PPF',        mikron:'220 Mikron', garanti:10, rozet:'⭐ POPÜLER',          mensei:'🇺🇸 Amerikan Ürünü · Ashland Yapışkan', full:70000,  fiyat_34:55000,  on3:20000, kaput:7000 },
-  N9:    { isim:'NiDOJP N9 250 Mikron TPU PPF',        mikron:'250 Mikron', garanti:12, rozet:'👑 MAKSİMUM',         mensei:'🇺🇸 Amerikan Ürünü · Ashland Yapışkan', full:90000,  fiyat_34:72000,  on3:null,  kaput:null },
-  RENKLI:{ isim:'NiDOJP Renkli 200 Mikron TPU PPF',   mikron:'200 Mikron Renkli', garanti:5, rozet:'🌈 RENKLİ',    mensei:'🇺🇸 Amerikan Ürünü · Ashland Yapışkan', full:180000, fiyat_34:140000, on3:null,  kaput:null },
+  CS190: { isim:'NiDOJP CS190 200 Mikron TPU PPF EKO', mikron:'200 Mikron', garanti:4,  rozet:'💡 EKONOMİK',       mensei:'🇩🇪 Alman Ürünü · Henkel Yapışkan',     full:45000,  on3:13000, kaput:3000 },
+  S75:   { isim:'NiDOJP S75 200 Mikron TPU PPF',       mikron:'200 Mikron', garanti:6,  rozet:'🇩🇪 GERMANY',       mensei:'🇩🇪 Alman Ürünü · Henkel Yapışkan',     full:55000,  on3:15000, kaput:4000 },
+  S85:   { isim:'NiDOJP S85 220 Mikron TPU PPF',       mikron:'220 Mikron', garanti:8,  rozet:'🇩🇪 GERMANY 8 YIL', mensei:'🇩🇪 Alman Ürünü · Henkel Yapışkan',     full:null,   on3:null,  kaput:null },
+  N7:    { isim:'NiDOJP N7 200 Mikron TPU PPF',        mikron:'200 Mikron', garanti:8,  rozet:'✅ BAŞLANGIÇ',       mensei:'🇺🇸 Amerikan Ürünü · Ashland Yapışkan', full:65000,  on3:17000, kaput:5000 },
+  N8:    { isim:'NiDOJP N8 220 Mikron TPU PPF',        mikron:'220 Mikron', garanti:10, rozet:'⭐ POPÜLER',          mensei:'🇺🇸 Amerikan Ürünü · Ashland Yapışkan', full:70000,  on3:20000, kaput:7000 },
+  N9:    { isim:'NiDOJP N9 250 Mikron TPU PPF',        mikron:'250 Mikron', garanti:12, rozet:'👑 MAKSİMUM',         mensei:'🇺🇸 Amerikan Ürünü · Ashland Yapışkan', full:90000,  on3:null,  kaput:null },
+  RENKLI:{ isim:'NiDOJP Renkli 200 Mikron TPU PPF',   mikron:'200 Mikron Renkli', garanti:5, rozet:'🌈 RENKLİ',    mensei:'🇺🇸 Amerikan Ürünü · Ashland Yapışkan', full:180000, on3:null,  kaput:null },
 };
 
 /* ══ ADMİN SENKRON — localStorage'dan fiyatları yükle ══ */
@@ -8393,7 +8393,6 @@ function urunDetayAc(urunId, tip) {
   var grid = document.getElementById('udm-fiyat-grid');
   var fiyatlar = [];
   if (u.full) fiyatlar.push({label:'Tam Araç', val:u.full, ana:true, key:'full'});
-  if (u.fiyat_34) fiyatlar.push({label:'34 Plaka', val:u.fiyat_34, ana:false, key:'fiyat_34'});
   if (u.on3) fiyatlar.push({label:'Ön 3 Parça', val:u.on3, ana:false, key:'on3'});
   if (u.kaput) fiyatlar.push({label:'Kaput', val:u.kaput, ana:false, key:'kaput'});
   if (!fiyatlar.length && u.tutar) fiyatlar.push({label:'Fiyat', val:u.tutar, ana:true, key:'tutar'});
@@ -8421,7 +8420,7 @@ function urunDetayAc(urunId, tip) {
   if (flagId) detaylar.push({ikon:flagId, lbl:'Menşei', val:menseiTxt.replace(' Ürünü','')});
   if (u.altKat === 'renkli') detaylar.push({ikon:'ic-palette', lbl:'Renk Seçenekleri', val:'30+ Renk'});
   // İşlem süresi tahmini (tip'e göre)
-  var sureMap = {full:'~5-8 saat', fiyat_34:'~3-4 saat', on3:'~2-3 saat', kaput:'~1-1.5 saat', tutar:''};
+  var sureMap = {full:'~5-8 saat', on3:'~2-3 saat', kaput:'~1-1.5 saat', tutar:''};
   var sure = sureMap[tip] || '';
   if (sure) detaylar.push({ikon:'ic-calendar', lbl:'İşlem Süresi', val:sure});
   
@@ -8475,7 +8474,7 @@ function urunDetayAc(urunId, tip) {
     // Seçilen tip'i dikkate al - başlangıçta full ise full, vs.
     var seciliTip = tip || (u.full ? 'full' : (u.tutar ? 'tutar' : 'full'));
     var seciliFiyat = u[seciliTip] || fiyat;
-    var tipLabelMap = {full:'Tam Araç', fiyat_34:'34 Plaka', on3:'Ön 3 Parça', kaput:'Kaput', tutar:''};
+    var tipLabelMap = {full:'Tam Araç', on3:'Ön 3 Parça', kaput:'Kaput', tutar:''};
     var tipLabel = tipLabelMap[seciliTip] || '';
     var aciklamaSon = u.isim + (tipLabel ? ' · ' + tipLabel : '');
     
