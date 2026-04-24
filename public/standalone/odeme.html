@@ -44,16 +44,10 @@
     .tutar-kart .deger { font-size: 36px; font-weight: 700; color: #7a231a; margin-top: 4px; }
     .tutar-kart .eski-tutar { font-size: 13px; color: #8a6d63; text-decoration: line-through; margin-top: 4px; }
     .tutar-kart .vade-not {
-      font-size: 11.5px; color: #a13128; margin-top: 8px; font-weight: 600;
-      padding: 6px 10px; border-top: 1px solid #f9d2c8;
-      background: rgba(251, 222, 213, 0.3); border-radius: 6px;
-      line-height: 1.45;
+      font-size: 11px; color: #a13128; margin-top: 6px; font-weight: 600;
+      padding-top: 6px; border-top: 1px solid #f9d2c8;
     }
-    .tutar-kart .vade-not.firma { 
-      color: #16a34a; 
-      background: rgba(240, 253, 244, 0.8);
-      border-top-color: #bbf7d0;
-    }
+    .tutar-kart .vade-not.firma { color: #16a34a; }
 
     .bilgi-sati { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f4e3dd; }
     .bilgi-sati:last-child { border-bottom: none; }
@@ -77,7 +71,20 @@
     .form-grup textarea { resize: vertical; min-height: 60px; }
     .form-satir-3 { display: grid; grid-template-columns: 2fr 2fr 1.5fr; gap: 12px; }
 
-    /* Vade secici CSS — KALDIRILDI (artık müşteri seçimi yok) */
+    /* Vade secici butonlari */
+    .vade-secici { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .vade-btn {
+      padding: 12px; border: 2px solid #e8d4ce; border-radius: 10px;
+      background: white; cursor: pointer; transition: all 0.2s;
+      font-family: inherit; text-align: center;
+    }
+    .vade-btn:hover { border-color: #a13128; background: #fff5f3; }
+    .vade-btn.secili {
+      background: linear-gradient(135deg, #a13128, #7a231a);
+      border-color: #7a231a; color: white;
+    }
+    .vade-baslik { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+    .vade-aciklama { font-size: 11px; opacity: 0.75; }
 
     .kart-marka-bilgi {
       margin-top: 6px; padding: 8px 10px; background: #fff5f3; border-radius: 6px;
@@ -116,6 +123,7 @@
 
     @media (max-width: 520px) {
       .form-satir-3 { grid-template-columns: 1fr 1fr; }
+      .vade-secici { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -186,10 +194,19 @@
             </div>
           </div>
 
-          <!-- Vade farkı müşteriye sorulmaz — Admin panelinden belirlenir. 
-               Müşteri sadece Özet/Taksit kutusunda sonucu görür: 
-               • Firma karşılıyorsa tutar sabit kalır (+%X firma)
-               • Müşteri karşılıyorsa taksit tutarına dahil edilir -->
+          <div class="form-grup">
+            <label>Vade Farkı</label>
+            <div class="vade-secici">
+              <button type="button" class="vade-btn" data-vade="firma" id="vade-btn-firma">
+                <div class="vade-baslik">Firmadan Kesilsin</div>
+                <div class="vade-aciklama">Tutar sabit kalır</div>
+              </button>
+              <button type="button" class="vade-btn" data-vade="musteri" id="vade-btn-musteri">
+                <div class="vade-baslik">Müşteriden Kesilsin</div>
+                <div class="vade-aciklama">Tutara eklenir</div>
+              </button>
+            </div>
+          </div>
 
           <div class="form-grup">
             <label for="taksit">Taksit Seçimi</label>
@@ -229,13 +246,6 @@
     var SECILEN_MARKA = null;
     var BIN_SORGU_TIMER = null;
     var SON_BIN = null;
-    
-    // URL parametrelerini oku
-    var URL_PARAMS = new URLSearchParams(window.location.search);
-    // Panel'den direkt tetiklenen ödeme mi? ?mod=panel parametresi ile panel operatörü vade seçebilir
-    var PANEL_MOD = URL_PARAMS.get('mod') === 'panel';
-    // URL'den vade override (panel'den "?vade=firma" veya "?vade=musteri" gelirse panel ayarını ez)
-    var VADE_URL_OVERRIDE = URL_PARAMS.get('vade'); // 'firma' | 'musteri' | null
 
     var yukleniyorEl = document.getElementById('yukleniyor');
     var icerikEl = document.getElementById('icerik');
@@ -259,9 +269,7 @@
 
     document.getElementById('card_number').addEventListener('input', function(e) {
       var v = e.target.value.replace(/\s/g, '');
-      if (v.length > 19) v = v.substring(0, 19); // Amex/bazı kartlar 19 hane
-      // Sadece rakam kabul et
-      v = v.replace(/\D/g, '');
+      if (v.length > 16) v = v.substring(0, 16);
       e.target.value = v.replace(/(.{4})/g, '$1 ').trim();
 
       if (v.length >= 6) {
@@ -289,13 +297,31 @@
       tutarGuncelle();
     });
 
-    // Vade butonlari — KALDIRILDI
-    // Vade karşılayan taraf (firma/müşteri) admin panelinden /api/odeme/taksit-bilgi'de belirlenir.
-    // Müşteri seçim yapmaz, sadece tutar/taksit kutusunda sonucu görür.
+    // Vade butonlari
+    var vadeBtnFirma = document.getElementById('vade-btn-firma');
+    var vadeBtnMusteri = document.getElementById('vade-btn-musteri');
+
     function vadeButonGuncelle() {
-      // Artık buton yok — sadece tutarGuncelle() çalıştırılıyor ki taksit label'ları ve özet güncellensin
-      // Bu fonksiyon backward compat için mevcut, boş bırakılmasın diye.
+      if (VADE_KARSILAYAN_FIRMA) {
+        vadeBtnFirma.classList.add('secili');
+        vadeBtnMusteri.classList.remove('secili');
+      } else {
+        vadeBtnMusteri.classList.add('secili');
+        vadeBtnFirma.classList.remove('secili');
+      }
     }
+
+    vadeBtnFirma.addEventListener('click', function() {
+      VADE_KARSILAYAN_FIRMA = true;
+      vadeButonGuncelle();
+      taksitSeceneklerGuncelle();
+    });
+
+    vadeBtnMusteri.addEventListener('click', function() {
+      VADE_KARSILAYAN_FIRMA = false;
+      vadeButonGuncelle();
+      taksitSeceneklerGuncelle();
+    });
 
     function binSorgu(bin) {
       fetch('/api/odeme/paytr/bin', {
@@ -360,36 +386,40 @@
 
       taksitSelectEl.innerHTML = '';
 
-      // Tek çekim
       var oran1 = oranlar ? (oranlar[1] || 0) : 0;
-      var metin1 = 'Tek Çekim - ' + paraFormat(tutar);
-      if (oran1 > 0 && !VADE_KARSILAYAN_FIRMA) {
-        var yeni1 = tutar * (1 + oran1/100);
-        metin1 = 'Tek Çekim - ' + paraFormat(yeni1) + ' (+%' + oran1 + ' vade farkı)';
+      var metin1 = 'Tek Çekim';
+      if (oran1 > 0) {
+        if (VADE_KARSILAYAN_FIRMA) {
+          metin1 += '  (%' + oran1 + ' firmadan)';
+        } else {
+          var yeni1 = tutar * (1 + oran1/100);
+          metin1 += ' - ' + paraFormat(yeni1) + ' (+%' + oran1 + ')';
+        }
+      } else {
+        metin1 += ' - ' + paraFormat(tutar);
       }
-      // Firma karşılıyorsa etiket sadece fiyat gösterir, "firma" demez (müşteri merak etmez)
       var opt1 = document.createElement('option');
       opt1.value = '0';
       opt1.textContent = metin1;
       taksitSelectEl.appendChild(opt1);
 
-      // Taksitler (sadece marka tespit edildiyse)
+      // YENI: Marka tespit edilmediyse (oranlar null) taksit seceneklerini ekleme
+      // Bu, Ziraat Combo gibi taksit desteklemeyen kartlar icin PayTR hatasini onler
       if (oranlar) {
         for (var ay = 2; ay <= 12; ay++) {
           var oran = oranlar[ay] || 0;
-          var metin;
-          if (oran > 0 && !VADE_KARSILAYAN_FIRMA) {
-            // Müşteri öder: toplam artar, aylık da artar
-            var yeniTop = tutar * (1 + oran/100);
-            var aylikYeni = yeniTop / ay;
-            metin = ay + ' Taksit - ' + paraFormat(aylikYeni) + '/ay (Toplam ' + paraFormat(yeniTop) + ')';
-          } else if (oran > 0 && VADE_KARSILAYAN_FIRMA) {
-            // Firma karşılıyor: müşteri için fiyat sabit
-            var aylik = tutar / ay;
-            metin = ay + ' Taksit - ' + paraFormat(aylik) + '/ay (Toplam ' + paraFormat(tutar) + ')';
+          var metin = ay + ' Taksit';
+          if (oran > 0) {
+            if (VADE_KARSILAYAN_FIRMA) {
+              var aylik = tutar / ay;
+              metin += ' - ' + paraFormat(aylik) + '/ay (%' + oran + ' firma)';
+            } else {
+              var yeniTop = tutar * (1 + oran/100);
+              var aylikYeni = yeniTop / ay;
+              metin += ' - ' + paraFormat(aylikYeni) + '/ay (Toplam ' + paraFormat(yeniTop) + ')';
+            }
           } else {
-            // Vade farkı yok
-            metin = ay + ' Taksit - ' + paraFormat(tutar / ay) + '/ay';
+            metin += ' - ' + paraFormat(tutar / ay) + '/ay';
           }
           var opt = document.createElement('option');
           opt.value = ay.toString();
@@ -412,24 +442,20 @@
       var gosterilecekTutar = tutar;
 
       if (oran > 0 && !VADE_KARSILAYAN_FIRMA) {
-        // Vade farkı müşteriye yükleniyor (admin öyle ayarlamış)
         gosterilecekTutar = tutar * (1 + oran/100);
         ozetTutarEl.textContent = paraFormat(gosterilecekTutar);
         eskiTutarEl.textContent = paraFormat(tutar);
         eskiTutarEl.style.display = 'block';
-        var fark = gosterilecekTutar - tutar;
-        vadeNotEl.innerHTML = 'Taksit vade farkı <b>+%' + oran + '</b> (' + paraFormat(fark) + ') tutara dahildir';
+        vadeNotEl.textContent = 'Vade farkı (+%' + oran + ') tutara dahildir';
         vadeNotEl.className = 'vade-not';
         vadeNotEl.style.display = 'block';
       } else if (oran > 0 && VADE_KARSILAYAN_FIRMA) {
-        // Vade farkı firma karşılıyor — müşteri orijinal tutarı öder
         ozetTutarEl.textContent = paraFormat(tutar);
         eskiTutarEl.style.display = 'none';
-        vadeNotEl.innerHTML = '✓ Vade farkı (%' + oran + ') <b>firma tarafından karşılanır</b> — ek ücret yok';
+        vadeNotEl.textContent = 'Vade farkı (%' + oran + ') firma tarafından karşılanır';
         vadeNotEl.className = 'vade-not firma';
         vadeNotEl.style.display = 'block';
       } else {
-        // Vade farkı yok (tek çekim veya vadesiz taksit)
         ozetTutarEl.textContent = paraFormat(tutar);
         eskiTutarEl.style.display = 'none';
         vadeNotEl.style.display = 'none';
@@ -482,15 +508,6 @@
             TAKSIT_ORANLARI = d.data.taksitOranlari || {};
             VADE_KARSILAYAN_FIRMA = d.data.vadeKarsilayanFirma !== false;
           }
-          // URL override — Panel operatörü link oluştururken ?vade=firma/musteri gönderdiyse onu kullan
-          if (VADE_URL_OVERRIDE === 'firma') VADE_KARSILAYAN_FIRMA = true;
-          else if (VADE_URL_OVERRIDE === 'musteri') VADE_KARSILAYAN_FIRMA = false;
-          
-          // Panel modu — operatör ödeme alırken vade seçebilsin
-          if (PANEL_MOD) {
-            panelModuGoster();
-          }
-          
           vadeButonGuncelle();
           taksitSeceneklerGuncelle();
           yukleniyorEl.style.display = 'none';
@@ -503,100 +520,6 @@
           genelHataEl.style.display = 'block';
         });
     }
-    
-    /* Panel modu - operatör vade seçici göster */
-    function panelModuGoster() {
-      // Sayfa üstüne "PANEL MODU" rozeti ekle
-      var rozet = document.createElement('div');
-      rozet.style.cssText = 'background:#1e293b;color:#fff;padding:8px 14px;border-radius:8px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px;justify-content:center';
-      rozet.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Panel Operatör Modu · Vade Farkını Seçebilirsiniz';
-      icerikEl.insertBefore(rozet, icerikEl.firstChild);
-      
-      // Vade seçici butonları oluştur (mevcut bilgi kutusunun altına)
-      var secici = document.createElement('div');
-      secici.className = 'form-grup';
-      secici.id = 'panel-vade-secici';
-      secici.innerHTML = 
-        '<label style="color:#1e293b;font-weight:700">Vade Farkı Kime Ait? <span style="color:#888;font-weight:400;font-size:11px">(Operatör seçimi)</span></label>' +
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
-          '<button type="button" id="pnl-vade-firma" style="padding:12px;border:2px solid #16a34a;border-radius:10px;background:#fff;cursor:pointer;font-family:inherit;text-align:center">' +
-            '<div style="font-size:13px;font-weight:700;color:#16a34a">FİRMADAN KESİLSİN</div>' +
-            '<div style="font-size:10px;opacity:.7;margin-top:2px">Müşteri sabit tutar öder</div>' +
-          '</button>' +
-          '<button type="button" id="pnl-vade-musteri" style="padding:12px;border:2px solid #ea580c;border-radius:10px;background:#fff;cursor:pointer;font-family:inherit;text-align:center">' +
-            '<div style="font-size:13px;font-weight:700;color:#ea580c">MÜŞTERİDEN KESİLSİN</div>' +
-            '<div style="font-size:10px;opacity:.7;margin-top:2px">Vade farkı tutara eklenir</div>' +
-          '</button>' +
-        '</div>';
-      // Bilgi kutusunun önüne yerleştir
-      var bilgiGrup = document.getElementById('vade-bilgi-grup');
-      if (bilgiGrup && bilgiGrup.parentNode) {
-        bilgiGrup.parentNode.insertBefore(secici, bilgiGrup);
-      }
-      
-      // Buton davranışı
-      var bF = document.getElementById('pnl-vade-firma');
-      var bM = document.getElementById('pnl-vade-musteri');
-      function panelVadeBtnGuncelle() {
-        if (VADE_KARSILAYAN_FIRMA) {
-          bF.style.background = '#16a34a'; bF.style.color = '#fff';
-          bF.querySelector('div:first-child').style.color = '#fff';
-          bM.style.background = '#fff'; bM.style.color = '#ea580c';
-          bM.querySelector('div:first-child').style.color = '#ea580c';
-        } else {
-          bM.style.background = '#ea580c'; bM.style.color = '#fff';
-          bM.querySelector('div:first-child').style.color = '#fff';
-          bF.style.background = '#fff'; bF.style.color = '#16a34a';
-          bF.querySelector('div:first-child').style.color = '#16a34a';
-        }
-      }
-      panelVadeBtnGuncelle();
-      bF.addEventListener('click', function() {
-        VADE_KARSILAYAN_FIRMA = true;
-        panelVadeBtnGuncelle();
-        vadeButonGuncelle();
-        taksitSeceneklerGuncelle();
-      });
-      bM.addEventListener('click', function() {
-        VADE_KARSILAYAN_FIRMA = false;
-        panelVadeBtnGuncelle();
-        vadeButonGuncelle();
-        taksitSeceneklerGuncelle();
-      });
-    }
-
-    /* Luhn algoritması ile kart numarası doğrulama */
-    function luhnKontrol(cardNum) {
-      if (!cardNum || !/^\d+$/.test(cardNum)) return false;
-      var sum = 0;
-      var alt = false;
-      for (var i = cardNum.length - 1; i >= 0; i--) {
-        var n = parseInt(cardNum.charAt(i), 10);
-        if (alt) {
-          n *= 2;
-          if (n > 9) n -= 9;
-        }
-        sum += n;
-        alt = !alt;
-      }
-      return sum % 10 === 0;
-    }
-
-    /* Son kullanma tarihi kontrolü - ay/yıl geçmiş mi */
-    function kartGecmisMi(ay, yil) {
-      var aySayi = parseInt(ay, 10);
-      var yilSayi = parseInt(yil, 10);
-      if (isNaN(aySayi) || aySayi < 1 || aySayi > 12) return true;
-      if (isNaN(yilSayi)) return true;
-      // 2 haneli yılı 4 haneli yap
-      var tamYil = yilSayi < 100 ? 2000 + yilSayi : yilSayi;
-      var bugun = new Date();
-      var buYil = bugun.getFullYear();
-      var buAy = bugun.getMonth() + 1;
-      if (tamYil < buYil) return true;
-      if (tamYil === buYil && aySayi < buAy) return true;
-      return false;
-    }
 
     formEl.addEventListener('submit', function(e) {
       e.preventDefault();
@@ -605,81 +528,24 @@
 
       var ccOwner = document.getElementById('cc_owner').value.trim();
       var cardNumber = document.getElementById('card_number').value.replace(/\s/g, '');
-      var expiryMonth = document.getElementById('expiry_month').value.trim();
-      var expiryYear = document.getElementById('expiry_year').value.trim();
-      var cvv = document.getElementById('cvv').value.trim();
+      var expiryMonth = document.getElementById('expiry_month').value;
+      var expiryYear = document.getElementById('expiry_year').value;
+      var cvv = document.getElementById('cvv').value;
       var installmentCount = parseInt(taksitSelectEl.value) || 0;
       var musteriNotu = document.getElementById('musteri_notu').value.trim();
 
-      // 1. Kart üzerindeki isim
-      if (!ccOwner || ccOwner.length < 3) {
-        hataMesajEl.textContent = 'Kart üzerindeki ad soyadı eksiksiz girin';
-        hataMesajEl.classList.add('gorunur');
-        document.getElementById('cc_owner').focus();
-        return;
-      }
-      if (ccOwner.indexOf(' ') < 0) {
-        hataMesajEl.textContent = 'Ad ve soyad arasında boşluk bırakın';
-        hataMesajEl.classList.add('gorunur');
-        document.getElementById('cc_owner').focus();
-        return;
-      }
-
-      // 2. Kart numarası - uzunluk + Luhn
       if (cardNumber.length < 13 || cardNumber.length > 19) {
-        hataMesajEl.textContent = 'Kart numarası geçersiz (13-19 hane olmalı)';
-        hataMesajEl.classList.add('gorunur');
-        document.getElementById('card_number').focus();
-        return;
+        hataMesajEl.textContent = 'Kart numarası geçersiz';
+        hataMesajEl.classList.add('gorunur'); return;
       }
-      if (!luhnKontrol(cardNumber)) {
-        hataMesajEl.textContent = 'Kart numarası hatalı — kontrol edin';
-        hataMesajEl.classList.add('gorunur');
-        document.getElementById('card_number').focus();
-        return;
-      }
-
-      // 3. Son kullanma tarihi
-      if (!expiryMonth || expiryMonth.length < 1 || expiryMonth.length > 2) {
-        hataMesajEl.textContent = 'Son kullanma ayını girin (01-12)';
-        hataMesajEl.classList.add('gorunur');
-        document.getElementById('expiry_month').focus();
-        return;
-      }
-      if (!expiryYear || (expiryYear.length !== 2 && expiryYear.length !== 4)) {
-        hataMesajEl.textContent = 'Son kullanma yılını girin (örn: 28)';
-        hataMesajEl.classList.add('gorunur');
-        document.getElementById('expiry_year').focus();
-        return;
-      }
-      if (kartGecmisMi(expiryMonth, expiryYear)) {
-        hataMesajEl.textContent = 'Kartın son kullanma tarihi geçmiş';
-        hataMesajEl.classList.add('gorunur');
-        document.getElementById('expiry_month').focus();
-        return;
-      }
-
-      // 4. CVV
-      if (cvv.length < 3 || cvv.length > 4 || !/^\d+$/.test(cvv)) {
-        hataMesajEl.textContent = 'CVC/CVV hatalı (3 veya 4 hane)';
-        hataMesajEl.classList.add('gorunur');
-        document.getElementById('cvv').focus();
-        return;
-      }
-
-      // 5. Borç/tutar kontrolü
-      if (!mevcutBorc || !mevcutBorc.tutar || mevcutBorc.tutar <= 0) {
-        hataMesajEl.textContent = 'Ödeme tutarı okunamadı. Sayfayı yenileyin.';
-        hataMesajEl.classList.add('gorunur');
-        return;
+      if (cvv.length < 3) {
+        hataMesajEl.textContent = 'CVV geçersiz';
+        hataMesajEl.classList.add('gorunur'); return;
       }
 
       odemeBtn.disabled = true;
       odemeBtn.innerHTML = '⏳ Ödeme İşleniyor...';
 
-      // BACKEND PAYLOAD
-      // Güvenlik notu: vadeKarsilayanFirma backend'de belirleniyor (admin ayarı), 
-      // client'tan gönderilmiyor. Müşteri bu değeri manipüle edemez.
       fetch('/api/odeme/paytr/direct', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -692,62 +558,39 @@
           cvv: cvv,
           installmentCount: installmentCount,
           musteriNotu: musteriNotu,
-          // vadeKarsilayanFirma: kaldırıldı — backend kendi değerini kullanıyor
+          vadeKarsilayanFirma: VADE_KARSILAYAN_FIRMA,
           secilenMarka: SECILEN_MARKA || null
         })
       })
-      .then(function(r) {
-        // HTTP status kontrolü
-        if (!r.ok && r.status !== 400 && r.status !== 402) {
-          throw new Error('Sunucu hatası (' + r.status + ')');
-        }
-        return r.json();
-      })
+      .then(function(r) { return r.json(); })
       .then(function(d) {
         if (!d.success) {
-          // Spesifik hata mesajları
-          var hata = d.error || 'Ödeme başlatılamadı';
-          // Bilinen PayTR hataları için daha anlaşılır mesaj
-          if (/insufficient|yetersiz/i.test(hata)) hata = 'Kartınızda yeterli bakiye yok';
-          else if (/invalid.*card|gecersiz.*kart/i.test(hata)) hata = 'Kart bilgileri hatalı';
-          else if (/expired|gecmis/i.test(hata)) hata = 'Kartın son kullanma tarihi geçmiş';
-          else if (/limit/i.test(hata)) hata = 'Kart kullanım limiti aşıldı';
-          else if (/3d.*secure/i.test(hata)) hata = '3D Secure doğrulaması gerekli — bankanızı arayın';
-          hataMesajEl.textContent = hata;
+          hataMesajEl.textContent = d.error || 'Ödeme başlatılamadı';
           hataMesajEl.classList.add('gorunur');
           odemeBtn.disabled = false;
           odemeBtn.innerHTML = '💳 Ödeme Yap';
-          // Hata mesajına odaklan (mobilde kullanıcı hatayı görmeli)
-          hataMesajEl.scrollIntoView({behavior:'smooth', block:'center'});
           return;
         }
         if (d.data && d.data.type === 'sync_success') {
-          // Başarı — redirect'e gitmeden önce butonu kısa bir "BAŞARILI" göster
-          odemeBtn.innerHTML = '✓ Ödeme Başarılı — Yönlendiriliyor...';
-          odemeBtn.style.background = '#16a34a';
-          setTimeout(function(){ window.location.href = d.data.redirectUrl; }, 600);
+          window.location.href = d.data.redirectUrl;
           return;
         }
         if (d.data && d.data.type === '3ds_redirect' && d.data.html3ds) {
-          // 3D Secure ekranı — kullanıcıyı bilgilendir
-          odemeBtn.innerHTML = '🔒 Banka Doğrulaması...';
           document.open();
           document.write(d.data.html3ds);
           document.close();
           return;
         }
-        hataMesajEl.textContent = 'Beklenmeyen yanıt — lütfen tekrar deneyin';
+        hataMesajEl.textContent = 'Beklenmeyen yanıt';
         hataMesajEl.classList.add('gorunur');
         odemeBtn.disabled = false;
         odemeBtn.innerHTML = '💳 Ödeme Yap';
       })
       .catch(function(err) {
-        console.error('Ödeme hatası:', err);
-        hataMesajEl.textContent = 'Bağlantı hatası: ' + (err.message || 'İnternetinizi kontrol edin');
+        hataMesajEl.textContent = 'Bağlantı hatası: ' + err.message;
         hataMesajEl.classList.add('gorunur');
         odemeBtn.disabled = false;
         odemeBtn.innerHTML = '💳 Ödeme Yap';
-        hataMesajEl.scrollIntoView({behavior:'smooth', block:'center'});
       });
     });
 

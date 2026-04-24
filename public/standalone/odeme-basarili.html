@@ -2,12 +2,9 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#16a34a">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>Ödeme Başarılı · AutoClub Samsun Merkez</title>
+<title>Ödeme Başarılı · Autonax</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
@@ -15,15 +12,10 @@
     --r:#b01c2e; --ink:#1a1a1a; --ink4:#888;
     --bg:#f5f5f0; --bg2:#fff; --bd:#e5e5e0; --green:#16a34a;
   }
-  html,body{min-height:100vh;min-height:100dvh}
   body{
     font-family:'Outfit',sans-serif; background:var(--bg);
-    color:var(--ink); min-height:100vh; min-height:100dvh; display:flex;
+    color:var(--ink); min-height:100vh; display:flex;
     align-items:center; justify-content:center; padding:20px;
-    padding-top:calc(20px + env(safe-area-inset-top));
-    padding-bottom:calc(20px + env(safe-area-inset-bottom));
-    padding-left:calc(20px + env(safe-area-inset-left));
-    padding-right:calc(20px + env(safe-area-inset-right));
   }
   .card{
     background:var(--bg2); border-radius:20px;
@@ -32,17 +24,13 @@
   }
   .logo{
     font-family:'Bebas Neue',sans-serif; font-size:26px;
-    letter-spacing:4px; color:var(--r); margin-bottom:6px;
-  }
-  .logo-alt{
-    font-size:10px; letter-spacing:2px; color:var(--ink4); margin-bottom:30px;
+    letter-spacing:4px; color:var(--r); margin-bottom:30px;
   }
   .check-wrap{
     width:90px; height:90px; background:var(--green);
     border-radius:50%; display:flex; align-items:center;
     justify-content:center; margin:0 auto 20px;
     animation:pop .5s ease-out;
-    box-shadow:0 8px 24px rgba(22,163,74,.3);
   }
   .check{
     width:44px; height:44px; stroke:#fff;
@@ -66,45 +54,19 @@
   .detay{
     background:var(--bg); border-radius:10px;
     padding:16px; margin-bottom:24px; text-align:left;
-    border:1px solid var(--bd);
   }
   .detay-row{
     display:flex; justify-content:space-between;
-    padding:8px 0; font-size:13px;
-    border-bottom:1px dashed var(--bd);
+    padding:6px 0; font-size:13px;
   }
-  .detay-row:last-child{border-bottom:none}
   .detay-lbl{color:var(--ink4)}
   .detay-val{color:var(--ink);font-weight:600}
-  .detay-val.green{color:var(--green)}
 
-  .btn-grup{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
   .btn{
-    flex:1;min-width:140px;
-    display:inline-flex;align-items:center;justify-content:center;gap:6px;
-    padding:13px 20px;
+    display:inline-block; padding:12px 28px;
     background:var(--r); color:#fff; border:none;
     border-radius:10px; font-family:'Bebas Neue',sans-serif;
     font-size:14px; letter-spacing:2px; text-decoration:none;
-    min-height:48px;
-    transition:.15s;
-  }
-  .btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(176,28,46,.2)}
-  .btn-ghost{
-    background:transparent; color:var(--ink4);
-    border:1.5px solid var(--bd);
-  }
-  .btn-ghost:hover{background:var(--bg);color:var(--ink)}
-  .btn svg{flex-shrink:0}
-
-  @media(max-width:480px){
-    .card{padding:30px 22px;border-radius:16px}
-    h1{font-size:28px}
-    .check-wrap{width:76px;height:76px}
-    .check{width:36px;height:36px}
-    .btn{font-size:13px;padding:12px 16px}
-    .btn-grup{flex-direction:column}
-    .btn{min-width:0;width:100%}
   }
 </style>
 </head>
@@ -112,8 +74,7 @@
 
 <div class="card">
 
-  <div class="logo">AUTOCLUB</div>
-  <div class="logo-alt">SAMSUN MERKEZ · AUTONAX</div>
+  <div class="logo">AUTONAX</div>
 
   <div class="check-wrap">
     <svg class="check" viewBox="0 0 24 24">
@@ -123,35 +84,22 @@
 
   <h1>Ödeme Başarılı</h1>
   <p class="msg">
-    Ödemeniz başarıyla alındı. Hizmetiniz için hazırlıklar başladı.<br>
-    Ödeme detayları e-posta ve SMS olarak size iletilecektir.
+    Ödemeniz başarıyla alındı. Size özel hizmetiniz için hazırlanıyoruz.
+    Ödeme detayları e-posta adresinize gönderilecektir.
   </p>
 
   <div class="detay" id="detay" style="display:none">
-    <div class="detay-row">
-      <div class="detay-lbl">Durum</div>
-      <div class="detay-val green">✓ Ödendi</div>
-    </div>
     <div class="detay-row">
       <div class="detay-lbl">Sipariş No</div>
       <div class="detay-val" id="d-siparis">—</div>
     </div>
     <div class="detay-row">
-      <div class="detay-lbl">Ödeme Tarihi</div>
+      <div class="detay-lbl">Tarih</div>
       <div class="detay-val" id="d-tarih">—</div>
     </div>
   </div>
 
-  <div class="btn-grup">
-    <a href="/standalone/hesabim.html" class="btn">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      Hesabım
-    </a>
-    <a href="/" class="btn btn-ghost">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      Ana Sayfa
-    </a>
-  </div>
+  <a href="/" class="btn">Ana Sayfa</a>
 
 </div>
 
@@ -165,31 +113,6 @@
     document.getElementById('d-tarih').textContent = new Date().toLocaleString('tr-TR');
     document.getElementById('detay').style.display = '';
   }
-  
-  /* ══ RANDEVU DURUMUNU LOCALSTORAGE'DA GÜNCELLE ══
-     Backend API'den callback gelmese bile, müşterinin tarayıcısında
-     randevu durumu 'odendi: true' olarak işaretlensin.
-     hesabım.html ve panel bunu okuyacak. */
-  try {
-    if(oid){
-      ['autonax_randevular','autonax_randevular_v1'].forEach(function(key){
-        try{
-          var list = JSON.parse(localStorage.getItem(key) || '[]');
-          var guncellendi = false;
-          list.forEach(function(r){
-            if(r.id === oid || (r.odemeLinki && r.odemeLinki.indexOf(oid) !== -1)){
-              r.odendi = true;
-              r.odenenToplam = r.tutar || r.odenenToplam || 0;
-              r.durum = 'onay';
-              r.odemeTarih = new Date().toISOString();
-              guncellendi = true;
-            }
-          });
-          if(guncellendi) localStorage.setItem(key, JSON.stringify(list));
-        }catch(e){}
-      });
-    }
-  }catch(e){ console.warn('localStorage güncelleme hatası:',e); }
 </script>
 
 </body>
