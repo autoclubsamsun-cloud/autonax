@@ -3797,9 +3797,13 @@ function rdvDuzenle(idx){
         +'</div>'
       +'</div>'
       // ─── Butonlar ───
-      +'<div style="padding:14px 20px;border-top:1.5px solid var(--bd);display:flex;gap:8px;flex-shrink:0">'
-        +'<button onclick="document.getElementById(&quot;rdv-duzenle-ovl&quot;).remove()" style="flex:1;padding:11px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer">İPTAL</button>'
-        +'<button onclick="rdvKaydet('+idx+')" style="flex:2;padding:11px;border:none;border-radius:8px;background:var(--r);color:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer;box-shadow:0 3px 10px rgba(176,28,46,.3)">💾 KAYDET</button>'
+      +'<div style="padding:14px 20px;border-top:1.5px solid var(--bd);display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap">'
+        +(typeof kullaniciAdmin==='function' && kullaniciAdmin()
+          ? '<button onclick="rdvIptalEt('+idx+')" style="flex:1;min-width:130px;min-height:44px;padding:11px 10px;border:1.5px solid #d97706;border-radius:8px;background:#fff;color:#d97706;font-family:Bebas Neue,sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;font-weight:700">🚫 İPTAL ET</button>'
+            +'<button onclick="rdvSil('+idx+')" style="flex:1;min-width:110px;min-height:44px;padding:11px 10px;border:1.5px solid #dc2626;border-radius:8px;background:#fff;color:#dc2626;font-family:Bebas Neue,sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;font-weight:700">🗑 SİL</button>'
+          : '')
+        +'<button onclick="document.getElementById(&quot;rdv-duzenle-ovl&quot;).remove()" style="flex:1;min-width:90px;min-height:44px;padding:11px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer">KAPAT</button>'
+        +'<button onclick="rdvKaydet('+idx+')" style="flex:2;min-width:130px;min-height:44px;padding:11px;border:none;border-radius:8px;background:var(--r);color:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer;box-shadow:0 3px 10px rgba(176,28,46,.3)">💾 KAYDET</button>'
       +'</div>'
     +'</div>';
 
@@ -3944,6 +3948,156 @@ function rdvKaydet(idx){
   t.style.cssText='position:fixed;bottom:24px;right:24px;background:var(--r);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.2);animation:fadeIn .3s';
   t.textContent='✅ '+r.musteri+' randevusu güncellendi'+(indirim>0?' (₺'+indirim.toLocaleString('tr-TR')+' indirim)':'');
   document.body.appendChild(t);setTimeout(function(){t.remove();},3000);
+}
+
+/**
+ * Randevuyu iptal et (SOFT CANCEL)
+ * - Kayıt silinmez, durum='iptal' yapılır
+ * - Ödenmiş tutar varsa otomatik iade edilir (odemeGecmisi temizlenir)
+ * - Müşteri panelinde "İptal Edildi" olarak görünür
+ * - Sadece kullaniciAdmin() yetkisi olanlar çalıştırabilir
+ */
+function rdvIptalEt(idx){
+  if(typeof kullaniciAdmin!=='function' || !kullaniciAdmin()){
+    if(typeof toast==='function') toast('Bu işlem için yetkiniz yok','red'); else alert('Yetkiniz yok');
+    return;
+  }
+  var r=RANDEVULAR[idx]; if(!r) return;
+
+  // Zaten iptal edilmişse tekrar iptal etme
+  if(r.durum==='iptal'){
+    if(typeof toast==='function') toast('Bu randevu zaten iptal edilmiş','orange');
+    return;
+  }
+
+  var odenen=r.odenenToplam||0;
+  var tamamlanmis=!!r.islem;
+
+  // Uyarı metni: tamamlanmış ise ek uyarı, ödemeli ise iade bilgisi
+  var uyari='🚫 RANDEVU İPTAL\n\n';
+  uyari+='Müşteri: '+(r.musteri||'—')+'\n';
+  uyari+='Plaka: '+(r.plaka||'—')+'\n';
+  uyari+='Tarih: '+(r.tarih||'—')+' '+(r.saat||'')+'\n';
+  uyari+='Hizmet: '+(r.hizmet||'—')+'\n\n';
+  if(tamamlanmis){
+    uyari+='⚠️ DİKKAT: Bu randevu TAMAMLANMIŞ durumda!\n';
+    uyari+='İptal etmek fatura ve muhasebe kayıtlarını etkileyebilir.\n\n';
+  }
+  if(odenen>0){
+    uyari+='💰 Ödenmiş tutar: ₺'+odenen.toLocaleString('tr-TR')+'\n';
+    uyari+='Bu tutar OTOMATİK İADE edilecek (ödeme geçmişi silinecek).\n\n';
+  }
+  uyari+='Randevu "İptal Edildi" durumuna geçecek ve müşteri panelinde de iptal olarak görünecek.\n\n';
+  uyari+='Devam etmek istiyor musunuz?';
+
+  if(!confirm(uyari)) return;
+
+  // 1) Ödeme iadesi (varsa)
+  if(odenen>0){
+    r.odemeGecmisi=[];
+    r.odenenToplam=0;
+  }
+
+  // 2) Durum güncellemesi
+  r.durum='iptal';
+  r.islem=false;
+  r.odendi=false;
+  r.onlineOdeme=false;
+  r.iptalTarihi=new Date().toISOString();
+  r.iptalEden=(typeof CURRENT_USER!=='undefined' && CURRENT_USER && CURRENT_USER.username) ? CURRENT_USER.username : '';
+
+  // 3) Persist (önce lokal, sonra backend)
+  try{ storageKaydet(); }catch(e){console.error('Autonax:',e)}
+  if(typeof dbRandevuKaydet==='function') dbRandevuKaydet(r);
+
+  // 4) UI refresh
+  var ovlEl=document.getElementById('rdv-duzenle-ovl');
+  if(ovlEl) ovlEl.remove();
+  if(typeof doRdvListele==='function') doRdvListele();
+  if(typeof doTakvim==='function') doTakvim();
+  if(typeof odemeListeYukle==='function') odemeListeYukle();
+  if(typeof dashboardYukle==='function') dashboardYukle();
+
+  // 5) Geri bildirim
+  if(typeof hapticMedium==='function') hapticMedium();
+  if(typeof toast==='function'){
+    var msg='🚫 Randevu iptal edildi';
+    if(odenen>0) msg+=' (₺'+odenen.toLocaleString('tr-TR')+' iade edildi)';
+    toast(msg,'orange');
+  }
+}
+
+/**
+ * Randevuyu KALICI sil
+ * - RANDEVULAR dizisinden çıkar + backend DELETE
+ * - Ödenmiş tutar varsa silme öncesi iade mantığı uygulanır (geçmişi koru)
+ * - İki aşamalı onay ile (canlı sistem güvenliği)
+ * - Sadece kullaniciAdmin() yetkisi olanlar çalıştırabilir
+ */
+function rdvSil(idx){
+  if(typeof kullaniciAdmin!=='function' || !kullaniciAdmin()){
+    if(typeof toast==='function') toast('Bu işlem için yetkiniz yok','red'); else alert('Yetkiniz yok');
+    return;
+  }
+  var r=RANDEVULAR[idx]; if(!r) return;
+
+  var odenen=r.odenenToplam||0;
+  var tamamlanmis=!!r.islem;
+
+  // İlk onay
+  var uyari1='🗑 RANDEVUYU KALICI SİL\n\n';
+  uyari1+='Müşteri: '+(r.musteri||'—')+'\n';
+  uyari1+='Plaka: '+(r.plaka||'—')+'\n';
+  uyari1+='Tarih: '+(r.tarih||'—')+' '+(r.saat||'')+'\n';
+  uyari1+='Hizmet: '+(r.hizmet||'—')+'\n\n';
+  if(tamamlanmis){
+    uyari1+='⚠️ DİKKAT: Bu randevu TAMAMLANMIŞ durumda!\n';
+    uyari1+='Silmek fatura ve muhasebe kayıtlarını etkileyebilir.\n\n';
+  }
+  if(odenen>0){
+    uyari1+='💰 Ödenmiş tutar: ₺'+odenen.toLocaleString('tr-TR')+'\n';
+    uyari1+='Bu tutar silmeden önce iade edilecek.\n\n';
+  }
+  uyari1+='Bu işlem randevuyu veritabanından KALICI olarak siler.\n';
+  uyari1+='Devam etmek istiyor musunuz?';
+  if(!confirm(uyari1)) return;
+
+  // İkinci onay (canlı sistem güvenliği — yanlış tıklama koruması)
+  if(!confirm('⚠️ SON UYARI\n\n'+(r.musteri||'Randevu')+' kaydı KALICI silinecek.\nBu işlem GERİ ALINAMAZ.\n\nOnaylıyor musunuz?')) return;
+
+  // 1) Ödeme iadesi (sessiz — zaten iki kez onay alındı)
+  if(odenen>0){
+    r.odemeGecmisi=[];
+    r.odenenToplam=0;
+    r.odendi=false;
+    r.onlineOdeme=false;
+  }
+
+  var silinenId=r.id;
+  var silinenMusteri=r.musteri||'Randevu';
+
+  // 2) Diziden çıkar
+  RANDEVULAR.splice(idx,1);
+
+  // 3) Persist (önce lokal, sonra backend)
+  try{ storageKaydet(); }catch(e){console.error('Autonax:',e)}
+  if(silinenId && typeof dbRandevuSil==='function') dbRandevuSil(silinenId);
+
+  // 4) UI refresh
+  var ovlEl=document.getElementById('rdv-duzenle-ovl');
+  if(ovlEl) ovlEl.remove();
+  if(typeof doRdvListele==='function') doRdvListele();
+  if(typeof doTakvim==='function') doTakvim();
+  if(typeof odemeListeYukle==='function') odemeListeYukle();
+  if(typeof dashboardYukle==='function') dashboardYukle();
+
+  // 5) Geri bildirim
+  if(typeof hapticMedium==='function') hapticMedium();
+  if(typeof toast==='function'){
+    var msg='🗑 '+silinenMusteri+' randevusu silindi';
+    if(odenen>0) msg+=' (₺'+odenen.toLocaleString('tr-TR')+' iade)';
+    toast(msg,'red');
+  }
 }
 
 
