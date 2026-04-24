@@ -3794,13 +3794,13 @@ svg{display:block;flex-shrink:0}
       </div>
       
       <script>
-      // Google Maps yorum sistemi — AutoClub Samsun Merkez CID: 12835252300512927754
+      // Google Maps yorum sistemi — AutoClub Samsun Merkez
       var AUTONAX_GOOGLE = {
         cid: '12835252300512927754',
+        // Google Maps işletme sayfası (CID ile) - kullanıcı Maps'te yorum yazabilir
         placeUrl: 'https://www.google.com/maps/place/?cid=12835252300512927754',
-        writeReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJd1JzRdF3iEAROqCWlvb5H7I',
-        // Alternatif yorum yaz URL (CID tabanlı — bazen daha iyi çalışır)
-        writeReviewCidUrl: 'https://search.google.com/local/writereview?placeid=0x408877d145735277:0xb21ff9f69696a00a'
+        // Yorum yaz için ayrı URL - direkt Maps'e yönlendirir (en güvenilir)
+        writeReviewUrl: 'https://www.google.com/maps/place/?cid=12835252300512927754'
       };
       
       // Teşekkür bildirimi göster
@@ -3833,7 +3833,7 @@ svg{display:block;flex-shrink:0}
         var win = window.open(url, '_blank', 'noopener');
         
         // Kullanıcıyı yönlendir
-        _skNotifGoster('Google\'da yorum sayfası açıldı — Değerli görüşünüz için teşekkürler! ⭐', '#4285F4');
+        _skNotifGoster('Google Maps açıldı — Yorum Yaz butonuna tıklayın ⭐', '#4285F4');
         
         // Fallback — eğer pop-up bloklandıysa veya URL geçersizse alternatife yönlendir
         if (!win) {
