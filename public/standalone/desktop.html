@@ -1758,37 +1758,267 @@ svg{display:block;flex-shrink:0}
 @media(max-width:767px){.hd-user-dd{right:-8px;min-width:190px}#hd-user-label{display:none}.hd-user-caret{display:none}}
 
 @keyframes sbarIn{from{transform:translateY(-16px) scale(.97);opacity:0}to{transform:none;opacity:1}}
-/* ══ ÜRÜN DETAY MODAL ══ */
-#urun-detay-ovl{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
-#urun-detay-ovl.show{display:flex}
-#urun-detay-modal{background:#fff;border-radius:20px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.25)}
-.udm-header{position:relative;height:200px;border-radius:20px 20px 0 0;overflow:hidden;display:flex;align-items:flex-end;padding:24px}
-.udm-header-bg{position:absolute;inset:0;background:linear-gradient(135deg,#B01C2E 0%,#1a1a1a 100%)}
-.udm-header-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4}
-.udm-header-content{position:relative;z-index:1;color:#fff}
-.udm-rozet{font-size:11px;background:rgba(255,255,255,.2);padding:3px 10px;border-radius:20px;margin-bottom:8px;display:inline-block;font-weight:600}
-.udm-isim{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px;line-height:1.1}
-.udm-garanti{font-size:12px;opacity:.8;margin-top:4px}
-.udm-body{padding:24px}
-.udm-close{position:absolute;top:16px;right:16px;z-index:2;width:32px;height:32px;background:rgba(255,255,255,.15);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px}
-.udm-close:hover{background:rgba(255,255,255,.3)}
-.udm-fiyat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
-.udm-fiyat-kart{background:#f8f8f8;border-radius:12px;padding:14px;text-align:center}
-.udm-fiyat-kart.ana{background:#B01C2E;color:#fff}
-.udm-fiyat-label{font-size:10px;font-weight:700;letter-spacing:.5px;opacity:.7;text-transform:uppercase;margin-bottom:4px}
-.udm-fiyat-val{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px}
-.udm-ozellik-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
-.udm-ozellik{background:#f3f4f6;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;color:#374151}
-.udm-aciklama{font-size:14px;color:#6b7280;line-height:1.6;margin-bottom:20px}
-.udm-mensei{display:flex;align-items:center;gap:8px;font-size:13px;color:#374151;font-weight:600;padding:12px;background:#f9fafb;border-radius:10px;margin-bottom:20px}
-.udm-btn-row{display:flex;gap:10px}
-.udm-btn-randevu{flex:1;padding:14px;background:#B01C2E;color:#fff;border:none;border-radius:12px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer}
-.udm-btn-sepet{padding:14px 20px;border:2px solid #B01C2E;background:#fff;color:#B01C2E;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer}
-@media(max-width:600px){
-  .udm-fiyat-grid{grid-template-columns:1fr 1fr}
-  .udm-isim{font-size:20px}
-  .udm-header{height:160px;padding:16px}
+/* ══ ÜRÜN DETAY MODAL — Mobile-First App Deneyimi ══ */
+#urun-detay-ovl{position:fixed;inset:0;z-index:9999;background:rgba(10,10,15,.72);display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#urun-detay-ovl.show{display:flex;animation:udOvlIn .25s ease-out}
+@keyframes udOvlIn{from{background:rgba(0,0,0,0);backdrop-filter:blur(0)}to{background:rgba(10,10,15,.72);backdrop-filter:blur(6px)}}
+#urun-detay-modal{
+  background:#fff;
+  border-radius:24px 24px 0 0;
+  width:100%;max-width:720px;
+  max-height:92vh;
+  overflow:hidden;
+  box-shadow:0 -16px 60px rgba(0,0,0,.25);
+  display:flex;flex-direction:column;
+  animation:udModIn .35s cubic-bezier(.34,1.56,.64,1);
 }
+@keyframes udModIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
+
+/* Pull-indicator (native app tarzı) */
+.udm-pull{
+  width:40px;height:4px;border-radius:2px;
+  background:rgba(255,255,255,.5);
+  position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  z-index:3;
+}
+
+/* Header — zenginleştirildi */
+.udm-header{
+  position:relative;min-height:180px;overflow:hidden;
+  display:flex;align-items:flex-end;padding:24px 22px 20px;
+  flex-shrink:0;
+}
+.udm-header-bg{
+  position:absolute;inset:0;
+  background:linear-gradient(135deg,#B01C2E 0%,#7a1220 60%,#1a1a1a 100%);
+}
+.udm-header-bg::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(circle at 80% 20%, rgba(255,255,255,.1) 0%, transparent 50%),
+    radial-gradient(circle at 20% 80%, rgba(255,255,255,.06) 0%, transparent 50%);
+}
+.udm-header-img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;opacity:.35;mix-blend-mode:luminosity;
+}
+/* Nav bar (native app tarzı) */
+.udm-navbar{
+  position:absolute;top:0;left:0;right:0;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:16px 16px 0;z-index:5;
+}
+.udm-nav-btn{
+  width:38px;height:38px;
+  background:rgba(255,255,255,.18);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:#fff;
+  transition:background .15s, transform .1s;
+}
+.udm-nav-btn:hover{background:rgba(255,255,255,.3)}
+.udm-nav-btn:active{transform:scale(.92)}
+.udm-nav-btn svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.udm-nav-right{display:flex;gap:8px}
+
+.udm-header-content{position:relative;z-index:2;color:#fff;width:100%}
+.udm-rozet{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:10px;font-weight:800;
+  background:rgba(255,255,255,.2);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.25);
+  padding:5px 10px;border-radius:20px;margin-bottom:10px;
+  text-transform:uppercase;letter-spacing:.8px;
+}
+.udm-rozet svg{width:13px;height:13px;color:#fff}
+.udm-isim{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:26px;letter-spacing:1.2px;line-height:1.1;
+  margin-bottom:6px;text-shadow:0 2px 8px rgba(0,0,0,.2);
+}
+.udm-garanti-row{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:600;opacity:.92;
+}
+.udm-garanti-row svg{width:14px;height:14px;color:#fff}
+
+/* Body — scrollable */
+.udm-body{
+  padding:20px 22px 20px;
+  overflow-y:auto;
+  flex:1;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* Menşei — yenilendi */
+.udm-mensei{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 14px;
+  background:linear-gradient(90deg,#f8fafc 0%,#f1f5f9 100%);
+  border:1px solid #e2e8f0;
+  border-radius:12px;margin-bottom:18px;
+}
+.udm-mensei .flg{
+  width:32px;height:22px;border-radius:3px;overflow:hidden;
+  box-shadow:0 2px 6px rgba(0,0,0,.1);flex-shrink:0;
+}
+.udm-mensei .flg svg{width:100%;height:100%;display:block}
+.udm-mensei-txt{flex:1;min-width:0}
+.udm-mensei-lbl{font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px}
+.udm-mensei-val{font-size:13px;color:#0f172a;font-weight:700}
+
+/* Fiyat Grid — yenilendi */
+.udm-section-lbl{
+  display:flex;align-items:center;gap:8px;
+  font-size:10px;font-weight:800;
+  color:#64748b;text-transform:uppercase;letter-spacing:1.2px;
+  margin-bottom:10px;
+}
+.udm-section-lbl svg{width:14px;height:14px;color:var(--r)}
+.udm-fiyat-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;
+}
+.udm-fiyat-kart{
+  background:#f8fafc;border:2px solid transparent;
+  border-radius:14px;padding:14px 12px;text-align:center;
+  cursor:pointer;transition:all .2s;
+  min-height:72px;display:flex;flex-direction:column;justify-content:center;
+}
+.udm-fiyat-kart:hover{border-color:rgba(176,28,46,.25);transform:translateY(-2px)}
+.udm-fiyat-kart.ana{
+  background:linear-gradient(135deg,var(--r) 0%,#8a1220 100%);
+  color:#fff;border-color:transparent;
+  box-shadow:0 6px 16px rgba(176,28,46,.28);
+}
+.udm-fiyat-kart.ana:hover{transform:translateY(-3px);box-shadow:0 10px 22px rgba(176,28,46,.35)}
+.udm-fiyat-label{font-size:10px;font-weight:800;letter-spacing:1px;opacity:.75;text-transform:uppercase;margin-bottom:4px}
+.udm-fiyat-kart.ana .udm-fiyat-label{opacity:.9}
+.udm-fiyat-val{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.8px;line-height:1}
+
+/* Özellik tablosu — yeni */
+.udm-detay-tablo{
+  background:#f8fafc;border:1px solid #e2e8f0;
+  border-radius:12px;padding:4px 14px;margin-bottom:18px;
+}
+.udm-detay-row{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 0;border-bottom:1px solid #e2e8f0;
+  font-size:13px;
+}
+.udm-detay-row:last-child{border-bottom:none}
+.udm-detay-ico{
+  width:30px;height:30px;
+  background:rgba(176,28,46,.08);
+  border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.udm-detay-ico svg{width:16px;height:16px;color:var(--r)}
+.udm-detay-lbl{color:#64748b;font-weight:600;flex:1}
+.udm-detay-val{color:#0f172a;font-weight:700;text-align:right}
+
+/* Özellik pill'leri (eski stil) */
+.udm-ozellik-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
+.udm-ozellik{
+  display:inline-flex;align-items:center;gap:5px;
+  background:#f1f5f9;padding:6px 11px;border-radius:18px;
+  font-size:11.5px;font-weight:700;color:#334155;
+  border:1px solid #e2e8f0;
+}
+.udm-ozellik svg{width:13px;height:13px;color:var(--r)}
+
+/* Açıklama */
+.udm-aciklama{
+  font-size:13.5px;color:#475569;line-height:1.65;margin-bottom:18px;
+  padding:14px 16px;background:#f8fafc;border-radius:12px;
+  border-left:3px solid var(--r);
+}
+
+/* Garanti kapsamı kutusu */
+.udm-garanti-kapsam{
+  background:linear-gradient(135deg,rgba(22,163,74,.06) 0%,rgba(22,163,74,.02) 100%);
+  border:1px solid rgba(22,163,74,.2);border-radius:12px;
+  padding:14px 16px;margin-bottom:18px;
+}
+.udm-gk-baslik{
+  display:flex;align-items:center;gap:8px;
+  font-size:12px;font-weight:800;color:#15803d;
+  text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;
+}
+.udm-gk-baslik svg{width:16px;height:16px;color:#15803d}
+.udm-gk-liste{display:flex;flex-wrap:wrap;gap:6px}
+.udm-gk-item{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:11.5px;font-weight:600;color:#15803d;
+  background:rgba(22,163,74,.1);padding:4px 9px;border-radius:14px;
+}
+.udm-gk-item svg{width:11px;height:11px;color:#15803d}
+
+/* Alt sabit bar (mobile app) */
+.udm-footer{
+  padding:14px 20px;
+  background:#fff;
+  border-top:1px solid #e2e8f0;
+  box-shadow:0 -4px 12px rgba(0,0,0,.04);
+  flex-shrink:0;
+  display:flex;gap:10px;align-items:center;
+  padding-bottom:calc(14px + env(safe-area-inset-bottom, 0));
+}
+.udm-footer-fiyat{
+  display:flex;flex-direction:column;justify-content:center;
+  min-width:0;padding-right:4px;
+}
+.udm-footer-fiyat-lbl{font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.8px;line-height:1}
+.udm-footer-fiyat-val{
+  font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--r);
+  line-height:1.1;margin-top:2px;letter-spacing:.5px;
+}
+.udm-btn-randevu{
+  flex:1;min-height:48px;
+  background:linear-gradient(135deg,var(--r) 0%,#8a1220 100%);
+  color:#fff;border:none;
+  border-radius:12px;
+  font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1.6px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:all .2s;
+  box-shadow:0 6px 16px rgba(176,28,46,.28);
+}
+.udm-btn-randevu:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(176,28,46,.35)}
+.udm-btn-randevu:active{transform:translateY(0) scale(.98)}
+.udm-btn-randevu svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+.udm-btn-wa{
+  width:48px;height:48px;flex-shrink:0;
+  background:#25D366;color:#fff;border:none;
+  border-radius:12px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;box-shadow:0 6px 16px rgba(37,211,102,.28);
+}
+.udm-btn-wa:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(37,211,102,.35)}
+.udm-btn-wa:active{transform:translateY(0) scale(.95)}
+.udm-btn-wa svg{width:22px;height:22px;fill:#fff}
+
+/* Mobil optimize (detay modal) */
+@media(max-width:600px){
+  #urun-detay-ovl{padding:0}
+  #urun-detay-modal{max-height:96vh;border-radius:20px 20px 0 0}
+  .udm-header{min-height:160px;padding:20px 18px 18px}
+  .udm-isim{font-size:22px}
+  .udm-body{padding:18px 18px 16px}
+  .udm-fiyat-grid{gap:8px}
+  .udm-fiyat-val{font-size:19px}
+  .udm-footer{padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom, 0))}
+  .udm-footer-fiyat-val{font-size:19px}
+  .udm-btn-randevu{font-size:13.5px;letter-spacing:1.2px;min-height:46px}
+  .udm-btn-wa{width:46px;height:46px}
+  .udm-nav-btn{width:36px;height:36px}
+  .udm-detay-row{font-size:12.5px}
+}
+
 </style>
 <script>window.onerror=function(msg,url,line,col,err){console.error("Autonax Global Error:",msg,"at",url+":"+line+":"+col);return false;};</script>
 </head>
@@ -5926,7 +6156,10 @@ function urunDetayAc(urunId, tip) {
   var u = URUNLER[urunId];
   if (!u) return;
   
-  // Header
+  // — State
+  window._udSon = {urunId:urunId, tip:tip, u:u};
+  
+  // — Header arkaplan
   var bg = document.getElementById('udm-bg');
   var img = document.getElementById('udm-img');
   if (u.resim) {
@@ -5934,32 +6167,86 @@ function urunDetayAc(urunId, tip) {
   } else {
     img.style.display = 'none';
   }
-  // Renk
-  var renk = u.altKat === 'alman' ? '#1a5276' : u.altKat === 'renkli' ? '#6d28d9' : '#B01C2E';
-  bg.style.background = 'linear-gradient(135deg,' + renk + ' 0%,#0a0a0a 100%)';
+  var renk = u.altKat === 'alman' ? '#1a1a1a' : u.altKat === 'renkli' ? '#6d28d9' : '#B01C2E';
+  var renk2 = u.altKat === 'alman' ? '#DD0000' : u.altKat === 'renkli' ? '#ec4899' : '#8a1220';
+  bg.style.background = 'linear-gradient(135deg,' + renk + ' 0%,' + renk2 + ' 60%,#0a0a0a 100%)';
   
-  // İçerik
-  document.getElementById('udm-rozet').textContent = u.rozet || '';
-  document.getElementById('udm-isim').textContent = u.isim || '';
-  document.getElementById('udm-garanti').textContent = u.garanti ? u.garanti + ' Yıl Üretici Garantisi' : '';
-  
-  // Menşei
-  var mensei = document.getElementById('udm-mensei');
-  if (u.mensei) {
-    mensei.innerHTML = '<span style="font-size:16px">' + u.mensei + '</span>';
-    mensei.style.display = 'flex';
+  // — Rozet (SVG ikonlu)
+  var rozetIkonMap = {
+    'POPÜLER':'ic-star','POPULER':'ic-star',
+    'BAŞLANGIÇ':'ic-check','BASLANGIÇ':'ic-check','BASLANGIC':'ic-check',
+    'GERMANY':'ic-flag-de','ALMAN':'ic-flag-de',
+    'EKONOMİK':'ic-dollar','EKONOMIK':'ic-dollar','EKO':'ic-dollar',
+    'MAKSİMUM':'ic-crown','MAKSIMUM':'ic-crown','PREMIUM':'ic-crown',
+    'RENKLİ':'ic-palette','RENKLI':'ic-palette'
+  };
+  var rozetEl = document.getElementById('udm-rozet');
+  var rozetText = u.rozet || '';
+  if (rozetText) {
+    // Rozet metninden ikon bul
+    var ikonId = 'ic-star';
+    var rozetLabel = rozetText;
+    for (var k in rozetIkonMap) {
+      if (rozetText.toUpperCase().indexOf(k) !== -1) {
+        ikonId = rozetIkonMap[k];
+        rozetLabel = k.charAt(0) + k.slice(1).toLowerCase();
+        break;
+      }
+    }
+    // Emojiyi temizle — başında varsa
+    var temizRozet = rozetText.replace(/^[^\wığüşöçĞÜŞÖÇİ]+/g, '').trim();
+    rozetEl.innerHTML = '<svg><use href="#' + ikonId + '"/></svg>' + (temizRozet || rozetLabel);
+    rozetEl.style.display = 'inline-flex';
   } else {
-    mensei.style.display = 'none';
+    rozetEl.style.display = 'none';
   }
   
-  // Fiyat grid
+  // — İsim + Garanti
+  document.getElementById('udm-isim').textContent = u.isim || '';
+  var garEl = document.getElementById('udm-garanti');
+  var garRowEl = document.getElementById('udm-garanti-row');
+  if (u.garanti) {
+    garEl.textContent = u.garanti + ' Yıl Üretici Garantisi';
+    garRowEl.style.display = 'flex';
+  } else {
+    garRowEl.style.display = 'none';
+  }
+  
+  // — Menşei (bayrak + yapışkan marka)
+  var menseiEl = document.getElementById('udm-mensei');
+  var flagId = '', menseiTxt = '', yapisTxt = '';
+  if (u.altKat === 'alman' || (u.mensei && u.mensei.indexOf('Alman') !== -1)) {
+    flagId = 'ic-flag-de';
+    menseiTxt = 'Alman Ürünü';
+    yapisTxt = 'Henkel Yapışkan';
+  } else if (u.altKat === 'amerikan' || (u.mensei && u.mensei.indexOf('Amerikan') !== -1) || (u.mensei && u.mensei.indexOf('USA') !== -1)) {
+    flagId = 'ic-flag-us';
+    menseiTxt = 'Amerikan Ürünü';
+    yapisTxt = 'Ashland Yapışkan';
+  }
+  if (flagId) {
+    menseiEl.innerHTML =
+      '<div class="flg"><svg><use href="#' + flagId + '"/></svg></div>' +
+      '<div class="udm-mensei-txt">' +
+      '<div class="udm-mensei-lbl">Menşei & Yapışkan</div>' +
+      '<div class="udm-mensei-val">' + menseiTxt + ' · ' + yapisTxt + '</div>' +
+      '</div>';
+    menseiEl.style.display = 'flex';
+  } else if (u.mensei) {
+    menseiEl.innerHTML = '<div class="udm-mensei-txt"><div class="udm-mensei-val">' + u.mensei + '</div></div>';
+    menseiEl.style.display = 'flex';
+  } else {
+    menseiEl.style.display = 'none';
+  }
+  
+  // — Fiyat grid
   var grid = document.getElementById('udm-fiyat-grid');
   var fiyatlar = [];
-  if (u.full) fiyatlar.push({label: 'Tam Araç', val: u.full, ana: true});
-  if (u.on3) fiyatlar.push({label: 'Ön 3 Parça', val: u.on3, ana: false});
-  if (u.kaput) fiyatlar.push({label: 'Kaput', val: u.kaput, ana: false});
-  if (u.fiyat_34) fiyatlar.push({label: '34 Plaka', val: u.fiyat_34, ana: false});
-  if (!fiyatlar.length && u.tutar) fiyatlar.push({label: 'Fiyat', val: u.tutar, ana: true});
+  if (u.full) fiyatlar.push({label:'Tam Araç', val:u.full, ana:true, key:'full'});
+  if (u.fiyat_34) fiyatlar.push({label:'34 Plaka', val:u.fiyat_34, ana:false, key:'fiyat_34'});
+  if (u.on3) fiyatlar.push({label:'Ön 3 Parça', val:u.on3, ana:false, key:'on3'});
+  if (u.kaput) fiyatlar.push({label:'Kaput', val:u.kaput, ana:false, key:'kaput'});
+  if (!fiyatlar.length && u.tutar) fiyatlar.push({label:'Fiyat', val:u.tutar, ana:true, key:'tutar'});
   
   if (fiyatlar.length === 0) {
     grid.innerHTML = '<div class="udm-fiyat-kart ana" style="grid-column:1/-1"><div class="udm-fiyat-label">Fiyat</div><div class="udm-fiyat-val">Bilgi için arayın</div></div>';
@@ -5972,51 +6259,145 @@ function urunDetayAc(urunId, tip) {
     }).join('');
   }
   
-  // Özellikler
+  // — Detay tablo
+  var tabloEl = document.getElementById('udm-detay-tablo');
+  var tabloLblEl = document.getElementById('udm-detay-lbl');
+  var detaylar = [];
+  if (u.mikron) detaylar.push({ikon:'ic-ruler', lbl:'Kalınlık', val:u.mikron});
+  if (u.garanti) detaylar.push({ikon:'ic-shield', lbl:'Garanti', val:u.garanti + ' Yıl'});
+  detaylar.push({ikon:'ic-bolt', lbl:'Teknoloji', val:'Self-Healing (Kendini Onarır)'});
+  detaylar.push({ikon:'ic-drop', lbl:'Yüzey', val:(u.tip && u.tip.indexOf('hidrofilik')!==-1) ? 'Hidrofilik' : 'Hidrofobik'});
+  detaylar.push({ikon:'ic-star', lbl:'UV Koruma', val:'Evet'});
+  if (flagId) detaylar.push({ikon:flagId, lbl:'Menşei', val:menseiTxt.replace(' Ürünü','')});
+  if (u.altKat === 'renkli') detaylar.push({ikon:'ic-palette', lbl:'Renk Seçenekleri', val:'30+ Renk'});
+  // İşlem süresi tahmini (tip'e göre)
+  var sureMap = {full:'~5-8 saat', fiyat_34:'~3-4 saat', on3:'~2-3 saat', kaput:'~1-1.5 saat', tutar:''};
+  var sure = sureMap[tip] || '';
+  if (sure) detaylar.push({ikon:'ic-calendar', lbl:'İşlem Süresi', val:sure});
+  
+  if (detaylar.length) {
+    tabloEl.innerHTML = detaylar.map(function(d) {
+      var stylePart = d.ikon.indexOf('ic-flag')!==-1 ? ' style="width:14px;height:10px"' : '';
+      return '<div class="udm-detay-row">' +
+        '<div class="udm-detay-ico"><svg' + stylePart + '><use href="#' + d.ikon + '"/></svg></div>' +
+        '<div class="udm-detay-lbl">' + d.lbl + '</div>' +
+        '<div class="udm-detay-val">' + d.val + '</div>' +
+        '</div>';
+    }).join('');
+    tabloEl.style.display = 'block';
+    tabloLblEl.style.display = 'flex';
+  } else {
+    tabloEl.style.display = 'none';
+    tabloLblEl.style.display = 'none';
+  }
+  
+  // — Özellik pill'leri (kısa özet — SVG ikonlu)
   var ozList = [];
-  if (u.mikron) ozList.push('📏 ' + u.mikron);
-  if (u.garanti) ozList.push('🛡️ ' + u.garanti + ' Yıl Garanti');
-  ozList.push('✨ Self-Healing');
-  ozList.push('💧 Hidrofobik');
-  ozList.push('☀️ UV Koruma');
-  if (u.altKat === 'alman') ozList.push('🇩🇪 Alman Kalitesi');
-  if (u.altKat === 'amerikan') ozList.push('🇺🇸 Amerikan Kalitesi');
-  if (u.altKat === 'renkli') ozList.push('🌈 30+ Renk Seçeneği');
+  if (u.mikron) ozList.push({ikon:'ic-ruler', txt:u.mikron});
+  if (u.garanti) ozList.push({ikon:'ic-shield', txt:u.garanti + ' Yıl Garanti'});
+  ozList.push({ikon:'ic-bolt', txt:'Self-Healing'});
+  ozList.push({ikon:'ic-drop', txt:'Hidrofobik'});
+  ozList.push({ikon:'ic-star', txt:'UV Koruma'});
   
   document.getElementById('udm-ozellikler').innerHTML = ozList.map(function(o) {
-    return '<span class="udm-ozellik">' + o + '</span>';
+    return '<span class="udm-ozellik"><svg><use href="#' + o.ikon + '"/></svg>' + o.txt + '</span>';
   }).join('');
   
-  // Açıklama
-  document.getElementById('udm-aciklama').textContent = u.aciklama || '';
+  // — Garanti kapsamı (varsayılan göster)
+  document.getElementById('udm-garanti-kapsam').style.display = u.garanti ? 'block' : 'none';
   
-  // Butonlar
+  // — Açıklama
+  var aciklama = u.aciklama || '';
+  if (!aciklama) {
+    // Auto-generate açıklama
+    var t = (u.altKat === 'alman') ? 'Alman kalitesinde üretilmiş premium TPU' : (u.altKat === 'renkli' ? 'Renkli TPU PPF — araç görünümünü tamamen değiştirir' : 'Amerikan kalitesinde üretilmiş premium TPU');
+    aciklama = (u.mikron ? u.mikron + ' kalınlıkta ' : '') + t + '. Taş, tırnak izi, ağaç reçinesi, kuş pisliği, böcek lekesi gibi etkenlere karşı tam koruma sağlar. Kendini onaran yapısı sayesinde küçük çizikler ısıyla kaybolur.';
+  }
+  document.getElementById('udm-aciklama').textContent = aciklama;
+  
+  // — Alt sabit bar fiyatı
   var fiyat = u.full || u.tutar || 0;
   var fiyatStr = fiyat ? '₺' + fiyat.toLocaleString('tr-TR') : 'Fiyat için arayın';
+  document.getElementById('udm-footer-fiyat').textContent = fiyatStr;
   
+  // — Butonlar
   document.getElementById('udm-randevu-btn').onclick = function() {
+    // Seçilen tip'i dikkate al - başlangıçta full ise full, vs.
+    var seciliTip = tip || (u.full ? 'full' : (u.tutar ? 'tutar' : 'full'));
+    var seciliFiyat = u[seciliTip] || fiyat;
+    var tipLabelMap = {full:'Tam Araç', fiyat_34:'34 Plaka', on3:'Ön 3 Parça', kaput:'Kaput', tutar:''};
+    var tipLabel = tipLabelMap[seciliTip] || '';
+    var aciklamaSon = u.isim + (tipLabel ? ' · ' + tipLabel : '');
+    
     urunDetayKapat();
-    if (typeof openSepet === 'function') {
-      SEPET.add({id: urunId + '_' + Date.now(), isim: u.isim, aciklama: u.aciklama || '', fiyat: fiyat, fiyatStr: fiyatStr});
+    if (typeof SEPET !== 'undefined' && typeof openSepet === 'function') {
+      SEPET.add({id: urunId + '_' + Date.now(), isim: aciklamaSon, aciklama: u.aciklama || '', fiyat: seciliFiyat, fiyatStr: '₺' + seciliFiyat.toLocaleString('tr-TR')});
       openSepet();
     }
   };
-  document.getElementById('udm-sepet-btn').onclick = function() {
-    SEPET.add({id: urunId + '_' + Date.now(), isim: u.isim, aciklama: u.aciklama || '', fiyat: fiyat, fiyatStr: fiyatStr});
-    var btn = document.getElementById('udm-sepet-btn');
-    btn.textContent = '✓ Sepete Eklendi';
-    btn.style.background = '#16A34A'; btn.style.color = '#fff'; btn.style.borderColor = '#16A34A';
-    setTimeout(function() {
-      btn.textContent = '🛒 Sepete Ekle';
-      btn.style.background = ''; btn.style.color = ''; btn.style.borderColor = '';
-    }, 2000);
+  
+  document.getElementById('udm-wa-btn').onclick = function() {
+    var sa = window.SITE_AYARLAR || {};
+    var waNo = (sa.genel && (sa.genel.whatsapp || sa.genel.tel1)) ? (sa.genel.whatsapp || sa.genel.tel1).replace(/[^0-9]/g,'') : '';
+    var mesaj = 'Merhaba, "' + u.isim + '" hakkında bilgi almak istiyorum.';
+    if (waNo) {
+      window.open('https://wa.me/' + waNo + '?text=' + encodeURIComponent(mesaj), '_blank');
+    } else {
+      alert('WhatsApp numarası tanımlı değil');
+    }
   };
   
-  // Modalı aç
+  // — Favori butonu (localStorage)
+  guncelleFavoriBtn(urunId);
+  
+  // — Modalı aç
   var ovl = document.getElementById('urun-detay-ovl');
   ovl.style.display = 'flex';
   ovl.classList.add('show');
   document.body.style.overflow = 'hidden';
+}
+
+// Paylaş
+function urunPaylas() {
+  if (!window._udSon) return;
+  var u = window._udSon.u;
+  var url = window.location.origin + window.location.pathname + '#urun-' + window._udSon.urunId;
+  var metin = u.isim + ' - Autonax';
+  if (navigator.share) {
+    navigator.share({title:metin, text:'Bu ürüne göz at: ' + u.isim, url:url}).catch(function(){});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(function(){
+      var btn = event.currentTarget;
+      var orig = btn.innerHTML;
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      setTimeout(function(){ btn.innerHTML = orig; }, 1500);
+    });
+  }
+}
+
+// Favori
+function urunFavori() {
+  if (!window._udSon) return;
+  var FAV_KEY = 'autonax_favoriler_v1';
+  var id = window._udSon.urunId;
+  var favs = [];
+  try { favs = JSON.parse(localStorage.getItem(FAV_KEY) || '[]'); } catch(e) {}
+  var idx = favs.indexOf(id);
+  if (idx === -1) favs.push(id);
+  else favs.splice(idx, 1);
+  try { localStorage.setItem(FAV_KEY, JSON.stringify(favs)); } catch(e) {}
+  guncelleFavoriBtn(id);
+}
+
+function guncelleFavoriBtn(id) {
+  var btn = document.getElementById('udm-fav-btn');
+  if (!btn) return;
+  var favs = [];
+  try { favs = JSON.parse(localStorage.getItem('autonax_favoriler_v1') || '[]'); } catch(e) {}
+  var isFav = favs.indexOf(id) !== -1;
+  btn.innerHTML = isFav ?
+    '<svg viewBox="0 0 24 24" fill="#fff" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' :
+    '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
 }
 
 function urunDetayKapat() {
@@ -6385,25 +6766,90 @@ function authCikis(){
 <!-- ══ ÜRÜN DETAY MODAL ══ -->
 <div id="urun-detay-ovl" style="display:none" onclick="if(event.target===this)urunDetayKapat()">
   <div id="urun-detay-modal">
+    <!-- Header -->
     <div class="udm-header" id="udm-header">
       <div class="udm-header-bg" id="udm-bg"></div>
       <img id="udm-img" class="udm-header-img" src="" alt="" style="display:none">
-      <button class="udm-close" onclick="urunDetayKapat()">✕</button>
+      <div class="udm-pull"></div>
+      <!-- Navbar (native app stili) -->
+      <div class="udm-navbar">
+        <button class="udm-nav-btn" onclick="urunDetayKapat()" aria-label="Kapat">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <div class="udm-nav-right">
+          <button class="udm-nav-btn" onclick="urunPaylas()" aria-label="Paylaş" title="Paylaş">
+            <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </button>
+          <button class="udm-nav-btn" onclick="urunFavori()" aria-label="Favori" title="Favoriye Ekle" id="udm-fav-btn">
+            <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </button>
+        </div>
+      </div>
+      <!-- İçerik -->
       <div class="udm-header-content">
         <div class="udm-rozet" id="udm-rozet"></div>
         <div class="udm-isim" id="udm-isim"></div>
-        <div class="udm-garanti" id="udm-garanti"></div>
+        <div class="udm-garanti-row" id="udm-garanti-row" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+          <span id="udm-garanti"></span>
+        </div>
       </div>
     </div>
+
+    <!-- Body (scrollable) -->
     <div class="udm-body">
+      <!-- Menşei (bayrak + yapışkan) -->
       <div id="udm-mensei" class="udm-mensei" style="display:none"></div>
-      <div class="udm-fiyat-grid" id="udm-fiyat-grid"></div>
-      <div id="udm-ozellikler" class="udm-ozellik-list"></div>
-      <div id="udm-aciklama" class="udm-aciklama"></div>
-      <div class="udm-btn-row">
-        <button class="udm-btn-randevu" id="udm-randevu-btn">📅 Randevu Al</button>
-        <button class="udm-btn-sepet" id="udm-sepet-btn">🛒 Sepete Ekle</button>
+
+      <!-- Fiyat Grid -->
+      <div class="udm-section-lbl">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Paket Seçenekleri
       </div>
+      <div class="udm-fiyat-grid" id="udm-fiyat-grid"></div>
+
+      <!-- Detay tablo (ikonlu) -->
+      <div class="udm-section-lbl" id="udm-detay-lbl" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        Ürün Detayları
+      </div>
+      <div class="udm-detay-tablo" id="udm-detay-tablo" style="display:none"></div>
+
+      <!-- Özellik pill'leri -->
+      <div id="udm-ozellikler" class="udm-ozellik-list"></div>
+
+      <!-- Garanti kapsamı -->
+      <div class="udm-garanti-kapsam" id="udm-garanti-kapsam" style="display:none">
+        <div class="udm-gk-baslik">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="8 12 11 15 16 9"/></svg>
+          Garanti Kapsamı
+        </div>
+        <div class="udm-gk-liste">
+          <span class="udm-gk-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Sararma</span>
+          <span class="udm-gk-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Kabarma / Ayrılma</span>
+          <span class="udm-gk-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Çatlama</span>
+          <span class="udm-gk-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Yapışkan Bozulması</span>
+          <span class="udm-gk-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Renk Solması</span>
+        </div>
+      </div>
+
+      <!-- Açıklama -->
+      <div id="udm-aciklama" class="udm-aciklama"></div>
+    </div>
+
+    <!-- Alt sabit bar (mobile app hissi) -->
+    <div class="udm-footer">
+      <div class="udm-footer-fiyat">
+        <span class="udm-footer-fiyat-lbl">Başlangıç</span>
+        <span class="udm-footer-fiyat-val" id="udm-footer-fiyat">—</span>
+      </div>
+      <button class="udm-btn-wa" id="udm-wa-btn" aria-label="WhatsApp ile sor" title="WhatsApp ile sor">
+        <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+      </button>
+      <button class="udm-btn-randevu" id="udm-randevu-btn">
+        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg>
+        RANDEVU AL
+      </button>
     </div>
   </div>
 </div>
