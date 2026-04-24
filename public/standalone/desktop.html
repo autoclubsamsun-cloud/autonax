@@ -6613,7 +6613,7 @@ function gosterOneri(){
           </div>
           <div class="rc-garanti"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#B01C2E" stroke-width="1.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>${R.s.garanti} Yıl Garanti</div>
         </div>
-        <button class="rc-btn" onclick="closeRobot()">🗓 Hemen Randevu Al</button>
+        <button class="rc-btn" onclick="robotSepeteAktar()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Hemen Randevu Al</button>
         <button class="rc-btn-sec" onclick="robotuYenile()">↩ Yeni Sorgu Başlat</button>`;
       C().appendChild(card); scroll();
       setTimeout(()=>{
@@ -6892,6 +6892,76 @@ function robotuYenile(){
   adim_tur();
 }
 
+/* ════════════════════════════════
+   ROBOT → SEPET OTOMATIK AKTARIM
+   Kullanıcının robot adımlarında verdiği tüm bilgileri sepete taşır
+   Araç bilgileri (marka, model), hizmet önerisi, fiyat ve not otomatik dolsun
+═════════════════════════════════ */
+function robotSepeteAktar(){
+  try {
+    // Robot'tan gelen öneriyi hesapla
+    const o = (typeof hesaplaOneri==='function') ? hesaplaOneri() : null;
+    if(!o){ 
+      closeRobot(); 
+      openSepet(); 
+      return; 
+    }
+
+    // Fiyatı sayıya çevir (örn: "₺65.000" → 65000)
+    let fiyatNum = 0;
+    if(typeof o.fiyat==='string'){
+      fiyatNum = parseInt(o.fiyat.replace(/[^0-9]/g,''))||0;
+    } else if(typeof o.fiyat==='number'){
+      fiyatNum = o.fiyat;
+    }
+
+    // Araç bilgisi: marka + model
+    const aracBilgisi = [R.s.marka, R.s.aractipi].filter(Boolean).join(' ');
+
+    // Sepete öneri ürününü ekle
+    SEPET.add({
+      id: 'robot_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+      isim: o.isim,
+      aciklama: o.aciklama || '',
+      fiyat: fiyatNum,
+      fiyatStr: fiyatNum>0 ? '₺'+fiyatNum.toLocaleString('tr-TR') : (o.fiyat||'Fiyat için arayın'),
+      // Ek: Robot'un topladığı araç bilgisi (sepetOde sırasında kullanılacak)
+      robotArac: aracBilgisi,
+      robotGaranti: R.s.garanti || '',
+      robotKapsam: (R.s.bolgeler||[]).join(', ') || R.akis || ''
+    });
+
+    // Robot'tan gelen müşteri bağlam bilgilerini sepet üzerinde sakla 
+    // (sepetOde'de backend'e gönderirken kullanılacak)
+    SEPET.robotContext = {
+      arac: aracBilgisi,
+      marka: R.s.marka || '',
+      model: R.s.aractipi || '',
+      garanti: R.s.garanti || '',
+      akis: R.akis || '',
+      bolgeler: (R.s.bolgeler||[]).slice(),
+      not: 'PPF Robotu önerisi · '+R.akis.toUpperCase()+(R.s.garanti?' · '+R.s.garanti+' yıl garanti':'')
+    };
+
+    // Robot'u kapat, sepeti aç
+    closeRobot();
+    openSepet();
+
+    // Sepet açıldıktan sonra misafir formundaki "Araç Modeli" alanına otomatik doldur
+    setTimeout(function(){
+      const aracInput = document.getElementById('rdv-misafir-arac');
+      if(aracInput && aracBilgisi) aracInput.value = aracBilgisi;
+      const notInput = document.getElementById('rdv-misafir-not');
+      if(notInput && SEPET.robotContext) notInput.value = SEPET.robotContext.not;
+    }, 300);
+
+  } catch(e){
+    console.warn('robotSepeteAktar hata:', e);
+    closeRobot();
+    openSepet();
+  }
+}
+
 /* ── BAŞLAT ── */
 setTimeout(openRobot,1500);
 document.querySelectorAll('.tool-btn,.mbctr,.mbctr-btn').forEach(el=>{if(el.textContent.includes('Robot')||el.textContent.includes('robot'))el.addEventListener('click',openRobot);});
@@ -6986,16 +7056,46 @@ function openSepet(){
     mf = document.createElement('div');
     mf.id = 'rdv-misafir-form';
     mf.style.cssText = 'background:rgba(176,28,46,.05);border:1.5px solid rgba(176,28,46,.2);border-radius:10px;padding:14px;margin:12px 16px 0';
-    mf.innerHTML = '<div style="font-size:11px;font-weight:700;color:#b01c2e;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">📋 İletişim Bilgileriniz</div>'
-      +'<input id="rdv-misafir-ad" placeholder="Ad Soyad *" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:7px;font-size:13px;margin-bottom:8px;box-sizing:border-box">'
-      +'<input id="rdv-misafir-tel" type="tel" placeholder="Telefon *" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:7px;font-size:13px;margin-bottom:8px;box-sizing:border-box">'
-      +'<input id="rdv-misafir-email" type="email" placeholder="E-posta (isteğe bağlı)" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:7px;font-size:13px;margin-bottom:0;box-sizing:border-box">'
-      +'<div style="font-size:10px;color:#888;margin-top:6px">veya <a href="javascript:void(0)" id="rdv-giris-link" style="color:#b01c2e;font-weight:700">giriş yapın</a> → bilgileriniz otomatik gelsin</div>';
+    mf.innerHTML = '<div style="font-size:11px;font-weight:700;color:#b01c2e;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#b01c2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>İletişim Bilgileriniz</div>'
+      +'<input id="rdv-misafir-ad" placeholder="Ad Soyad *" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:7px;font-size:13px;margin-bottom:8px;box-sizing:border-box;font-family:inherit">'
+      +'<input id="rdv-misafir-tel" type="tel" placeholder="Telefon * (05XX XXX XX XX)" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:7px;font-size:13px;margin-bottom:8px;box-sizing:border-box;font-family:inherit">'
+      +'<input id="rdv-misafir-email" type="email" placeholder="E-posta (isteğe bağlı)" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:7px;font-size:13px;margin-bottom:12px;box-sizing:border-box;font-family:inherit">'
+      +'<div style="font-size:11px;font-weight:700;color:#b01c2e;margin:6px 0 8px;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#b01c2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Araç Bilgileri</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
+        +'<input id="rdv-misafir-plaka" placeholder="Plaka (34 ABC 123)" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:7px;font-size:13px;box-sizing:border-box;font-family:\"Bebas Neue\",inherit;letter-spacing:1.5px;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">'
+        +'<input id="rdv-misafir-arac" placeholder="Araç Modeli" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:7px;font-size:13px;box-sizing:border-box;font-family:inherit">'
+      +'</div>'
+      +'<textarea id="rdv-misafir-not" placeholder="Not / İstekleriniz (opsiyonel)" rows="2" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:7px;font-size:13px;margin-bottom:0;box-sizing:border-box;font-family:inherit;resize:vertical"></textarea>'
+      +'<div style="font-size:10px;color:#888;margin-top:8px;padding-top:8px;border-top:1px dashed #e0e0e0">veya <a href="javascript:void(0)" id="rdv-giris-link" style="color:#b01c2e;font-weight:700">giriş yapın</a> → bilgileriniz otomatik gelsin</div>';
     setTimeout(function(){ var lnk=document.getElementById('rdv-giris-link'); if(lnk) lnk.onclick=function(){closeSepet();openAuth('giris');}; },100);
     var sepetBody = document.getElementById('sepet-body');
     if(sepetBody) sepetBody.parentNode.insertBefore(mf, sepetBody);
   }
-  mf.style.display = isLoggedIn ? 'none' : 'block';
+  mf.style.display = 'block'; // Form her zaman görünür (plaka şart)
+  
+  // Giriş yapmışsa sadece iletişim alanlarını gizle, araç alanları görünsün
+  var iletisimAlanlari = ['rdv-misafir-ad','rdv-misafir-tel','rdv-misafir-email'];
+  var iletisimBaslik = mf.querySelector('div:first-child'); // "İletişim Bilgileriniz" başlığı
+  
+  if(isLoggedIn){
+    // Başlığı "Araç Bilgileri" olarak güncelle ve iletişim kısmını gizle
+    iletisimAlanlari.forEach(function(id){
+      var el=document.getElementById(id);
+      if(el) el.style.display='none';
+    });
+    if(iletisimBaslik) iletisimBaslik.style.display='none';
+    // Alt linki de gizle (giriş yapmış zaten)
+    var girisLink = mf.querySelector('div[style*="border-top"]');
+    if(girisLink) girisLink.style.display='none';
+  } else {
+    iletisimAlanlari.forEach(function(id){
+      var el=document.getElementById(id);
+      if(el) el.style.display='block';
+    });
+    if(iletisimBaslik) iletisimBaslik.style.display='flex';
+    var girisLink = mf.querySelector('div[style*="border-top"]');
+    if(girisLink) girisLink.style.display='block';
+  }
 }
 function closeSepet(){ document.getElementById('sepet-ovl').classList.remove('show'); document.body.style.overflow=''; }
 function sepetOverlayClick(e){ if(e.target===document.getElementById('sepet-ovl')) closeSepet(); }
@@ -7019,23 +7119,58 @@ function sepetOde(){
   var toplam=SEPET.total();
   // Giriş yapmamışsa misafir bilgilerini al
   var loggedUser = (typeof AuthManager!=='undefined'&&AuthManager.currentUser) ? AuthManager.currentUser : null;
-  var musteriAd, musteriTel, musteriEmail;
+  var musteriAd, musteriTel, musteriEmail, plaka, aracModel, not;
+  
+  // Plaka, araç ve not her durumda misafir formundan alınır (giriş yapmış da olsa)
+  plaka = (document.getElementById('rdv-misafir-plaka')?.value||'').trim().toUpperCase();
+  aracModel = (document.getElementById('rdv-misafir-arac')?.value||'').trim();
+  not = (document.getElementById('rdv-misafir-not')?.value||'').trim();
+  
+  // Robot'tan aktarım varsa ve araç boşsa, robot context'ini kullan
+  if(!aracModel && SEPET.robotContext && SEPET.robotContext.arac){
+    aracModel = SEPET.robotContext.arac;
+  }
+  if(!not && SEPET.robotContext && SEPET.robotContext.not){
+    not = SEPET.robotContext.not;
+  }
+  
   if(loggedUser){
     musteriAd = loggedUser.name||loggedUser.ad||'Müşteri';
     musteriTel = loggedUser.phone||loggedUser.tel||'-';
     musteriEmail = loggedUser.email||'';
+    // Giriş yapmışsa da plaka gerekli — yoksa uyarı ver
+    if(!plaka){
+      var mf = document.getElementById('rdv-misafir-form');
+      // Giriş yapmış olsa bile plaka alanını göster
+      if(mf){
+        mf.style.display='block';
+        // Sadece plaka alanını göster, diğerlerini gizle
+        ['rdv-misafir-ad','rdv-misafir-tel','rdv-misafir-email'].forEach(function(id){
+          var el=document.getElementById(id);
+          if(el) el.parentNode ? el.style.display='none' : null;
+        });
+      }
+      var plakaInp = document.getElementById('rdv-misafir-plaka');
+      if(plakaInp){ plakaInp.style.borderColor='#b01c2e'; plakaInp.focus(); }
+      return;
+    }
   } else {
     // Misafir — bilgi formu göster
     musteriAd = document.getElementById('rdv-misafir-ad')?.value?.trim();
     musteriTel = document.getElementById('rdv-misafir-tel')?.value?.trim();
     musteriEmail = document.getElementById('rdv-misafir-email')?.value?.trim();
-    if(!musteriAd||!musteriTel){
+    if(!musteriAd||!musteriTel||!plaka){
       // Misafir formu göster
       var misafirForm = document.getElementById('rdv-misafir-form');
       if(misafirForm){ misafirForm.style.display='block'; misafirForm.scrollIntoView({behavior:'smooth'}); }
+      // Boş alanları kırmızı yap
+      ['rdv-misafir-ad','rdv-misafir-tel','rdv-misafir-plaka'].forEach(function(id){
+        var el=document.getElementById(id);
+        if(el && !el.value.trim()) el.style.borderColor='#b01c2e';
+      });
       var errEl=document.createElement('div');
       errEl.style.cssText='color:#b01c2e;font-size:12px;font-weight:700;margin-top:8px;padding:8px;background:rgba(176,28,46,.08);border-radius:6px';
-      errEl.textContent='Lütfen iletişim bilgilerinizi girin';
+      errEl.textContent='Lütfen Ad, Telefon ve Plaka alanlarını doldurun';
       var existErr=document.getElementById('rdv-misafir-err');
       if(existErr) existErr.remove();
       errEl.id='rdv-misafir-err';
@@ -7050,8 +7185,11 @@ function sepetOde(){
     musteri: musteriAd||'Misafir',
     tel: musteriTel||'-',
     email: musteriEmail||'',
+    plaka: (plaka||'').replace(/ /g,'').toUpperCase(),
+    arac: aracModel||'—',
     hizmet: hizmetler,
     tutar: toplam,
+    not: not||'',
     durum: 'bekl',
     odendi: false,
     islem: false,
