@@ -2456,7 +2456,7 @@ async function dashboardYukle() {
       var p=r.tarih.split('.'); var rdvDate=new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]));
       return rdvDate >= haftaBaslangic ? t+(r.odenenToplam||r.tutar||0) : t;
     }, 0);
-    var bekleyenOnay = randevular.filter(function(r){ return r.durum==='bekl'||r.durum==='bekliyor'||!r.durum; }).length;
+    var bekleyenOnay = randevular.filter(function(r){ return _rdvGercekDurum(r)==='bekl'; }).length;
 
     var skVals = document.querySelectorAll('#pg-dashboard .sk-val');
     skVals.forEach(function(el){el.style.opacity='1';});
@@ -2756,6 +2756,51 @@ function rdvRenkStyle(r){
   return{bg:'',border:'',tag:r.durum==='onay'?'onay':'bekl',txt:r.durum==='onay'?'Onaylı':'Bekliyor',ekBtn:false,online:false};
 }
 
+/**
+ * Bir randevunun "gerçek" (ekranla tutarlı) kategorisini döndürür.
+ * Dönüş: 'tamamlandi' | 'onay' | 'iptal' | 'islem-yapilmadi' | 'bekl'
+ * rdvRenkStyle ile aynı kurallara uyar — buradaki mantık oradan türetilmiştir.
+ * Tek doğruluk kaynağı: kategori mantığı değişirse tek yerden güncellenir.
+ */
+function _rdvGercekDurum(r){
+  if(!r) return 'bekl';
+  // Kullanıcı tarafından iptal edilmiş (soft cancel)
+  if(r.durum==='iptal') return 'iptal';
+  // Ödendi + işlem tamamlandı → tamamlanmış sayılır
+  if(r.odendi && r.islem) return 'tamamlandi';
+  if(r.onlineOdeme && r.odendi) return 'tamamlandi';
+  // Tarih hesabı
+  try{
+    var now=new Date();
+    var nowMs=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+    var p=(r.tarih||'').split('.');
+    if(p.length===3){
+      var rdvMs=new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0])).getTime();
+      var gecmis=rdvMs<=nowMs;
+      if(gecmis && r.islem) return 'tamamlandi';
+      if(gecmis && !r.islem) return 'islem-yapilmadi';
+    }
+  }catch(e){}
+  // Henüz geçmemiş + tamamlanmamış
+  if(r.durum==='onay') return 'onay';
+  return 'bekl';
+}
+
+/**
+ * Filtre butonu ile randevunun gerçek durumu eşleşiyor mu?
+ * - 'bekl' filtresi: sadece gerçekten bekleyenler (tamamlanmış olanlar dahil DEĞİL)
+ * - 'onay' filtresi: onaylı + tamamlandı (ekranda yeşil görünenler)
+ * - Diğer tek değerler için direkt eşleşme
+ */
+function _rdvDurumEslesme(r, filtre){
+  if(filtre==='hepsi') return true;
+  var g=_rdvGercekDurum(r);
+  if(filtre==='bekl') return g==='bekl';
+  if(filtre==='onay') return g==='onay' || g==='tamamlandi';
+  // Geriye dönük uyumluluk: başka bir filtre geldiyse direkt eşleştir
+  return r.durum===filtre;
+}
+
 /* ══ RANDEVU LİSTELE ══ */
 var _rdvDurum='hepsi';
 var _borcluFiltre=false;
@@ -2768,7 +2813,7 @@ function doRdvListele(){
     var p=r.tarih.split('.'),rGun=p[0],rAy=p[1];
     var ayOk=!ay||rAy===ay;
     var gunOk=!gun||rGun===gun;
-    var durumOk=_rdvDurum==='hepsi'||r.durum===_rdvDurum;
+    var durumOk=_rdvDurumEslesme(r, _rdvDurum);
     var aramaOk=!arama||(r.musteri.toLowerCase().indexOf(arama)>-1)||(r.plaka.toLowerCase().indexOf(arama)>-1);
     var borcOk=!_borcluFiltre||((r.odenenToplam||0)<(r.tutar||0)&&(r.tutar||0)>0);
     return ayOk&&gunOk&&durumOk&&aramaOk&&borcOk;
@@ -3138,7 +3183,7 @@ function dashboardGuncelle(){ dashboardYukle(); return; /* Artık dashboardYukle
     var buHaftaGelir = rdvlar.reduce(function(s,r){ return s+(parseFloat(r.tutar)||0); },0);
 
     // Bekleyen onay
-    var bekleyen = rdvlar.filter(function(r){ return !r.durum||r.durum==='bekliyor'||r.durum==='beklemede'; }).length;
+    var bekleyen = rdvlar.filter(function(r){ return _rdvGercekDurum(r)==='bekl'; }).length;
 
     // ── KPI Kartları ──
     var el=document.getElementById('dash-bugun-rdv'); if(el) el.textContent=bugunRdv.length;
