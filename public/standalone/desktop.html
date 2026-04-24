@@ -3706,28 +3706,58 @@ svg{display:block;flex-shrink:0}
       </div>
       
       <script>
-      // Google Maps yorum sistemi
-      function acGoogleMaps(){
-        // Panel'den özelleştirilmiş URL varsa onu kullan
-        var sa = window.SITE_AYARLAR || {};
-        var yorumYazUrl = (sa.sosyal && sa.sosyal.googleYorumYaz) ? sa.sosyal.googleYorumYaz : '';
-        
-        // Varsayılan: arama linki (kullanıcı işletmeyi bulup yorum yazar)
-        if (!yorumYazUrl) {
-          yorumYazUrl = 'https://www.google.com/search?q=AutoClub+Samsun+Merkez+Canik';
+      // Google Maps yorum sistemi — AutoClub Samsun Merkez CID: 12835252300512927754
+      var AUTONAX_GOOGLE = {
+        cid: '12835252300512927754',
+        placeUrl: 'https://www.google.com/maps/place/?cid=12835252300512927754',
+        writeReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJd1JzRdF3iEAROqCWlvb5H7I',
+        // Alternatif yorum yaz URL (CID tabanlı — bazen daha iyi çalışır)
+        writeReviewCidUrl: 'https://search.google.com/local/writereview?placeid=0x408877d145735277:0xb21ff9f69696a00a'
+      };
+      
+      // Teşekkür bildirimi göster
+      function _skNotifGoster(metin, renk){
+        renk = renk || '#16A34A';
+        var n = document.getElementById('sk-notif');
+        if (!n) {
+          n = document.createElement('div');
+          n.id = 'sk-notif';
+          n.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:'+renk+';color:#fff;padding:14px 22px;border-radius:12px;font-size:14px;font-weight:700;box-shadow:0 10px 30px rgba(0,0,0,.2);z-index:99999;transition:transform .35s cubic-bezier(.34,1.56,.64,1);display:flex;align-items:center;gap:10px;max-width:90%;text-align:center;pointer-events:none';
+          document.body.appendChild(n);
         }
-        window.open(yorumYazUrl, '_blank', 'noopener');
+        n.style.background = renk;
+        n.innerHTML = '<svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg><span>'+metin+'</span>';
+        // Show
+        setTimeout(function(){ n.style.transform = 'translateX(-50%) translateY(0)'; }, 10);
+        // Hide
+        clearTimeout(window._skNotifTimer);
+        window._skNotifTimer = setTimeout(function(){
+          n.style.transform = 'translateX(-50%) translateY(120px)';
+        }, 4000);
+      }
+      
+      function acGoogleMaps(){
+        // Panel'den özel URL varsa onu kullan, yoksa sabit URL
+        var sa = window.SITE_AYARLAR || {};
+        var url = (sa.sosyal && sa.sosyal.googleYorumYaz) ? sa.sosyal.googleYorumYaz : AUTONAX_GOOGLE.writeReviewUrl;
+        
+        // Yeni pencerede aç
+        var win = window.open(url, '_blank', 'noopener');
+        
+        // Kullanıcıyı yönlendir
+        _skNotifGoster('Google\'da yorum sayfası açıldı — Değerli görüşünüz için teşekkürler! ⭐', '#4285F4');
+        
+        // Fallback — eğer pop-up bloklandıysa veya URL geçersizse alternatife yönlendir
+        if (!win) {
+          setTimeout(function(){ window.location.href = AUTONAX_GOOGLE.placeUrl; }, 800);
+        }
       }
       
       function acTumYorumlar(){
         // Tüm yorumları Google Maps'te göster
         var sa = window.SITE_AYARLAR || {};
-        var yorumlarUrl = (sa.sosyal && sa.sosyal.googleMaps) ? sa.sosyal.googleMaps : '';
-        
-        if (!yorumlarUrl) {
-          yorumlarUrl = 'https://www.google.com/search?q=AutoClub+Samsun+Merkez+Canik+yorumlar';
-        }
-        window.open(yorumlarUrl, '_blank', 'noopener');
+        var url = (sa.sosyal && sa.sosyal.googleMaps) ? sa.sosyal.googleMaps : AUTONAX_GOOGLE.placeUrl;
+        window.open(url, '_blank', 'noopener');
       }
       </script>
 
