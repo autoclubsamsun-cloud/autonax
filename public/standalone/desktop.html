@@ -2611,6 +2611,313 @@ svg{display:block;flex-shrink:0}
       </div>
     </div>
 
+    <!-- ═══════════════════════════════════════════════════════
+         EĞİTİCİ TABLOLAR — TPH vs TPU + PPF vs Seramik
+         ═══════════════════════════════════════════════════════ -->
+    <style>
+    /* Eğitici tablo ortak stiller */
+    .edu-wrap{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:22px 24px;margin-top:16px;position:relative;overflow:hidden}
+    .edu-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#F59E0B,#FFCE00,#F59E0B)}
+    .edu-wrap.pro::before{background:linear-gradient(90deg,#1a56db,#3B82F6,#1a56db)}
+    .edu-head{text-align:center;margin-bottom:18px}
+    .edu-eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:800;color:#D97706;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:6px;padding:4px 12px;background:rgba(245,158,11,.08);border-radius:14px}
+    .edu-eyebrow.pro{color:#1a56db;background:rgba(26,86,219,.08)}
+    .edu-eyebrow svg{width:13px;height:13px}
+    .edu-title{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1.2px;color:var(--ink);line-height:1.1;margin-bottom:6px}
+    .edu-desc{font-size:13px;color:var(--ink3);max-width:640px;margin:0 auto;line-height:1.5}
+    
+    /* Tablo konteyner */
+    .edu-tabwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -24px;padding:0 24px 6px;position:relative}
+    .edu-tabwrap::-webkit-scrollbar{height:6px}
+    .edu-tabwrap::-webkit-scrollbar-track{background:transparent}
+    .edu-tabwrap::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
+    
+    /* Scroll hint mobilde */
+    .edu-scroll-hint{display:none;position:absolute;right:0;top:0;bottom:6px;width:40px;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.9) 70%,#fff 100%);pointer-events:none;z-index:5}
+    .edu-scroll-hint::after{content:'›';position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:24px;font-weight:800;color:var(--r);animation:cmpSwipe 1.4s ease-in-out infinite}
+    
+    /* Tablo */
+    .edu-tab{width:100%;border-collapse:separate;border-spacing:0;min-width:640px}
+    .edu-tab th,.edu-tab td{padding:12px 12px;text-align:center;vertical-align:middle;font-size:12.5px;border-bottom:1px solid var(--bd)}
+    .edu-tab tbody tr:hover td{background:rgba(0,0,0,.015)}
+    .edu-tab th{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:var(--ink);font-weight:400;background:#fafbfc;position:sticky;top:0;z-index:2;padding:14px 12px}
+    .edu-tab th.edu-lbl{text-align:left;color:var(--ink3);font-size:10px;letter-spacing:1.2px;font-weight:800;font-family:'Outfit',sans-serif;text-transform:uppercase}
+    .edu-tab td.edu-lbl-td{text-align:left;color:var(--ink2);font-weight:700;font-size:12px;background:#fafbfc;border-right:1px solid var(--bd);min-width:140px}
+    
+    /* Ürün başlık */
+    .edu-prod{position:relative;padding:14px 12px 12px !important}
+    .edu-prod-name{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:.8px;color:var(--ink);line-height:1.1;margin-bottom:3px}
+    .edu-prod-alt{font-size:10px;color:var(--ink4);font-weight:700;letter-spacing:.6px;text-transform:uppercase}
+    
+    /* Vurgulu sütun (TPU / PPF) */
+    .edu-tab th.edu-highlight{background:linear-gradient(180deg,rgba(22,163,74,.1) 0%,#fafbfc 100%);position:relative}
+    .edu-tab th.edu-highlight::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:#16A34A}
+    .edu-tab th.edu-highlight .edu-prod-name{color:#15803d}
+    .edu-tab td.edu-highlight-col{background:rgba(22,163,74,.03)}
+    .edu-tab tbody tr:hover td.edu-highlight-col{background:rgba(22,163,74,.08)}
+    
+    /* Rozetler */
+    .edu-badge{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:800;padding:3px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;white-space:nowrap}
+    .edu-badge.b-best{background:#16A34A;color:#fff}
+    .edu-badge.b-avg{background:#F59E0B;color:#fff}
+    .edu-badge.b-poor{background:#94a3b8;color:#fff}
+    .edu-badge svg{width:10px;height:10px}
+    
+    /* Hücre değer stilleri */
+    .edu-v-good{color:#15803d;font-weight:700}
+    .edu-v-bad{color:#B91C1C;font-weight:700}
+    .edu-v-mid{color:#B45309;font-weight:700}
+    .edu-v-normal{color:var(--ink2)}
+    
+    /* Durum ikonları */
+    .edu-icon{display:inline-flex;align-items:center;justify-content:center;gap:4px;font-weight:700}
+    .edu-icon svg{width:14px;height:14px;flex-shrink:0}
+    .edu-check{color:#15803d}
+    .edu-cross{color:#B91C1C}
+    .edu-partial{color:#D97706}
+    
+    /* Bilgi kutusu */
+    .edu-info{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;background:linear-gradient(135deg,rgba(245,158,11,.04) 0%,rgba(245,158,11,.1) 100%);border:1px solid rgba(245,158,11,.2);border-radius:10px;margin-top:16px;font-size:12.5px;color:var(--ink2);line-height:1.55}
+    .edu-info.pro{background:linear-gradient(135deg,rgba(26,86,219,.04) 0%,rgba(26,86,219,.1) 100%);border-color:rgba(26,86,219,.2)}
+    .edu-info-ico{flex-shrink:0;width:30px;height:30px;background:#F59E0B;border-radius:50%;display:flex;align-items:center;justify-content:center}
+    .edu-info.pro .edu-info-ico{background:#1a56db}
+    .edu-info-ico svg{width:16px;height:16px;color:#fff;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .edu-info strong{color:#D97706}
+    .edu-info.pro strong{color:#1a56db}
+    
+    /* Mobil */
+    @media(max-width:900px){
+      .edu-wrap{padding:18px 16px}
+      .edu-tabwrap{margin:0 -16px;padding:0 16px 6px}
+      .edu-scroll-hint{display:block}
+      .edu-title{font-size:22px}
+      .edu-tab{min-width:540px}
+    }
+    @media(max-width:600px){
+      .edu-wrap{padding:16px 14px;border-radius:10px}
+      .edu-tabwrap{margin:0 -14px;padding:0 14px 6px}
+      .edu-title{font-size:19px;letter-spacing:1px}
+      .edu-desc{font-size:12px}
+      .edu-tab{min-width:480px}
+      .edu-tab td.edu-lbl-td{position:sticky;left:0;background:#fafbfc;z-index:3;border-right:1px solid var(--bd);min-width:110px;padding:9px 10px;font-size:10.5px}
+      .edu-tab th.edu-lbl{position:sticky;left:0;background:#fafbfc;z-index:4;min-width:110px;padding:10px;font-size:10px}
+      .edu-prod-name{font-size:14px}
+      .edu-prod-alt{font-size:9px}
+      .edu-tab th,.edu-tab td{padding:9px 8px;font-size:11.5px}
+      .edu-badge{font-size:8px;padding:2px 5px}
+      .edu-info{padding:11px 12px;font-size:11.5px;gap:9px}
+      .edu-info-ico{width:26px;height:26px}
+      .edu-info-ico svg{width:14px;height:14px}
+    }
+    @media(max-width:400px){
+      .edu-tab{min-width:420px}
+    }
+    </style>
+
+    <!-- TABLO 1: TPH vs TPU (Teknik Kıyaslama) -->
+    <div class="edu-wrap">
+      <div class="edu-head">
+        <div class="edu-eyebrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11H7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-2"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg>
+          Teknik Bilgi · Hammadde Kıyaslaması
+        </div>
+        <h2 class="edu-title">HANGİ PPF TEKNOLOJİSİ EN İYİSİ?</h2>
+        <div class="edu-desc">Piyasada TPH ve TPU olmak üzere iki ana PPF teknolojisi vardır. Autonax olarak neden yalnızca <strong style="color:#15803d">TPU (Termoplastik Poliüretan)</strong> kullandığımızı teknik olarak açıklayalım.</div>
+      </div>
+
+      <div class="edu-tabwrap" id="edu-tab1-wrap">
+        <table class="edu-tab">
+          <thead>
+            <tr>
+              <th class="edu-lbl">Özellik</th>
+              <th class="edu-prod">
+                <div class="edu-badge b-avg"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>Orta Seviye</div>
+                <div class="edu-prod-name">TPH</div>
+                <div class="edu-prod-alt">Termoplastik Hibrit</div>
+              </th>
+              <th class="edu-prod edu-highlight">
+                <div class="edu-badge b-best"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Premium</div>
+                <div class="edu-prod-name">TPU</div>
+                <div class="edu-prod-alt">Termoplastik Poliüretan</div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="edu-lbl-td">Kimyasal Yapı</td>
+              <td><span class="edu-v-mid">PVC + Yumuşatıcı</span></td>
+              <td class="edu-highlight-col"><span class="edu-v-good">Esnek Poliüretan</span></td>
+            </tr>
+            <tr>
+              <td class="edu-lbl-td">Esneklik (Uzama)</td>
+              <td><span class="edu-v-mid">%150-200</span><div style="font-size:10px;color:var(--ink4);margin-top:2px">Orta</div></td>
+              <td class="edu-highlight-col"><span class="edu-v-good">%400+</span><div style="font-size:10px;color:var(--ink4);margin-top:2px">Çok Yüksek</div></td>
+            </tr>
+            <tr>
+              <td class="edu-lbl-td">Sararma Direnci</td>
+              <td><span class="edu-v-mid">2-3 yılda matlaşır</span></td>
+              <td class="edu-highlight-col"><span class="edu-v-good">7-10 yıl mükemmel</span></td>
+            </tr>
+            <tr>
+              <td class="edu-lbl-td">Self-Healing</td>
+              <td><span class="edu-icon edu-partial"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>Kısmen</span></td>
+              <td class="edu-highlight-col"><span class="edu-icon edu-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Var (Isı ile onarım)</span></td>
+            </tr>
+            <tr>
+              <td class="edu-lbl-td">Dayanıklılık</td>
+              <td><span class="edu-v-mid">Zamanla gevrekleşir</span></td>
+              <td class="edu-highlight-col"><span class="edu-v-good">Darbe emer, yırtılmaz</span></td>
+            </tr>
+            <tr>
+              <td class="edu-lbl-td">Boya Üzerinde İz</td>
+              <td><span class="edu-v-mid">Sökümde zorluk</span></td>
+              <td class="edu-highlight-col"><span class="edu-v-good">İz bırakmadan çıkar</span></td>
+            </tr>
+            <tr>
+              <td class="edu-lbl-td">Uygulama Kolaylığı</td>
+              <td><span class="edu-v-mid">Orta derece</span></td>
+              <td class="edu-highlight-col"><span class="edu-v-good">Kolay (kıvrımları sarar)</span></td>
+            </tr>
+            <tr>
+              <td class="edu-lbl-td">Fiyat</td>
+              <td><span class="edu-v-normal">Düşük-Orta</span></td>
+              <td class="edu-highlight-col"><span class="edu-v-normal">Yüksek (değer)</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="edu-scroll-hint"></div>
+      </div>
+
+      <div class="edu-info">
+        <div class="edu-info-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+        <div>
+          <strong>Neden TPU?</strong> Autonax olarak yalnızca TPU (Termoplastik Poliüretan) hammadde kullanıyoruz. TPH ucuz alternatif olabilir ama <strong style="color:#B91C1C">2-3 yıl içinde matlaşır ve sökümde boyaya zarar verir</strong>. TPU ise 7-10 yıl boyunca ilk günkü parlaklığını korur, iz bırakmadan sökülür.
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLO 2: PPF vs Seramik (Satış Odaklı) -->
+    <div class="edu-wrap pro">
+      <div class="edu-head">
+        <div class="edu-eyebrow pro">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Koruma Kıyaslaması
+        </div>
+        <h2 class="edu-title">PPF KAPLAMA VS SERAMİK KAPLAMA</h2>
+        <div class="edu-desc">Aracınız için hangi koruma daha uygun? İki koruma türünü yan yana inceleyerek doğru kararı verin.</div>
+      </div>
+
+      <div class="edu-tabwrap" id="edu-tab2-wrap">
+        <table class="edu-tab">
+          <thead>
+            <tr>
+              <th class="edu-lbl">Özellik</th>
+              <th class="edu-prod edu-highlight">
+                <div class="edu-badge b-best"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>En Üstün</div>
+                <div class="edu-prod-name">PPF KAPLAMA</div>
+                <div class="edu-prod-alt">Fiziksel Koruma</div>
+              </th>
+              <th class="edu-prod">
+                <div class="edu-badge b-avg"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>Kimyasal</div>
+                <div class="edu-prod-name">SERAMİK KAPLAMA</div>
+                <div class="edu-prod-alt">Parlaklık & Hidrofobik</div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="edu-lbl-td">Kasti Çizilme (Anahtar vb)</td>
+              <td class="edu-highlight-col"><span class="edu-icon edu-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Korur</span></td>
+              <td><span class="edu-icon edu-cross"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Korumaz</span></td>
+            </tr>
+            <tr>
+              <td class="edu-lbl-td">Uzun Yolda Taş Vurukları</td>
+              <td class="edu-highlight-col"><span class="edu-icon edu-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Korur</span></td>
+              <td><span class="edu-icon edu-cross"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Korumaz</span></td>
+            </tr>
+            <tr>
+              <td class="edu-lbl-td">Güneş Yanıkları</td>
+              <td class="edu-highlight-col"><span class="edu-icon edu-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Korur</span></td>
+              <td><span class="edu-icon edu-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Korur</span></td>
+            </tr>
+            <tr>
+              <td class="edu-lbl-td">Kılcal Çizikler</td>
+              <td class="edu-highlight-col"><span class="edu-icon edu-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Korur</span></td>
+              <td><span class="edu-icon edu-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Korur</span></td>
+            </tr>
+            <tr>
+              <td class="edu-lbl-td">Matlaşma</td>
+              <td class="edu-highlight-col"><span class="edu-icon edu-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Korur</span></td>
+              <td><span class="edu-icon edu-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Korur</span></td>
+            </tr>
+            <tr>
+              <td class="edu-lbl-td">Kuş Pisliği</td>
+              <td class="edu-highlight-col"><span class="edu-icon edu-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Tam Korur</span></td>
+              <td><span class="edu-icon edu-partial"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>Kısmen</span></td>
+            </tr>
+            <tr>
+              <td class="edu-lbl-td">Reçine & Zift</td>
+              <td class="edu-highlight-col"><span class="edu-icon edu-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Korur</span></td>
+              <td><span class="edu-icon edu-partial"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>Kısmen</span></td>
+            </tr>
+            <tr>
+              <td class="edu-lbl-td">Dolu Hasarı</td>
+              <td class="edu-highlight-col"><span class="edu-icon edu-partial"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>Kısmen</span></td>
+              <td><span class="edu-icon edu-cross"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Korumaz</span></td>
+            </tr>
+            <tr>
+              <td class="edu-lbl-td">Uygulama Süresi</td>
+              <td class="edu-highlight-col"><span class="edu-v-normal">3 iş günü</span></td>
+              <td><span class="edu-v-normal">2 iş günü</span></td>
+            </tr>
+            <tr>
+              <td class="edu-lbl-td">Garanti Süresi</td>
+              <td class="edu-highlight-col"><span class="edu-v-good">5-10 yıl</span></td>
+              <td><span class="edu-v-mid">2 yıl</span></td>
+            </tr>
+            <tr>
+              <td class="edu-lbl-td">Bölgesel Yenileme</td>
+              <td class="edu-highlight-col"><span class="edu-icon edu-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Yapılabilir</span></td>
+              <td><span class="edu-icon edu-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Yapılabilir</span></td>
+            </tr>
+            <tr>
+              <td class="edu-lbl-td">Sökülme Kolaylığı</td>
+              <td class="edu-highlight-col"><span class="edu-v-good">Kolay (iz bırakmaz)</span></td>
+              <td><span class="edu-v-normal">—</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="edu-scroll-hint"></div>
+      </div>
+
+      <div class="edu-info pro">
+        <div class="edu-info-ico"><svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m0 16v1m-9-9H2m19 0h-1m-2.121-6.879l-.707.707M6.828 6.828l-.707-.707m12.728 12.728l-.707-.707M6.828 17.172l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg></div>
+        <div>
+          <strong>PPF + Seramik = İdeal Kombo!</strong> PPF <strong>fiziksel darbelere</strong> (taş vuruğu, anahtar çiziği) karşı kalkandır. Seramik ise <strong>kimyasal etkilere</strong> (UV, su izi) karşı koruma sağlar. Premium araçlarda bu iki kaplamayı birlikte uyguluyoruz — maksimum koruma için <strong>PPF altta, seramik üstte</strong>.
+        </div>
+      </div>
+    </div>
+
+    <script>
+    // Eğitici tabloların scroll hint yönetimi
+    (function(){
+      ['edu-tab1-wrap', 'edu-tab2-wrap'].forEach(function(id){
+        var wrap = document.getElementById(id);
+        if (!wrap) return;
+        var hint = wrap.querySelector('.edu-scroll-hint');
+        if (!hint) return;
+        wrap.addEventListener('scroll', function(){
+          if (wrap.scrollLeft > 20) {
+            hint.style.opacity = '0';
+            hint.style.transition = 'opacity .3s';
+          } else {
+            hint.style.opacity = '1';
+          }
+        });
+      });
+    })();
+    </script>
+
     <script>
     (function(){
       // Karşılaştırma tablosu — URUNLER sözlüğüyle senkronize
