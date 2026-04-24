@@ -4080,38 +4080,131 @@ function dinamikKartEkle(u){
   var kat = u.kat||'ppf';
   var fiyat = u.full_fiyat||u.tutar||0;
   var fiyatStr = fiyat ? '₺'+fiyat.toLocaleString('tr-TR') : 'Fiyat için arayın';
-  var rozet = u.rozet||'🆕 YENİ';
+  var rozetRaw = u.rozet||'🆕 YENİ';
   var garanti = u.garanti||0;
-  var garatiStr = garanti ? garanti+' Yıl Garanti' : 'Garanti Bilgisi';
+  var garatiStr = garanti ? garanti+' Yıl Garanti' : 'Garanti';
   var isim = u.isim||'';
   var aciklama = u.aciklama||'';
+  var altKat = u.alt_kat||'';
 
-  // SVG ikonları kategoriye göre
-  var svgIkon = {
-    ppf: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>',
-    seramik: '<circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/>',
-    bakim: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'
-  }[kat] || '<circle cx="12" cy="12" r="10"/>';
-
-  // Kart HTML'i
-  var resimHtml = '';
-  if(u.resim){
-    resimHtml = '<img loading="lazy" src="'+u.resim+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45;border-radius:inherit;pointer-events:none" class="urun-resim" alt="'+u.id+'">';
+  // — Rozet metni → SVG ikon + temiz metin
+  var rozetIkonMap = [
+    ['POPÜLER','ic-star'], ['POPULER','ic-star'],
+    ['BAŞLANGIÇ','ic-check'], ['BASLANGIC','ic-check'],
+    ['GERMANY','ic-flag-de'], ['ALMAN','ic-flag-de'], ['ALMANYA','ic-flag-de'],
+    ['EKONOMIK','ic-dollar'], ['EKONOMİK','ic-dollar'], ['EKO','ic-dollar'],
+    ['MAKSİMUM','ic-crown'], ['MAKSIMUM','ic-crown'], ['PREMIUM','ic-crown'], ['PREMİUM','ic-crown'],
+    ['RENKLİ','ic-palette'], ['RENKLI','ic-palette'],
+    ['YENİ','ic-star'], ['YENI','ic-star']
+  ];
+  var bdgClsMap = {
+    'ic-star':'', 'ic-check':'bdg-success', 'ic-flag-de':'bdg-germany',
+    'ic-dollar':'bdg-eko', 'ic-crown':'bdg-premium', 'ic-palette':'bdg-renkli'
+  };
+  var rozetIkon = 'ic-star', rozetCls = '';
+  var upRoz = rozetRaw.toUpperCase();
+  for (var i=0; i<rozetIkonMap.length; i++) {
+    if (upRoz.indexOf(rozetIkonMap[i][0]) !== -1) {
+      rozetIkon = rozetIkonMap[i][1];
+      rozetCls = bdgClsMap[rozetIkon] || '';
+      break;
+    }
   }
-  var kartHtml = '<div class="svc" data-dinamik-id="'+u.id+'">'+
-    '<div class="svc-img" style="position:relative;overflow:hidden">'+resimHtml+'<svg viewBox="0 0 24 24">'+svgIkon+'</svg>'+
-    '<div class="svc-bdg">'+rozet+'</div></div>'+
-    '<div class="svc-body">'+
-      '<div class="svc-tag-row">'+
-        '<span class="svc-brand">'+isim+'</span>'+
-        '<span class="svc-garanti">'+garatiStr+'</span>'+
+  // Emoji/bozuk karakterleri temizle, sadece yazı kalsın
+  var rozetTemiz = rozetRaw.replace(/[^\wığüşöçĞÜŞÖÇİa-zA-Z0-9 ]/g,'').trim();
+  if (!rozetTemiz) rozetTemiz = 'Yeni';
+
+  // — Menşei & bayrak filigranı
+  var flagId = '', menseiAd = '';
+  if (altKat === 'alman' || (aciklama.indexOf('Alman')!==-1) || (isim.indexOf('Alman')!==-1)) {
+    flagId = 'ic-flag-de'; menseiAd = 'Almanya';
+  } else if (altKat === 'amerikan' || (aciklama.indexOf('USA')!==-1) || (aciklama.indexOf('Amerik')!==-1) || (isim.indexOf('USA')!==-1)) {
+    flagId = 'ic-flag-us'; menseiAd = 'USA';
+  }
+
+  // — svc class (marka temalı arka plan)
+  var svcCls = 'svc';
+  if (flagId === 'ic-flag-us') svcCls += ' svc-us';
+  else if (flagId === 'ic-flag-de') svcCls += ' svc-de';
+  if ((isim+' '+aciklama).toLowerCase().indexOf('renkli')!==-1) svcCls += ' svc-renkli';
+
+  // — Placeholder SVG (kalkan + check)
+  var placeholder = '<svg class="svc-placeholder" viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5 3.5 9.6 8 10.8 4.5-1.2 8-5.8 8-10.8V5l-8-3z" fill="none" stroke="currentColor"/><polyline points="8 12 11 15 16 9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  // — Gerçek resim varsa kullan
+  var imgContent = '';
+  if (u.resim) {
+    imgContent = '<img loading="lazy" src="'+u.resim+'" alt="'+(isim||u.id)+'">';
+  } else {
+    imgContent = placeholder;
+  }
+
+  // — Bayrak filigranı
+  var flagWm = flagId ? '<div class="svc-flag-wm"><svg><use href="#'+flagId+'"/></svg></div>' : '';
+
+  // — Rozet (yeni SVG yapısı)
+  var bdgHtml = '<div class="svc-bdg '+rozetCls+'"><svg><use href="#'+rozetIkon+'"/></svg> '+rozetTemiz+'</div>';
+
+  // — Garanti rozeti (SVG ikonlu)
+  var garHtml = garanti ? '<span class="svc-garanti"><svg><use href="#ic-shield"/></svg>'+garatiStr+'</span>' : '';
+
+  // — Özellikler (3 madde, ikonlu)
+  var feats = [];
+  // Mikron tahmin et — isim/açıklamadan
+  var mikronMatch = (isim+' '+aciklama).match(/(\d{3})\s*[Mm]ikron/);
+  if (mikronMatch) {
+    feats.push('<div class="svc-feat"><svg><use href="#ic-ruler"/></svg><span><strong>'+mikronMatch[1]+' Mikron</strong> kalınlık</span></div>');
+  }
+  // Teknoloji
+  if ((isim+' '+aciklama).toLowerCase().indexOf('hidrofilik') !== -1) {
+    feats.push('<div class="svc-feat"><svg><use href="#ic-bolt"/></svg><span>Hidrofilik · Parlak</span></div>');
+  } else if ((isim+' '+aciklama).toLowerCase().indexOf('hidrofobik') !== -1) {
+    feats.push('<div class="svc-feat"><svg><use href="#ic-bolt"/></svg><span>Hidrofobik · Parlak</span></div>');
+  } else if (kat === 'seramik') {
+    feats.push('<div class="svc-feat"><svg><use href="#ic-drop"/></svg><span>Nano Seramik Koruma</span></div>');
+  } else {
+    feats.push('<div class="svc-feat"><svg><use href="#ic-bolt"/></svg><span>Self-Healing</span></div>');
+  }
+  // Menşei
+  if (menseiAd) {
+    feats.push('<div class="svc-feat"><svg style="width:14px;height:10px;border-radius:1px"><use href="#'+flagId+'"/></svg><span><strong>'+menseiAd+'</strong> üretim</span></div>');
+  } else if (garanti) {
+    feats.push('<div class="svc-feat"><svg><use href="#ic-shield"/></svg><span><strong>'+garanti+' Yıl</strong> koruma</span></div>');
+  }
+
+  // — Marka adı (sol üst) — isim kısa ise öyle, uzunsa kesilir
+  var brandKisa = isim;
+  if (brandKisa.length > 18) {
+    // "NiDOJP S85 220 Mikron TPU PPF" → "NiDOJP S85"
+    var parts = isim.split(' ');
+    brandKisa = parts.slice(0, 2).join(' ');
+  }
+
+  // — Ürün adı (ikinci satır)
+  var urunAd = isim;
+  if (aciklama && aciklama.length > 0 && aciklama.length <= 60) {
+    // Açıklama kısa ve anlamlıysa onu kullan
+    urunAd = aciklama.slice(0, 40);
+  } else if (isim.length > 20) {
+    // Uzun isimden gerekli kısmı al
+    urunAd = isim;
+  }
+
+  // — Kart HTML (yeni yapıya uygun)
+  var kartHtml =
+    '<div class="'+svcCls+'" data-dinamik-id="'+u.id+'">'+
+      '<div class="svc-img">'+imgContent+flagWm+bdgHtml+'</div>'+
+      '<div class="svc-body">'+
+        '<div class="svc-tag-row">'+
+          '<span class="svc-brand">'+brandKisa+'</span>'+
+          garHtml+
+        '</div>'+
+        '<div class="svc-name">'+urunAd+'</div>'+
+        '<div class="svc-feats">'+feats.join('')+'</div>'+
+        '<div class="svc-price"><span data-urun-id="'+u.id+'" data-fiyat-tip="full">'+fiyatStr+'</span></div>'+
+        '<button class="svc-btn" data-uid="'+u.id+'" data-tip="full" onclick="urunDetayAc(this.dataset.uid,this.dataset.tip)"><svg><use href="#ic-calendar"/></svg>Randevu Al</button>'+
       '</div>'+
-      '<div class="svc-name">'+aciklama.slice(0,40)+'</div>'+
-      '<div class="svc-sub">'+aciklama+'</div>'+
-      '<div class="svc-price"><span data-urun-id="'+u.id+'" data-fiyat-tip="full">'+fiyatStr+'</span></div>'+
-      '<button class="svc-btn" data-uid="'+u.id+'" data-tip="full" onclick="urunDetayAc(this.dataset.uid,this.dataset.tip)">Randevu Al</button>'+
-    '</div>'+
-  '</div>';
+    '</div>';
 
   // Doğru grid'i bul — kategoriye göre
   var gridSec = null;
