@@ -4902,8 +4902,21 @@ svg{display:block;flex-shrink:0}
 
 /* SEÇENEK BUTONLARI */
 .rm-opts{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
-.rm-opt{padding:7px 14px;border:1.5px solid var(--r);border-radius:20px;font-size:13px;font-weight:500;color:var(--r);cursor:pointer;background:#fff;transition:.12s;white-space:nowrap}
+.rm-opt{padding:7px 14px;border:1.5px solid var(--r);border-radius:20px;font-size:13px;font-weight:500;color:var(--r);cursor:pointer;background:#fff;transition:.12s;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
 .rm-opt:hover{background:var(--r);color:#fff}
+.rm-opt:hover .ro-icon svg{stroke:#fff}
+
+/* Bilgilendirme butonları (TPH/TPU farkı, PPF/Seramik farkı) */
+.rm-opt.rm-opt-info{border-color:#1a56db;color:#1a56db;background:rgba(26,86,219,.04)}
+.rm-opt.rm-opt-info:hover{background:#1a56db;color:#fff}
+.rm-opt.rm-opt-info:hover .ro-icon svg{stroke:#fff}
+.rm-opt.rm-opt-info .ro-icon svg{stroke:#1a56db}
+.rm-opt.rm-opt-info .ro-badge{background:rgba(26,86,219,.1);color:#1a56db;border-color:rgba(26,86,219,.25)}
+
+/* Bilgi ayırıcı - "Önce öğrenmek ister misin?" */
+.rm-info-divider{display:flex;align-items:center;gap:8px;margin:10px 0 2px;font-size:10.5px;font-weight:700;color:var(--ink4);letter-spacing:1px;text-transform:uppercase}
+.rm-info-divider::before,.rm-info-divider::after{content:'';flex:1;height:1px;background:var(--bd)}
+.rm-info-divider svg{width:12px;height:12px;color:#1a56db}
 
 /* INPUT ALANI */
 .rm-footer{padding:14px 20px;border-top:1px solid var(--bd);background:#fff;flex-shrink:0}
@@ -4939,9 +4952,11 @@ svg{display:block;flex-shrink:0}
 .rm-plaka-skip{background:transparent;border:1.5px solid var(--bd);color:var(--ink4);border-radius:7px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer}
 .rm-plaka-send{flex-shrink:0}
 
-/* OPT İKON */
-.ro-icon{margin-right:4px}
-.ro-badge{font-size:9px;font-weight:700;background:rgba(176,28,46,.12);color:var(--r);padding:2px 6px;border-radius:8px;margin-left:5px;border:1px solid rgba(176,28,46,.2)}
+/* OPT İKON (SVG destekli) */
+.ro-icon{display:inline-flex;align-items:center;justify-content:center;margin-right:2px}
+.ro-icon svg{width:14px;height:14px;stroke:var(--r);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:stroke .12s}
+.ro-badge{font-size:9px;font-weight:700;background:rgba(176,28,46,.12);color:var(--r);padding:2px 6px;border-radius:8px;margin-left:5px;border:1px solid rgba(176,28,46,.2);transition:.12s}
+.rm-opt:hover .ro-badge{background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.3)}
 
 /* BÖLGE SEÇİCİ */
 .bolge-widget{background:#FAFAFA;border:1px solid var(--bd);border-radius:12px;padding:14px;margin-top:4px}
@@ -5730,10 +5745,19 @@ function addMsg(role, html, opts=[], extra=null){
   if(opts.length){
     const row=document.createElement('div'); row.className='rm-opts';
     opts.forEach(o=>{
+      // Ayırıcı (bilgilendirme bölümü başlangıcı)
+      if(o.divider){
+        const d=document.createElement('div'); d.className='rm-info-divider';
+        d.style.flexBasis='100%';
+        d.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>${o.divider}`;
+        row.appendChild(d);
+        return;
+      }
       const lbl=o.label||o, val=o.val||lbl, icon=o.icon||'', badge=o.badge?`<span class="ro-badge">${o.badge}</span>`:'';
-      const b=document.createElement('button'); b.className='rm-opt'; b.dataset.val=o.val||'';
+      const cls = o.cls ? 'rm-opt '+o.cls : 'rm-opt';
+      const b=document.createElement('button'); b.className=cls; b.dataset.val=o.val||'';
       b.innerHTML=`${icon?`<span class="ro-icon">${icon}</span>`:''}${lbl}${badge}`;
-      b.onclick=()=>{ if(!R.waitOpt)return; row.querySelectorAll('.rm-opt').forEach(x=>{x.disabled=true;x.style.opacity='.45'}); b.style.opacity='1';b.style.background='var(--r)';b.style.color='#fff'; R.waitOpt=false; addMsg('user',lbl); handleSec(val); };
+      b.onclick=()=>{ if(!R.waitOpt)return; row.querySelectorAll('.rm-opt').forEach(x=>{x.disabled=true;x.style.opacity='.45'}); b.style.opacity='1';b.style.background='var(--r)';b.style.color='#fff'; if(o.cls==='rm-opt-info'){b.style.background='#1a56db'} R.waitOpt=false; addMsg('user',lbl); handleSec(val); };
       row.appendChild(b);
     });
     C().appendChild(row); R.waitOpt=true;
@@ -5772,6 +5796,19 @@ function handleSec(val){
 
   // ADIM 1 — TÜR SEÇİMİ
   if(step===1){
+    // Bilgilendirme akışları (ana akışı bozma, adım ilerletme)
+    if(val==='info_tph_tpu'){
+      adim_info_tph_tpu();
+      return;
+    }
+    if(val==='info_ppf_seramik'){
+      adim_info_ppf_seramik();
+      return;
+    }
+    if(val==='__restart_tur'){
+      adim_tur_kisa();
+      return;
+    }
     R.akis = val; // komple, bolgesel, seramik, kombo
     R.s.tur = val;
     setTimeout(()=>adim_marka(), 300);
@@ -5881,15 +5918,165 @@ function adim_tur(){
   setStep(1,'Tür');
   setTimeout(()=>{
     addMsg('bot',
-      `Merhaba! 👋 Ben <b>Autonax PPF Kaplama Robotu</b>.<br>Size özel en uygun koruma çözümünü birlikte belirleyelim.<br><br>🎯 <b>Hangi tür koruma arıyorsunuz?</b>`,
+      `Merhaba! <span style="display:inline-block;transform:translateY(-1px)">👋</span> Ben <b>AutoClub Samsun Merkez PPF Kaplama Robotu</b>.<br>Size özel en uygun koruma çözümünü birlikte belirleyelim.<br><br><b style="display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#B01C2E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>Hangi tür koruma arıyorsunuz?</b>`,
       [
-        {icon:'🛡️', label:'Komple PPF Kaplama',   val:'komple',  badge:'Tam Araç'},
-        {icon:'🎯', label:'Bölgesel PPF Koruma',   val:'bolgesel',badge:'Ekonomik'},
-        {icon:'✨', label:'Seramik Kaplama',         val:'seramik', badge:'Parlaklık'},
-        {icon:'🔥', label:'PPF + Seramik Kombo',    val:'kombo',   badge:'En İyi'},
+        {
+          icon:`<svg viewBox="0 0 24 24"><path d="M12 2L4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4z"/></svg>`,
+          label:'Komple PPF Kaplama', val:'komple', badge:'Tam Araç'
+        },
+        {
+          icon:`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
+          label:'Bölgesel PPF Koruma', val:'bolgesel', badge:'Ekonomik'
+        },
+        {
+          icon:`<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+          label:'Seramik Kaplama', val:'seramik', badge:'Parlaklık'
+        },
+        {
+          icon:`<svg viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`,
+          label:'PPF + Seramik Kombo', val:'kombo', badge:'En İyi'
+        },
+        {divider: 'Önce öğrenmek ister misiniz?'},
+        {
+          icon:`<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
+          label:'TPH vs TPU Farkı', val:'info_tph_tpu', cls:'rm-opt-info', badge:'Teknik'
+        },
+        {
+          icon:`<svg viewBox="0 0 24 24"><path d="M12 2L4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4z"/><polyline points="9 12 11 14 15 10"/></svg>`,
+          label:'PPF vs Seramik Farkı', val:'info_ppf_seramik', cls:'rm-opt-info', badge:'Kıyas'
+        },
       ]
     );
   },400);
+}
+
+/* ════════════════════════════════
+   BİLGİ — TPH vs TPU FARKI
+   Ana akışı bozmaz, kullanıcı bilgiyi gördükten sonra tekrar tür seçimine döner
+════════════════════════════════ */
+function adim_tur_kisa(){
+  // Bilgi aldıktan sonra kısa versiyon - sadece hizmet butonları
+  setStep(1,'Tür');
+  showTyping();
+  setTimeout(()=>{
+    hideTyping();
+    addMsg('bot',
+      `Şimdi <b>hangi hizmeti</b> istediğinizi seçelim:`,
+      [
+        {
+          icon:`<svg viewBox="0 0 24 24"><path d="M12 2L4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4z"/></svg>`,
+          label:'Komple PPF Kaplama', val:'komple', badge:'Tam Araç'
+        },
+        {
+          icon:`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
+          label:'Bölgesel PPF Koruma', val:'bolgesel', badge:'Ekonomik'
+        },
+        {
+          icon:`<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+          label:'Seramik Kaplama', val:'seramik', badge:'Parlaklık'
+        },
+        {
+          icon:`<svg viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`,
+          label:'PPF + Seramik Kombo', val:'kombo', badge:'En İyi'
+        },
+      ]
+    );
+  },500);
+}
+
+function adim_info_tph_tpu(){
+  showTyping();
+  setTimeout(()=>{
+    hideTyping();
+    addMsg('bot',
+      `<div style="background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);border-radius:10px;padding:12px 14px;margin:-2px 0 8px;border-left:3px solid #f59e0b">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.8px;color:#92400e;margin-bottom:6px;display:flex;align-items:center;gap:6px">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#92400e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          TPH vs TPU — Hangisi Üstün?
+        </div>
+        <div style="font-size:12px;color:#78350f;line-height:1.5">Piyasada 2 ana PPF hammaddesi var. Farkları bilmek, kaliteli ürün almanın ilk adımı.</div>
+      </div>
+      
+      <table style="width:100%;font-size:11.5px;border-collapse:collapse;margin-bottom:4px">
+        <thead>
+          <tr style="background:#f3f4f6">
+            <th style="padding:7px 8px;text-align:left;color:#6b7280;font-size:10px;font-weight:800;letter-spacing:.8px">ÖZELLİK</th>
+            <th style="padding:7px 6px;color:#B45309;font-weight:700;font-size:11px;border-left:1px solid #e5e7eb">TPH</th>
+            <th style="padding:7px 6px;color:#15803d;font-weight:700;font-size:11px;background:rgba(22,163,74,.08);border-left:2px solid #16A34A">TPU ⭐</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #f3f4f6"><td style="padding:6px 8px;color:#4b5563;font-weight:600">Esneklik</td><td style="padding:6px;text-align:center;color:#B45309">%150-200</td><td style="padding:6px;text-align:center;color:#15803d;font-weight:700;background:rgba(22,163,74,.04)">%400+</td></tr>
+          <tr style="border-bottom:1px solid #f3f4f6"><td style="padding:6px 8px;color:#4b5563;font-weight:600">Sararma</td><td style="padding:6px;text-align:center;color:#B45309">2-3 yıl</td><td style="padding:6px;text-align:center;color:#15803d;font-weight:700;background:rgba(22,163,74,.04)">7-10 yıl</td></tr>
+          <tr style="border-bottom:1px solid #f3f4f6"><td style="padding:6px 8px;color:#4b5563;font-weight:600">Self-Healing</td><td style="padding:6px;text-align:center;color:#B45309">Kısmen</td><td style="padding:6px;text-align:center;color:#15803d;font-weight:700;background:rgba(22,163,74,.04)">✓ Var</td></tr>
+          <tr style="border-bottom:1px solid #f3f4f6"><td style="padding:6px 8px;color:#4b5563;font-weight:600">Sökümde İz</td><td style="padding:6px;text-align:center;color:#B45309">Bırakır</td><td style="padding:6px;text-align:center;color:#15803d;font-weight:700;background:rgba(22,163,74,.04)">Bırakmaz</td></tr>
+        </tbody>
+      </table>
+      
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:9px 11px;margin-top:6px;font-size:11.5px;color:#166534;line-height:1.5">
+        <b style="display:inline-flex;align-items:center;gap:4px">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#15803d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Neden TPU?
+        </b> AutoClub Samsun Merkez olarak <b>yalnızca Nidojp USA TPU</b> kullanıyoruz. 7-10 yıl garantili, iz bırakmadan sökülür.
+      </div>`,
+      [
+        {
+          icon:`<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>`,
+          label:'Devam — Hizmet Seçimi', val:'__restart_tur'
+        }
+      ]
+    );
+  },600);
+}
+
+/* ════════════════════════════════
+   BİLGİ — PPF vs SERAMİK FARKI
+═══════════════════════════════ */
+function adim_info_ppf_seramik(){
+  showTyping();
+  setTimeout(()=>{
+    hideTyping();
+    addMsg('bot',
+      `<div style="background:linear-gradient(135deg,#dbeafe 0%,#bfdbfe 100%);border-radius:10px;padding:12px 14px;margin:-2px 0 8px;border-left:3px solid #1a56db">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.8px;color:#1e3a8a;margin-bottom:6px;display:flex;align-items:center;gap:6px">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#1e3a8a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4z"/><polyline points="9 12 11 14 15 10"/></svg>
+          PPF vs Seramik Kaplama
+        </div>
+        <div style="font-size:12px;color:#1e40af;line-height:1.5">İki farklı koruma — birbirinin rakibi değil, tamamlayıcısı!</div>
+      </div>
+      
+      <table style="width:100%;font-size:11.5px;border-collapse:collapse;margin-bottom:4px">
+        <thead>
+          <tr style="background:#f3f4f6">
+            <th style="padding:7px 8px;text-align:left;color:#6b7280;font-size:10px;font-weight:800;letter-spacing:.8px">ÖZELLİK</th>
+            <th style="padding:7px 6px;color:#15803d;font-weight:700;font-size:11px;background:rgba(22,163,74,.08);border-left:2px solid #16A34A">PPF ⭐</th>
+            <th style="padding:7px 6px;color:#B45309;font-weight:700;font-size:11px;border-left:1px solid #e5e7eb">Seramik</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #f3f4f6"><td style="padding:6px 8px;color:#4b5563;font-weight:600">Taş Vuruğu</td><td style="padding:6px;text-align:center;color:#15803d;font-weight:700;background:rgba(22,163,74,.04)">✓ Korur</td><td style="padding:6px;text-align:center;color:#B91C1C">✗ Korumaz</td></tr>
+          <tr style="border-bottom:1px solid #f3f4f6"><td style="padding:6px 8px;color:#4b5563;font-weight:600">Anahtar Çiziği</td><td style="padding:6px;text-align:center;color:#15803d;font-weight:700;background:rgba(22,163,74,.04)">✓ Korur</td><td style="padding:6px;text-align:center;color:#B91C1C">✗ Korumaz</td></tr>
+          <tr style="border-bottom:1px solid #f3f4f6"><td style="padding:6px 8px;color:#4b5563;font-weight:600">Kuş Pisliği</td><td style="padding:6px;text-align:center;color:#15803d;font-weight:700;background:rgba(22,163,74,.04)">✓ Tam</td><td style="padding:6px;text-align:center;color:#B45309">∼ Kısmen</td></tr>
+          <tr style="border-bottom:1px solid #f3f4f6"><td style="padding:6px 8px;color:#4b5563;font-weight:600">UV / Güneş</td><td style="padding:6px;text-align:center;color:#15803d;font-weight:700;background:rgba(22,163,74,.04)">✓ Korur</td><td style="padding:6px;text-align:center;color:#15803d;font-weight:700">✓ Korur</td></tr>
+          <tr style="border-bottom:1px solid #f3f4f6"><td style="padding:6px 8px;color:#4b5563;font-weight:600">Parlaklık</td><td style="padding:6px;text-align:center;color:#15803d;font-weight:700;background:rgba(22,163,74,.04)">Yüksek</td><td style="padding:6px;text-align:center;color:#15803d;font-weight:700">Çok Yüksek</td></tr>
+          <tr style="border-bottom:1px solid #f3f4f6"><td style="padding:6px 8px;color:#4b5563;font-weight:600">Garanti</td><td style="padding:6px;text-align:center;color:#15803d;font-weight:700;background:rgba(22,163,74,.04)">5-12 yıl</td><td style="padding:6px;text-align:center;color:#B45309">2 yıl</td></tr>
+        </tbody>
+      </table>
+      
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:9px 11px;margin-top:6px;font-size:11.5px;color:#1e40af;line-height:1.5">
+        <b style="display:inline-flex;align-items:center;gap:4px">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#1e40af" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+          En İyi Çözüm: Kombo
+        </b> PPF <b>fiziksel</b> darbelere, Seramik <b>kimyasal</b> etkilere karşı kalkandır. Premium araçlarda ikisini birlikte uyguluyoruz — <b>PPF altta, seramik üstte</b>.
+      </div>`,
+      [
+        {
+          icon:`<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>`,
+          label:'Devam — Hizmet Seçimi', val:'__restart_tur'
+        }
+      ]
+    );
+  },600);
 }
 
 /* ════════════════════════════════
