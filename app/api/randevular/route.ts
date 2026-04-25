@@ -48,8 +48,18 @@ export async function GET(req: NextRequest) {
     const q = searchParams.get('q')?.toLowerCase();
     const mod = searchParams.get('mod'); // 'musteri' = sadece kendi randevuları
 
-    // ─── MÜŞTERİ MODU ─────────────────────────────────────────────
-    if (auth.kim === 'musteri' || mod === 'musteri') {
+    // ─── HOTFIX — Mod kararı ──────────────────────────────────────
+    // ESKI: auth.kim === 'musteri' tek başına müşteri modu tetikliyordu
+    //       → admin panel müşteri cookie'si de varsa kazara müşteri sanıyordu
+    // YENI: Müşteri modu SADECE şu durumda tetiklenir:
+    //       1) Açıkça ?mod=musteri query param VAR  (müşteri panelinden çağrılır)
+    //       2) VEYA istek atan admin token YOK ve sadece müşteri token VAR
+    //       Yani admin token varsa, mod=musteri olmadıkça admin akışı çalışır.
+    // ─────────────────────────────────────────────────────────────
+    const adminToken = req.cookies.get('autonax_token')?.value;
+    const isMusteriRequest = (mod === 'musteri') || (auth.kim === 'musteri' && !adminToken);
+
+    if (isMusteriRequest) {
       // Müşteri ise zorla kendi verilerini çek
       if (auth.kim !== 'musteri') {
         return NextResponse.json(
