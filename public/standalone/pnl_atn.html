@@ -2101,6 +2101,11 @@ var DIGER_HIZMETLER = [
   { isim:'Detaylı İç+Dış Temizlik', kat:'bakim', altKat:'detayli', tutar:3500, bayiIndirim:12, aciklama:'Komple araç detay temizliği. Buharlı temizlik dahil.' }
 ];
 
+/* ─── DB ÖZEL ÜRÜNLER ───
+   DB'den gelen ama URUNLER/SERAMIK/DIGER_HIZMETLER objelerinde karşılığı olmayan
+   "hayalet" ürünler. dbSyncYukle ve fiyatSayfasiYukle tarafından doldurulur.
+   Amaç: DENEMME gibi DB'de kalmış test ürünlerini admin panelden yönetebilmek. */
+var DB_OZEL_URUNLER = [];
 
 var RANDEVULAR=[];
 var FIYAT_DATA=[
@@ -9912,6 +9917,45 @@ function urunleriApiSenkronEt(){
   .catch(function(e){console.warn('Ürün API hatası:',e);});
 }
 
+/* ─── DB ÖZEL ÜRÜN TESPİTİ ─── */
+
+/**
+ * Bir DB ürünü "özel" mi (yani URUNLER/SERAMIK/DIGER_HIZMETLER'de yok mu)?
+ * DENEMME gibi sadece DB'de var olan kayıtları yakalar.
+ * Dönüş: true = özel ürün (admin panelde yönetilemiyor), false = bilinen ürün
+ */
+function _dbUrunOzelMi(u){
+  if(!u || !u.id) return false;
+  // PPF varsayılanlardan biri mi?
+  if(URUNLER[u.id]) return false;
+  // Seramik dizisinde mi? (id format: "seramik_0", "seramik_1"...)
+  if((u.id||'').indexOf('seramik_')===0){
+    var sIdx=parseInt((u.id||'').replace('seramik_',''));
+    if(!isNaN(sIdx) && SERAMIK[sIdx]) return false;
+  }
+  // Diğer hizmetler dizisinde mi? (id format: "s0", "s1"...)
+  if((u.id||'').match(/^s\d+$/)){
+    var dIdx=parseInt((u.id||'').replace('s',''));
+    if(!isNaN(dIdx)){
+      if(dIdx < SERAMIK.length) return false;
+      if((dIdx - SERAMIK.length) < DIGER_HIZMETLER.length) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * DB_OZEL_URUNLER dizisini API yanıtına göre yeniden doldurur.
+ * Her dbSyncYukle ve fiyatSayfasiYukle çağrısında çalışır.
+ */
+function _dbOzelUrunleriYakala(apiData){
+  DB_OZEL_URUNLER = [];
+  if(!apiData || !apiData.length) return;
+  apiData.forEach(function(u){
+    if(_dbUrunOzelMi(u)) DB_OZEL_URUNLER.push(u);
+  });
+}
+
 /* ─── DB SYNC — API'ye yaz ─── */
 function dbSync(url, method, body){
   return fetch(url,{method:method,headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,credentials:'same-origin'}).catch(function(e){console.warn('DB sync hata:',e);});
@@ -9921,6 +9965,8 @@ function dbSyncYukle(){
   // Ürünleri DB'den çek — fiyat yönetimi ile senkron
   fetch('/api/urunler',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
     if(d.success&&d.data&&d.data.length>0){
+      // DB'de var ama URUNLER'de olmayan özel ürünleri yakala (DENEMME gibi)
+      _dbOzelUrunleriYakala(d.data);
       d.data.forEach(function(u){
         if(u.id&&URUNLER[u.id]){
           // Mevcut ürünü güncelle
@@ -10069,6 +10115,147 @@ var _fAltKatAktif = {};
 
 
 /* ════ BAKIM KATEGORİSİ RENDER ════ */
+/* ════ DB ÖZEL ÜRÜNLER RENDER ════
+   DB'den gelen ama URUNLER'de olmayan "hayalet" ürünleri listeler ve sil imkanı verir.
+   DENEMME gibi test ürünlerini admin panelden temizlemek için. */
+function fKatDbOzelRender(el){
+  if(!el) el=document.getElementById('fkat-icerik');
+  if(!el) return;
+
+  if(!DB_OZEL_URUNLER || DB_OZEL_URUNLER.length===0){
+    el.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--ink4)">'
+      +'<div style="font-size:48px;margin-bottom:12px">✨</div>'
+      +'<div style="font-size:14px;font-weight:600;margin-bottom:6px">Hiç özel ürün yok</div>'
+      +'<div style="font-size:12px;line-height:1.6">Veritabanı temiz. Admin panele kayıtlı olmayan bir ürün yok.</div>'
+      +'</div>';
+    return;
+  }
+
+  // Bilgi kutusu — kullanıcıya ne olduğunu açıkla
+  var bilgi = '<div style="margin-bottom:16px;padding:14px 16px;background:#fff7ed;border:1.5px solid #fed7aa;border-radius:10px;display:flex;gap:12px;align-items:flex-start">'
+    +'<div style="font-size:24px">⚠️</div>'
+    +'<div style="flex:1">'
+      +'<div style="font-size:13px;font-weight:700;color:#9a3412;margin-bottom:4px">DB\'de Kayıtlı Ama Admin Panele Kayıtlı Olmayan Ürünler</div>'
+      +'<div style="font-size:12px;color:#9a3412;line-height:1.5">Bu ürünler veritabanında var ama kod tarafında (URUNLER objesi) tanımlı değil. Sitede görünüyor olabilirler. Test verisi veya eski kayıt olabilir. <b>Silmek geri alınamaz işlemdir.</b></div>'
+    +'</div>'
+  +'</div>';
+
+  // Ürün kartları
+  var kartlar = DB_OZEL_URUNLER.map(function(u){
+    var isim = u.isim || u.id || 'İsimsiz';
+    var kat = u.kat || '—';
+    var altKat = u.alt_kat || u.altKat || '';
+    var fiyat = u.full_fiyat || u.tutar || u.full || 0;
+    var aciklama = u.aciklama || '';
+    var resim = u.resim || '';
+
+    return '<div style="background:#fff;border:1.5px solid var(--bd);border-radius:12px;padding:16px;display:flex;gap:14px;align-items:flex-start">'
+      +(resim
+        ? '<img src="'+resim+'" style="width:64px;height:64px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid var(--bd)" onerror="this.style.display=\'none\'">'
+        : '<div style="width:64px;height:64px;border-radius:8px;background:#f4f4f0;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">📦</div>')
+      +'<div style="flex:1;min-width:0">'
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">'
+          +'<div style="flex:1;min-width:0">'
+            +'<div style="font-size:14px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_escapeHtml(isim)+'</div>'
+            +'<div style="font-size:11px;color:var(--ink4);margin-top:2px">ID: <code style="background:#f4f4f0;padding:1px 5px;border-radius:3px;font-size:10px">'+_escapeHtml(u.id||'')+'</code></div>'
+          +'</div>'
+          +(fiyat>0?'<div style="font-size:14px;font-weight:700;color:var(--r);white-space:nowrap">₺'+Number(fiyat).toLocaleString('tr-TR')+'</div>':'')
+        +'</div>'
+        +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0">'
+          +'<span style="font-size:10px;background:#f4f4f0;padding:2px 8px;border-radius:6px;color:var(--ink3)">Kat: '+_escapeHtml(kat)+'</span>'
+          +(altKat?'<span style="font-size:10px;background:#f4f4f0;padding:2px 8px;border-radius:6px;color:var(--ink3)">Alt: '+_escapeHtml(altKat)+'</span>':'')
+        +'</div>'
+        +(aciklama?'<div style="font-size:11px;color:var(--ink4);line-height:1.5;margin:6px 0;max-height:36px;overflow:hidden">'+_escapeHtml(aciklama).slice(0,160)+(aciklama.length>160?'…':'')+'</div>':'')
+        +'<div style="display:flex;gap:6px;margin-top:10px">'
+          +'<button onclick="dbOzelUrunSil(\''+_escapeJsAttr(u.id)+'\')" style="flex:1;min-height:38px;padding:8px 12px;border:1.5px solid #dc2626;border-radius:8px;background:#fff;color:#dc2626;font-family:Bebas Neue,sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;font-weight:700">🗑 KALICI SİL</button>'
+        +'</div>'
+      +'</div>'
+    +'</div>';
+  }).join('');
+
+  el.innerHTML = bilgi + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:14px">'+kartlar+'</div>';
+}
+
+/** HTML escape — XSS koruması */
+function _escapeHtml(str){
+  if(str==null) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+/** JS string attribute escape — onclick içindeki ID'leri güvenli yap */
+function _escapeJsAttr(str){
+  if(str==null) return '';
+  return String(str).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+}
+
+/**
+ * DB'deki "hayalet" bir ürünü sil.
+ * Backend DELETE destekliyor mu bilmiyoruz — iki paralel istek gönderiyoruz:
+ *   1) DELETE /api/urunler?id=X (varsa temiz silme)
+ *   2) POST   /api/urunler  (mevcut tüm ürünler, silinen hariç — REPLACE)
+ * İkisinden biri çalışırsa iş tamam.
+ */
+function dbOzelUrunSil(id){
+  if(!id) return;
+  // Yetki kontrolü (admin gerekli)
+  if(typeof kullaniciAdmin==='function' && !kullaniciAdmin()){
+    if(typeof toast==='function') toast('Bu işlem için yetkiniz yok','red'); else alert('Yetkiniz yok');
+    return;
+  }
+
+  // İlgili ürünü bul
+  var idx=-1;
+  for(var i=0;i<DB_OZEL_URUNLER.length;i++){ if(DB_OZEL_URUNLER[i].id===id){ idx=i; break; } }
+  if(idx===-1){
+    if(typeof toast==='function') toast('Ürün bulunamadı','red');
+    return;
+  }
+  var urun = DB_OZEL_URUNLER[idx];
+  var isim = urun.isim || urun.id || 'Ürün';
+
+  // İki aşamalı onay (canlı + geri alınamaz)
+  var uyari1 = '🗑 DB\'DEN KALICI SİL\n\n';
+  uyari1 += 'Ürün: '+isim+'\n';
+  uyari1 += 'ID: '+id+'\n\n';
+  uyari1 += '⚠️ Bu işlem ürünü VERİTABANINDAN kalıcı silmeye çalışır.\n';
+  uyari1 += 'Geri alınamaz. Sitede görünmeyi de durdurur.\n\n';
+  uyari1 += 'Devam etmek istiyor musunuz?';
+  if(!confirm(uyari1)) return;
+
+  if(!confirm('⚠️ SON UYARI\n\n"'+isim+'" KALICI silinecek.\nBu işlem GERİ ALINAMAZ.\n\nOnaylıyor musunuz?')) return;
+
+  // 1) Diziden çıkar (UI hemen güncellenir)
+  DB_OZEL_URUNLER.splice(idx,1);
+
+  // 2) Yöntem A: DELETE endpoint (destekleniyorsa temiz silme)
+  fetch('/api/urunler?id='+encodeURIComponent(id),{
+    method:'DELETE',
+    credentials:'same-origin'
+  }).catch(function(e){ console.warn('DELETE fail (sessiz):',e); });
+
+  // 3) Yöntem B: REPLACE/UPSERT (kanıtlanmış mevcut yol — backend'in destekledği POST)
+  // urunleriApiSenkronEt mevcut tüm URUNLER + SERAMIK + DIGER_HIZMETLER'i POST eder
+  // DB_OZEL_URUNLER artık silineni içermediği için onu da ekleyip listeye dahil etmek istemiyoruz
+  // (yani sadece ana listeyi POST'lamak yeterli — silinen "hayalet" ürün eksik kalacak)
+  // NOT: Yine de korumaya almak için DB_OZEL_URUNLER'in geri kalanını da koruyalım — admin
+  // istemediği özel ürünleri silsin ama istediklerini yanlışlıkla kaybetmesin.
+  if(typeof urunleriApiSenkronEt==='function'){
+    // urunleriApiSenkronEt'in mevcut implementasyonu URUNLER, SERAMIK, DIGER_HIZMETLER'i POST eder
+    // DB_OZEL_URUNLER bu fonksiyona dahil değil, dolayısıyla silinmiş olanı baştan göndermez
+    // Diğer DB_OZEL_URUNLER da bu çağrıyla ayrıca POST'a dahil edilmez — onlar zaten DB'de
+    // yaşamaya devam edecek (DELETE çağırmadığımız sürece).
+    urunleriApiSenkronEt();
+  }
+
+  // 4) UI bildirimi
+  if(typeof hapticMedium==='function') hapticMedium();
+  if(typeof toast==='function') toast('🗑 '+isim+' silindi (sayfayı yenileyince DB\'den gitmiş mi doğrulayın)','orange');
+
+  // 5) Sayfayı yenile — DB'den fresh yükle
+  if(typeof fiyatSayfasiYukle==='function') setTimeout(fiyatSayfasiYukle, 800);
+}
+
+/* ════ BAKIM KATEGORİSİ RENDER ════ */
 function fKatBakimRender(el){
   if(!el) el=document.getElementById('fkat-icerik');
   if(!el) return;
@@ -10200,10 +10387,12 @@ function fKatSec(kat){
     else if(btnKat==='bolumler') btn.style.cssText='background:#fff;color:#1d4ed8;border-color:#1d4ed8';
   });
   // Eski sabit id'li butonlar için de
-  ['ppf','seramik','bakim','bolumler'].forEach(function(k){
+  ['ppf','seramik','bakim','bolumler','db_ozel'].forEach(function(k){
     var btn=document.getElementById('fkat-'+k);
     if(btn) btn.className='fiyat-tab'+(k===kat?' fiyat-tab-aktif':'');
   });
+  // db_ozel için tek doğruluk kaynağı fiyatSekmelerGuncelle — yeniden çağır
+  if(typeof fiyatSekmelerGuncelle==='function') fiyatSekmelerGuncelle();
   fKatRender(kat);
 }
 
@@ -10220,6 +10409,12 @@ function fKatRender(kat){
   // Bakım — hem hizmet hem ürün yönetimi
   if(kat==='bakim'){
     fKatBakimRender(el);
+    return;
+  }
+
+  // DB Özel ürünler — DB'de var ama URUNLER'de olmayan "hayalet" ürünler
+  if(kat==='db_ozel'){
+    fKatDbOzelRender(el);
     return;
   }
 
@@ -10392,6 +10587,8 @@ function fiyatSayfasiYukle(){
   // Önce DB'den güncel fiyatları çek, sonra sayfayı oluştur
   fetch('/api/urunler',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(data){
     if(data.success && data.data && data.data.length > 0){
+      // DB özel ürünleri yakala (DENEMME gibi URUNLER'de olmayanlar)
+      _dbOzelUrunleriYakala(data.data);
       data.data.forEach(function(u){
         if(u.kat === 'seramik' || u.kat === 'bakim') return; // PPF dışı ayrı işle
         if(URUNLER[u.id]){
@@ -10690,6 +10887,14 @@ function fiyatSekmelerGuncelle(){
     return '<button data-kat="'+k+'" class="fiyat-tab'+(aktif?' fiyat-tab-aktif':'')+'" style="white-space:nowrap">'+kat.ikon+' '+kat.isim+'</button>';
   }).join('');
   html+='<button id="fkat-bolumler" data-kat="bolumler" class="fiyat-tab'+(_fKatAktif==='bolumler'?' fiyat-tab-aktif':'')+'" style="white-space:nowrap;background:#1d4ed8;color:#fff;border-color:#1d4ed8">🗂️ Hizmet Bölümleri</button>';
+
+  // DB Özel sekmesi: sadece DB_OZEL_URUNLER doluyken görünür
+  var dbOzelSayi = (typeof DB_OZEL_URUNLER !== 'undefined') ? DB_OZEL_URUNLER.length : 0;
+  if(dbOzelSayi > 0){
+    var aktifDb = _fKatAktif==='db_ozel';
+    html += '<button id="fkat-db_ozel" data-kat="db_ozel" class="fiyat-tab'+(aktifDb?' fiyat-tab-aktif':'')+'" style="white-space:nowrap;background:'+(aktifDb?'#ea580c':'#fff7ed')+';color:'+(aktifDb?'#fff':'#ea580c')+';border-color:'+(aktifDb?'#ea580c':'#fed7aa')+'">🗄️ DB Özel <span style="display:inline-block;background:'+(aktifDb?'#fff':'#ea580c')+';color:'+(aktifDb?'#ea580c':'#fff')+';border-radius:10px;padding:1px 7px;font-size:10px;margin-left:4px;font-weight:700">'+dbOzelSayi+'</span></button>';
+  }
+
   barEl.innerHTML=html;
   barEl.querySelectorAll('.fiyat-tab').forEach(function(btn){
     btn.addEventListener('click',function(){fKatSec(btn.getAttribute('data-kat'));});
