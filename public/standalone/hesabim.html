@@ -1113,66 +1113,209 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 
 <script>
 /* ════════════════════════════════════════════════════
-   AUTONAX AUTH SİSTEMİ — Hesabım Panel
+   AUTONAX AUTH SİSTEMİ — Hesabım Panel (API/DB tabanlı)
+   ────────────────────────────────────────────────────
+   Backend: POST /api/musteri/auth { action: login|logout|check_session }
+   Cookie:  autonax_musteri_token (httpOnly, JWT, 30 gün)
+   
+   desktop.html ile birebir aynı mimari kullanır — iki sayfa arasında
+   tutarlılık. localStorage'a şifre yazılmaz, session backend yönetir.
 ════════════════════════════════════════════════════ */
-const SESSION_KEY = 'autonax_session';
+const SESSION_KEY = 'autonax_session'; // legacy referans, artık kullanılmıyor
 const CART_KEY    = 'autonax_cart';
+const GARAJ_KEY   = 'garaj_araclar';   // legacy fallback (sadece okuma, yazma yok)
 
-const DEMO_USERS = {
-
-  'test@autonax.com':{sifre:'test123',ad:'Zeynep',soyad:'Kaya',tel:'0544 987 65 43',sehir:'İstanbul',avatar:'ZK',puan:350,seviye:'Bronz',uye_tarih:'15.06.2024',araclar:[{plaka:'34KY001',marka:'Toyota',model:'Corolla',yil:'2023',tarih:'01.09.2024',puan:0,hizmetler:[{isim:'NiDOJP CS190 200 Mikron PPF',tur:'ppf',tarih:'01.09.2024',garantiYil:4,fiyat:45000}]}]}
-};
+let _currentUser = null;
+let _sessionLoaded = false;
+let _sessionLoadPromise = null;
 
 const AuthManager = {
-  getUser(){
+  /** Sync — anlık cache'den kullanıcıyı döner */
+  getUser(){ return _currentUser; },
+  isSessionLoaded(){ return _sessionLoaded; },
+
+  /** Sayfa açılışında bir kere çalışır — cookie'den oturum yükler */
+  async loadSession(){
+    if(_sessionLoadPromise) return _sessionLoadPromise;
+    _sessionLoadPromise = (async () => {
+      try{
+        const res = await fetch('/api/musteri/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ action: 'check_session' })
+        });
+        const d = await res.json();
+        if(d && d.success && d.authenticated && d.user){
+          _currentUser = d.user;
+        } else {
+          _currentUser = null;
+        }
+      } catch(e){
+        console.warn('[Auth] loadSession hata:', e && e.message);
+        _currentUser = null;
+      } finally {
+        _sessionLoaded = true;
+      }
+      return _currentUser;
+    })();
+    return _sessionLoadPromise;
+  },
+
+  async login(emailOrTel, sifre){
+    const girdi = (emailOrTel || '').trim();
+    if(!girdi || !sifre){
+      return { ok: false, hata: 'E-posta ve şifre gerekli' };
+    }
+    const isTel = /^[0-9\s\-\(\)+]{7,15}$/.test(girdi) || girdi.startsWith('05') || girdi.startsWith('+90');
+    if(isTel && !girdi.includes('@')){
+      return { ok: false, hata: 'Lütfen e-posta adresinizle giriş yapın' };
+    }
     try{
-      const s=localStorage.getItem(SESSION_KEY);
-      if(!s) return null;
-      const sess=JSON.parse(s);
-      if(Date.now()-sess.time>7*24*60*60*1000){this.logout();return null;}
-      return sess.user;
-    }catch(e){return null;}
+      const res = await fetch('/api/musteri/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ action: 'login', email: girdi.toLowerCase(), sifre })
+      });
+      const d = await res.json();
+      if(!d || !d.success){
+        return { ok: false, hata: (d && d.error) || 'Giriş başarısız' };
+      }
+      _currentUser = d.user;
+      _sessionLoaded = true;
+      return { ok: true, user: d.user };
+    } catch(e){
+      console.error('[Auth] login hata:', e);
+      return { ok: false, hata: 'Sunucuya ulaşılamıyor. Lütfen tekrar deneyin.' };
+    }
   },
-  login(email,sifre){
-    email=(email||'').toLowerCase().trim();
-    const u=DEMO_USERS[email];
-    if(!u||u.sifre!==sifre) return {ok:false,hata:'E-posta veya şifre hatalı.'};
-    const user={email,ad:u.ad,soyad:u.soyad,tel:u.tel,sehir:u.sehir,avatar:u.avatar,puan:u.puan,seviye:u.seviye,uye_tarih:u.uye_tarih};
-    localStorage.setItem(SESSION_KEY,JSON.stringify({user,time:Date.now()}));
-    localStorage.setItem('garaj_araclar',JSON.stringify(u.araclar));
-    return {ok:true,user};
-  },
+
+  /** Çıkış yap. Cache hemen, API arka planda. */
   logout(){
-    localStorage.removeItem(SESSION_KEY);
+    _currentUser = null;
+    fetch('/api/musteri/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ action: 'logout' })
+    }).catch(function(e){ console.warn('[Auth] logout hata:', e && e.message); });
     geriDon();
   },
-  getCart(){try{return JSON.parse(localStorage.getItem(CART_KEY)||'[]');}catch(e){return[];}}
+
+  getCart(){ try{ return JSON.parse(localStorage.getItem(CART_KEY)||'[]'); } catch(e){ return []; } },
+
+  /**
+   * Profil güncelleme — şu an sadece local cache.
+   * Sprint 2'de /api/musteri/auth action:update_profile'a bağlanacak.
+   */
+  updateUser(patch){
+    try{
+      if(!_currentUser) return { ok:false, hata:'Kullanıcı oturumu yok' };
+      if(!patch || typeof patch !== 'object') return { ok:false, hata:'Geçersiz' };
+      const temiz = {};
+      Object.keys(patch).forEach(k => {
+        const v = patch[k];
+        if(v !== null && v !== undefined && String(v).trim() !== '') temiz[k] = String(v).trim();
+      });
+      if(Object.keys(temiz).length === 0) return { ok:true, user:_currentUser };
+      _currentUser = Object.assign({}, _currentUser, temiz);
+      if((temiz.ad || temiz.soyad) && !patch.avatar){
+        const ad2 = _currentUser.ad || '';
+        const soyad2 = _currentUser.soyad || '';
+        if(ad2) _currentUser.avatar = (ad2[0] + (soyad2 ? soyad2[0] : '')).toUpperCase();
+      }
+      return { ok:true, user:_currentUser };
+    } catch(e){
+      return { ok:false, hata:'Güncelleme başarısız: '+e.message };
+    }
+  }
 };
+
+/* ════════════════════════════════════════════════════
+   GARAJ — DB tabanlı (musteri_araclari tablosu)
+   ────────────────────────────────────────────────────
+   Backend: GET/POST/DELETE /api/musteri/araclar
+   Müşteri JWT cookie'siyle erişim. Optimistic UI: butona basınca
+   anında UI güncellenir, sonra API'ye gider. Hata olursa rollback.
+════════════════════════════════════════════════════ */
+let araclar = [];               // DB'den çekilen liste (cache)
+let _araclarYukleniyor = false; // race protection
+
+/** Müşterinin araçlarını DB'den çeker, global state'e koyar, render'ı tetikler */
+async function aracListesiYukle(){
+  if(_araclarYukleniyor) return;
+  _araclarYukleniyor = true;
+  try{
+    const res = await fetch('/api/musteri/araclar', {
+      credentials: 'same-origin',
+      cache: 'no-store'
+    });
+    const d = await res.json();
+    if(d && d.success && Array.isArray(d.data)){
+      araclar = d.data.map(_aracDBdenUI);
+    } else {
+      araclar = [];
+    }
+  } catch(e){
+    console.warn('[Garaj] yükleme hata:', e && e.message);
+    araclar = [];
+  } finally {
+    _araclarYukleniyor = false;
+    if(typeof aracListesiGoster === 'function') aracListesiGoster();
+  }
+}
+
+/** DB satırını UI formatına çevirir (geriye dönük uyumlu) */
+function _aracDBdenUI(r){
+  return {
+    id: r.id,
+    plaka: r.plaka || '',
+    marka: r.marka || '',
+    model: r.model || '',
+    yil: r.yil || '',
+    renk: r.renk || '',
+    varsayilan: !!r.varsayilan,
+    tarih: r.eklenme ? new Date(r.eklenme).toLocaleDateString('tr-TR') : '',
+    puan: 0,
+    hizmetler: []   // Sprint 3'te randevulardan dolacak
+  };
+}
 
 /* ══ VERİ ══ */
 
-
-let kullanici = AuthManager.getUser();
-let araclar   = JSON.parse(localStorage.getItem('garaj_araclar')||'[]');
+let kullanici = null; // _currentUser'dan kopya, geriye dönük uyumluluk için
 
 /* ══ BAŞLANGIÇ ══ */
-window.addEventListener('DOMContentLoaded', ()=>{
-  // Oturum kontrolü
+window.addEventListener('DOMContentLoaded', async ()=>{
+  // 1) Önce session yükle (cookie kontrolü)
+  await AuthManager.loadSession();
   kullanici = AuthManager.getUser();
-  araclar = JSON.parse(localStorage.getItem('garaj_araclar')||'[]');
+
   if(!kullanici){
     // Giriş yapılmamış — login overlay göster
     _loginOverlayGoster();
     return;
   }
+
+  // 2) UI'ı hemen göster (kullanıcı bekletmeden)
   kullaniciGoster();
-  aracListesiGoster();
-  document.querySelector('.hbg-mob').style.display = window.innerWidth <= 767 ? 'block' : 'none';
+  aracListesiGoster(); // Boş liste render — yükleniyor durumu
+
+  // 3) Mobile/desktop layout
+  const hbgMob = document.querySelector('.hbg-mob');
+  if(hbgMob) hbgMob.style.display = window.innerWidth <= 767 ? 'block' : 'none';
   window.addEventListener('resize', ()=>{
-    document.querySelector('.hbg-mob').style.display = window.innerWidth <= 767 ? 'block' : 'none';
+    if(hbgMob) hbgMob.style.display = window.innerWidth <= 767 ? 'block' : 'none';
   });
+
+  // 4) Sepet badge
   sepetBadgeGoster();
-  // Bekleyen odemeleri sessizce arka planda yukle (dashboard karti ve badge icin)
+
+  // 5) DB'den araçları çek (arka planda, UI güncellenir)
+  aracListesiYukle();
+
+  // 6) Bekleyen ödemeleri sessizce arka planda yukle (dashboard karti ve badge icin)
   odemelerimSessizYukle();
 });
 
@@ -1442,39 +1585,154 @@ function odemelerimSessizYukle(){
 }
 
 /* ══ GARAJ ══ */
-function aracEkle(){
-  const plaka = document.getElementById('yeni-plaka').value.toUpperCase().replace(/\s/g,'');
-  const marka = document.getElementById('yeni-marka').value;
-  const model = document.getElementById('yeni-model').value;
-  const yil   = document.getElementById('yeni-yil').value;
-  if(!plaka){ alert('Plaka zorunlu!'); return; }
-  if(araclar.find(a=>a.plaka===plaka)){ alert('Bu plaka zaten kayıtlı!'); return; }
-  araclar.push({
-    plaka, marka, model, yil,
-    tarih: new Date().toLocaleDateString('tr-TR'),
-    puan: 0,
-    hizmetler:[
-      {isim:'NiDOJP N8 220 Mikron PPF',tur:'ppf',tarih:'15.03.2025',garantiYil:10,fiyat:70000},
-      {isim:'Nano Seramik Kaplama',tur:'seramik',tarih:'15.03.2025',garantiYil:3,fiyat:12000},
-    ]
-  });
-  localStorage.setItem(GARAJ_KEY, JSON.stringify(araclar));
-  ['yeni-plaka','yeni-model','yeni-yil'].forEach(id=>{ document.getElementById(id).value=''; });
-  document.getElementById('yeni-marka').value='';
-  aracListesiGoster();
+/* ══════════════════════════════════════════════════
+   ARAÇ EKLE — Optimistic UI + API
+   ══════════════════════════════════════════════════ */
+async function aracEkle(){
+  const plakaInput = document.getElementById('yeni-plaka');
+  const markaInput = document.getElementById('yeni-marka');
+  const modelInput = document.getElementById('yeni-model');
+  const yilInput   = document.getElementById('yeni-yil');
+
+  const plaka = (plakaInput?.value || '').toUpperCase().replace(/\s/g,'');
+  const marka = (markaInput?.value || '').trim();
+  const model = (modelInput?.value || '').trim();
+  const yil   = (yilInput?.value || '').trim();
+
+  if(!plaka){
+    _toast('Plaka zorunlu', 'red');
+    plakaInput?.focus();
+    return;
+  }
+  if(plaka.length < 4 || plaka.length > 10){
+    _toast('Plaka 4-10 karakter olmalı', 'red');
+    return;
+  }
+  if(araclar.find(a => a.plaka === plaka)){
+    _toast('Bu plaka zaten kayıtlı', 'orange');
+    return;
+  }
+
+  // Buton durumu — kullanıcıya tepki ver
+  const btn = document.querySelector('[onclick*="aracEkle"]');
+  const eskiText = btn ? btn.textContent : '';
+  if(btn){ btn.disabled = true; btn.textContent = 'Ekleniyor...'; btn.style.opacity = '.7'; }
+
+  try{
+    const res = await fetch('/api/musteri/araclar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        plaka, marka, model,
+        yil: yil ? parseInt(yil) : null
+      })
+    });
+    const d = await res.json();
+    if(!d || !d.success){
+      _toast(d?.error || 'Araç eklenemedi', 'red');
+      return;
+    }
+
+    // DB güncel listeyi döndü — state'i o sat
+    if(Array.isArray(d.data)) araclar = d.data.map(_aracDBdenUI);
+
+    // Form temizle
+    if(plakaInput) plakaInput.value = '';
+    if(markaInput) markaInput.value = '';
+    if(modelInput) modelInput.value = '';
+    if(yilInput)   yilInput.value = '';
+
+    aracListesiGoster();
+    _toast('✓ Araç eklendi', 'green');
+    if(typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(20);
+  } catch(e){
+    console.error('[Garaj] aracEkle hata:', e);
+    _toast('Bağlantı hatası, tekrar deneyin', 'red');
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = eskiText || 'Araç Ekle'; btn.style.opacity = ''; }
+  }
 }
 
-function aracSil(plaka){
-  if(!confirm(plaka+' plakalı aracı garajdan kaldırmak istiyor musunuz?')) return;
-  araclar = araclar.filter(a=>a.plaka!==plaka);
-  localStorage.setItem(GARAJ_KEY, JSON.stringify(araclar));
+/* ══════════════════════════════════════════════════
+   ARAÇ SİL — Optimistic UI + API
+   ══════════════════════════════════════════════════ */
+async function aracSil(plaka){
+  if(!plaka) return;
+  if(!confirm(plaka + ' plakalı aracı garajınızdan kaldırmak istiyor musunuz?')) return;
+
+  const arac = araclar.find(a => a.plaka === plaka);
+  if(!arac || !arac.id){
+    _toast('Araç bulunamadı', 'red');
+    return;
+  }
+
+  // Optimistic: UI'dan hemen kaldır
+  const eskiAraclar = araclar.slice();
+  araclar = araclar.filter(a => a.plaka !== plaka);
   aracListesiGoster();
+
+  try{
+    const res = await fetch('/api/musteri/araclar?id=' + encodeURIComponent(arac.id), {
+      method: 'DELETE',
+      credentials: 'same-origin'
+    });
+    const d = await res.json();
+    if(!d || !d.success){
+      // Rollback
+      araclar = eskiAraclar;
+      aracListesiGoster();
+      _toast(d?.error || 'Araç silinemedi', 'red');
+      return;
+    }
+    _toast('✓ Araç silindi', 'green');
+    if(typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(15);
+  } catch(e){
+    // Rollback
+    araclar = eskiAraclar;
+    aracListesiGoster();
+    console.error('[Garaj] aracSil hata:', e);
+    _toast('Bağlantı hatası, tekrar deneyin', 'red');
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   Toast — minimal, mobil-uyumlu
+   ══════════════════════════════════════════════════ */
+function _toast(mesaj, renk){
+  const renkler = {
+    green: { bg:'#16a34a', text:'#fff' },
+    red: { bg:'#dc2626', text:'#fff' },
+    orange: { bg:'#ea580c', text:'#fff' },
+    blue: { bg:'#2563eb', text:'#fff' }
+  };
+  const r = renkler[renk] || renkler.blue;
+  let el = document.getElementById('_toast_el');
+  if(!el){
+    el = document.createElement('div');
+    el.id = '_toast_el';
+    el.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(100px);background:'+r.bg+';color:'+r.text+';padding:12px 22px;border-radius:24px;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.18);transition:transform .25s cubic-bezier(.2,1,.3,1),opacity .2s;opacity:0;max-width:90vw;text-align:center;letter-spacing:.2px';
+    document.body.appendChild(el);
+  }
+  el.style.background = r.bg;
+  el.style.color = r.text;
+  el.textContent = mesaj;
+  // Force reflow
+  el.offsetHeight;
+  el.style.transform = 'translateX(-50%) translateY(0)';
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => {
+    el.style.transform = 'translateX(-50%) translateY(100px)';
+    el.style.opacity = '0';
+  }, 2400);
 }
 
 function aracListesiGoster(){
   document.getElementById('stat-arac').textContent = araclar.length;
   document.getElementById('garaj-badge').textContent = araclar.length;
   const el = document.getElementById('arac-listesi');
+  if(!el) return;
   if(!araclar.length){
     el.innerHTML = `<div class="empty-state">
       <div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect x="9" y="11" width="14" height="10" rx="2"/></svg></div>
@@ -1498,8 +1756,8 @@ function aracListesiGoster(){
         <div class="arac-badge ${kalanYil<2&&kalanYil>0?'warn':''}">
           ${kalanYil>0?'🛡️ Korumalı':'⚠️ Dikkat'}
         </div>
-        <button onclick="aracSil('${a.plaka}')" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--ink5);transition:.15s" onmouseover="this.style.color='var(--r)'" onmouseout="this.style.color='var(--ink5)'">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        <button onclick="aracSil('${a.plaka}')" style="background:none;border:none;cursor:pointer;padding:8px;min-width:44px;min-height:44px;color:var(--ink5);transition:.15s;display:inline-flex;align-items:center;justify-content:center" onmouseover="this.style.color='var(--r)'" onmouseout="this.style.color='var(--ink5)'" aria-label="Aracı sil">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
         </button>
       </div>
       <div class="skor-bar">
@@ -1530,14 +1788,25 @@ function aracListesiGoster(){
 
 /* ══ PROFİL ══ */
 function profilKaydet(){
-  if(!kullanici) kullanici={};
-  kullanici.ad  = (document.getElementById('p-ad').value+' '+document.getElementById('p-soyad').value).trim();
-  kullanici.email = document.getElementById('p-email').value;
-  kullanici.tel = document.getElementById('p-tel').value;
-  const sess=JSON.parse(localStorage.getItem(SESSION_KEY)||'{}');
-    if(sess.user){sess.user={...sess.user,...kullanici};localStorage.setItem(SESSION_KEY,JSON.stringify(sess));}
+  const ad = document.getElementById('p-ad').value;
+  const soyad = document.getElementById('p-soyad').value;
+  const tel = document.getElementById('p-tel').value;
+  const email = document.getElementById('p-email').value;
+
+  // Cache'i AuthManager.updateUser ile güncelle (Sprint 2'de API'ye bağlanacak)
+  const r = AuthManager.updateUser({
+    ad: ((ad||'') + ' ' + (soyad||'')).trim(),
+    tel: tel,
+    email: email
+  });
+
+  if(!r.ok){
+    _toast(r.hata || 'Güncelleme başarısız', 'red');
+    return;
+  }
+  kullanici = AuthManager.getUser();
   kullaniciGoster();
-  alert('Profil güncellendi!');
+  _toast('✓ Profil güncellendi (Sprint 2\'de DB\'ye yansıyacak)', 'green');
 }
 
 /* ══ SİDEBAR MOBİL ══ */
@@ -1548,8 +1817,7 @@ function sidebarToggle(){
 /* ══ ÇIKIŞ ══ */
 function cikisYap(){
   if(confirm('Çıkış yapmak istediğinize emin misiniz?')){
-    localStorage.removeItem(AUTH_KEY);
-    geriDon();
+    AuthManager.logout(); // Cookie temizle + redirect
   }
 }
 
@@ -1602,26 +1870,39 @@ function _loginOverlayGoster(){
   ovl.insertBefore(bg, ovl.firstChild);
 }
 
-function _panelLogin(){
-  const email = document.getElementById('lov-email')?.value||'';
-  const sifre = document.getElementById('lov-sifre')?.value||'';
-  const r = AuthManager.login(email, sifre);
-  if(!r.ok){
-    const err = document.getElementById('login-err');
-    if(err){err.textContent=r.hata;err.style.display='block';setTimeout(()=>err.style.display='none',3000);}
-    return;
+async function _panelLogin(){
+  const email = document.getElementById('lov-email')?.value || '';
+  const sifre = document.getElementById('lov-sifre')?.value || '';
+  const btn = document.querySelector('[onclick="_panelLogin()"]');
+  const eskiText = btn ? btn.textContent : '';
+  if(btn){ btn.disabled = true; btn.textContent = 'Giriş yapılıyor...'; btn.style.opacity = '.7'; }
+
+  try{
+    const r = await AuthManager.login(email, sifre);
+    if(!r.ok){
+      const err = document.getElementById('login-err');
+      if(err){ err.textContent = r.hata; err.style.display = 'block'; setTimeout(()=>err.style.display='none', 3500); }
+      return;
+    }
+    // Başarılı giriş — overlay kaldır, paneli başlat
+    const ovl = document.getElementById('login-ovl');
+    if(ovl) ovl.style.opacity = '0';
+    setTimeout(async ()=>{
+      if(ovl) ovl.remove();
+      kullanici = AuthManager.getUser();
+      kullaniciGoster();
+      sepetBadgeGoster();
+      // Layout
+      const hbgMob = document.querySelector('.hbg-mob');
+      if(hbgMob) hbgMob.style.display = window.innerWidth <= 767 ? 'block' : 'none';
+      // DB'den araçları çek
+      await aracListesiYukle();
+      // Bekleyen ödemeleri yükle
+      if(typeof odemelerimSessizYukle === 'function') odemelerimSessizYukle();
+    }, 300);
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = eskiText || 'Giriş Yap'; btn.style.opacity = ''; }
   }
-  // Başarılı giriş — overlay kaldır, paneli başlat
-  const ovl = document.getElementById('login-ovl');
-  if(ovl) ovl.style.opacity='0';
-  setTimeout(()=>{
-    if(ovl) ovl.remove();
-    kullanici = AuthManager.getUser();
-    araclar   = JSON.parse(localStorage.getItem('garaj_araclar')||'[]');
-    kullaniciGoster();
-    aracListesiGoster();
-    document.querySelector('.hbg-mob').style.display = window.innerWidth<=767?'block':'none';
-  }, 300);
 }
 
 
