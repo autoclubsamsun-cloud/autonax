@@ -5254,130 +5254,183 @@ function authCikis(){
 const SESSION_KEY = 'autonax_session';
 const CART_KEY    = 'autonax_cart';
 
-const DEMO_USERS = {
-  'test@autonax.com':{sifre:'test123',ad:'Zeynep',soyad:'Kaya',tel:'0544 987 65 43',sehir:'İstanbul',avatar:'ZK',puan:350,seviye:'Bronz',uye_tarih:'15.06.2024',araclar:[{plaka:'34KY001',marka:'Toyota',model:'Corolla',yil:'2023',tarih:'01.09.2024',puan:0,hizmetler:[{isim:'NiDOJP CS190 200 Mikron PPF',tur:'ppf',tarih:'01.09.2024',garantiYil:4,fiyat:45000}]}]}
-};
+/* ─────────────────────────────────────────────────────────────────
+   AUTH MANAGER — API-BASED (DB üzerinden çalışır)
+   ─────────────────────────────────────────────────────────────────
+   Backend: POST /api/musteri/auth { action: register|login|logout|check_session }
+   Cookie: autonax_musteri_token (httpOnly, JWT, 30 gün)
+   
+   Mimari: İki katman
+     1. _currentUser cache (sync erişim) — getUser() bunu döner
+     2. Async aksiyonlar (login/register/logout) → API + cache güncelle
+   
+   Sayfa açılışında loadSession() çalışır, cookie varsa cache dolar.
+   localStorage SESSION_KEY artık kullanılmıyor (kullanmaya gerek yok,
+   cookie httpOnly olduğu için JS ona dokunamaz da zaten — backend yönetiyor).
+───────────────────────────────────────────────────────────────── */
+
+let _currentUser = null;          // { id, ad, soyad, email, tel, avatar, puan, seviye }
+let _sessionLoaded = false;       // İlk loadSession çağrıldı mı?
+let _sessionLoadPromise = null;   // Birden çok eşzamanlı çağrı için single-flight
 
 const AuthManager = {
-  getUser(){
-    try{
-      const s=localStorage.getItem(SESSION_KEY);
-      if(!s) return null;
-      const sess=JSON.parse(s);
-      if(Date.now()-sess.time>7*24*60*60*1000){this.logout();return null;}
-      return sess.user;
-    }catch(e){return null;}
-  },
-  login(email,sifre){
-    var girdi=(email||'').trim();
-    // Telefon mu email mi belirle
-    var telNormalize=function(t){return (t||'').replace(/[\s\-\(\)]/g,'');};
-    var isTel=/^[0-9\s\-\(\)+]{7,15}$/.test(girdi) || girdi.startsWith('05') || girdi.startsWith('+90');
-    var u=null; var foundEmail='';
-    if(isTel){
-      // Telefon ile giriş — tüm kullanıcılarda ara
-      var telKey=telNormalize(girdi);
-      // Demo kullanıcılarda ara
-      for(var e in DEMO_USERS){
-        if(telNormalize(DEMO_USERS[e].tel)===telKey){u=DEMO_USERS[e];foundEmail=e;break;}
-      }
-      // Kayıtlı kullanıcılarda ara
-      if(!u){
-        try{var kayitlilar=JSON.parse(localStorage.getItem('autonax_users')||'{}');
-        for(var e2 in kayitlilar){
-          if(telNormalize(kayitlilar[e2].tel)===telKey){u=kayitlilar[e2];foundEmail=e2;break;}
-        }}catch(ex){}
-      }
-    } else {
-      // Email ile giriş
-      foundEmail=girdi.toLowerCase();
-      u=DEMO_USERS[foundEmail];
-      if(!u){
-        try{var kayitlilar2=JSON.parse(localStorage.getItem('autonax_users')||'{}');u=kayitlilar2[foundEmail];}catch(ex2){}
-      }
-    }
-    if(!u||u.sifre!==sifre) return {ok:false,hata:'E-posta/telefon veya şifre hatalı.'};
-    var user={email:foundEmail,ad:u.ad,soyad:u.soyad,tel:u.tel,sehir:u.sehir,avatar:u.avatar,puan:u.puan,seviye:u.seviye,uye_tarih:u.uye_tarih};
-    localStorage.setItem(SESSION_KEY,JSON.stringify({user:user,time:Date.now()}));
-    localStorage.setItem('garaj_araclar',JSON.stringify(u.araclar||[]));
-    return {ok:true,user:user};
-  },
-  register(ad,soyad,tel,email,sifre){
-    if(!ad||!email||!sifre) return {ok:false,hata:'Tüm alanları doldurun.'};
-    if(sifre.length<6) return {ok:false,hata:'Şifre en az 6 karakter olmalı.'};
-    email=(email||'').toLowerCase().trim();
-    var telNormalize=function(t){return (t||'').replace(/[\s\-\(\)]/g,'');};
-    var telKey=telNormalize(tel);
-    // Demo kullanıcılarda email veya telefon var mı kontrol
-    if(DEMO_USERS[email]) return {ok:false,hata:'Bu e-posta adresi zaten kayıtlı.'};
-    if(telKey){
-      for(var e in DEMO_USERS){
-        if(telNormalize(DEMO_USERS[e].tel)===telKey) return {ok:false,hata:'Bu telefon numarası zaten kayıtlı.'};
-      }
-    }
-    // Kayıtlı kullanıcılarda email veya telefon var mı kontrol
-    var kayitlilar={}; try{kayitlilar=JSON.parse(localStorage.getItem('autonax_users')||'{}');}catch(ex){}
-    if(kayitlilar[email]) return {ok:false,hata:'Bu e-posta adresi zaten kayıtlı.'};
-    if(telKey){
-      for(var e2 in kayitlilar){
-        if(telNormalize(kayitlilar[e2].tel)===telKey) return {ok:false,hata:'Bu telefon numarası zaten kayıtlı.'};
-      }
-    }
-    // Yeni kullanıcı kaydet
-    var user={email:email,ad:ad,soyad:soyad,tel:tel,sehir:'',avatar:(ad[0]+(soyad?soyad[0]:'')).toUpperCase(),puan:0,seviye:'Bronz',uye_tarih:new Date().toLocaleDateString('tr-TR')};
-    kayitlilar[email]={sifre:sifre,ad:ad,soyad:soyad,tel:tel,sehir:'',avatar:user.avatar,puan:0,seviye:'Bronz',uye_tarih:user.uye_tarih,araclar:[]};
-    localStorage.setItem('autonax_users',JSON.stringify(kayitlilar));
-    localStorage.setItem(SESSION_KEY,JSON.stringify({user:user,time:Date.now()}));
-    localStorage.setItem('garaj_araclar',JSON.stringify([]));
-    return {ok:true,user:user};
-  },
-  logout(){localStorage.removeItem(SESSION_KEY);},
-  saveCart(items){localStorage.setItem(CART_KEY,JSON.stringify(items||[]));},
-  getCart(){try{return JSON.parse(localStorage.getItem(CART_KEY)||'[]');}catch(e){return [];}},
+  /** Sync — anlık cache'den kullanıcıyı döner. null = çıkış yapılmış. */
+  getUser(){ return _currentUser; },
+
+  /** True dönerse session yüklendi, çağıranlar UI'ı render edebilir */
+  isSessionLoaded(){ return _sessionLoaded; },
+
   /**
-   * Kullanıcı profil bilgilerini günceller — hem session hem de autonax_users'da
-   * patch: { ad, soyad, tel, email, sehir, ... } gibi değişiklikler
-   * Sadece dolu/non-empty olan alanlar güncellenir (boş değer mevcut değeri silmez)
-   * Demo kullanıcılar güncellenmez (kalıcılık için).
+   * Sayfa açılışında bir kere çalışır — cookie token'ı backend'e sorar,
+   * geçerliyse _currentUser'ı doldurur.
+   * Hata olursa sessizce geçer (kullanıcı misafir kalır).
+   */
+  async loadSession(){
+    if(_sessionLoadPromise) return _sessionLoadPromise;
+    _sessionLoadPromise = (async () => {
+      try{
+        const res = await fetch('/api/musteri/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ action: 'check_session' })
+        });
+        const d = await res.json();
+        if(d && d.success && d.authenticated && d.user){
+          _currentUser = d.user;
+        } else {
+          _currentUser = null;
+        }
+      } catch(e){
+        console.warn('[Auth] loadSession hata:', e && e.message);
+        _currentUser = null;
+      } finally {
+        _sessionLoaded = true;
+      }
+      return _currentUser;
+    })();
+    return _sessionLoadPromise;
+  },
+
+  /**
+   * Giriş yap. email veya telefon kabul eder, ama backend SADECE email destekliyor.
+   * Eğer telefonla girilmek istenirse hata verir (kullanıcı email girmeli).
+   * @returns {Promise<{ok:boolean, user?:object, hata?:string}>}
+   */
+  async login(emailOrTel, sifre){
+    const girdi = (emailOrTel || '').trim();
+    if(!girdi || !sifre){
+      return { ok: false, hata: 'E-posta ve şifre gerekli' };
+    }
+    // Backend sadece email destekliyor — telefon girişine izin verme
+    const isTel = /^[0-9\s\-\(\)+]{7,15}$/.test(girdi) || girdi.startsWith('05') || girdi.startsWith('+90');
+    if(isTel && !girdi.includes('@')){
+      return { ok: false, hata: 'Lütfen e-posta adresinizle giriş yapın' };
+    }
+    try{
+      const res = await fetch('/api/musteri/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ action: 'login', email: girdi.toLowerCase(), sifre })
+      });
+      const d = await res.json();
+      if(!d || !d.success){
+        return { ok: false, hata: (d && d.error) || 'Giriş başarısız' };
+      }
+      _currentUser = d.user;
+      _sessionLoaded = true;
+      return { ok: true, user: d.user };
+    } catch(e){
+      console.error('[Auth] login hata:', e);
+      return { ok: false, hata: 'Sunucuya ulaşılamıyor. Lütfen tekrar deneyin.' };
+    }
+  },
+
+  /**
+   * Yeni üye kaydı. Şifre min 8 karakter (backend zorunluluğu).
+   * @returns {Promise<{ok:boolean, user?:object, hata?:string}>}
+   */
+  async register(ad, soyad, tel, email, sifre){
+    if(!ad || !email || !sifre){
+      return { ok: false, hata: 'Tüm alanları doldurun' };
+    }
+    if(sifre.length < 8){
+      return { ok: false, hata: 'Şifre en az 8 karakter olmalı' };
+    }
+    try{
+      const res = await fetch('/api/musteri/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          action: 'register',
+          ad: (ad||'').trim(),
+          soyad: (soyad||'').trim(),
+          tel: (tel||'').trim(),
+          email: (email||'').toLowerCase().trim(),
+          sifre
+        })
+      });
+      const d = await res.json();
+      if(!d || !d.success){
+        return { ok: false, hata: (d && d.error) || 'Kayıt başarısız' };
+      }
+      _currentUser = d.user;
+      _sessionLoaded = true;
+      return { ok: true, user: d.user };
+    } catch(e){
+      console.error('[Auth] register hata:', e);
+      return { ok: false, hata: 'Sunucuya ulaşılamıyor. Lütfen tekrar deneyin.' };
+    }
+  },
+
+  /**
+   * Çıkış yap. Cache'i hemen temizler (UI sync güncellenebilsin),
+   * backend'e logout isteği arka planda gönderilir.
+   */
+  logout(){
+    // Cache'i hemen temizle — UI hemen güncellesin
+    _currentUser = null;
+    // Backend'e logout isteği (arka planda, hata olsa bile cache temiz)
+    fetch('/api/musteri/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ action: 'logout' })
+    }).catch(function(e){ console.warn('[Auth] logout hata (göz ardı):', e && e.message); });
+  },
+
+  saveCart(items){ localStorage.setItem(CART_KEY, JSON.stringify(items||[])); },
+  getCart(){ try{ return JSON.parse(localStorage.getItem(CART_KEY)||'[]'); } catch(e){ return []; } },
+
+  /**
+   * Profil güncelleme — şu an sadece cache'i günceller (lokal).
+   * AŞAMA 3'te backend'e bağlanacak (PUT /api/musteri/auth gibi).
+   * Mevcut updateUser çağrılarının bozulmaması için arabirim korundu.
    */
   updateUser(patch){
     try{
-      const user = this.getUser();
-      if(!user) return {ok:false,hata:'Kullanıcı oturumu yok'};
-      if(!patch || typeof patch!=='object') return {ok:false,hata:'Geçersiz güncelleme'};
-      
-      const tempEmail = user.email||'';
-      // Patch'teki boş/null değerleri at (mevcut verileri silmesin)
+      if(!_currentUser) return { ok: false, hata: 'Kullanıcı oturumu yok' };
+      if(!patch || typeof patch !== 'object') return { ok: false, hata: 'Geçersiz güncelleme' };
+      // Boş değerleri at
       const temiz = {};
-      Object.keys(patch).forEach(k=>{
+      Object.keys(patch).forEach(k => {
         const v = patch[k];
-        if(v!==null && v!==undefined && String(v).trim()!=='') temiz[k] = String(v).trim();
+        if(v !== null && v !== undefined && String(v).trim() !== '') temiz[k] = String(v).trim();
       });
-      if(Object.keys(temiz).length===0) return {ok:true,user:user};
-      
-      // Session'ı güncelle (mevcut değerlerle birleştir)
-      const guncelUser = Object.assign({}, user, temiz);
-      // Avatar güncellemesi ad/soyad değişimiyle olabilir
-      if((temiz.ad||temiz.soyad) && !patch.avatar){
-        const ad2 = guncelUser.ad||'';
-        const soyad2 = guncelUser.soyad||'';
-        if(ad2) guncelUser.avatar = (ad2[0]+(soyad2?soyad2[0]:'')).toUpperCase();
+      if(Object.keys(temiz).length === 0) return { ok: true, user: _currentUser };
+      // Cache'i güncelle
+      _currentUser = Object.assign({}, _currentUser, temiz);
+      // Avatar ad/soyad değişimiyle güncellenir
+      if((temiz.ad || temiz.soyad) && !patch.avatar){
+        const ad2 = _currentUser.ad || '';
+        const soyad2 = _currentUser.soyad || '';
+        if(ad2) _currentUser.avatar = (ad2[0] + (soyad2 ? soyad2[0] : '')).toUpperCase();
       }
-      localStorage.setItem(SESSION_KEY, JSON.stringify({user:guncelUser, time:Date.now()}));
-      
-      // autonax_users'daki kalıcı kaydı da güncelle (demo user değilse)
-      try{
-        const kayitlilar = JSON.parse(localStorage.getItem('autonax_users')||'{}');
-        if(kayitlilar[tempEmail]){
-          Object.assign(kayitlilar[tempEmail], temiz);
-          if(guncelUser.avatar) kayitlilar[tempEmail].avatar = guncelUser.avatar;
-          localStorage.setItem('autonax_users', JSON.stringify(kayitlilar));
-        }
-      }catch(e2){ /* demo user veya ilk kayıt — sorun değil */ }
-      
-      return {ok:true, user:guncelUser};
-    }catch(e){
-      return {ok:false, hata:'Güncelleme başarısız: '+e.message};
+      return { ok: true, user: _currentUser };
+    } catch(e){
+      return { ok: false, hata: 'Güncelleme başarısız: ' + e.message };
     }
   }
 };
@@ -7615,49 +7668,72 @@ function authSuccess(ad){
   document.getElementById('panel-success')?.classList.add('on');
   setTimeout(()=>closeAuth(), 2000);
 }
-function doLogin(){
+async function doLogin(){
   const email=document.getElementById('giris-email')?.value;
   const pass=document.getElementById('giris-sifre')?.value;
-  const r=AuthManager.login(email,pass);
-  if(!r.ok){
-    const errEl=document.getElementById('auth-error');
-    if(errEl){errEl.textContent=r.hata;errEl.style.display='block';}
-    else alert(r.hata);
-    return;
+  // Buton durumu: yükleniyor
+  const btn=document.querySelector('#panel-giris .auth-btn');
+  if(btn){btn.disabled=true; btn.dataset.eskiText=btn.textContent; btn.textContent='Giriş yapılıyor...';}
+  const errEl=document.getElementById('auth-error');
+  if(errEl){errEl.textContent=''; errEl.style.display='none';}
+  try{
+    const r=await AuthManager.login(email,pass);
+    if(!r.ok){
+      if(errEl){errEl.textContent=r.hata;errEl.style.display='block';}
+      else alert(r.hata);
+      return;
+    }
+    authSuccess(r.user.ad);
+    setTimeout(authUIGuncelle, 2200);
+  } finally {
+    if(btn){btn.disabled=false; btn.textContent=btn.dataset.eskiText||'Giriş Yap';}
   }
-  authSuccess(r.user.ad);
-  setTimeout(authUIGuncelle, 2200);
 }
-function doRegister(){
+async function doRegister(){
   const ad=document.getElementById('kayit-ad')?.value?.trim();
   const soyad='';
   const tel=document.getElementById('kayit-tel')?.value?.trim()||'';
   const email=document.getElementById('kayit-email')?.value?.trim();
   const pass=document.getElementById('kayit-sifre')?.value;
+  const errEl=document.getElementById('auth-error');
+  if(errEl){errEl.textContent=''; errEl.style.display='none';}
+
   if(!ad){
-    var err=document.getElementById('auth-error');
-    if(err){err.textContent='Ad Soyad zorunludur';err.style.display='block';}
+    if(errEl){errEl.textContent='Ad Soyad zorunludur';errEl.style.display='block';}
     return;
   }
   if(!email){
-    var err=document.getElementById('auth-error');
-    if(err){err.textContent='E-posta zorunludur';err.style.display='block';}
+    if(errEl){errEl.textContent='E-posta zorunludur';errEl.style.display='block';}
     return;
   }
-  if(!pass||pass.length<6){
-    var err=document.getElementById('auth-error');
-    if(err){err.textContent='Şifre en az 6 karakter olmalı';err.style.display='block';}
+  if(!tel){
+    if(errEl){errEl.textContent='Telefon zorunludur';errEl.style.display='block';}
     return;
   }
-  const r=AuthManager.register(ad,soyad,tel,email,pass);
-  if(!r.ok){
-    const errEl=document.getElementById('auth-error');
-    if(errEl){errEl.textContent=r.hata;errEl.style.display='block';}
-    else alert(r.hata);
+  if(!pass||pass.length<8){
+    if(errEl){errEl.textContent='Şifre en az 8 karakter olmalı';errEl.style.display='block';}
     return;
   }
-  authSuccess(r.user.ad);
-  setTimeout(authUIGuncelle, 2200);
+
+  // "Ad Soyad" şeklinde girildiyse ayır
+  var adParcalar=(ad||'').trim().split(/\s+/);
+  var adKisim=adParcalar[0]||'';
+  var soyadKisim=adParcalar.slice(1).join(' ')||soyad||'';
+
+  const btn=document.querySelector('#panel-kayit .auth-btn');
+  if(btn){btn.disabled=true; btn.dataset.eskiText=btn.textContent; btn.textContent='Kayıt yapılıyor...';}
+  try{
+    const r=await AuthManager.register(adKisim,soyadKisim,tel,email,pass);
+    if(!r.ok){
+      if(errEl){errEl.textContent=r.hata;errEl.style.display='block';}
+      else alert(r.hata);
+      return;
+    }
+    authSuccess(r.user.ad);
+    setTimeout(authUIGuncelle, 2200);
+  } finally {
+    if(btn){btn.disabled=false; btn.textContent=btn.dataset.eskiText||'Üye Ol — Ücretsiz';}
+  }
 }
 function socialLogin(provider){ alert(provider+' girişi yakında aktif edilecek!'); }
 
@@ -8636,7 +8712,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     history.replaceState(null,'',window.location.pathname);
   }
   SEPET.updateBadge();
-  authUIGuncelle();
+  // Önce session'ı yükle (cookie varsa kullanıcı doldurulur), sonra UI'ı render et
+  AuthManager.loadSession().finally(function(){ authUIGuncelle(); });
   // Robot overlay başlangıçta kapalı olsun
   var robotOvl=document.getElementById('robot-ovl');
   if(robotOvl){ robotOvl.style.display='none'; robotOvl.classList.remove('show'); }
