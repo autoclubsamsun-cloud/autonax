@@ -123,8 +123,11 @@ export function requireMusteriAuth(req: NextRequest):
 // Örnek: GET /api/randevular — admin tüm randevuları, müşteri sadece
 // kendininkini görür. Endpoint kim olduğuna göre filter ekler.
 //
-// Önce müşteri token'ı denenir, yoksa admin denenir.
-// (Müşteri öncelikli çünkü müşteri kendi verisine erişiyor.)
+// HOTFIX: Admin token öncelikli (önceden müşteri öncelikli idi).
+// Sebep: Aynı tarayıcıda iki cookie de olabilir (admin ayrı sekmede
+// müşteri olarak da girmişse). Admin endpoint'lerinde admin akışı
+// çalışmalı. Endpoint isterse ?mod=musteri ile müşteri akışını
+// zorlayabilir.
 // ═══════════════════════════════════════════════════════════════════
 
 export type AnyAuthResult =
@@ -132,21 +135,21 @@ export type AnyAuthResult =
   | { kim: 'admin'; username: string };
 
 export function requireAnyAuth(req: NextRequest): AnyAuthResult | NextResponse {
-  // 1) Müşteri token önce
-  const musteriToken = req.cookies.get(MUSTERI_COOKIE)?.value;
-  if (musteriToken) {
-    const payload = verifyTokenGeneric<MusteriTokenPayload>(musteriToken);
-    if (payload) {
-      return { kim: 'musteri', musteriId: payload.sub, email: payload.email };
-    }
-  }
-
-  // 2) Admin token
+  // 1) Admin token önce
   const adminToken = req.cookies.get(ADMIN_COOKIE)?.value;
   if (adminToken) {
     const payload = verifyTokenGeneric<AdminTokenPayload>(adminToken);
     if (payload) {
       return { kim: 'admin', username: payload.sub };
+    }
+  }
+
+  // 2) Müşteri token
+  const musteriToken = req.cookies.get(MUSTERI_COOKIE)?.value;
+  if (musteriToken) {
+    const payload = verifyTokenGeneric<MusteriTokenPayload>(musteriToken);
+    if (payload) {
+      return { kim: 'musteri', musteriId: payload.sub, email: payload.email };
     }
   }
 
