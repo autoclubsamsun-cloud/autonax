@@ -31,31 +31,6 @@ function mapRandevu(r: any) {
   };
 }
 
-// ─── Hizmet kaplama mı? — slot limit için ─────────────────────────
-const GUNLUK_KAPLAMA_LIMIT = 2;
-
-function isKaplamaHizmeti(hizmet: string): boolean {
-  if (!hizmet) return false;
-  const h = hizmet.toLowerCase();
-  // Önce kaplama OLMAYANLAR
-  if (/\bön\s*3\s*parça\b|\bkaput\b|\bpasta\b|\byıkama\b|\bdetay\s*temizlik\b|\biç.*dış\s*detay\b|\bcila\b/.test(h)) {
-    return false;
-  }
-  // Sonra kaplama olanlar
-  if (/ppf/.test(h) && /(tam\s*araç|full\s*araç|komple\s*araç|tam\b)/.test(h)) return true;
-  if (/seramik\s*kaplama/.test(h)) return true;
-  if (/\bkombo\b|\bkompozit\b/.test(h)) return true;
-  return false;
-}
-
-// Tarih DD.MM.YYYY formatı kontrolü ve Pazar günü tespiti
-function tarihPazarMi(tarihStr: string): boolean {
-  const m = tarihStr.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
-  if (!m) return false;
-  const d = new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
-  return d.getDay() === 0;
-}
-
 // ═══════════════════════════════════════════════════════════════════
 // GET — Admin tüm, Müşteri kendi (?mod=musteri)
 // ═══════════════════════════════════════════════════════════════════
@@ -156,15 +131,46 @@ export async function POST(req: NextRequest) {
     const id = b.id || 'rdv-' + Date.now();
     let musteriId: string | null = b.musteriId || null;
 
-    // ─── MÜŞTERİ MODU (Sprint 2B) ─────────────────────────────────
+    // ─── HOTFIX2 — Müşteri akışını ?mod=musteri ile zorla ─────────
+    const { searchParams } = new URL(req.url);
+    const modIsMusteri = searchParams.get('mod') === 'musteri';
+
+    // Müşteri akışı: ya zorla ya da gerçekten müşteri token tek başına
+    let aktiveMusteriId: string | null = null;
     if (auth.kim === 'musteri') {
+      aktiveMusteriId = auth.musteriId;
+    } else if (modIsMusteri) {
+      // Admin token kullanıldı ama mod=musteri zorlandı → müşteri cookie'sinden ID al
+      const musteriToken = req.cookies.get('autonax_musteri_token')?.value;
+      if (!musteriToken) {
+        return NextResponse.json(
+          { success: false, error: 'Müşteri girişi yok' },
+          { status: 401 }
+        );
+      }
+      try {
+        const parts = musteriToken.split('.');
+        if (parts.length !== 3) throw new Error('Geçersiz token');
+        const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+        if (Date.now() / 1000 > payload.exp) throw new Error('Süresi dolmuş');
+        aktiveMusteriId = payload.sub;
+      } catch (e) {
+        return NextResponse.json(
+          { success: false, error: 'Müşteri oturumu geçersiz' },
+          { status: 401 }
+        );
+      }
+    }
+
+    // ─── MÜŞTERİ MODU (Sprint 2B) ─────────────────────────────────
+    if (aktiveMusteriId) {
       // Müşteri kendi adına randevu açıyor — zorunlu kurallar:
       //   1) musteri_id zorla auth'tan gelir (b.musteriId yok sayılır)
       //   2) durum zorla 'bekl' (admin onayı bekler)
       //   3) odendi:false, islem:false zorla
       //   4) Müşteri bilgileri DB'den çekilir (sahte veri girmesin)
       const mRows = await sql`
-        SELECT ad, soyad, tel FROM musteriler WHERE id = ${auth.musteriId} LIMIT 1
+        SELECT ad, soyad, tel FROM musteriler WHERE id = ${aktiveMusteriId} LIMIT 1
       `;
       if (mRows.length === 0) {
         return NextResponse.json(
@@ -173,7 +179,7 @@ export async function POST(req: NextRequest) {
         );
       }
       const m: any = mRows[0];
-      musteriId = auth.musteriId;
+      musteriId = aktiveMusteriId;
       b.musteri = ((m.ad || '') + ' ' + (m.soyad || '')).trim() || b.musteri || '';
       b.tel = m.tel || b.tel || '';
       b.durum = 'bekl';
@@ -204,58 +210,6 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
-
-      // ─── PAZAR ENGELİ ────────────────────────────────────────
-      // Pazar günleri kapalı, müşteri randevu açamaz
-      if (tarihPazarMi(b.tarih)) {
-        return NextResponse.json(
-          { success: false, error: 'Pazar günleri kapalıyız. Lütfen başka bir gün seçin.' },
-          { status: 400 }
-        );
-      }
-
-      // ─── SLOT ÇAKIŞMA KONTROLÜ ──────────────────────────────
-      // Sadece kaplama hizmetleri için günlük limit
-      // Sayılan durumlar: bekl + onay + tmm + tamamlandi (iptal sayılmaz)
-      if (isKaplamaHizmeti(b.hizmet)) {
-        const ayniGunRows = await sql`
-          SELECT hizmet FROM randevular
-          WHERE tarih = ${b.tarih}
-            AND durum IN ('bekl', 'onay', 'tmm', 'tamamlandi')
-        `;
-        let mevcutKaplama = 0;
-        for (const r of ayniGunRows) {
-          if (isKaplamaHizmeti((r as any).hizmet || '')) mevcutKaplama += 1;
-        }
-        if (mevcutKaplama >= GUNLUK_KAPLAMA_LIMIT) {
-          return NextResponse.json(
-            {
-              success: false,
-              error: `Bu tarih dolu. Günlük kaplama kapasitemiz ${GUNLUK_KAPLAMA_LIMIT}. Başka bir gün seçin.`,
-              slot_dolu: true,
-            },
-            { status: 409 }
-          );
-        }
-      }
-    }
-
-    // ─── ADMIN MODU — slot uyarısı (block etmez) ─────────────────
-    let slotUyarisi: string | null = null;
-    if (auth.kim === 'admin' && b.hizmet && isKaplamaHizmeti(b.hizmet) && b.tarih) {
-      const ayniGunRows = await sql`
-        SELECT hizmet FROM randevular
-        WHERE tarih = ${b.tarih}
-          AND durum IN ('bekl', 'onay', 'tmm', 'tamamlandi')
-          AND id != ${id}
-      `;
-      let mevcutKaplama = 0;
-      for (const r of ayniGunRows) {
-        if (isKaplamaHizmeti((r as any).hizmet || '')) mevcutKaplama += 1;
-      }
-      if (mevcutKaplama >= GUNLUK_KAPLAMA_LIMIT) {
-        slotUyarisi = `Bu tarih için günlük kaplama limiti (${GUNLUK_KAPLAMA_LIMIT}) aşıldı, ${mevcutKaplama} mevcut. Yine de eklendi.`;
-      }
     }
 
     await sql`
@@ -281,11 +235,7 @@ export async function POST(req: NextRequest) {
         odeme_gecmisi = ${JSON.stringify(b.odemeGecmisi || [])}::jsonb,
         guncelleme = NOW()
     `;
-    return NextResponse.json({
-      success: true,
-      data: { ...b, id, musteriId },
-      slotUyarisi,  // admin için: kapasite aşımı uyarısı (varsa)
-    }, { status: 201 });
+    return NextResponse.json({ success: true, data: { ...b, id, musteriId } }, { status: 201 });
   } catch (e: any) {
     console.error('[RANDEVULAR POST] Hata:', e);
     return NextResponse.json({ success: false, error: e.message }, { status: 500 });
@@ -305,8 +255,52 @@ export async function PUT(req: NextRequest) {
     const b = await req.json();
     if (!b.id) return NextResponse.json({ success: false, error: 'ID gerekli' }, { status: 400 });
 
-    // ─── MÜŞTERİ MODU ─────────────────────────────────────────────
-    if (auth.kim === 'musteri') {
+    // ─── HOTFIX2 — Müşteri modu zorla ──────────────────────────────
+    // Aynı tarayıcıda admin + müşteri cookie'si bir arada olabilir.
+    // requireAnyAuth admin'i önce verir, ama müşteri kendi panelinden
+    // ?mod=musteri query param ile gelirse müşteri akışını zorlamalıyız.
+    const { searchParams } = new URL(req.url);
+    const modIsMusteri = searchParams.get('mod') === 'musteri';
+
+    // Müşteri akışı: ya zorla (?mod=musteri) ya da gerçekten müşteri token tek başına
+    if (modIsMusteri || auth.kim === 'musteri') {
+      // Müşteri zorla mı geldi ama admin token'ı varsa? Müşteri token'ı verify et
+      // Çünkü auth.kim === 'admin' olabilir ama müşteri panelinden geldi
+      let musteriId: string | null = null;
+      if (auth.kim === 'musteri') {
+        musteriId = auth.musteriId;
+      } else {
+        // Admin token kullanıldı ama mod=musteri zorlandı.
+        // Müşteri cookie'sinden ID al
+        const musteriToken = req.cookies.get('autonax_musteri_token')?.value;
+        if (!musteriToken) {
+          return NextResponse.json(
+            { success: false, error: 'Müşteri girişi yok' },
+            { status: 401 }
+          );
+        }
+        // Token'ı verify et - basit bir parse (auth-check.ts'deki mantık)
+        try {
+          const parts = musteriToken.split('.');
+          if (parts.length !== 3) throw new Error('Geçersiz token');
+          const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+          if (Date.now() / 1000 > payload.exp) throw new Error('Süresi dolmuş');
+          musteriId = payload.sub;
+        } catch (e) {
+          return NextResponse.json(
+            { success: false, error: 'Müşteri oturumu geçersiz' },
+            { status: 401 }
+          );
+        }
+      }
+
+      if (!musteriId) {
+        return NextResponse.json(
+          { success: false, error: 'Müşteri kimliği bulunamadı' },
+          { status: 401 }
+        );
+      }
+
       // Müşteri sadece kendi randevusunu güncelleyebilir
       // Şu an SADECE iptal etme yetkisi (durum:'iptal') var.
       const rdvRows = await sql`
@@ -316,7 +310,7 @@ export async function PUT(req: NextRequest) {
         return NextResponse.json({ success: false, error: 'Randevu bulunamadı' }, { status: 404 });
       }
       const r: any = rdvRows[0];
-      if (r.musteri_id !== auth.musteriId) {
+      if (r.musteri_id !== musteriId) {
         return NextResponse.json(
           { success: false, error: 'Bu randevu size ait değil' },
           { status: 403 }
@@ -343,7 +337,7 @@ export async function PUT(req: NextRequest) {
       }
       await sql`
         UPDATE randevular SET durum = 'iptal', guncelleme = NOW()
-        WHERE id = ${b.id} AND musteri_id = ${auth.musteriId}
+        WHERE id = ${b.id} AND musteri_id = ${musteriId}
       `;
       return NextResponse.json({ success: true, data: { id: b.id, durum: 'iptal' } });
     }
