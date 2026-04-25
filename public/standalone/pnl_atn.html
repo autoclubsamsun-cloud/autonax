@@ -2107,6 +2107,11 @@ var DIGER_HIZMETLER = [
    Amaç: DENEMME gibi DB'de kalmış test ürünlerini admin panelden yönetebilmek. */
 var DB_OZEL_URUNLER = [];
 
+/* /api/musteriler'den çekilen üye kayıtları (uye:true olanlar).
+   musteriListesiOlustur() bu cache'i okuyup mevcut RANDEVULAR-bazlı
+   listeye enjekte eder. dbSyncYukle çalıştığında otomatik dolar. */
+var _dbUyelerCache = [];
+
 var RANDEVULAR=[];
 var FIYAT_DATA=[
   {kod:'CS190',isim:'CS190 200 Mikron',full:45000,on3:13000,kaput:3000,garanti:'4 Yıl',mensei:'🇩🇪'},
@@ -9175,7 +9180,8 @@ function musteriListesiOlustur(){
       isim:r.musteri, tel:r.tel||'—',
       plakalar:[], araclar:[], rdvIndexleri:[],
       rdvSayisi:0, toplamTutar:0, toplamOdenen:0, toplamKalan:0,
-      sonTarih:'', sonHizmet:'', bekleyen:0
+      sonTarih:'', sonHizmet:'', bekleyen:0,
+      onlineUye:false, email:''   // online üye flag'i
     };}
     var m=map[key];
     var rdvIdx=RANDEVULAR.indexOf(r);
@@ -9192,6 +9198,61 @@ function musteriListesiOlustur(){
     if(r.arac&&r.arac!='—'&&m.araclar.indexOf(r.arac)<0) m.araclar.push(r.arac);
     if(!m.sonTarih||r.tarih>m.sonTarih){m.sonTarih=r.tarih;m.sonHizmet=r.hizmet;}
   });
+
+  // ─── ÜYE ENJEKSİYON ────────────────────────────────────────────
+  // _dbUyelerCache: site üzerinden üye olmuş müşteriler (uye:true)
+  // Eşleşme önceliği: telefon (en güvenilir) → ad+soyad
+  // Eşleşirse: mevcut kayda 'onlineUye:true' rozeti ekle, email/avatar al
+  // Eşleşmezse: yeni kart ekle (rdvSayisi:0, toplamTutar:0)
+  if(_dbUyelerCache && _dbUyelerCache.length){
+    var telToKey = {};
+    var adToKey = {};
+    Object.keys(map).forEach(function(k){
+      var m = map[k];
+      if(m.tel && m.tel !== '—'){
+        var telN = (m.tel||'').replace(/[\s\-()]/g,'').replace(/^(\+?9?0?)/,'');
+        if(telN) telToKey[telN] = k;
+      }
+      if(m.isim) adToKey[m.isim.toLowerCase().trim()] = k;
+    });
+
+    _dbUyelerCache.forEach(function(u){
+      if(!u || !u.id) return;
+      var uyeTelN = (u.tel||'').replace(/[\s\-()]/g,'').replace(/^(\+?9?0?)/,'');
+      var uyeAd = (u.isim||'').toLowerCase().trim();
+      var matchedKey = (uyeTelN && telToKey[uyeTelN]) || (uyeAd && adToKey[uyeAd]) || null;
+
+      if(matchedKey){
+        // Eşleşti — mevcut kayda rozet ekle, email/avatar zenginleştir
+        var existing = map[matchedKey];
+        existing.onlineUye = true;
+        if(!existing.email && u.email) existing.email = u.email;
+        if(u.avatar) existing.avatar = u.avatar;
+        if((!existing.tel || existing.tel === '—') && u.tel) existing.tel = u.tel;
+      } else {
+        // Eşleşmedi — yeni kart (henüz randevusu olmayan üye)
+        var newKey = 'uye_' + u.id;
+        map[newKey] = {
+          isim: u.isim || ((u.ad||'')+' '+(u.soyad||'')).trim() || u.email || 'İsimsiz',
+          tel: u.tel || '—',
+          email: u.email || '',
+          plakalar: u.plaka ? [u.plaka] : [],
+          araclar: u.arac ? [u.arac] : [],
+          rdvIndexleri: [],
+          rdvSayisi: 0,
+          toplamTutar: 0,
+          toplamOdenen: 0,
+          toplamKalan: 0,
+          sonTarih: '',
+          sonHizmet: '',
+          bekleyen: 0,
+          onlineUye: true,
+          avatar: u.avatar || '',
+        };
+      }
+    });
+  }
+
   return Object.values(map);
 }
 var _mstSort='rdv';
@@ -9226,7 +9287,7 @@ function mstListele(){
       +'<div style="font-size:10px;color:#16a34a">Odenen: ₺'+m.toplamOdenen.toLocaleString('tr-TR')+'</div>'
       +(m.toplamKalan>0?'<div style="font-size:10px;color:#dc2626">Kalan: ₺'+m.toplamKalan.toLocaleString('tr-TR')+'</div>':'');
     return '<tr data-musteri="'+idx+'">'
-      +'<td><div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:32px;border-radius:50%;background:'+renk+';display:flex;align-items:center;justify-content:center;font-family:Bebas Neue,sans-serif;font-size:13px;color:#fff;flex-shrink:0">'+harf+'</div><div><b>'+m.isim+'</b></div></div></td>'
+      +'<td><div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:32px;border-radius:50%;background:'+renk+';display:flex;align-items:center;justify-content:center;font-family:Bebas Neue,sans-serif;font-size:13px;color:#fff;flex-shrink:0">'+harf+'</div><div><b>'+m.isim+'</b>'+(m.onlineUye?' <span style="display:inline-block;background:#dcfce7;color:#16a34a;font-size:9px;padding:1px 6px;border-radius:8px;margin-left:4px;font-weight:700;letter-spacing:.3px;vertical-align:middle">🟢 ONLİNE ÜYE</span>':'')+(m.email?'<div style="font-size:10px;color:var(--ink4)">'+m.email+'</div>':'')+'</div></div></td>'
       +'<td style="font-size:12px">'+m.tel+'</td>'
       +'<td>'+plar+(m.araclar[0]?'<br><small style="color:var(--ink4)">'+m.araclar[0]+'</small>':'')+'</td>'
       +'<td style="text-align:center;font-weight:700">'+m.rdvSayisi+'</td>'
@@ -9259,7 +9320,7 @@ function mstMobilKartlariRender(liste){
         +'<div style="display:flex;align-items:center;gap:6px">'
           +'<span style="width:30px;height:30px;border-radius:50%;background:var(--r);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-family:Bebas Neue,sans-serif;font-size:13px">'+(m.isim||'?').slice(0,1).toUpperCase()+'</span>'
           +'<div>'
-            +'<div class="mcard-musteri" style="margin:0">'+m.isim+'</div>'
+            +'<div class="mcard-musteri" style="margin:0">'+m.isim+(m.onlineUye?' <span style="display:inline-block;background:#dcfce7;color:#16a34a;font-size:9px;padding:1px 5px;border-radius:6px;font-weight:700">🟢 ONLİNE</span>':'')+'</div>'
             +'<div style="font-size:11px;color:var(--ink4)">'+(m.tel||'')+'</div>'
           +'</div>'
         +'</div>'
@@ -9956,12 +10017,41 @@ function _dbOzelUrunleriYakala(apiData){
   });
 }
 
+/**
+ * /api/musteriler'den site üzerinden üye olmuş müşterileri çeker
+ * ve _dbUyelerCache'e doldurur. musteriListesiOlustur() bu cache'i
+ * RANDEVULAR-bazlı türetmenin üzerine enjekte eder.
+ *
+ * Hata durumunda (offline, 500, vs.) sessizce geçer — mevcut müşteri
+ * görünümü bozulmaz, sadece "online üye" rozeti yansımaz.
+ */
+function _dbUyeleriYukle(){
+  return fetch('/api/musteriler',{credentials:'same-origin'})
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      if(!d || !d.success || !Array.isArray(d.data)) return;
+      // Sadece üye olanları al (uye:true) — randevu kaynaklı kayıtları
+      // tekrar enjekte etmeyelim, RANDEVULAR'dan zaten geliyorlar.
+      _dbUyelerCache = d.data.filter(function(m){ return m && m.uye === true; });
+      // Müşteriler sayfası açıksa otomatik refresh
+      if(typeof mstListele === 'function'){
+        var pgAktif = document.getElementById('pg-musteriler');
+        if(pgAktif && pgAktif.classList && pgAktif.classList.contains('aktif')) mstListele();
+      }
+    })
+    .catch(function(e){
+      console.warn('[Autonax] _dbUyeleriYukle:', e && e.message);
+    });
+}
+
 /* ─── DB SYNC — API'ye yaz ─── */
 function dbSync(url, method, body){
   return fetch(url,{method:method,headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,credentials:'same-origin'}).catch(function(e){console.warn('DB sync hata:',e);});
 }
 
 function dbSyncYukle(){
+  // Site üzerinden üye olmuş müşterileri çek (admin panelde rozetli görünmesi için)
+  if(typeof _dbUyeleriYukle === 'function') _dbUyeleriYukle();
   // Ürünleri DB'den çek — fiyat yönetimi ile senkron
   fetch('/api/urunler',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
     if(d.success&&d.data&&d.data.length>0){
