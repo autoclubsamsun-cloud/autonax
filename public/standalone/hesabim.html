@@ -803,37 +803,16 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
         <div class="page-title">Randevular</div>
         <div class="page-sub">Geçmiş ve yaklaşan randevularınız.</div>
       </div>
-      <div class="kart">
-        <div class="kart-head">
-          <div class="kart-title">Yaklaşan</div>
-        </div>
-        <div class="kart-body">
-          <div class="rdv-kart">
-            <div class="rdv-tarih"><div class="rdv-gun">15</div><div class="rdv-ay">NİSAN</div></div>
-            <div class="rdv-body">
-              <div class="rdv-isim">NiDOJP N8 220 Mikron PPF — Full Araç</div>
-              <div class="rdv-plaka">34 ABC 123 — BMW 5 Serisi</div>
-            </div>
-            <div><div class="rdv-saat">10:00</div><div class="rdv-status onay" style="margin-top:4px">Onaylı</div></div>
-          </div>
-          <button class="btn-secondary" style="font-size:11px;padding:8px 16px;margin-top:4px">Randevuyu İptal Et</button>
-        </div>
-      </div>
-      <div class="kart" style="margin-top:16px">
-        <div class="kart-head"><div class="kart-title">Geçmiş Randevular</div></div>
-        <div class="kart-body">
-          <div class="rdv-kart" style="opacity:.6">
-            <div class="rdv-tarih" style="background:#888"><div class="rdv-gun">15</div><div class="rdv-ay">MART</div></div>
-            <div class="rdv-body">
-              <div class="rdv-isim">N8 PPF + Nano Seramik Kombo</div>
-              <div class="rdv-plaka">34 ABC 123 — BMW 5 Serisi</div>
-            </div>
-            <div><div class="rdv-saat">08:00</div><div class="rdv-status tamam" style="margin-top:4px">Tamamlandı</div></div>
+      <div id="randevu-listesi-dyn">
+        <div class="kart">
+          <div class="kart-body" style="padding:32px 16px;text-align:center;color:var(--ink4)">
+            <div style="font-size:32px;margin-bottom:8px">⏳</div>
+            <div style="font-size:14px">Randevular yükleniyor...</div>
           </div>
         </div>
       </div>
       <div style="margin-top:16px;text-align:center">
-        <a href="#" onclick="event.preventDefault();geriDon()" class="btn-primary" style="display:inline-block;text-decoration:none">+ Yeni Randevu Al</a>
+        <button onclick="yeniRandevuAcModal()" class="btn-primary" style="display:inline-block;border:none;cursor:pointer;font-family:inherit">+ Yeni Randevu Al</button>
       </div>
     </div>
 
@@ -842,31 +821,14 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
       <div class="page-header">
         <div class="page-eyebrow">Hizmet Geçmişi</div>
         <div class="page-title">Tüm Hizmetler</div>
-        <div class="page-sub">Yaptırdığınız tüm kaplama ve bakım hizmetleri.</div>
+        <div class="page-sub">Yaptırdığınız tüm kaplama ve bakım hizmetleri (en yeni üstte).</div>
       </div>
-      <div class="kart">
-        <div class="kart-head">
-          <div class="kart-title">2025</div>
-          <span style="font-size:12px;color:var(--ink4);font-weight:600">Toplam ₺82.000</span>
-        </div>
-        <div class="kart-body">
-          <div class="hizmet-item">
-            <div class="hizmet-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
-            <div class="hizmet-body">
-              <div class="hizmet-name">NiDOJP N8 220 Mikron PPF — Full Araç</div>
-              <div class="hizmet-date">15 Mart 2025 · 34 ABC 123 · 10 Yıl Garanti · Technisyen: Ahmet U.</div>
-            </div>
-            <div class="hizmet-fiyat">₺70.000</div>
-            <div class="hizmet-tag aktif">Aktif</div>
-          </div>
-          <div class="hizmet-item">
-            <div class="hizmet-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10"/></svg></div>
-            <div class="hizmet-body">
-              <div class="hizmet-name">Nano Seramik Kaplama — Full Araç</div>
-              <div class="hizmet-date">15 Mart 2025 · 34 ABC 123 · 3 Yıl Garanti</div>
-            </div>
-            <div class="hizmet-fiyat">₺12.000</div>
-            <div class="hizmet-tag tamam">Tamamlandı</div>
+      <div id="hizmet-listesi-dyn">
+        <!-- Dinamik render — hizmetGecmisiYukle() doldurur -->
+        <div class="kart">
+          <div class="kart-body" style="padding:32px 16px;text-align:center;color:var(--ink4)">
+            <div style="font-size:32px;margin-bottom:8px">⏳</div>
+            <div style="font-size:14px">Hizmet geçmişi yükleniyor...</div>
           </div>
         </div>
       </div>
@@ -1206,8 +1168,46 @@ const AuthManager = {
   getCart(){ try{ return JSON.parse(localStorage.getItem(CART_KEY)||'[]'); } catch(e){ return []; } },
 
   /**
-   * Profil güncelleme — şu an sadece local cache.
-   * Sprint 2'de /api/musteri/auth action:update_profile'a bağlanacak.
+   * Profil güncelleme — Sprint 2A: API'ye bağlandı.
+   * Backend: POST /api/musteri/auth { action: 'update_profile', ... }
+   * Sadece izin verilen alanlar: ad, soyad, tel, sehir
+   * Email/şifre değişimi YOK (ayrı flow gerekir).
+   */
+  async updateProfile(patch){
+    try{
+      if(!_currentUser) return { ok:false, hata:'Kullanıcı oturumu yok' };
+      if(!patch || typeof patch !== 'object') return { ok:false, hata:'Geçersiz' };
+
+      const izinli = ['ad', 'soyad', 'tel', 'sehir'];
+      const temiz = {};
+      Object.keys(patch).forEach(k => {
+        if(izinli.indexOf(k) === -1) return;
+        const v = patch[k];
+        if(v !== null && v !== undefined) temiz[k] = String(v).trim();
+      });
+      if(Object.keys(temiz).length === 0) return { ok:true, user:_currentUser };
+
+      const res = await fetch('/api/musteri/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ action: 'update_profile', ...temiz })
+      });
+      const d = await res.json();
+      if(!d || !d.success){
+        return { ok:false, hata:(d && d.error) || 'Güncelleme başarısız' };
+      }
+      _currentUser = d.user;
+      return { ok:true, user:d.user };
+    } catch(e){
+      console.error('[Auth] updateProfile hata:', e);
+      return { ok:false, hata:'Sunucuya ulaşılamıyor, tekrar deneyin' };
+    }
+  },
+
+  /**
+   * @deprecated — eski sync arabirim, geriye uyumluluk için kalır.
+   * Yeni kod updateProfile() kullanmalı.
    */
   updateUser(patch){
     try{
@@ -1315,24 +1315,44 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   // 5) DB'den araçları çek (arka planda, UI güncellenir)
   aracListesiYukle();
 
-  // 6) Bekleyen ödemeleri sessizce arka planda yukle (dashboard karti ve badge icin)
+  // 6) DB'den randevuları çek (Sprint 2A — hizmet geçmişi + randevu listesi için)
+  randevularYukle();
+
+  // 7) Bekleyen ödemeleri sessizce arka planda yukle (dashboard karti ve badge icin)
   odemelerimSessizYukle();
 });
 
 function kullaniciGoster(){
-  const ad = kullanici?.ad || 'Misafir';
+  const adI = (kullanici?.ad || '').trim();
+  const soyadI = (kullanici?.soyad || '').trim();
+  const tamAd = (adI + (soyadI ? ' ' + soyadI : '')).trim() || 'Misafir';
   const email = kullanici?.email || 'Giriş yapılmadı';
-  document.getElementById('hdr-name').textContent = ad;
-  document.getElementById('hdr-email').textContent = email;
-  document.getElementById('hdr-avatar').textContent = ad[0]?.toUpperCase()||'?';
-  document.getElementById('pg-title').textContent = 'Hoşgeldiniz, '+ad+' 👋';
-  // Profil alanları
+  const avatar = kullanici?.avatar || (adI ? adI[0].toUpperCase() : '?');
+
+  const hdrName = document.getElementById('hdr-name');
+  const hdrEmail = document.getElementById('hdr-email');
+  const hdrAvatar = document.getElementById('hdr-avatar');
+  const pgTitle = document.getElementById('pg-title');
+  if(hdrName) hdrName.textContent = tamAd;
+  if(hdrEmail) hdrEmail.textContent = email;
+  if(hdrAvatar) hdrAvatar.textContent = avatar;
+  if(pgTitle) pgTitle.textContent = 'Hoşgeldiniz, ' + tamAd + ' 👋';
+
+  // Profil alanları — ad/soyad artık API'den ayrı geliyor, eskisi gibi split etme
   if(kullanici){
-    const [fn='',ln=''] = (kullanici.ad||'').split(' ');
-    document.getElementById('p-ad').value = fn;
-    document.getElementById('p-soyad').value = ln;
-    document.getElementById('p-email').value = kullanici.email||'';
-    document.getElementById('p-tel').value = kullanici.tel||'';
+    const pAd = document.getElementById('p-ad');
+    const pSoyad = document.getElementById('p-soyad');
+    const pEmail = document.getElementById('p-email');
+    const pTel = document.getElementById('p-tel');
+    if(pAd) pAd.value = adI;
+    if(pSoyad) pSoyad.value = soyadI;
+    if(pEmail){
+      pEmail.value = email;
+      pEmail.disabled = true;
+      pEmail.title = 'E-posta değişimi şu an desteklenmiyor';
+      pEmail.style.opacity = '.6';
+    }
+    if(pTel) pTel.value = kullanici.tel || '';
   }
 }
 
@@ -1585,9 +1605,425 @@ function odemelerimSessizYukle(){
 }
 
 /* ══ GARAJ ══ */
-/* ══════════════════════════════════════════════════
+/* ════════════════════════════════════════════════════
+   RANDEVULAR — DB tabanlı (Sprint 2A görüntüleme + Sprint 2B oluşturma)
+   ════════════════════════════════════════════════════ */
+let randevular = [];
+let _randevularYukleniyor = false;
+
+async function randevularYukle(){
+  if(_randevularYukleniyor) return;
+  _randevularYukleniyor = true;
+  try{
+    const res = await fetch('/api/randevular?mod=musteri', {
+      credentials: 'same-origin',
+      cache: 'no-store'
+    });
+    const d = await res.json();
+    if(d && d.success && Array.isArray(d.data)){
+      randevular = d.data;
+    } else {
+      randevular = [];
+    }
+  } catch(e){
+    console.warn('[Randevu] yükleme hata:', e && e.message);
+    randevular = [];
+  } finally {
+    _randevularYukleniyor = false;
+    if(typeof randevuListesiGoster === 'function') randevuListesiGoster();
+    if(typeof hizmetGecmisiGoster === 'function') hizmetGecmisiGoster();
+    // Dashboard sayacı güncelle
+    const statRdv = document.getElementById('stat-randevu');
+    if(statRdv) statRdv.textContent = randevular.filter(r => r.durum !== 'iptal').length;
+  }
+}
+
+/** Tarih string'ini Date objesine çevir (DD.MM.YYYY veya YYYY-MM-DD) */
+function _rdvTariheCevir(t){
+  if(!t) return null;
+  if(typeof t !== 'string') return null;
+  // DD.MM.YYYY
+  if(/^\d{1,2}\.\d{1,2}\.\d{4}/.test(t)){
+    const [g, a, y] = t.split('.');
+    return new Date(parseInt(y), parseInt(a)-1, parseInt(g));
+  }
+  // YYYY-MM-DD
+  if(/^\d{4}-\d{1,2}-\d{1,2}/.test(t)){
+    return new Date(t);
+  }
+  return null;
+}
+
+const _AY_KISA = ['OCAK','ŞUBAT','MART','NİSAN','MAYIS','HAZİRAN','TEMMUZ','AĞUSTOS','EYLÜL','EKİM','KASIM','ARALIK'];
+
+function _rdvDurumStil(durum){
+  const harita = {
+    'bekl': { etiket:'Onay Bekliyor', sinif:'bekl', renk:'#ea580c' },
+    'onay': { etiket:'Onaylı', sinif:'onay', renk:'#16a34a' },
+    'tmm': { etiket:'Tamamlandı', sinif:'tamam', renk:'#0ea5e9' },
+    'tamamlandi': { etiket:'Tamamlandı', sinif:'tamam', renk:'#0ea5e9' },
+    'iptal': { etiket:'İptal Edildi', sinif:'iptal', renk:'#dc2626' }
+  };
+  return harita[durum] || { etiket: durum || '—', sinif:'', renk:'#888' };
+}
+
+function randevuListesiGoster(){
+  const el = document.getElementById('randevu-listesi-dyn');
+  if(!el) return;
+
+  if(!randevular.length){
+    el.innerHTML = `<div class="kart"><div class="kart-body" style="padding:32px 16px;text-align:center;color:var(--ink4)">
+      <div style="font-size:42px;margin-bottom:8px">📅</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:4px">Henüz randevunuz yok</div>
+      <div style="font-size:13px">Aşağıdaki butonla yeni randevu alabilirsiniz.</div>
+    </div></div>`;
+    return;
+  }
+
+  // Yaklaşan ve geçmiş ayır
+  const bugun = new Date(); bugun.setHours(0,0,0,0);
+  const yaklasan = [];
+  const gecmis = [];
+  randevular.forEach(r => {
+    const t = _rdvTariheCevir(r.tarih);
+    if(!t) { gecmis.push(r); return; }
+    if(r.durum === 'iptal' || r.durum === 'tmm' || r.durum === 'tamamlandi'){ gecmis.push(r); return; }
+    if(t >= bugun) yaklasan.push(r);
+    else gecmis.push(r);
+  });
+
+  // En yakın yaklaşan üstte, geçmişte en yeni üstte
+  yaklasan.sort((a,b) => {
+    const ta = _rdvTariheCevir(a.tarih); const tb = _rdvTariheCevir(b.tarih);
+    return (ta?.getTime()||0) - (tb?.getTime()||0);
+  });
+  gecmis.sort((a,b) => {
+    const ta = _rdvTariheCevir(a.tarih); const tb = _rdvTariheCevir(b.tarih);
+    return (tb?.getTime()||0) - (ta?.getTime()||0);
+  });
+
+  function rdvKart(r, gecmisMi){
+    const d = _rdvDurumStil(r.durum);
+    const t = _rdvTariheCevir(r.tarih);
+    const gun = t ? t.getDate() : '?';
+    const ay = t ? _AY_KISA[t.getMonth()] : '';
+    const iptalBtn = (!gecmisMi && r.durum !== 'iptal' && r.durum !== 'tmm' && r.durum !== 'tamamlandi')
+      ? `<button onclick="randevuIptalEt('${r.id}')" class="btn-secondary" style="font-size:11px;padding:8px 16px;margin-top:8px;border:1px solid #fee2e2;background:#fff;color:#dc2626;border-radius:8px;cursor:pointer">İptal Et</button>`
+      : '';
+    return `<div class="rdv-kart" style="${gecmisMi?'opacity:.7':''}">
+      <div class="rdv-tarih" style="${gecmisMi?'background:#888':''}">
+        <div class="rdv-gun">${gun}</div>
+        <div class="rdv-ay">${ay}</div>
+      </div>
+      <div class="rdv-body">
+        <div class="rdv-isim">${_escapeHtml(r.hizmet || '—')}</div>
+        <div class="rdv-plaka">${_escapeHtml(r.plaka || '')} ${r.arac ? '— '+_escapeHtml(r.arac) : ''}</div>
+        ${iptalBtn}
+      </div>
+      <div>
+        <div class="rdv-saat">${_escapeHtml(r.saat || '')}</div>
+        <div class="rdv-status ${d.sinif}" style="margin-top:4px;background:${d.renk}22;color:${d.renk};padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;display:inline-block">${d.etiket}</div>
+      </div>
+    </div>`;
+  }
+
+  let html = '';
+  if(yaklasan.length){
+    html += `<div class="kart">
+      <div class="kart-head"><div class="kart-title">Yaklaşan (${yaklasan.length})</div></div>
+      <div class="kart-body">${yaklasan.map(r=>rdvKart(r,false)).join('')}</div>
+    </div>`;
+  }
+  if(gecmis.length){
+    html += `<div class="kart" style="margin-top:16px">
+      <div class="kart-head"><div class="kart-title">Geçmiş (${gecmis.length})</div></div>
+      <div class="kart-body">${gecmis.map(r=>rdvKart(r,true)).join('')}</div>
+    </div>`;
+  }
+  el.innerHTML = html;
+}
+
+/** Hizmet geçmişi sayfası — randevular'dan tüm hizmetleri tarihe göre listele */
+function hizmetGecmisiGoster(){
+  const el = document.getElementById('hizmet-listesi-dyn');
+  if(!el) return;
+
+  // Sadece tamamlanmış veya işlem görmüş randevular
+  const hizmetler = randevular.filter(r =>
+    r.durum === 'tmm' || r.durum === 'tamamlandi' || r.islem === true || r.odendi === true
+  );
+
+  if(!hizmetler.length){
+    el.innerHTML = `<div class="kart"><div class="kart-body" style="padding:32px 16px;text-align:center;color:var(--ink4)">
+      <div style="font-size:42px;margin-bottom:8px">🛡️</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:4px">Henüz hizmet geçmişi yok</div>
+      <div style="font-size:13px">Tamamlanmış hizmetleriniz burada listelenecek.</div>
+    </div></div>`;
+    return;
+  }
+
+  // Yıla göre grupla
+  const gruplar = {};
+  hizmetler.forEach(r => {
+    const t = _rdvTariheCevir(r.tarih);
+    const yil = t ? t.getFullYear() : 'Tarihsiz';
+    if(!gruplar[yil]) gruplar[yil] = [];
+    gruplar[yil].push(r);
+  });
+
+  // En yeni yıl üstte
+  const yillar = Object.keys(gruplar).sort((a,b) => {
+    if(a === 'Tarihsiz') return 1;
+    if(b === 'Tarihsiz') return -1;
+    return parseInt(b) - parseInt(a);
+  });
+
+  let html = '';
+  yillar.forEach(yil => {
+    const grup = gruplar[yil];
+    grup.sort((a,b) => {
+      const ta = _rdvTariheCevir(a.tarih); const tb = _rdvTariheCevir(b.tarih);
+      return (tb?.getTime()||0) - (ta?.getTime()||0);
+    });
+    const yilToplam = grup.reduce((s,r) => s + (Number(r.tutar)||0), 0);
+    const items = grup.map(r => {
+      const ikonSvg = r.hizmet && r.hizmet.toLowerCase().includes('ppf')
+        ? '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>'
+        : '<circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10"/>';
+      const aktif = r.durum !== 'iptal' && (r.odendi || r.islem);
+      const tag = r.durum === 'iptal'
+        ? '<div class="hizmet-tag" style="background:#fee2e2;color:#dc2626">İptal</div>'
+        : (aktif ? '<div class="hizmet-tag aktif">Tamamlandı</div>' : '<div class="hizmet-tag tamam">İşlemde</div>');
+      return `<div class="hizmet-item">
+        <div class="hizmet-icon"><svg viewBox="0 0 24 24">${ikonSvg}</svg></div>
+        <div class="hizmet-body">
+          <div class="hizmet-name">${_escapeHtml(r.hizmet || '—')}</div>
+          <div class="hizmet-date">${_escapeHtml(r.tarih || '')} · ${_escapeHtml(r.plaka || '')} ${r.arac ? '· '+_escapeHtml(r.arac) : ''}</div>
+        </div>
+        <div class="hizmet-fiyat">₺${(Number(r.tutar)||0).toLocaleString('tr-TR')}</div>
+        ${tag}
+      </div>`;
+    }).join('');
+    html += `<div class="kart" style="margin-bottom:16px">
+      <div class="kart-head">
+        <div class="kart-title">${yil}</div>
+        <span style="font-size:12px;color:var(--ink4);font-weight:600">Toplam ₺${yilToplam.toLocaleString('tr-TR')}</span>
+      </div>
+      <div class="kart-body">${items}</div>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+/* ════════════════════════════════════════════════════
+   RANDEVU İPTAL — Müşteri kendi randevusunu iptal eder (Sprint 2B)
+   ════════════════════════════════════════════════════ */
+async function randevuIptalEt(rdvId){
+  if(!rdvId) return;
+  if(!confirm('Randevuyu iptal etmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.')) return;
+
+  // Optimistic — UI'dan hemen "iptal" durumuna geçir
+  const rdv = randevular.find(r => r.id === rdvId);
+  if(!rdv){ _toast('Randevu bulunamadı', 'red'); return; }
+  const eskiDurum = rdv.durum;
+  rdv.durum = 'iptal';
+  randevuListesiGoster();
+  hizmetGecmisiGoster();
+
+  try{
+    const res = await fetch('/api/randevular', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ id: rdvId, durum: 'iptal' })
+    });
+    const d = await res.json();
+    if(!d || !d.success){
+      // Rollback
+      rdv.durum = eskiDurum;
+      randevuListesiGoster();
+      hizmetGecmisiGoster();
+      _toast(d?.error || 'İptal başarısız', 'red');
+      return;
+    }
+    _toast('✓ Randevu iptal edildi', 'green');
+    if(typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(15);
+  } catch(e){
+    rdv.durum = eskiDurum;
+    randevuListesiGoster();
+    hizmetGecmisiGoster();
+    console.error('[Randevu] iptal hata:', e);
+    _toast('Bağlantı hatası, tekrar deneyin', 'red');
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   YENİ RANDEVU MODAL — Sprint 2B
+   ════════════════════════════════════════════════════ */
+function yeniRandevuAcModal(){
+  // Kullanıcının aracı yoksa önce uyar
+  if(!araclar.length){
+    if(confirm('Önce garajınıza bir araç eklemeniz gerekiyor.\n\nGarajım sayfasına gidilsin mi?')){
+      goster('garajim');
+    }
+    return;
+  }
+
+  const aracOpt = araclar.map(a =>
+    `<option value="${_escapeHtml(a.plaka)}|${_escapeHtml((a.marka||'') + ' ' + (a.model||'') + (a.yil ? ' ' + a.yil : '')).trim()}">${_escapeHtml(a.plaka)} — ${_escapeHtml((a.marka||'') + ' ' + (a.model||'')).trim()}</option>`
+  ).join('');
+
+  // Bugünden 1 gün sonra başla, 30 gün ileriye kadar
+  const yarin = new Date(); yarin.setDate(yarin.getDate() + 1);
+  const minTarih = yarin.toISOString().split('T')[0];
+  const maxDate = new Date(); maxDate.setDate(maxDate.getDate() + 60);
+  const maxTarih = maxDate.toISOString().split('T')[0];
+
+  const modal = document.createElement('div');
+  modal.id = 'yeni-rdv-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;animation:rdvFadeIn .2s';
+  modal.innerHTML = `
+    <style>
+      @keyframes rdvFadeIn { from{opacity:0} to{opacity:1} }
+      @keyframes rdvSlideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+      #yeni-rdv-modal .rdv-modal-box{background:#fff;border-radius:18px;padding:24px;max-width:480px;width:100%;max-height:92vh;overflow-y:auto;animation:rdvSlideUp .25s cubic-bezier(.2,1,.3,1);box-shadow:0 24px 60px rgba(0,0,0,.25)}
+      #yeni-rdv-modal .rdv-modal-baslik{font-size:20px;font-weight:700;margin-bottom:4px;color:#111}
+      #yeni-rdv-modal .rdv-modal-alt{font-size:13px;color:#666;margin-bottom:20px}
+      #yeni-rdv-modal label{display:block;font-size:12px;font-weight:600;color:#444;margin-bottom:6px;margin-top:14px;letter-spacing:.3px}
+      #yeni-rdv-modal input,#yeni-rdv-modal select,#yeni-rdv-modal textarea{width:100%;padding:12px 14px;border:1.5px solid #e5e5e5;border-radius:10px;font-size:14px;font-family:inherit;background:#fff;outline:none;transition:.2s;min-height:44px;box-sizing:border-box}
+      #yeni-rdv-modal input:focus,#yeni-rdv-modal select:focus,#yeni-rdv-modal textarea:focus{border-color:#B01C2E;box-shadow:0 0 0 3px rgba(176,28,46,.1)}
+      #yeni-rdv-modal textarea{min-height:80px;resize:vertical}
+      #yeni-rdv-modal .rdv-uyari{margin-top:14px;padding:10px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:11px;color:#9a3412;line-height:1.5}
+      #yeni-rdv-modal .rdv-btnlar{display:flex;gap:8px;margin-top:20px}
+      #yeni-rdv-modal button.iptal{flex:1;padding:13px;border:1.5px solid #e5e5e5;background:#fff;color:#444;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;min-height:44px}
+      #yeni-rdv-modal button.kaydet{flex:2;padding:13px;border:none;background:#B01C2E;color:#fff;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;min-height:44px;letter-spacing:.3px}
+      #yeni-rdv-modal button.kaydet:disabled{opacity:.5;cursor:not-allowed}
+    </style>
+    <div class="rdv-modal-box">
+      <div class="rdv-modal-baslik">Yeni Randevu Talebi</div>
+      <div class="rdv-modal-alt">Bilgilerinizi girin, ekibimiz onaylayıp size dönüş yapsın.</div>
+
+      <label>Araç</label>
+      <select id="yrdv-arac">${aracOpt}</select>
+
+      <label>Hizmet</label>
+      <select id="yrdv-hizmet">
+        <option value="">Seçin...</option>
+        <option>NiDOJP CS190 200 Mikron PPF — Tam Araç</option>
+        <option>NiDOJP S75 200 Mikron PPF — Tam Araç</option>
+        <option>NiDOJP S85 220 Mikron PPF — Tam Araç</option>
+        <option>NiDOJP N7 200 Mikron PPF — Tam Araç</option>
+        <option>NiDOJP N8 220 Mikron PPF — Tam Araç</option>
+        <option>NiDOJP N9 250 Mikron PPF — Tam Araç</option>
+        <option>NiDOJP Renkli/Mat PPF — Tam Araç</option>
+        <option>PPF — Ön 3 Parça</option>
+        <option>PPF — Kaput</option>
+        <option>Seramik Kaplama 9H — Tam Araç</option>
+        <option>Seramik Kaplama 7H</option>
+        <option>Pasta Cila + Detaylı Yıkama</option>
+        <option>İç + Dış Detay Temizlik</option>
+        <option>Bilmiyorum — Önerinizi alayım</option>
+      </select>
+
+      <label>Tarih</label>
+      <input type="date" id="yrdv-tarih" min="${minTarih}" max="${maxTarih}" value="${minTarih}">
+
+      <label>Saat (tahmini)</label>
+      <select id="yrdv-saat">
+        <option value="09:00">09:00</option>
+        <option value="10:00">10:00</option>
+        <option value="11:00">11:00</option>
+        <option value="12:00">12:00</option>
+        <option value="13:00">13:00</option>
+        <option value="14:00">14:00</option>
+        <option value="15:00">15:00</option>
+        <option value="16:00">16:00</option>
+        <option value="17:00">17:00</option>
+      </select>
+
+      <label>Not (opsiyonel)</label>
+      <textarea id="yrdv-not" placeholder="Eklemek istediğiniz bilgi..."></textarea>
+
+      <div class="rdv-uyari">
+        ⚠️ Bu bir <b>talep</b>. Saat ve hizmet, ekibimiz size dönüş yaptığında kesinleşir.
+        Onay durumunu "Randevularım" sayfasından takip edebilirsiniz.
+      </div>
+
+      <div class="rdv-btnlar">
+        <button class="iptal" onclick="document.getElementById('yeni-rdv-modal').remove()">İptal</button>
+        <button class="kaydet" onclick="randevuTalebGonder(this)">Talebi Gönder</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+async function randevuTalebGonder(btn){
+  const aracVal = document.getElementById('yrdv-arac').value;
+  const hizmet = document.getElementById('yrdv-hizmet').value;
+  const tarihRaw = document.getElementById('yrdv-tarih').value;
+  const saat = document.getElementById('yrdv-saat').value;
+  const notVal = document.getElementById('yrdv-not').value.trim();
+
+  if(!aracVal){ _toast('Araç seçin', 'red'); return; }
+  if(!hizmet){ _toast('Hizmet seçin', 'red'); return; }
+  if(!tarihRaw){ _toast('Tarih seçin', 'red'); return; }
+
+  const [plaka, aracIsim] = aracVal.split('|');
+
+  // YYYY-MM-DD → DD.MM.YYYY (mevcut tabloda format böyle)
+  const [y, a, g] = tarihRaw.split('-');
+  const tarihDB = `${g}.${a}.${y}`;
+
+  const eskiText = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Gönderiliyor...';
+
+  try{
+    const res = await fetch('/api/randevular', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        tarih: tarihDB,
+        saat: saat,
+        plaka: plaka,
+        arac: aracIsim,
+        hizmet: hizmet + (notVal ? ' [Not: ' + notVal + ']' : ''),
+        tutar: 0,
+        durum: 'bekl'
+      })
+    });
+    const d = await res.json();
+    if(!d || !d.success){
+      _toast(d?.error || 'Talep gönderilemedi', 'red');
+      btn.disabled = false; btn.textContent = eskiText;
+      return;
+    }
+    document.getElementById('yeni-rdv-modal')?.remove();
+    _toast('✓ Talebiniz alındı, en kısa sürede dönüş yapacağız', 'green');
+    if(typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([20, 50, 20]);
+    // Listeyi yenile
+    await randevularYukle();
+    // Randevular sayfasına git
+    if(typeof goster === 'function') goster('randevular');
+  } catch(e){
+    console.error('[Randevu] talep hata:', e);
+    _toast('Bağlantı hatası, tekrar deneyin', 'red');
+    btn.disabled = false; btn.textContent = eskiText;
+  }
+}
+
+/** HTML escape (XSS koruma) */
+function _escapeHtml(str){
+  if(str == null) return '';
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+/* ════════════════════════════════════════════════════
    ARAÇ EKLE — Optimistic UI + API
-   ══════════════════════════════════════════════════ */
+   ════════════════════════════════════════════════════ */
 async function aracEkle(){
   const plakaInput = document.getElementById('yeni-plaka');
   const markaInput = document.getElementById('yeni-marka');
@@ -1787,26 +2223,40 @@ function aracListesiGoster(){
 }
 
 /* ══ PROFİL ══ */
-function profilKaydet(){
-  const ad = document.getElementById('p-ad').value;
-  const soyad = document.getElementById('p-soyad').value;
-  const tel = document.getElementById('p-tel').value;
-  const email = document.getElementById('p-email').value;
+async function profilKaydet(){
+  const adInput = document.getElementById('p-ad');
+  const soyadInput = document.getElementById('p-soyad');
+  const telInput = document.getElementById('p-tel');
+  // email değişimi şu an desteklenmiyor (KVKK + verification gerekir)
 
-  // Cache'i AuthManager.updateUser ile güncelle (Sprint 2'de API'ye bağlanacak)
-  const r = AuthManager.updateUser({
-    ad: ((ad||'') + ' ' + (soyad||'')).trim(),
-    tel: tel,
-    email: email
-  });
+  const ad = (adInput?.value || '').trim();
+  const soyad = (soyadInput?.value || '').trim();
+  const tel = (telInput?.value || '').trim();
 
-  if(!r.ok){
-    _toast(r.hata || 'Güncelleme başarısız', 'red');
+  if(!ad){
+    _toast('Ad zorunlu', 'red');
+    adInput?.focus();
     return;
   }
-  kullanici = AuthManager.getUser();
-  kullaniciGoster();
-  _toast('✓ Profil güncellendi (Sprint 2\'de DB\'ye yansıyacak)', 'green');
+
+  // Buton durumu
+  const btn = document.querySelector('[onclick*="profilKaydet"]');
+  const eskiText = btn ? btn.textContent : '';
+  if(btn){ btn.disabled = true; btn.textContent = 'Kaydediliyor...'; btn.style.opacity = '.7'; }
+
+  try{
+    const r = await AuthManager.updateProfile({ ad, soyad, tel });
+    if(!r.ok){
+      _toast(r.hata || 'Güncelleme başarısız', 'red');
+      return;
+    }
+    kullanici = AuthManager.getUser();
+    kullaniciGoster();
+    _toast('✓ Profil güncellendi', 'green');
+    if(typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(20);
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = eskiText || 'Değişiklikleri Kaydet'; btn.style.opacity = ''; }
+  }
 }
 
 /* ══ SİDEBAR MOBİL ══ */
@@ -1897,6 +2347,8 @@ async function _panelLogin(){
       if(hbgMob) hbgMob.style.display = window.innerWidth <= 767 ? 'block' : 'none';
       // DB'den araçları çek
       await aracListesiYukle();
+      // DB'den randevuları çek
+      randevularYukle();
       // Bekleyen ödemeleri yükle
       if(typeof odemelerimSessizYukle === 'function') odemelerimSessizYukle();
     }, 300);
