@@ -1710,13 +1710,17 @@ function randevuListesiGoster(){
     const iptalBtn = (!gecmisMi && r.durum !== 'iptal' && r.durum !== 'tmm' && r.durum !== 'tamamlandi')
       ? `<button onclick="randevuIptalEt('${r.id}')" class="btn-secondary" style="font-size:11px;padding:8px 16px;margin-top:8px;border:1px solid #fee2e2;background:#fff;color:#dc2626;border-radius:8px;cursor:pointer">İptal Et</button>`
       : '';
+    // Online randevu rozeti — musteri_id varsa müşteri kendi açmış demektir
+    const onlineRozet = r.musteriId
+      ? `<span style="display:inline-flex;align-items:center;gap:3px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;letter-spacing:.3px;margin-left:6px;box-shadow:0 1px 4px rgba(59,130,246,.3)">🌐 ONLİNE</span>`
+      : '';
     return `<div class="rdv-kart" style="${gecmisMi?'opacity:.7':''}">
       <div class="rdv-tarih" style="${gecmisMi?'background:#888':''}">
         <div class="rdv-gun">${gun}</div>
         <div class="rdv-ay">${ay}</div>
       </div>
       <div class="rdv-body">
-        <div class="rdv-isim">${_escapeHtml(r.hizmet || '—')}</div>
+        <div class="rdv-isim">${_escapeHtml(r.hizmet || '—')}${onlineRozet}</div>
         <div class="rdv-plaka">${_escapeHtml(r.plaka || '')} ${r.arac ? '— '+_escapeHtml(r.arac) : ''}</div>
         ${iptalBtn}
       </div>
@@ -1860,7 +1864,10 @@ async function randevuIptalEt(rdvId){
 /* ════════════════════════════════════════════════════
    YENİ RANDEVU MODAL — Sprint 2B
    ════════════════════════════════════════════════════ */
-function yeniRandevuAcModal(){
+// Müsait tarihler cache (modal açılırken yüklenir)
+let _musaitTarihler = null;
+
+async function yeniRandevuAcModal(){
   // Kullanıcının aracı yoksa önce uyar
   if(!araclar.length){
     if(confirm('Önce garajınıza bir araç eklemeniz gerekiyor.\n\nGarajım sayfasına gidilsin mi?')){
@@ -1873,7 +1880,7 @@ function yeniRandevuAcModal(){
     `<option value="${_escapeHtml(a.plaka)}|${_escapeHtml((a.marka||'') + ' ' + (a.model||'') + (a.yil ? ' ' + a.yil : '')).trim()}">${_escapeHtml(a.plaka)} — ${_escapeHtml((a.marka||'') + ' ' + (a.model||'')).trim()}</option>`
   ).join('');
 
-  // Bugünden 1 gün sonra başla, 30 gün ileriye kadar
+  // Bugünden 1 gün sonra başla, 60 gün ileriye kadar
   const yarin = new Date(); yarin.setDate(yarin.getDate() + 1);
   const minTarih = yarin.toISOString().split('T')[0];
   const maxDate = new Date(); maxDate.setDate(maxDate.getDate() + 60);
@@ -1892,8 +1899,14 @@ function yeniRandevuAcModal(){
       #yeni-rdv-modal label{display:block;font-size:12px;font-weight:600;color:#444;margin-bottom:6px;margin-top:14px;letter-spacing:.3px}
       #yeni-rdv-modal input,#yeni-rdv-modal select,#yeni-rdv-modal textarea{width:100%;padding:12px 14px;border:1.5px solid #e5e5e5;border-radius:10px;font-size:14px;font-family:inherit;background:#fff;outline:none;transition:.2s;min-height:44px;box-sizing:border-box}
       #yeni-rdv-modal input:focus,#yeni-rdv-modal select:focus,#yeni-rdv-modal textarea:focus{border-color:#B01C2E;box-shadow:0 0 0 3px rgba(176,28,46,.1)}
+      #yeni-rdv-modal input:disabled,#yeni-rdv-modal select:disabled{opacity:.5;cursor:not-allowed;background:#f5f5f5}
       #yeni-rdv-modal textarea{min-height:80px;resize:vertical}
       #yeni-rdv-modal .rdv-uyari{margin-top:14px;padding:10px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:11px;color:#9a3412;line-height:1.5}
+      #yeni-rdv-modal .tarih-bilgi{margin-top:6px;padding:8px 10px;border-radius:8px;font-size:11px;font-weight:600;line-height:1.4;display:none}
+      #yeni-rdv-modal .tarih-bilgi.musait{background:#dcfce7;color:#166534;border:1px solid #86efac}
+      #yeni-rdv-modal .tarih-bilgi.dolu{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+      #yeni-rdv-modal .tarih-bilgi.kapali{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+      #yeni-rdv-modal .saat-uyari{font-size:10px;color:#9a3412;margin-top:4px;font-style:italic}
       #yeni-rdv-modal .rdv-btnlar{display:flex;gap:8px;margin-top:20px}
       #yeni-rdv-modal button.iptal{flex:1;padding:13px;border:1.5px solid #e5e5e5;background:#fff;color:#444;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;min-height:44px}
       #yeni-rdv-modal button.kaydet{flex:2;padding:13px;border:none;background:#B01C2E;color:#fff;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;min-height:44px;letter-spacing:.3px}
@@ -1907,28 +1920,35 @@ function yeniRandevuAcModal(){
       <select id="yrdv-arac">${aracOpt}</select>
 
       <label>Hizmet</label>
-      <select id="yrdv-hizmet">
+      <select id="yrdv-hizmet" onchange="_yrdvHizmetDegisti()">
         <option value="">Seçin...</option>
-        <option>NiDOJP CS190 200 Mikron PPF — Tam Araç</option>
-        <option>NiDOJP S75 200 Mikron PPF — Tam Araç</option>
-        <option>NiDOJP S85 220 Mikron PPF — Tam Araç</option>
-        <option>NiDOJP N7 200 Mikron PPF — Tam Araç</option>
-        <option>NiDOJP N8 220 Mikron PPF — Tam Araç</option>
-        <option>NiDOJP N9 250 Mikron PPF — Tam Araç</option>
-        <option>NiDOJP Renkli/Mat PPF — Tam Araç</option>
-        <option>PPF — Ön 3 Parça</option>
-        <option>PPF — Kaput</option>
-        <option>Seramik Kaplama 9H — Tam Araç</option>
-        <option>Seramik Kaplama 7H</option>
-        <option>Pasta Cila + Detaylı Yıkama</option>
-        <option>İç + Dış Detay Temizlik</option>
+        <optgroup label="🛡️ Tam Araç PPF (Günlük 2 randevu kapasitesi)">
+          <option>NiDOJP CS190 200 Mikron PPF — Tam Araç</option>
+          <option>NiDOJP S75 200 Mikron PPF — Tam Araç</option>
+          <option>NiDOJP S85 220 Mikron PPF — Tam Araç</option>
+          <option>NiDOJP N7 200 Mikron PPF — Tam Araç</option>
+          <option>NiDOJP N8 220 Mikron PPF — Tam Araç</option>
+          <option>NiDOJP N9 250 Mikron PPF — Tam Araç</option>
+          <option>NiDOJP Renkli/Mat PPF — Tam Araç</option>
+        </optgroup>
+        <optgroup label="✨ Seramik Kaplama (Günlük 2 randevu kapasitesi)">
+          <option>Seramik Kaplama 9H — Tam Araç</option>
+          <option>Seramik Kaplama 7H</option>
+        </optgroup>
+        <optgroup label="🔧 Parça İşler (Limit yok)">
+          <option>PPF — Ön 3 Parça</option>
+          <option>PPF — Kaput</option>
+          <option>Pasta Cila + Detaylı Yıkama</option>
+          <option>İç + Dış Detay Temizlik</option>
+        </optgroup>
         <option>Bilmiyorum — Önerinizi alayım</option>
       </select>
 
-      <label>Tarih</label>
-      <input type="date" id="yrdv-tarih" min="${minTarih}" max="${maxTarih}" value="${minTarih}">
+      <label>Tarih (Pazar günleri kapalıyız)</label>
+      <input type="date" id="yrdv-tarih" min="${minTarih}" max="${maxTarih}" value="${minTarih}" onchange="_yrdvTarihDegisti()">
+      <div id="yrdv-tarih-bilgi" class="tarih-bilgi"></div>
 
-      <label>Saat (tahmini)</label>
+      <label>Saat</label>
       <select id="yrdv-saat">
         <option value="09:00">09:00</option>
         <option value="10:00">10:00</option>
@@ -1940,6 +1960,7 @@ function yeniRandevuAcModal(){
         <option value="16:00">16:00</option>
         <option value="17:00">17:00</option>
       </select>
+      <div id="yrdv-saat-uyari" class="saat-uyari"></div>
 
       <label>Not (opsiyonel)</label>
       <textarea id="yrdv-not" placeholder="Eklemek istediğiniz bilgi..."></textarea>
@@ -1951,11 +1972,132 @@ function yeniRandevuAcModal(){
 
       <div class="rdv-btnlar">
         <button class="iptal" onclick="document.getElementById('yeni-rdv-modal').remove()">İptal</button>
-        <button class="kaydet" onclick="randevuTalebGonder(this)">Talebi Gönder</button>
+        <button class="kaydet" id="yrdv-kaydet-btn" onclick="randevuTalebGonder(this)">Talebi Gönder</button>
       </div>
     </div>
   `;
   document.body.appendChild(modal);
+
+  // Müsait tarihler yükle (arka planda)
+  await _musaitTarihleriYukle();
+  // İlk değişimleri tetikle
+  _yrdvTarihDegisti();
+}
+
+/** /api/musait-tarihler'den verileri çek, cache'le */
+async function _musaitTarihleriYukle(){
+  try{
+    const res = await fetch('/api/musait-tarihler?gun=60', {
+      credentials: 'same-origin',
+      cache: 'no-store'
+    });
+    const d = await res.json();
+    if(d && d.success && d.data && Array.isArray(d.data.tarihler)){
+      _musaitTarihler = {};
+      d.data.tarihler.forEach(t => { _musaitTarihler[t.tarih] = t; });
+    }
+  } catch(e){
+    console.warn('[Musait] yükleme hata:', e && e.message);
+    _musaitTarihler = {};
+  }
+}
+
+/** Hizmet değişince (kaplama mı parça iş mi) bilgilendirme */
+function _yrdvHizmetDegisti(){
+  // Sadece UI güncellemesi için tarih bilgisini yenile
+  _yrdvTarihDegisti();
+}
+
+/** Tarih değişince — pazar mı, dolu mu, kaç slot var göster */
+function _yrdvTarihDegisti(){
+  const tarihInput = document.getElementById('yrdv-tarih');
+  const bilgiEl = document.getElementById('yrdv-tarih-bilgi');
+  const saatSelect = document.getElementById('yrdv-saat');
+  const saatUyari = document.getElementById('yrdv-saat-uyari');
+  const kaydetBtn = document.getElementById('yrdv-kaydet-btn');
+  const hizmetSelect = document.getElementById('yrdv-hizmet');
+  if(!tarihInput || !bilgiEl) return;
+
+  const tarihRaw = tarihInput.value;
+  if(!tarihRaw) return;
+
+  // YYYY-MM-DD → DD.MM.YYYY
+  const [y, a, g] = tarihRaw.split('-');
+  const tarihDB = `${g}.${a}.${y}`;
+
+  // Cache hazır mı?
+  if(!_musaitTarihler){
+    bilgiEl.style.display = 'none';
+    return;
+  }
+
+  const info = _musaitTarihler[tarihDB];
+  const hizmet = hizmetSelect ? hizmetSelect.value : '';
+  const isKaplama = _isKaplamaHizmetClient(hizmet);
+
+  // Saatleri sıfırla
+  if(saatSelect){
+    Array.from(saatSelect.options).forEach(opt => {
+      opt.disabled = false;
+      opt.textContent = opt.value;
+    });
+  }
+  if(saatUyari) saatUyari.textContent = '';
+  if(kaydetBtn) kaydetBtn.disabled = false;
+
+  if(!info){
+    // Cache'te yok — varsayılan müsait
+    bilgiEl.style.display = 'none';
+    return;
+  }
+
+  bilgiEl.style.display = 'block';
+
+  if(info.durum === 'kapali_pazar'){
+    bilgiEl.className = 'tarih-bilgi kapali';
+    bilgiEl.innerHTML = '🚫 Bu gün <b>Pazar — kapalıyız</b>. Lütfen başka bir gün seçin.';
+    if(kaydetBtn) kaydetBtn.disabled = true;
+    return;
+  }
+
+  // Dolu saatler — saat dropdown'ında işaretle
+  if(saatSelect && info.dolu_saatler && info.dolu_saatler.length){
+    Array.from(saatSelect.options).forEach(opt => {
+      if(info.dolu_saatler.includes(opt.value)){
+        // Dolu olan saati gri yap, " (Dolu)" yazısı ekle
+        opt.textContent = opt.value + ' — Dolu';
+        opt.style.color = '#999';
+      }
+    });
+    if(saatUyari) saatUyari.textContent = '⚠️ Dolu olan saatler için yine de talep gönderebilirsiniz, alternatif önerilir.';
+  }
+
+  if(info.durum === 'dolu' && isKaplama){
+    bilgiEl.className = 'tarih-bilgi dolu';
+    bilgiEl.innerHTML = `🚫 Bu gün <b>kaplama kapasitesi dolu</b> (${info.kaplama_sayisi}/2 randevu mevcut). Kaplama hizmeti için başka bir gün seçin.`;
+    if(kaydetBtn) kaydetBtn.disabled = true;
+    return;
+  }
+
+  if(isKaplama){
+    bilgiEl.className = 'tarih-bilgi musait';
+    const kalan = info.kalan_kaplama || (2 - (info.kaplama_sayisi || 0));
+    bilgiEl.innerHTML = `✅ Bu gün <b>${kalan} kaplama slot</b>'u boş.${info.toplam_randevu ? ' (Toplam ' + info.toplam_randevu + ' randevu var)' : ''}`;
+  } else {
+    bilgiEl.className = 'tarih-bilgi musait';
+    bilgiEl.innerHTML = `✅ Bu gün <b>müsait</b>.${info.toplam_randevu ? ' (' + info.toplam_randevu + ' diğer randevu var)' : ''}`;
+  }
+}
+
+/** Frontend tarafı kaplama tespiti — backend ile aynı mantık */
+function _isKaplamaHizmetClient(hizmet){
+  if(!hizmet) return false;
+  const h = hizmet.toLowerCase();
+  if(/\bön\s*3\s*parça\b|\bkaput\b|\bpasta\b|\byıkama\b|\bdetay\s*temizlik\b|\biç.*dış\s*detay\b|\bcila\b/.test(h)) return false;
+  if(/ppf/.test(h) && /(tam\s*araç|full\s*araç|komple\s*araç|tam\b)/.test(h)) return true;
+  if(/seramik\s*kaplama/.test(h)) return true;
+  if(/\bkombo\b|\bkompozit\b/.test(h)) return true;
+  return false;
 }
 
 async function randevuTalebGonder(btn){
@@ -1995,7 +2137,15 @@ async function randevuTalebGonder(btn){
     });
     const d = await res.json();
     if(!d || !d.success){
-      _toast(d?.error || 'Talep gönderilemedi', 'red');
+      // Slot dolu özel mesajı (409 status code)
+      if(res.status === 409 || d?.slot_dolu){
+        _toast(d?.error || 'Bu tarih dolu, başka tarih seçin', 'orange');
+        // Cache'i yenile — başka müşteri eklemiş olabilir
+        await _musaitTarihleriYukle();
+        _yrdvTarihDegisti();
+      } else {
+        _toast(d?.error || 'Talep gönderilemedi', 'red');
+      }
       btn.disabled = false; btn.textContent = eskiText;
       return;
     }
@@ -2004,6 +2154,8 @@ async function randevuTalebGonder(btn){
     if(typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([20, 50, 20]);
     // Listeyi yenile
     await randevularYukle();
+    // Müsait tarih cache'ini de sıfırla
+    _musaitTarihler = null;
     // Randevular sayfasına git
     if(typeof goster === 'function') goster('randevular');
   } catch(e){
