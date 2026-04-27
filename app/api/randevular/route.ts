@@ -413,18 +413,51 @@ export async function PUT(req: NextRequest) {
       // Müşteri sadece kendi randevusunu güncelleyebilir
       // Şu an SADECE iptal etme yetkisi (durum:'iptal') var.
       const rdvRows = await sql`
-        SELECT musteri_id, durum FROM randevular WHERE id = ${b.id} LIMIT 1
+        SELECT musteri_id, durum, tel, musteri FROM randevular WHERE id = ${b.id} LIMIT 1
       `;
       if (rdvRows.length === 0) {
         return NextResponse.json({ success: false, error: 'Randevu bulunamadı' }, { status: 404 });
       }
       const r: any = rdvRows[0];
-      if (r.musteri_id !== musteriId) {
+
+      // ─── SAHİPLİK KONTROLÜ — fallback ile ────────────────────
+      // 1) musteri_id eşleşiyor → kesinlikle bu kişiye ait
+      // 2) musteri_id NULL ama tel veya ad eşleşiyor → eski randevu, atayalım
+      // 3) Hiçbiri → reddet
+      let sahip = false;
+      let migrate = false;  // musteri_id atama yapacak mıyız
+
+      if (r.musteri_id === musteriId) {
+        sahip = true;
+      } else if (r.musteri_id === null || r.musteri_id === undefined) {
+        // Eski kayıt — tel/ad fallback ile doğrula
+        const userRows = await sql`
+          SELECT ad, soyad, tel FROM musteriler WHERE id = ${musteriId} LIMIT 1
+        `;
+        if (userRows.length > 0) {
+          const u: any = userRows[0];
+          const userAdSoyad = ((u.ad || '') + ' ' + (u.soyad || '')).trim().toLowerCase();
+          const userTelDigits = (u.tel || '').replace(/[^0-9]/g, '');
+          const rdvTelDigits = (r.tel || '').replace(/[^0-9]/g, '');
+          const rdvMusteri = (r.musteri || '').trim().toLowerCase();
+
+          if (userTelDigits && userTelDigits === rdvTelDigits) {
+            sahip = true;
+            migrate = true;
+          } else if (userAdSoyad && userAdSoyad === rdvMusteri) {
+            sahip = true;
+            migrate = true;
+          }
+        }
+      }
+
+      if (!sahip) {
         return NextResponse.json(
           { success: false, error: 'Bu randevu size ait değil' },
           { status: 403 }
         );
       }
+
       if (r.durum === 'iptal') {
         return NextResponse.json(
           { success: false, error: 'Zaten iptal edilmiş' },
@@ -444,10 +477,21 @@ export async function PUT(req: NextRequest) {
           { status: 403 }
         );
       }
-      await sql`
-        UPDATE randevular SET durum = 'iptal', guncelleme = NOW()
-        WHERE id = ${b.id} AND musteri_id = ${musteriId}
-      `;
+
+      // Eski randevuya musteri_id ata (bir defaya mahsus migrasyon)
+      // ve durum iptal yap
+      if (migrate) {
+        await sql`
+          UPDATE randevular 
+          SET durum = 'iptal', guncelleme = NOW(), musteri_id = ${musteriId}
+          WHERE id = ${b.id}
+        `;
+      } else {
+        await sql`
+          UPDATE randevular SET durum = 'iptal', guncelleme = NOW()
+          WHERE id = ${b.id} AND musteri_id = ${musteriId}
+        `;
+      }
       return NextResponse.json({ success: true, data: { id: b.id, durum: 'iptal' } });
     }
 
