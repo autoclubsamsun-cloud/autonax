@@ -2470,8 +2470,8 @@ svg{display:block;flex-shrink:0}
     <div class="ig-profil">
       <a href="https://www.instagram.com/autoclubsamsunmerkez/" target="_blank" rel="noopener" class="ig-avatar-link" id="ig-avatar-link" aria-label="Instagram'da takip et">
         <div class="ig-avatar-ring">
-          <img src="/uploads/instagram/profil.jpg" alt="Enes Koc" class="ig-avatar" id="ig-avatar-img" onerror="this.style.display='none';this.parentNode.querySelector('.ig-avatar-fallback').style.display='flex'">
-          <div class="ig-avatar-fallback">EK</div>
+          <img src="" alt="Enes Koc" class="ig-avatar" id="ig-avatar-img" style="display:none">
+          <div class="ig-avatar-fallback" style="display:flex">EK</div>
         </div>
       </a>
       <div class="ig-profil-bilgi">
@@ -9245,7 +9245,7 @@ const IG_DEFAULT = {
   kullaniciAdi: 'autoclubsamsunmerkez',
   tamIsim: 'Enes Koç',
   slogan: 'Autonax® Kaplama Sarrafı®',
-  profilResmi: '/uploads/instagram/profil.jpg',
+  profilResmi: '',
   bioMetin: "Karadeniz'in En Çok Tercih Edilen PPF Merkezi",
   bioIller: 'Samsun · Ordu · Giresun · Trabzon · Rize · Tokat · Amasya · Sinop',
   gonderiSayisi: '647',
@@ -9319,7 +9319,24 @@ function igProfilRender(d){
 
   // Avatar resmi
   const avEl = document.getElementById('ig-avatar-img');
-  if(avEl) avEl.src = d.profilResmi || IG_DEFAULT.profilResmi;
+  if(avEl){
+    const yeniSrc = d.profilResmi || '';
+    const fb = avEl.parentNode && avEl.parentNode.querySelector('.ig-avatar-fallback');
+    if(yeniSrc){
+      avEl.src = yeniSrc;
+      avEl.style.display = '';
+      if(fb) fb.style.display = 'none';
+      // Yeni src yüklenemezse fallback aç
+      avEl.onerror = function(){
+        avEl.style.display = 'none';
+        if(fb) fb.style.display = 'flex';
+      };
+    } else {
+      // URL yok → fallback (EK) göster
+      avEl.style.display = 'none';
+      if(fb) fb.style.display = 'flex';
+    }
+  }
 
   // Kullanıcı adı
   const usrEl = document.getElementById('ig-username');
