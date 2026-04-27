@@ -7368,7 +7368,11 @@ function sepetOde(){
     odemeGecmisi: [],
     odenenToplam: 0
   };
-  fetch('/api/randevular',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(rdv)})
+  // Üye giriş yapmışsa müşteri akışını zorla → musteri_id otomatik atanır
+  // Üye değilse eski akış (admin modu, musteri_id boş kalır) — geriye uyumlu
+  var _isUye = (typeof AuthManager!=='undefined' && AuthManager.getUser && AuthManager.getUser());
+  var _rdvUrl = _isUye ? '/api/randevular?mod=musteri' : '/api/randevular';
+  fetch(_rdvUrl,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(rdv)})
   .then(function(r){return r.json();})
   .then(function(d){
     if(d.success){
