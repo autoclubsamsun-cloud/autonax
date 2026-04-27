@@ -2759,6 +2759,8 @@ function mobileTabBarAktif(pgId){
 
 /* ══ SAAT ══ */
 function rdvRenkStyle(r){
+  // İptal edilmiş randevular — diğer kurallardan ÖNCE kontrol edilmeli
+  if(r.durum==='iptal') return {bg:'rgba(220,38,38,.05)',border:'3px solid #dc2626',tag:'iptal',txt:'✕ İptal Edildi',ekBtn:false,online:!!r.onlineOdeme};
   var now=new Date();
   var nowMs=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
   var p=r.tarih.split('.'),rGun=parseInt(p[0]),rAy=parseInt(p[1])-1,rYil=parseInt(p[2]);
