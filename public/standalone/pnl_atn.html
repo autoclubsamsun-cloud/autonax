@@ -202,7 +202,10 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 .tbl-fiyat{font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--r)}
 
 /* ══ BADGE ══ */
-.tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px}
+.tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;display:inline-block;line-height:1.6;vertical-align:middle}
+@media (min-width:601px){
+  .tag{white-space:nowrap}
+}
 .tag.bekl{background:#FFF8E1;color:var(--amber);border:1px solid #FFD54F}
 .tag.onay{background:#E8F5E9;color:var(--green);border:1px solid #A5D6A7}
 .tag.tamam{background:var(--bg);color:var(--ink4);border:1px solid var(--bd)}
@@ -2900,7 +2903,7 @@ function doRdvListele(){
       +'<td class="tbl-fiyat" data-col="tutar">'+tutarStr+'</td>'
       +'<td><span class="tag '+s.tag+'">'+s.txt+'</span></td>'
       +'<td data-col="odeme">'+odemeTag+'</td>'
-      +'<td data-col="islem" style="display:flex;gap:5px;flex-wrap:wrap">'
+      +'<td data-col="islem" style="display:flex;gap:5px;flex-wrap:nowrap;white-space:nowrap;justify-content:flex-end">'
         +(s.ekBtn?'<button class="ab ab-g" onclick="rdvIslemYap(this)">Tamamla</button>':'')
         +'<button class="ab ab-n" onclick="rdvDetay('+i+')">Detay</button>'
         +'<button style="padding:5px 8px;border:1.5px solid #2563EB;border-radius:6px;background:transparent;color:#2563EB;font-size:11px;font-weight:600;cursor:pointer" onclick="rdvDuzenle('+i+')">✏️ Düzenle</button>'
