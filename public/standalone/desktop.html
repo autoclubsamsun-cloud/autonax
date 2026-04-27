@@ -592,15 +592,96 @@ svg{display:block;flex-shrink:0}
 .nl svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .nl:hover,.nl.on{color:#fff;border-color:var(--r)}
 
-/* ══ PLAKA BAR ══ */
-.plakabar{background:var(--w);border-bottom:1px solid var(--bd)}
-.plakabar .wrap{display:flex;align-items:center;gap:12px;padding-top:12px;padding-bottom:12px;flex-wrap:wrap}
-.plaka-label{font-size:13px;font-weight:600;color:var(--ink3);display:flex;align-items:center;gap:6px;flex-shrink:0}
-.plaka-label svg{width:15px;height:15px;stroke:var(--r);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.plaka-inp{border:1.5px solid var(--bd);border-radius:6px;padding:7px 12px;font-size:13px;font-family:'Outfit',sans-serif;outline:none;width:170px;color:var(--ink)}
-.plaka-inp:focus{border-color:var(--r)}
-.plaka-btn{background:var(--r);color:#fff;border:none;border-radius:6px;padding:8px 18px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1.5px;cursor:pointer;white-space:nowrap}
-.plaka-btn:hover{background:var(--rd)}
+/* ══ INSTAGRAM PROFIL + REELS BAR ══ */
+.igbar{background:var(--w);border-bottom:1px solid var(--bd);padding:20px 0 24px}
+.igbar .wrap{max-width:1280px;margin:0 auto;padding:0 20px}
+
+/* Profil Üst */
+.ig-profil{display:flex;gap:24px;align-items:flex-start;padding-bottom:16px}
+.ig-avatar-link{flex-shrink:0;text-decoration:none}
+.ig-avatar-ring{width:130px;height:130px;border-radius:50%;background:linear-gradient(45deg,#feda75 0%,#fa7e1e 25%,#d62976 50%,#962fbf 75%,#4f5bd5 100%);padding:4px;position:relative;cursor:pointer;transition:transform .2s}
+.ig-avatar-ring:hover{transform:scale(1.02)}
+.ig-avatar{width:100%;height:100%;border-radius:50%;object-fit:cover;background:#fff;border:3px solid #fff;display:block}
+.ig-avatar-fallback{display:none;width:100%;height:100%;border-radius:50%;background:#f1f1f1;border:3px solid #fff;align-items:center;justify-content:center;font-weight:700;font-size:36px;color:#999;font-family:'Bebas Neue',sans-serif;letter-spacing:2px}
+.ig-profil-bilgi{flex:1;min-width:0}
+.ig-profil-ust{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.ig-username{font-size:22px;font-weight:400;color:var(--ink);text-decoration:none;font-family:'Outfit',sans-serif}
+.ig-username:hover{opacity:.7}
+.ig-verified{width:18px;height:18px;flex-shrink:0}
+.ig-takip-btn{background:#0095f6;color:#fff !important;padding:7px 18px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;margin-left:8px;transition:background .2s}
+.ig-takip-btn:hover{background:#1877f2}
+.ig-profil-isim{font-size:18px;font-weight:600;color:var(--ink);margin-bottom:8px;letter-spacing:-0.2px}
+.ig-profil-slogan{font-weight:500;color:var(--r)}
+.ig-stats{display:flex;gap:24px;font-size:14px;color:var(--ink2);margin-bottom:8px}
+.ig-stats strong{color:var(--ink);font-weight:600}
+.ig-bio{font-size:13px;color:var(--ink2);line-height:1.5}
+.ig-bio-emoji{font-size:14px}
+.ig-bio-iller{color:var(--ink3);font-size:12.5px}
+
+/* Tabs */
+.ig-tabs{display:flex;justify-content:center;gap:60px;border-top:1px solid var(--bd2);margin-top:16px}
+.ig-tab{display:flex;align-items:center;gap:6px;padding:14px 0;color:var(--ink3);cursor:pointer;border-top:1px solid transparent;margin-top:-1px;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase}
+.ig-tab.active{color:var(--ink);border-top-color:var(--ink)}
+.ig-tab svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6}
+.ig-tab.active svg path[fill="currentColor"]{fill:currentColor}
+.ig-tab-label{font-size:11px}
+
+/* Reels Grid - 4 sütun desktop, 3 sütun tablet/mobile */
+.ig-reels{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:4px}
+.ig-reel{position:relative;aspect-ratio:9/16;background:#000;overflow:hidden;cursor:pointer;display:block;text-decoration:none;border-radius:2px}
+.ig-reel-thumb{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .3s}
+.ig-reel-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .3s;pointer-events:none}
+.ig-reel:hover .ig-reel-video{opacity:1}
+.ig-reel:hover .ig-reel-thumb{opacity:0}
+.ig-reel-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 50%,rgba(0,0,0,.6) 100%);pointer-events:none}
+.ig-reel-play{position:absolute;top:10px;right:10px;width:22px;height:22px;color:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+.ig-reel-play svg{width:100%;height:100%;fill:#fff}
+.ig-reel-views{position:absolute;bottom:8px;left:8px;color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;gap:4px;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.ig-reel-views svg{width:14px;height:14px;fill:#fff}
+.ig-reel-label{position:absolute;top:8px;left:8px;background:#dc2626;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:.5px;text-transform:uppercase}
+
+/* Tablet */
+@media (max-width:900px){
+  .ig-profil{gap:16px}
+  .ig-avatar-ring{width:100px;height:100px}
+  .ig-avatar-fallback{font-size:28px}
+  .ig-username{font-size:18px}
+  .ig-stats{gap:16px;font-size:13px}
+  .ig-reels{grid-template-columns:repeat(3,1fr)}
+}
+
+/* Mobil — Instagram mobile layout birebir */
+@media (max-width:560px){
+  .igbar{padding:14px 0 18px}
+  .igbar .wrap{padding:0 14px}
+
+  /* Profil grid: avatar solda, bilgi sağda */
+  .ig-profil{display:grid;grid-template-columns:86px 1fr;grid-template-areas:"avatar info" "bio bio" "stats stats";gap:14px 16px;align-items:start;padding-bottom:14px;text-align:left}
+  .ig-avatar-link{grid-area:avatar;align-self:start}
+  .ig-avatar-ring{width:86px;height:86px}
+  .ig-avatar-fallback{font-size:24px}
+
+  /* Bilgi alanı (kullanıcı adı + isim) */
+  .ig-profil-bilgi{grid-area:info;display:flex;flex-direction:column;gap:10px;min-width:0}
+  .ig-profil-ust{margin-bottom:0;flex-wrap:wrap;gap:8px}
+  .ig-username{font-size:18px;font-weight:600;color:var(--ink);font-family:inherit}
+  .ig-takip-btn{padding:7px 22px;font-size:13px;font-weight:600;border-radius:8px;width:100%;text-align:center;box-sizing:border-box;margin-left:0;margin-top:4px}
+  .ig-profil-isim{font-size:14px;font-weight:600;margin:0;line-height:1.35}
+
+  /* Bio - profil grid alanın altında, tam genişlik */
+  .ig-bio{grid-area:bio;font-size:13.5px;line-height:1.45;text-align:left;margin:0}
+  .ig-bio-iller{font-size:12.5px}
+
+  /* Sayılar - tam yatay 3 stack (Instagram gibi) */
+  .ig-stats{grid-area:stats;display:flex;justify-content:space-around;gap:0;padding:10px 0 4px;border-top:1px solid var(--bd2);font-size:13px;margin:0}
+  .ig-stats span{display:flex;flex-direction:column;align-items:center;line-height:1.2;gap:1px}
+  .ig-stats strong{font-size:15px;font-weight:700;color:var(--ink)}
+
+  .ig-tabs{gap:30px;margin-top:6px}
+  .ig-reels{grid-template-columns:repeat(3,1fr);gap:2px}
+  .ig-reels .ig-reel:nth-child(4){display:none}
+}
+
 .plaka-sep{width:1px;height:24px;background:var(--bd);margin:0 4px;flex-shrink:0}
 /* marka scroll — plaka bar içinde */
 .marka-scroll{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0;align-items:center}
@@ -2384,15 +2465,46 @@ svg{display:block;flex-shrink:0}
   </div>
 </div>
 
-<!-- PLAKA + MARKA BAR -->
-<div class="plakabar">
+<!-- INSTAGRAM PROFIL + REELS BAR -->
+<div class="igbar" id="ig-bar">
   <div class="wrap">
-    <div class="plaka-label">
-      <svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/><path d="M7 9.5h2v2H7z"/><path d="M15 9.5h2v2h-2z"/></svg>
-      <span>Garajım:</span>
+
+    <!-- Profil Üst -->
+    <div class="ig-profil">
+      <a href="https://www.instagram.com/autoclubsamsunmerkez/" target="_blank" rel="noopener" class="ig-avatar-link" id="ig-avatar-link" aria-label="Instagram'da takip et">
+        <div class="ig-avatar-ring">
+          <img src="/uploads/instagram/profil.jpg" alt="Enes Koc" class="ig-avatar" id="ig-avatar-img" onerror="this.style.display='none';this.parentNode.querySelector('.ig-avatar-fallback').style.display='flex'">
+          <div class="ig-avatar-fallback">EK</div>
+        </div>
+      </a>
+      <div class="ig-profil-bilgi">
+        <div class="ig-profil-ust">
+          <a href="https://www.instagram.com/autoclubsamsunmerkez/" target="_blank" rel="noopener" class="ig-username" id="ig-username">autoclubsamsunmerkez</a>
+          <svg class="ig-verified" viewBox="0 0 24 24"><path d="M12 2l2.4 1.8L17.4 3l1 2.8 2.8 1L20.4 9.6 21 12.6l-2.4 1.8L18 17.4l-2.8 0.4L13.4 20 12 18l-2.4 2-1.8-2.4L5 17l-0.6-2.8L2.4 12.6 3 9.6 1.4 6.8 4.2 5.8 5.2 3 8 3.8z" fill="#3897f0"/><path d="M9.5 12.5l1.8 1.8 3.7-3.7" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <a href="https://www.instagram.com/autoclubsamsunmerkez/" target="_blank" rel="noopener" class="ig-takip-btn" id="ig-takip-btn" onclick="return igTakipEt(event)">Takip Et</a>
+        </div>
+        <div class="ig-profil-isim" id="ig-tam-isim">Enes Koç <span class="ig-profil-slogan" id="ig-slogan">| Autonax® Kaplama Sarrafı®</span></div>
+        <div class="ig-stats">
+          <span><strong id="ig-gonderi">647</strong> gönderi</span>
+          <span><strong id="ig-takipci">17,7B</strong> takipçi</span>
+          <span><strong id="ig-takip">66</strong> takip</span>
+        </div>
+        <div class="ig-bio">
+          <span class="ig-bio-emoji">🚘</span> <span id="ig-bio-metin">Karadeniz'in En Çok Tercih Edilen PPF Merkezi</span><br>
+          <span class="ig-bio-iller" id="ig-bio-iller">Samsun · Ordu · Giresun · Trabzon · Rize · Tokat · Amasya · Sinop</span>
+        </div>
+      </div>
     </div>
-    <input class="plaka-inp" id="plaka-inp" type="text" placeholder="34 ABC 123 — Plaka" onkeydown="if(event.key==='Enter')plakaAra(this.value)" oninput="this.value=this.value.toUpperCase()">
-    <button class="plaka-btn" onclick="plakaAra(document.getElementById('plaka-inp').value)">Araç Bul</button>
+
+    <!-- Tab Bar -->
+    <div class="ig-tabs">
+      <div class="ig-tab"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="9.5" y="3" width="6" height="6" rx="1"/><rect x="16" y="3" width="5" height="6" rx="1"/><rect x="3" y="9.5" width="6" height="5" rx="1"/><rect x="9.5" y="9.5" width="6" height="5" rx="1"/><rect x="16" y="9.5" width="5" height="5" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="9.5" y="15" width="6" height="6" rx="1"/><rect x="16" y="15" width="5" height="6" rx="1"/></svg></div>
+      <div class="ig-tab active"><svg viewBox="0 0 24 24"><path d="M5 4l14 8-14 8V4z" fill="currentColor"/></svg><span class="ig-tab-label">REELS</span></div>
+      <div class="ig-tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h14v17l-7-4-7 4V4z"/></svg></div>
+    </div>
+
+    <!-- Reels Grid -->
+    <div class="ig-reels" id="ig-reels"></div>
 
   </div>
 </div>
@@ -9120,6 +9232,211 @@ function authCikis(){
     </div>
   </div>
 </div>
+
+<script>
+/* ════════════════════════════════════════════════════
+   INSTAGRAM PROFIL + REELS RENDER (Dinamik)
+   - Veri kaynağı: localStorage 'autonax_site_v1' → SITE_AYARLAR.instagramEmbed
+   - Yönetim: pnl_atn → Site Ayarları → Instagram sekmesi
+   - Veri yoksa default değerler kullanılır (hiçbir şey bozulmaz)
+════════════════════════════════════════════════════ */
+
+// Default veri (SITE_AYARLAR'da yoksa kullanılır)
+const IG_DEFAULT = {
+  aktif: true,
+  profilUrl: 'https://www.instagram.com/autoclubsamsunmerkez/',
+  kullaniciAdi: 'autoclubsamsunmerkez',
+  tamIsim: 'Enes Koç',
+  slogan: 'Autonax® Kaplama Sarrafı®',
+  profilResmi: '/uploads/instagram/profil.jpg',
+  bioMetin: "Karadeniz'in En Çok Tercih Edilen PPF Merkezi",
+  bioIller: 'Samsun · Ordu · Giresun · Trabzon · Rize · Tokat · Amasya · Sinop',
+  gonderiSayisi: '647',
+  takipciSayisi: '17,7B',
+  takipSayisi: '66',
+  reels: [
+    { url: 'https://www.instagram.com/autoclubsamsunmerkez/', thumb: '/uploads/instagram/reel1-thumb.jpg', video: '/uploads/instagram/reel1.mp4', views: '1.9 Mn', label: 'KAMPANYA' },
+    { url: 'https://www.instagram.com/autoclubsamsunmerkez/', thumb: '/uploads/instagram/reel2-thumb.jpg', video: '/uploads/instagram/reel2.mp4', views: '2.6 Mn', label: 'ORDU' },
+    { url: 'https://www.instagram.com/autoclubsamsunmerkez/', thumb: '/uploads/instagram/reel3-thumb.jpg', video: '/uploads/instagram/reel3.mp4', views: '2.5 Mn', label: '' },
+    { url: 'https://www.instagram.com/autoclubsamsunmerkez/', thumb: '/uploads/instagram/reel4-thumb.jpg', video: '/uploads/instagram/reel4.mp4', views: '441 B',  label: 'SAMSUN' }
+  ]
+};
+
+// localStorage'dan oku (panelde yapılan değişiklikler)
+function igVeriOku(){
+  try {
+    const raw = localStorage.getItem('autonax_site_v1');
+    if(!raw) return IG_DEFAULT;
+    const sa = JSON.parse(raw);
+    if(sa && sa.instagramEmbed && sa.instagramEmbed.aktif !== false){
+      // Default ile birleştir (eksik alan varsa default'tan al)
+      const ie = sa.instagramEmbed;
+      return {
+        aktif: ie.aktif !== false,
+        profilUrl: ie.profilUrl || IG_DEFAULT.profilUrl,
+        kullaniciAdi: ie.kullaniciAdi || IG_DEFAULT.kullaniciAdi,
+        tamIsim: ie.tamIsim || IG_DEFAULT.tamIsim,
+        slogan: ie.slogan || IG_DEFAULT.slogan,
+        profilResmi: ie.profilResmi || IG_DEFAULT.profilResmi,
+        bioMetin: ie.bioMetin || IG_DEFAULT.bioMetin,
+        bioIller: ie.bioIller || IG_DEFAULT.bioIller,
+        gonderiSayisi: ie.gonderiSayisi || IG_DEFAULT.gonderiSayisi,
+        takipciSayisi: ie.takipciSayisi || IG_DEFAULT.takipciSayisi,
+        takipSayisi: ie.takipSayisi || IG_DEFAULT.takipSayisi,
+        reels: (Array.isArray(ie.reels) && ie.reels.length) ? ie.reels.slice(0,4) : IG_DEFAULT.reels
+      };
+    }
+    return IG_DEFAULT;
+  } catch(e){ return IG_DEFAULT; }
+}
+
+// Backend'den de çekmeye çalış (sayfa açılınca güncel veri)
+function igBackendCek(callback){
+  fetch('/api/ayarlar?_t='+Date.now(), {credentials:'same-origin'})
+    .then(r => r.json())
+    .then(d => {
+      const sa = (d && d.data) || d;
+      if(sa && sa.instagramEmbed){
+        // localStorage'a yaz
+        try {
+          const raw = localStorage.getItem('autonax_site_v1');
+          const cur = raw ? JSON.parse(raw) : {};
+          cur.instagramEmbed = sa.instagramEmbed;
+          localStorage.setItem('autonax_site_v1', JSON.stringify(cur));
+        } catch(e){}
+      }
+      if(callback) callback();
+    })
+    .catch(() => { if(callback) callback(); });
+}
+
+// Profil bilgilerini DOM'a yaz
+function igProfilRender(d){
+  const bar = document.getElementById('ig-bar');
+  if(!bar) return;
+  // Aktif değilse tüm bar'ı gizle
+  if(d.aktif === false){ bar.style.display = 'none'; return; }
+  bar.style.display = '';
+
+  // Profil URL'lerini güncelle (avatar + username + takip butonu)
+  const profilUrl = d.profilUrl || IG_DEFAULT.profilUrl;
+  ['ig-avatar-link','ig-username','ig-takip-btn'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.href = profilUrl;
+  });
+
+  // Avatar resmi
+  const avEl = document.getElementById('ig-avatar-img');
+  if(avEl) avEl.src = d.profilResmi || IG_DEFAULT.profilResmi;
+
+  // Kullanıcı adı
+  const usrEl = document.getElementById('ig-username');
+  if(usrEl) usrEl.textContent = d.kullaniciAdi || IG_DEFAULT.kullaniciAdi;
+
+  // Tam isim + Slogan
+  const isimEl = document.getElementById('ig-tam-isim');
+  const slgEl = document.getElementById('ig-slogan');
+  if(isimEl){
+    // Önce text node'unu temizle, sloganı koru
+    isimEl.childNodes[0].nodeValue = (d.tamIsim || IG_DEFAULT.tamIsim) + ' ';
+  }
+  if(slgEl) slgEl.textContent = '| ' + (d.slogan || IG_DEFAULT.slogan);
+
+  // Sayılar
+  const gnEl = document.getElementById('ig-gonderi');
+  const tkcEl = document.getElementById('ig-takipci');
+  const tkEl = document.getElementById('ig-takip');
+  if(gnEl) gnEl.textContent = d.gonderiSayisi || IG_DEFAULT.gonderiSayisi;
+  if(tkcEl) tkcEl.textContent = d.takipciSayisi || IG_DEFAULT.takipciSayisi;
+  if(tkEl) tkEl.textContent = d.takipSayisi || IG_DEFAULT.takipSayisi;
+
+  // Bio
+  const bmEl = document.getElementById('ig-bio-metin');
+  const biEl = document.getElementById('ig-bio-iller');
+  if(bmEl) bmEl.textContent = d.bioMetin || IG_DEFAULT.bioMetin;
+  if(biEl) biEl.textContent = d.bioIller || IG_DEFAULT.bioIller;
+
+  // igTakipEt fonksiyonu için username güncelle
+  window.__IG_USERNAME = d.kullaniciAdi || IG_DEFAULT.kullaniciAdi;
+}
+
+// Instagram Takip Et — Mobile'da app aç, desktop'ta tarayıcıda
+function igTakipEt(e){
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if(!isMobile) return true; // Desktop normal davransın
+  e.preventDefault();
+  const username = window.__IG_USERNAME || 'autoclubsamsunmerkez';
+  const appUrl = 'instagram://user?username=' + username;
+  const webUrl = 'https://www.instagram.com/' + username + '/';
+  const startTime = Date.now();
+  // App'i açmaya çalış
+  window.location.href = appUrl;
+  // 1.5 saniye içinde uygulama açılmazsa web'e fallback
+  setTimeout(function(){
+    if(Date.now() - startTime < 2000 && document.visibilityState !== 'hidden'){
+      window.location.href = webUrl;
+    }
+  }, 1500);
+  return false;
+}
+
+// Reels render — hover'da video oynar, tıklayınca Instagram'a gider
+function igReelsRender(reels){
+  const wrap = document.getElementById('ig-reels');
+  if(!wrap) return;
+  // 4 slot - eksik varsa boş atla
+  const liste = (reels || []).slice(0,4).filter(r => r && (r.url || r.thumb || r.video));
+  if(!liste.length){ wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+
+  const eyeSvg = '<svg viewBox="0 0 24 24"><path d="M12 5C7 5 3 9 1.5 12 3 15 7 19 12 19s9-4 10.5-7C21 9 17 5 12 5zm0 11.5a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9zm0-7a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"/></svg>';
+  const playSvg = '<svg viewBox="0 0 24 24"><path d="M5 3l16 9-16 9V3z"/></svg>';
+
+  function escapeHTML(s){return String(s||'').replace(/[<>"&]/g, c=>({'<':'&lt;','>':'&gt;','"':'&quot;','&':'&amp;'}[c]));}
+
+  const html = liste.map((r, i) => {
+    const url = escapeHTML(r.url || '#');
+    const thumb = escapeHTML(r.thumb || '');
+    const video = escapeHTML(r.video || '');
+    const views = escapeHTML(r.views || '');
+    const label = escapeHTML(r.label || '');
+    return `<a href="${url}" target="_blank" rel="noopener" class="ig-reel" data-idx="${i}">
+      <img src="${thumb}" class="ig-reel-thumb" alt="Reel ${i+1}" onerror="this.style.background='linear-gradient(135deg,#222,#000)';this.removeAttribute('src')">
+      <video class="ig-reel-video" muted loop playsinline preload="none" data-src="${video}"></video>
+      <div class="ig-reel-overlay"></div>
+      ${label ? `<div class="ig-reel-label">${label}</div>` : ''}
+      <div class="ig-reel-play">${playSvg}</div>
+      ${views ? `<div class="ig-reel-views">${eyeSvg}<span>${views}</span></div>` : ''}
+    </a>`;
+  }).join('');
+  wrap.innerHTML = html;
+
+  // Hover'da video lazy-load + oynat
+  wrap.querySelectorAll('.ig-reel').forEach(reel => {
+    const v = reel.querySelector('.ig-reel-video');
+    if(!v || !v.dataset.src) return;
+    let loaded = false;
+    reel.addEventListener('mouseenter', () => {
+      if(!loaded){ v.src = v.dataset.src; loaded = true; }
+      v.play().catch(()=>{});
+    });
+    reel.addEventListener('mouseleave', () => {
+      try { v.pause(); v.currentTime = 0; } catch(e){}
+    });
+  });
+}
+
+// Tam render
+function igTumRender(){
+  const d = igVeriOku();
+  igProfilRender(d);
+  igReelsRender(d.reels);
+}
+
+// Sayfa açıldığında: önce localStorage'dan render et (anında görünür), sonra backend'den güncel veri çek
+igTumRender();
+igBackendCek(function(){ igTumRender(); });
+</script>
 
 </body>
 </html>
