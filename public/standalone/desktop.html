@@ -629,14 +629,11 @@ svg{display:block;flex-shrink:0}
 /* Reels Grid - 4 sütun desktop, 3 sütun tablet/mobile */
 .ig-reels{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:4px}
 .ig-reel{position:relative;aspect-ratio:9/16;background:#000;overflow:hidden;cursor:pointer;display:block;text-decoration:none;border-radius:2px}
-.ig-reel-thumb{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .3s}
-.ig-reel-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .3s;pointer-events:none}
-.ig-reel:hover .ig-reel-video{opacity:1}
-.ig-reel:hover .ig-reel-thumb{opacity:0}
-.ig-reel-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 50%,rgba(0,0,0,.6) 100%);pointer-events:none}
-.ig-reel-play{position:absolute;top:10px;right:10px;width:22px;height:22px;color:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
-.ig-reel-play svg{width:100%;height:100%;fill:#fff}
-.ig-reel-views{position:absolute;bottom:8px;left:8px;color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;gap:4px;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.ig-reel-embed-wrap{position:absolute;inset:0;width:100%;height:100%}
+.ig-reel-embed-wrap.reel-ig-bg{background:linear-gradient(135deg,#f09433 0%,#e6683c 20%,#dc2743 45%,#cc2366 70%,#bc1888 100%)}
+.ig-reel-embed-wrap.reel-tt-bg{background:linear-gradient(135deg,#25f4ee 0%,#000 50%,#fe2c55 100%)}
+.ig-reel-link{cursor:pointer}
+.ig-reel-views{position:absolute;bottom:8px;left:8px;color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;gap:4px;text-shadow:0 1px 2px rgba(0,0,0,.8);background:rgba(0,0,0,.4);padding:3px 8px;border-radius:6px;backdrop-filter:blur(4px)}
 .ig-reel-views svg{width:14px;height:14px;fill:#fff}
 .ig-reel-label{position:absolute;top:8px;left:8px;background:#dc2626;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:.5px;text-transform:uppercase}
 
@@ -9254,12 +9251,7 @@ const IG_DEFAULT = {
   gonderiSayisi: '647',
   takipciSayisi: '17,7B',
   takipSayisi: '66',
-  reels: [
-    { url: 'https://www.instagram.com/autoclubsamsunmerkez/', thumb: '/uploads/instagram/reel1-thumb.jpg', video: '/uploads/instagram/reel1.mp4', views: '1.9 Mn', label: 'KAMPANYA' },
-    { url: 'https://www.instagram.com/autoclubsamsunmerkez/', thumb: '/uploads/instagram/reel2-thumb.jpg', video: '/uploads/instagram/reel2.mp4', views: '2.6 Mn', label: 'ORDU' },
-    { url: 'https://www.instagram.com/autoclubsamsunmerkez/', thumb: '/uploads/instagram/reel3-thumb.jpg', video: '/uploads/instagram/reel3.mp4', views: '2.5 Mn', label: '' },
-    { url: 'https://www.instagram.com/autoclubsamsunmerkez/', thumb: '/uploads/instagram/reel4-thumb.jpg', video: '/uploads/instagram/reel4.mp4', views: '441 B',  label: 'SAMSUN' }
-  ]
+  reels: []
 };
 
 // localStorage'dan oku (panelde yapılan değişiklikler)
@@ -9380,50 +9372,74 @@ function igTakipEt(e){
   return false;
 }
 
-// Reels render — hover'da video oynar, tıklayınca Instagram'a gider
+// Instagram URL parse → iframe embed URL üret
+function igVideoParse(url){
+  if(!url) return null;
+  url = String(url).trim();
+  var m;
+  // Instagram Reel: instagram.com/reel/XXX/ veya reels/
+  if(m = url.match(/instagram\.com\/reels?\/([a-zA-Z0-9_-]+)/)){
+    return { tur:'instagram', id:m[1], embed:'https://www.instagram.com/reel/'+m[1]+'/embed/' };
+  }
+  // Instagram Post: instagram.com/p/XXX/
+  if(m = url.match(/instagram\.com\/p\/([a-zA-Z0-9_-]+)/)){
+    return { tur:'instagram', id:m[1], embed:'https://www.instagram.com/p/'+m[1]+'/embed/' };
+  }
+  // YouTube Shorts (yine de destekli olsun)
+  if(m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)){
+    return { tur:'youtube', id:m[1], embed:'https://www.youtube.com/embed/'+m[1]+'?rel=0&modestbranding=1&playsinline=1' };
+  }
+  // TikTok
+  if(m = url.match(/tiktok\.com\/(?:@[\w.-]+\/)?video\/(\d+)/)){
+    return { tur:'tiktok', id:m[1], embed:'https://www.tiktok.com/embed/v2/'+m[1] };
+  }
+  return null;
+}
+
+// Reels render — iframe embed (markalardaki gibi)
 function igReelsRender(reels){
   const wrap = document.getElementById('ig-reels');
   if(!wrap) return;
-  // 4 slot - eksik varsa boş atla
-  const liste = (reels || []).slice(0,4).filter(r => r && (r.url || r.thumb || r.video));
+  // 4 slot - URL'i olmayanları atla
+  const liste = (reels || []).slice(0,4).filter(r => r && r.url && r.url.trim());
   if(!liste.length){ wrap.style.display = 'none'; return; }
   wrap.style.display = '';
-
-  const eyeSvg = '<svg viewBox="0 0 24 24"><path d="M12 5C7 5 3 9 1.5 12 3 15 7 19 12 19s9-4 10.5-7C21 9 17 5 12 5zm0 11.5a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9zm0-7a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"/></svg>';
-  const playSvg = '<svg viewBox="0 0 24 24"><path d="M5 3l16 9-16 9V3z"/></svg>';
 
   function escapeHTML(s){return String(s||'').replace(/[<>"&]/g, c=>({'<':'&lt;','>':'&gt;','"':'&quot;','&':'&amp;'}[c]));}
 
   const html = liste.map((r, i) => {
     const url = escapeHTML(r.url || '#');
-    const thumb = escapeHTML(r.thumb || '');
-    const video = escapeHTML(r.video || '');
     const views = escapeHTML(r.views || '');
     const label = escapeHTML(r.label || '');
-    return `<a href="${url}" target="_blank" rel="noopener" class="ig-reel" data-idx="${i}">
-      <img src="${thumb}" class="ig-reel-thumb" alt="Reel ${i+1}" onerror="this.style.background='linear-gradient(135deg,#222,#000)';this.removeAttribute('src')">
-      <video class="ig-reel-video" muted loop playsinline preload="none" data-src="${video}"></video>
-      <div class="ig-reel-overlay"></div>
-      ${label ? `<div class="ig-reel-label">${label}</div>` : ''}
-      <div class="ig-reel-play">${playSvg}</div>
-      ${views ? `<div class="ig-reel-views">${eyeSvg}<span>${views}</span></div>` : ''}
-    </a>`;
+    const v = igVideoParse(r.url);
+    let inner = '';
+    if(v){
+      // iframe embed - markalardaki gibi
+      const bgClass = v.tur === 'instagram' ? 'reel-ig-bg' : (v.tur === 'tiktok' ? 'reel-tt-bg' : '');
+      inner = `<div class="ig-reel-embed-wrap ${bgClass}">
+        <iframe src="${escapeHTML(v.embed)}" allowfullscreen allowtransparency="true" frameborder="0" scrolling="no" allow="encrypted-media" loading="lazy" style="width:100%;height:100%;border:0;position:absolute;top:0;left:0;background:transparent"></iframe>
+      </div>`;
+    } else {
+      // URL tanınmadı - boş kart göster
+      inner = '<div style="width:100%;height:100%;background:linear-gradient(135deg,#222,#000);display:flex;align-items:center;justify-content:center;color:#888;font-size:11px">Video yüklenemedi</div>';
+    }
+    // Tıklanabilir overlay (iframe'in üstünde click yakalar, Instagram'a gönderir)
+    return `<div class="ig-reel" data-idx="${i}" style="position:relative">
+      ${inner}
+      <a href="${url}" target="_blank" rel="noopener" class="ig-reel-link" aria-label="Instagram'da aç" style="position:absolute;inset:0;z-index:5;background:transparent" onclick="return igReelTiklama(event,'${url}')"></a>
+      ${label ? `<div class="ig-reel-label" style="z-index:6">${label}</div>` : ''}
+      ${views ? `<div class="ig-reel-views" style="z-index:6"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 5C7 5 3 9 1.5 12 3 15 7 19 12 19s9-4 10.5-7C21 9 17 5 12 5zm0 11.5a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9zm0-7a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"/></svg><span>${views}</span></div>` : ''}
+    </div>`;
   }).join('');
   wrap.innerHTML = html;
+}
 
-  // Hover'da video lazy-load + oynat
-  wrap.querySelectorAll('.ig-reel').forEach(reel => {
-    const v = reel.querySelector('.ig-reel-video');
-    if(!v || !v.dataset.src) return;
-    let loaded = false;
-    reel.addEventListener('mouseenter', () => {
-      if(!loaded){ v.src = v.dataset.src; loaded = true; }
-      v.play().catch(()=>{});
-    });
-    reel.addEventListener('mouseleave', () => {
-      try { v.pause(); v.currentTime = 0; } catch(e){}
-    });
-  });
+// Reel tıklama — overlay tıklanırsa Instagram'a yönlendir, iframe içine tıklayınca yeni sekmede açılmasın
+function igReelTiklama(e, url){
+  // Eğer hover ile iframe yüklenmiş ve içinde oynatma yapılıyorsa, boşa tıklama Instagram'a gitsin
+  e.preventDefault();
+  window.open(url, '_blank', 'noopener,noreferrer');
+  return false;
 }
 
 // Tam render
