@@ -8929,6 +8929,7 @@ function gunKapasite(tarihStr){
   var s={A:0,B:0,C:0,E:0,X:0,detayli:0};
   RANDEVULAR.forEach(function(r){
     if(r.tarih!==tarihStr) return;
+    if(r.durum==='iptal') return;  // İptal edilenler kapasiteye dahil değil
     r.hizmet.split('+').forEach(function(h){
       h=h.trim();
       var k=hizmetKategori(h);
