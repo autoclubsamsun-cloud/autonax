@@ -13428,15 +13428,14 @@ function saInstagramEmbedHTML(){
     // Profil Resmi - dosya yükleme
     +'<div class="sa-sec"><div class="sa-lbl">Profil Resmi</div>'
       +'<div style="display:flex;gap:10px;align-items:center;margin-bottom:6px">'
-        +'<div id="ie-profilResmi-preview" style="width:64px;height:64px;border-radius:50%;background:#f1f1f1 url(\''+esc(ie.profilResmi||'')+'\') center/cover;border:2px solid #ddd;flex-shrink:0"></div>'
-        +'<div style="flex:1">'
+        +'<div id="ie-profilResmi-preview" style="width:64px;height:64px;border-radius:50%;background:#f1f1f1 center/cover;border:2px solid #ddd;flex-shrink:0;background-image:'+(ie.profilResmi?'url(\''+ie.profilResmi.replace(/\'/g,'%27').replace(/"/g,'%22')+'\')':'none')+'"></div>'
+        +'<div style="flex:1;min-width:0">'
           +'<input type="file" accept="image/*" id="ie-profilResmi-file" style="display:none">'
           +'<button type="button" onclick="document.getElementById(\'ie-profilResmi-file\').click()" style="background:var(--r);color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">📁 Dosya Seç</button>'
-          +'<div style="font-size:11px;color:var(--ink4);margin-top:4px">JPG/PNG, max 2MB. Yüklendikten sonra otomatik kaydedilir.</div>'
+          +'<div style="font-size:11px;color:var(--ink4);margin-top:4px">JPG/PNG, max 2MB.</div>'
+          +'<div id="ie-profilResmi-durum" style="font-size:10px;color:#16a34a;margin-top:4px;font-weight:600">'+(ie.profilResmi?'✅ Yüklendi':'⚠️ Henüz yüklenmedi')+'</div>'
         +'</div>'
       +'</div>'
-      +'<input type="hidden" '+IS+' id="ie-profilResmi" value="'+esc(ie.profilResmi||'')+'">'
-      +'<div style="font-size:10px;color:var(--ink4);margin-top:4px">Mevcut yol: <code style="background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px;font-size:10px">'+esc(ie.profilResmi||'(yok)')+'</code></div>'
     +'</div>'
     +'<div class="sa-sec"><div class="sa-lbl">Profil URL (Instagram link)</div><input '+IS+' id="ie-profilUrl" value="'+esc(ie.profilUrl||'')+'" placeholder="https://www.instagram.com/autoclubsamsunmerkez/"></div>'
     +'<div class="sa-sec"><div class="sa-lbl">Kullanıcı adı</div><input '+IS+' id="ie-kullaniciAdi" value="'+esc(ie.kullaniciAdi||'')+'" placeholder="autoclubsamsunmerkez"></div>'
@@ -13527,7 +13526,9 @@ function saInstagramEmbedKaydet(){
   // Profil
   var aktifBtn=document.getElementById('tgl-ie-aktif');
   ie.aktif=aktifBtn?aktifBtn.classList.contains('on'):true;
-  ['profilUrl','kullaniciAdi','tamIsim','slogan','profilResmi','bioMetin','bioIller','gonderiSayisi','takipciSayisi','takipSayisi'].forEach(function(k){
+  // profilResmi - dosya yüklendiğinde zaten SITE_AYARLAR'a yazıldı, formdan alma
+  // Diğer alanlar formdan
+  ['profilUrl','kullaniciAdi','tamIsim','slogan','bioMetin','bioIller','gonderiSayisi','takipciSayisi','takipSayisi'].forEach(function(k){
     ie[k]=saG('ie-'+k)||'';
   });
   // 4 Reel - sadece URL + İzlenme + Etiket (video alanı kaldırıldı, iframe embed kullanılıyor)
@@ -14190,19 +14191,19 @@ function saListenerBagla(tab){
         .then(function(r){return r.json();})
         .then(function(d){
           if(d.success){
-            // hidden input'a URL yaz
-            var hiddenInp=document.getElementById('ie-profilResmi');
-            if(hiddenInp) hiddenInp.value=d.url;
-            // Preview güncelle
-            var prev=document.getElementById('ie-profilResmi-preview');
-            if(prev) prev.style.backgroundImage='url(\''+d.url+'\')';
-            // Mevcut yol göstergesini güncelle
-            var kodEl=prev && prev.parentNode && prev.parentNode.parentNode && prev.parentNode.parentNode.querySelector('code');
-            if(kodEl) kodEl.textContent=d.url;
-            // SITE_AYARLAR'a yaz + kaydet
+            // SITE_AYARLAR'a yaz
             if(!SITE_AYARLAR.instagramEmbed) SITE_AYARLAR.instagramEmbed={};
             SITE_AYARLAR.instagramEmbed.profilResmi=d.url;
-            // Medyaya da ekle (mevcut sistemdeki gibi)
+            // Preview güncelle (URL'i CSS-safe yap)
+            var prev=document.getElementById('ie-profilResmi-preview');
+            if(prev){
+              var safeUrl=String(d.url).replace(/'/g,'%27').replace(/"/g,'%22');
+              prev.style.backgroundImage='url(\''+safeUrl+'\')';
+            }
+            // Durum metni güncelle
+            var durum=document.getElementById('ie-profilResmi-durum');
+            if(durum){durum.textContent='✅ Yüklendi';durum.style.color='#16a34a';}
+            // Medyaya da ekle
             if(!SITE_AYARLAR.medya) SITE_AYARLAR.medya=[];
             SITE_AYARLAR.medya.push({url:d.url,isim:file.name,boyut:file.size,tarih:new Date().toISOString()});
             siteAyarKaydet('Instagram Profil Resmi');
