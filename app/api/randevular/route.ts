@@ -31,6 +31,30 @@ function mapRandevu(r: any) {
   };
 }
 
+// ─── SLOT KONTROL — günlük kaplama limiti + pazar engeli ──────────
+const GUNLUK_KAPLAMA_LIMIT = 2;
+
+function isKaplamaHizmeti(hizmet: string): boolean {
+  if (!hizmet) return false;
+  const h = hizmet.toLowerCase();
+  // Önce kaplama OLMAYANLAR (öncelikli)
+  if (/\bön\s*3\s*parça\b|\bkaput\b|\bpasta\b|\byıkama\b|\bdetay\s*temizlik\b|\biç.*dış\s*detay\b|\bcila\b/.test(h)) {
+    return false;
+  }
+  // Sonra kaplama olanlar
+  if (/ppf/.test(h) && /(tam\s*araç|full\s*araç|komple\s*araç|tam\b)/.test(h)) return true;
+  if (/seramik\s*kaplama/.test(h)) return true;
+  if (/\bkombo\b|\bkompozit\b/.test(h)) return true;
+  return false;
+}
+
+function tarihPazarMi(tarihStr: string): boolean {
+  const m = tarihStr.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+  if (!m) return false;
+  const d = new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
+  return d.getDay() === 0;
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // GET — Admin tüm, Müşteri kendi (?mod=musteri)
 // ═══════════════════════════════════════════════════════════════════
@@ -239,6 +263,58 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
+
+      // ─── PAZAR ENGELİ ────────────────────────────────────────
+      // Müşteri Pazar günü randevu açamaz
+      if (tarihPazarMi(b.tarih)) {
+        return NextResponse.json(
+          { success: false, error: 'Pazar günleri kapalıyız. Lütfen başka bir gün seçin.' },
+          { status: 400 }
+        );
+      }
+
+      // ─── SLOT ÇAKIŞMA KONTROLÜ ──────────────────────────────
+      // Sadece kaplama hizmetleri için günlük limit (bekl + onay + tmm + tamamlandi)
+      if (isKaplamaHizmeti(b.hizmet)) {
+        const ayniGunRows = await sql`
+          SELECT hizmet FROM randevular
+          WHERE tarih = ${b.tarih}
+            AND durum IN ('bekl', 'onay', 'tmm', 'tamamlandi')
+            AND id != ${id}
+        `;
+        let mevcutKaplama = 0;
+        for (const r of ayniGunRows) {
+          if (isKaplamaHizmeti((r as any).hizmet || '')) mevcutKaplama += 1;
+        }
+        if (mevcutKaplama >= GUNLUK_KAPLAMA_LIMIT) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: `Bu tarih dolu. Günlük kaplama kapasitemiz ${GUNLUK_KAPLAMA_LIMIT}. Başka bir gün seçin.`,
+              slot_dolu: true,
+            },
+            { status: 409 }
+          );
+        }
+      }
+    }
+
+    // ─── ADMIN MODU — slot uyarısı (block etmez, sadece bilgilendirir) ──
+    let slotUyarisi: string | null = null;
+    if (auth.kim === 'admin' && b.hizmet && isKaplamaHizmeti(b.hizmet) && b.tarih && !aktiveMusteriId) {
+      const ayniGunRows = await sql`
+        SELECT hizmet FROM randevular
+        WHERE tarih = ${b.tarih}
+          AND durum IN ('bekl', 'onay', 'tmm', 'tamamlandi')
+          AND id != ${id}
+      `;
+      let mevcutKaplama = 0;
+      for (const r of ayniGunRows) {
+        if (isKaplamaHizmeti((r as any).hizmet || '')) mevcutKaplama += 1;
+      }
+      if (mevcutKaplama >= GUNLUK_KAPLAMA_LIMIT) {
+        slotUyarisi = `Bu tarih için günlük kaplama limiti (${GUNLUK_KAPLAMA_LIMIT}) aşıldı, ${mevcutKaplama} mevcut. Yine de eklendi.`;
+      }
     }
 
     await sql`
@@ -264,7 +340,11 @@ export async function POST(req: NextRequest) {
         odeme_gecmisi = ${JSON.stringify(b.odemeGecmisi || [])}::jsonb,
         guncelleme = NOW()
     `;
-    return NextResponse.json({ success: true, data: { ...b, id, musteriId } }, { status: 201 });
+    return NextResponse.json({
+      success: true,
+      data: { ...b, id, musteriId },
+      slotUyarisi,
+    }, { status: 201 });
   } catch (e: any) {
     console.error('[RANDEVULAR POST] Hata:', e);
     return NextResponse.json({ success: false, error: e.message }, { status: 500 });
