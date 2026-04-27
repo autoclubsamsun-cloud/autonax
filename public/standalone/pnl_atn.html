@@ -5095,17 +5095,17 @@ var SITE_AYARLAR={
     kullaniciAdi:'autoclubsamsunmerkez',
     tamIsim:'Enes Koç',
     slogan:'Autonax® Kaplama Sarrafı®',
-    profilResmi:'/uploads/instagram/profil.jpg',
+    profilResmi:'',
     bioMetin:'Karadeniz\'in En Çok Tercih Edilen PPF Merkezi',
     bioIller:'Samsun · Ordu · Giresun · Trabzon · Rize · Tokat · Amasya · Sinop',
     gonderiSayisi:'647',
     takipciSayisi:'17,7B',
     takipSayisi:'66',
     reels:[
-      {url:'https://www.instagram.com/autoclubsamsunmerkez/',thumb:'/uploads/instagram/reel1-thumb.jpg',video:'/uploads/instagram/reel1.mp4',views:'1.9 Mn',label:'KAMPANYA'},
-      {url:'https://www.instagram.com/autoclubsamsunmerkez/',thumb:'/uploads/instagram/reel2-thumb.jpg',video:'/uploads/instagram/reel2.mp4',views:'2.6 Mn',label:'ORDU'},
-      {url:'https://www.instagram.com/autoclubsamsunmerkez/',thumb:'/uploads/instagram/reel3-thumb.jpg',video:'/uploads/instagram/reel3.mp4',views:'2.5 Mn',label:''},
-      {url:'https://www.instagram.com/autoclubsamsunmerkez/',thumb:'/uploads/instagram/reel4-thumb.jpg',video:'/uploads/instagram/reel4.mp4',views:'441 B',label:'SAMSUN'}
+      {url:'',views:'',label:''},
+      {url:'',views:'',label:''},
+      {url:'',views:'',label:''},
+      {url:'',views:'',label:''}
     ]
   },
   medya:[],
@@ -13405,7 +13405,7 @@ function saSosyalKaydet(){
 
 /* ── INSTAGRAM EMBED (Anasayfa hero üstü) ── */
 function saInstagramEmbedHTML(){
-  // escapeHTML henüz tanımlanmamışsa local fallback (canlı sayfada zaten tanımlı, ama garanti)
+  // escapeHTML fallback
   var esc = (typeof escapeHTML === 'function') ? escapeHTML : function(s){
     if(s==null) return '';
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -13416,7 +13416,7 @@ function saInstagramEmbedHTML(){
   }
   var ie=SITE_AYARLAR.instagramEmbed;
   if(!ie.reels) ie.reels=[];
-  while(ie.reels.length<4) ie.reels.push({url:'',thumb:'',video:'',views:'',label:''});
+  while(ie.reels.length<4) ie.reels.push({url:'',views:'',label:''});
 
   var IS='class="sa-inp"';
   var html='<div class="g2">';
@@ -13425,11 +13425,23 @@ function saInstagramEmbedHTML(){
   html+='<div class="k"><div class="kh"><div class="kt">📷 Profil Bilgileri</div>'
     +'<button class="tgl'+(ie.aktif?' on':'')+'" id="tgl-ie-aktif" title="Anasayfada göster"></button>'
     +'</div><div class="kb">'
+    // Profil Resmi - dosya yükleme
+    +'<div class="sa-sec"><div class="sa-lbl">Profil Resmi</div>'
+      +'<div style="display:flex;gap:10px;align-items:center;margin-bottom:6px">'
+        +'<div id="ie-profilResmi-preview" style="width:64px;height:64px;border-radius:50%;background:#f1f1f1 url(\''+esc(ie.profilResmi||'')+'\') center/cover;border:2px solid #ddd;flex-shrink:0"></div>'
+        +'<div style="flex:1">'
+          +'<input type="file" accept="image/*" id="ie-profilResmi-file" style="display:none">'
+          +'<button type="button" onclick="document.getElementById(\'ie-profilResmi-file\').click()" style="background:var(--r);color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">📁 Dosya Seç</button>'
+          +'<div style="font-size:11px;color:var(--ink4);margin-top:4px">JPG/PNG, max 2MB. Yüklendikten sonra otomatik kaydedilir.</div>'
+        +'</div>'
+      +'</div>'
+      +'<input type="hidden" '+IS+' id="ie-profilResmi" value="'+esc(ie.profilResmi||'')+'">'
+      +'<div style="font-size:10px;color:var(--ink4);margin-top:4px">Mevcut yol: <code style="background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px;font-size:10px">'+esc(ie.profilResmi||'(yok)')+'</code></div>'
+    +'</div>'
     +'<div class="sa-sec"><div class="sa-lbl">Profil URL (Instagram link)</div><input '+IS+' id="ie-profilUrl" value="'+esc(ie.profilUrl||'')+'" placeholder="https://www.instagram.com/autoclubsamsunmerkez/"></div>'
     +'<div class="sa-sec"><div class="sa-lbl">Kullanıcı adı</div><input '+IS+' id="ie-kullaniciAdi" value="'+esc(ie.kullaniciAdi||'')+'" placeholder="autoclubsamsunmerkez"></div>'
     +'<div class="sa-sec"><div class="sa-lbl">Tam İsim</div><input '+IS+' id="ie-tamIsim" value="'+esc(ie.tamIsim||'')+'" placeholder="Enes Koç"></div>'
     +'<div class="sa-sec"><div class="sa-lbl">Slogan / Açıklama</div><input '+IS+' id="ie-slogan" value="'+esc(ie.slogan||'')+'" placeholder="Autonax® Kaplama Sarrafı®"></div>'
-    +'<div class="sa-sec"><div class="sa-lbl">Profil Resmi (URL veya yol)</div><input '+IS+' id="ie-profilResmi" value="'+esc(ie.profilResmi||'')+'" placeholder="/uploads/instagram/profil.jpg"></div>'
     +'<div class="sa-sec"><div class="sa-lbl">Bio Metin (1. satır)</div><input '+IS+' id="ie-bioMetin" value="'+esc(ie.bioMetin||'')+'" placeholder="Karadeniz\'in En Çok Tercih Edilen PPF Merkezi"></div>'
     +'<div class="sa-sec"><div class="sa-lbl">Bio İller (2. satır)</div><input '+IS+' id="ie-bioIller" value="'+esc(ie.bioIller||'')+'" placeholder="Samsun · Ordu · Giresun · ..."></div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">'
@@ -13439,30 +13451,75 @@ function saInstagramEmbedHTML(){
     +'</div>'
   +'</div></div>';
 
-  // Sağ Sutun - 4 Reel
+  // Sağ Sutun - 4 Reel (markalardaki mrk-foto-kutu yapısı)
   html+='<div class="k"><div class="kh"><div class="kt">🎬 4 Reels</div></div><div class="kb">';
-  html+='<p style="font-size:12px;color:var(--ink4);margin-bottom:10px;line-height:1.5">Her reel için 5 alan:</p>';
-  for(var i=0;i<4;i++){
-    var r=ie.reels[i];
-    html+='<div style="background:rgba(0,0,0,.02);border:1px solid var(--bd);border-radius:8px;padding:10px;margin-bottom:10px">'
-      +'<div style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:6px">Reel '+(i+1)+'</div>'
-      +'<div class="sa-sec"><div class="sa-lbl" style="font-size:10px">URL (Instagram reel linki)</div><input '+IS+' id="ie-r'+i+'-url" value="'+esc(r.url||'')+'" placeholder="https://www.instagram.com/reel/XXX/"></div>'
-      +'<div class="sa-sec"><div class="sa-lbl" style="font-size:10px">Kapak resmi</div><input '+IS+' id="ie-r'+i+'-thumb" value="'+esc(r.thumb||'')+'" placeholder="/uploads/instagram/reel'+(i+1)+'-thumb.jpg"></div>'
-      +'<div class="sa-sec"><div class="sa-lbl" style="font-size:10px">Video MP4 (hover\'da oynar)</div><input '+IS+' id="ie-r'+i+'-video" value="'+esc(r.video||'')+'" placeholder="/uploads/instagram/reel'+(i+1)+'.mp4"></div>'
-      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'
-        +'<div class="sa-sec"><div class="sa-lbl" style="font-size:10px">İzlenme</div><input '+IS+' id="ie-r'+i+'-views" value="'+esc(r.views||'')+'" placeholder="1.9 Mn"></div>'
-        +'<div class="sa-sec"><div class="sa-lbl" style="font-size:10px">Etiket (kırmızı rozet)</div><input '+IS+' id="ie-r'+i+'-label" value="'+esc(r.label||'')+'" placeholder="KAMPANYA"></div>'
-      +'</div>'
-    +'</div>';
-  }
-  html+='</div></div>';
+  html+='<p style="font-size:12px;color:var(--ink4);margin-bottom:14px;line-height:1.6">Her reel için <b>Instagram URL</b> yapıştırın. Site\'de <b>otomatik iframe embed</b> olur, MP4 yüklemenize gerek yoktur.</p>';
 
+  html+='<div class="mrk-galeri-grid">';
+  for(var i=0;i<4;i++){
+    var r=ie.reels[i] || {url:'',views:'',label:''};
+    var urlVal = esc(r.url||'');
+    var viewsVal = esc(r.views||'');
+    var labelVal = esc(r.label||'');
+
+    html+='<div class="mrk-foto-kutu" data-ie-r-idx="'+i+'">';
+    html+='<div class="mrk-foto-kutu-lbl">REEL '+(i+1)+'</div>';
+
+    // Önizleme alanı
+    html+='<div data-ie-r-preview="'+i+'" class="mrk-foto-img" style="height:160px;background:#1a1a1a;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;border-radius:6px;margin-bottom:8px">';
+    html+= ieReelOnizle(r.url||'');
+    html+='</div>';
+
+    // URL input
+    html+='<input data-ie-r-url="'+i+'" id="ie-r'+i+'-url" value="'+urlVal+'" placeholder="https://www.instagram.com/reel/XXX/" '+IS+' style="font-size:13px" oninput="ieReelOnizlemeGuncelle('+i+')">';
+    html+='<div style="font-size:10px;color:var(--ink4);margin-top:4px;line-height:1.4">Desteklenir: <b>instagram.com/reel/XXX/</b> · <b>instagram.com/p/XXX/</b></div>';
+
+    // İzlenme + Etiket
+    html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">';
+    html+='<div><div class="sa-lbl" style="font-size:10px">İzlenme (rozet)</div><input id="ie-r'+i+'-views" value="'+viewsVal+'" placeholder="1.9 Mn" '+IS+' style="font-size:13px"></div>';
+    html+='<div><div class="sa-lbl" style="font-size:10px">Etiket (kırmızı)</div><input id="ie-r'+i+'-label" value="'+labelVal+'" placeholder="KAMPANYA" '+IS+' style="font-size:13px"></div>';
+    html+='</div>';
+
+    html+='</div>';
+  }
+  html+='</div>';
+
+  html+='</div></div>';
   html+='</div>'; // g2 kapanışı
 
   html+=saYayinlaBar('Instagram Embed Kaydet','saInstagramEmbedKaydet()');
 
   return html;
 }
+
+// Reel önizleme (markaGaleriOnizle'nin video versiyonunu kullanır)
+function ieReelOnizle(url){
+  if(!url || !url.trim()){
+    return '<div style="color:#666;font-size:11px;text-align:center;padding:10px">Instagram URL yapıştırın</div>';
+  }
+  if(typeof window.markaVideoParse !== 'function'){
+    return '<div style="color:#888;font-size:11px;text-align:center;padding:10px">Önizleme yüklenemedi</div>';
+  }
+  var v = window.markaVideoParse(url);
+  if(!v){
+    return '<div style="color:#ffa500;font-size:11px;text-align:center;padding:10px">⚠️ Tanınmayan link<br><span style="font-size:10px;opacity:.7">Instagram URL bekleniyor</span></div>';
+  }
+  var etiket = v.tur.charAt(0).toUpperCase() + v.tur.slice(1);
+  if(v.thumb){
+    return '<div style="position:relative;width:100%;height:100%"><img src="'+v.thumb+'" style="width:100%;height:100%;object-fit:cover"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="width:44px;height:44px;background:rgba(255,255,255,.9);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#000;font-size:18px">▶</div></div><div style="position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.7);color:#fff;padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700">'+etiket+'</div></div>';
+  }
+  return '<div style="color:#25D366;font-size:11px;text-align:center;padding:10px"><div style="font-size:28px;margin-bottom:4px">▶</div>'+etiket+' video<br><span style="font-size:9px;color:#888">Site\'de embed olur</span></div>';
+}
+
+// URL input değişince preview güncelle
+window.ieReelOnizlemeGuncelle = function(idx){
+  var kutu = document.querySelector('[data-ie-r-idx="'+idx+'"]');
+  if(!kutu) return;
+  var urlEl = kutu.querySelector('[data-ie-r-url]');
+  var prevEl = kutu.querySelector('[data-ie-r-preview]');
+  if(!urlEl || !prevEl) return;
+  prevEl.innerHTML = ieReelOnizle(urlEl.value);
+};
 
 function saInstagramEmbedKaydet(){
   if(!SITE_AYARLAR.instagramEmbed) SITE_AYARLAR.instagramEmbed={};
@@ -13473,13 +13530,11 @@ function saInstagramEmbedKaydet(){
   ['profilUrl','kullaniciAdi','tamIsim','slogan','profilResmi','bioMetin','bioIller','gonderiSayisi','takipciSayisi','takipSayisi'].forEach(function(k){
     ie[k]=saG('ie-'+k)||'';
   });
-  // 4 Reel
+  // 4 Reel - sadece URL + İzlenme + Etiket (video alanı kaldırıldı, iframe embed kullanılıyor)
   ie.reels=[];
   for(var i=0;i<4;i++){
     ie.reels.push({
       url:saG('ie-r'+i+'-url')||'',
-      thumb:saG('ie-r'+i+'-thumb')||'',
-      video:saG('ie-r'+i+'-video')||'',
       views:saG('ie-r'+i+'-views')||'',
       label:saG('ie-r'+i+'-label')||''
     });
@@ -14114,10 +14169,49 @@ function saListenerBagla(tab){
       });
     }
   }
-  // Instagram Embed - aktif toggle
+  // Instagram Embed - aktif toggle + profil resmi upload
   if(tab==='instagramEmbed'){
     var tglIE=document.getElementById('tgl-ie-aktif');
     if(tglIE&&!tglIE._l){tglIE._l=true;tglIE.addEventListener('click',function(){tglIE.classList.toggle('on');});}
+
+    // Profil resmi dosya yükleme
+    var fileInp=document.getElementById('ie-profilResmi-file');
+    if(fileInp&&!fileInp._l){
+      fileInp._l=true;
+      fileInp.addEventListener('change',function(e){
+        var file=e.target.files[0]; if(!file) return;
+        if(!file.type.startsWith('image/')){toast('Sadece resim dosyası!','red');return;}
+        if(file.size>2*1024*1024){toast('Max 2MB olmalı!','red');return;}
+        toast('⏳ Yükleniyor...','blue');
+        var fd=new FormData();
+        fd.append('file',file);
+        fd.append('klasor','instagram');
+        fetch('/api/resim',{method:'POST',body:fd,credentials:'same-origin'})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.success){
+            // hidden input'a URL yaz
+            var hiddenInp=document.getElementById('ie-profilResmi');
+            if(hiddenInp) hiddenInp.value=d.url;
+            // Preview güncelle
+            var prev=document.getElementById('ie-profilResmi-preview');
+            if(prev) prev.style.backgroundImage='url(\''+d.url+'\')';
+            // Mevcut yol göstergesini güncelle
+            var kodEl=prev && prev.parentNode && prev.parentNode.parentNode && prev.parentNode.parentNode.querySelector('code');
+            if(kodEl) kodEl.textContent=d.url;
+            // SITE_AYARLAR'a yaz + kaydet
+            if(!SITE_AYARLAR.instagramEmbed) SITE_AYARLAR.instagramEmbed={};
+            SITE_AYARLAR.instagramEmbed.profilResmi=d.url;
+            // Medyaya da ekle (mevcut sistemdeki gibi)
+            if(!SITE_AYARLAR.medya) SITE_AYARLAR.medya=[];
+            SITE_AYARLAR.medya.push({url:d.url,isim:file.name,boyut:file.size,tarih:new Date().toISOString()});
+            siteAyarKaydet('Instagram Profil Resmi');
+            toast('✅ Profil resmi yüklendi','green');
+          } else {toast('❌ Yükleme hatası','red');}
+        })
+        .catch(function(){toast('❌ Bağlantı hatası','red');});
+      });
+    }
   }
 }
 
