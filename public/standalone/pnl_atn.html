@@ -1947,6 +1947,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
         <button class="siteayar-tab" data-stab="anasayfa">📄 Ana Sayfa</button>
         <button class="siteayar-tab" data-stab="seo">🔍 SEO</button>
         <button class="siteayar-tab" data-stab="sosyal">📱 Sosyal</button>
+        <button class="siteayar-tab" data-stab="instagramEmbed">📷 Instagram</button>
         <button class="siteayar-tab" data-stab="footer">🦶 Footer</button>
         <button class="siteayar-tab" data-stab="medya">🗂️ Medya</button>
         <button class="siteayar-tab" data-stab="odeme">💳 Ödeme</button>
@@ -2005,6 +2006,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
       <div id="stab-anasayfa" style="display:none"></div>
       <div id="stab-seo" style="display:none"></div>
       <div id="stab-sosyal" style="display:none"></div>
+      <div id="stab-instagramEmbed" style="display:none"></div>
       <div id="stab-footer" style="display:none"></div>
       <div id="stab-medya" style="display:none"></div>
       <div id="stab-odeme" style="display:none"></div>
@@ -5086,6 +5088,25 @@ var SITE_AYARLAR={
     instagram:'',facebook:'',youtube:'',tiktok:'',linkedin:'',x:'',
     instagramAktif:false,facebookAktif:false,youtubeAktif:false,
     tiktokAktif:false,linkedinAktif:false,xAktif:false
+  },
+  instagramEmbed:{
+    aktif:true,
+    profilUrl:'https://www.instagram.com/autoclubsamsunmerkez/',
+    kullaniciAdi:'autoclubsamsunmerkez',
+    tamIsim:'Enes Koç',
+    slogan:'Autonax® Kaplama Sarrafı®',
+    profilResmi:'/uploads/instagram/profil.jpg',
+    bioMetin:'Karadeniz\'in En Çok Tercih Edilen PPF Merkezi',
+    bioIller:'Samsun · Ordu · Giresun · Trabzon · Rize · Tokat · Amasya · Sinop',
+    gonderiSayisi:'647',
+    takipciSayisi:'17,7B',
+    takipSayisi:'66',
+    reels:[
+      {url:'https://www.instagram.com/autoclubsamsunmerkez/',thumb:'/uploads/instagram/reel1-thumb.jpg',video:'/uploads/instagram/reel1.mp4',views:'1.9 Mn',label:'KAMPANYA'},
+      {url:'https://www.instagram.com/autoclubsamsunmerkez/',thumb:'/uploads/instagram/reel2-thumb.jpg',video:'/uploads/instagram/reel2.mp4',views:'2.6 Mn',label:'ORDU'},
+      {url:'https://www.instagram.com/autoclubsamsunmerkez/',thumb:'/uploads/instagram/reel3-thumb.jpg',video:'/uploads/instagram/reel3.mp4',views:'2.5 Mn',label:''},
+      {url:'https://www.instagram.com/autoclubsamsunmerkez/',thumb:'/uploads/instagram/reel4-thumb.jpg',video:'/uploads/instagram/reel4.mp4',views:'441 B',label:'SAMSUN'}
+    ]
   },
   medya:[],
   footer:{
@@ -12046,7 +12067,7 @@ function saSekmeRender(tab){
       importEl.style.display='';
       importEl.innerHTML=saImportHTML();
       setTimeout(saImportListenerBagla,50);
-      ['admin','genel','gorsel','banner','kampanya','anasayfa','seo','sosyal','footer','medya','odeme','fatura'].forEach(function(t){
+      ['admin','genel','gorsel','banner','kampanya','anasayfa','seo','sosyal','instagramEmbed','footer','medya','odeme','fatura'].forEach(function(t){
         var e=document.getElementById('stab-'+t);if(e)e.style.display='none';
       });
       return;
@@ -12063,6 +12084,7 @@ function saSekmeRender(tab){
     else if(tab==='anasayfa') el.innerHTML=saAnaSayfaHTML();
     else if(tab==='seo') el.innerHTML=saSeoHTML();
     else if(tab==='sosyal') el.innerHTML=saSosyalHTML();
+    else if(tab==='instagramEmbed') el.innerHTML=saInstagramEmbedHTML();
     else if(tab==='footer') el.innerHTML=saFooterHTML();
     else if(tab==='medya') el.innerHTML=saMedyaHTML();
     else if(tab==='odeme'){el.innerHTML=saOdemeHTML();setTimeout(saOdemeListenerBagla,50);return;}
@@ -13381,6 +13403,90 @@ function saSosyalKaydet(){
   siteAyarKaydet('Sosyal Medya');
 }
 
+/* ── INSTAGRAM EMBED (Anasayfa hero üstü) ── */
+function saInstagramEmbedHTML(){
+  // escapeHTML henüz tanımlanmamışsa local fallback (canlı sayfada zaten tanımlı, ama garanti)
+  var esc = (typeof escapeHTML === 'function') ? escapeHTML : function(s){
+    if(s==null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  };
+
+  if(!SITE_AYARLAR.instagramEmbed){
+    SITE_AYARLAR.instagramEmbed={aktif:true,profilUrl:'',kullaniciAdi:'',tamIsim:'',slogan:'',profilResmi:'',bioMetin:'',bioIller:'',gonderiSayisi:'',takipciSayisi:'',takipSayisi:'',reels:[]};
+  }
+  var ie=SITE_AYARLAR.instagramEmbed;
+  if(!ie.reels) ie.reels=[];
+  while(ie.reels.length<4) ie.reels.push({url:'',thumb:'',video:'',views:'',label:''});
+
+  var IS='class="sa-inp"';
+  var html='<div class="g2">';
+
+  // Sol Sutun - Profil Bilgileri
+  html+='<div class="k"><div class="kh"><div class="kt">📷 Profil Bilgileri</div>'
+    +'<button class="tgl'+(ie.aktif?' on':'')+'" id="tgl-ie-aktif" title="Anasayfada göster"></button>'
+    +'</div><div class="kb">'
+    +'<div class="sa-sec"><div class="sa-lbl">Profil URL (Instagram link)</div><input '+IS+' id="ie-profilUrl" value="'+esc(ie.profilUrl||'')+'" placeholder="https://www.instagram.com/autoclubsamsunmerkez/"></div>'
+    +'<div class="sa-sec"><div class="sa-lbl">Kullanıcı adı</div><input '+IS+' id="ie-kullaniciAdi" value="'+esc(ie.kullaniciAdi||'')+'" placeholder="autoclubsamsunmerkez"></div>'
+    +'<div class="sa-sec"><div class="sa-lbl">Tam İsim</div><input '+IS+' id="ie-tamIsim" value="'+esc(ie.tamIsim||'')+'" placeholder="Enes Koç"></div>'
+    +'<div class="sa-sec"><div class="sa-lbl">Slogan / Açıklama</div><input '+IS+' id="ie-slogan" value="'+esc(ie.slogan||'')+'" placeholder="Autonax® Kaplama Sarrafı®"></div>'
+    +'<div class="sa-sec"><div class="sa-lbl">Profil Resmi (URL veya yol)</div><input '+IS+' id="ie-profilResmi" value="'+esc(ie.profilResmi||'')+'" placeholder="/uploads/instagram/profil.jpg"></div>'
+    +'<div class="sa-sec"><div class="sa-lbl">Bio Metin (1. satır)</div><input '+IS+' id="ie-bioMetin" value="'+esc(ie.bioMetin||'')+'" placeholder="Karadeniz\'in En Çok Tercih Edilen PPF Merkezi"></div>'
+    +'<div class="sa-sec"><div class="sa-lbl">Bio İller (2. satır)</div><input '+IS+' id="ie-bioIller" value="'+esc(ie.bioIller||'')+'" placeholder="Samsun · Ordu · Giresun · ..."></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">'
+      +'<div class="sa-sec"><div class="sa-lbl">Gönderi</div><input '+IS+' id="ie-gonderiSayisi" value="'+esc(ie.gonderiSayisi||'')+'" placeholder="647"></div>'
+      +'<div class="sa-sec"><div class="sa-lbl">Takipçi</div><input '+IS+' id="ie-takipciSayisi" value="'+esc(ie.takipciSayisi||'')+'" placeholder="17,7B"></div>'
+      +'<div class="sa-sec"><div class="sa-lbl">Takip</div><input '+IS+' id="ie-takipSayisi" value="'+esc(ie.takipSayisi||'')+'" placeholder="66"></div>'
+    +'</div>'
+  +'</div></div>';
+
+  // Sağ Sutun - 4 Reel
+  html+='<div class="k"><div class="kh"><div class="kt">🎬 4 Reels</div></div><div class="kb">';
+  html+='<p style="font-size:12px;color:var(--ink4);margin-bottom:10px;line-height:1.5">Her reel için 5 alan:</p>';
+  for(var i=0;i<4;i++){
+    var r=ie.reels[i];
+    html+='<div style="background:rgba(0,0,0,.02);border:1px solid var(--bd);border-radius:8px;padding:10px;margin-bottom:10px">'
+      +'<div style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:6px">Reel '+(i+1)+'</div>'
+      +'<div class="sa-sec"><div class="sa-lbl" style="font-size:10px">URL (Instagram reel linki)</div><input '+IS+' id="ie-r'+i+'-url" value="'+esc(r.url||'')+'" placeholder="https://www.instagram.com/reel/XXX/"></div>'
+      +'<div class="sa-sec"><div class="sa-lbl" style="font-size:10px">Kapak resmi</div><input '+IS+' id="ie-r'+i+'-thumb" value="'+esc(r.thumb||'')+'" placeholder="/uploads/instagram/reel'+(i+1)+'-thumb.jpg"></div>'
+      +'<div class="sa-sec"><div class="sa-lbl" style="font-size:10px">Video MP4 (hover\'da oynar)</div><input '+IS+' id="ie-r'+i+'-video" value="'+esc(r.video||'')+'" placeholder="/uploads/instagram/reel'+(i+1)+'.mp4"></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'
+        +'<div class="sa-sec"><div class="sa-lbl" style="font-size:10px">İzlenme</div><input '+IS+' id="ie-r'+i+'-views" value="'+esc(r.views||'')+'" placeholder="1.9 Mn"></div>'
+        +'<div class="sa-sec"><div class="sa-lbl" style="font-size:10px">Etiket (kırmızı rozet)</div><input '+IS+' id="ie-r'+i+'-label" value="'+esc(r.label||'')+'" placeholder="KAMPANYA"></div>'
+      +'</div>'
+    +'</div>';
+  }
+  html+='</div></div>';
+
+  html+='</div>'; // g2 kapanışı
+
+  html+=saYayinlaBar('Instagram Embed Kaydet','saInstagramEmbedKaydet()');
+
+  return html;
+}
+
+function saInstagramEmbedKaydet(){
+  if(!SITE_AYARLAR.instagramEmbed) SITE_AYARLAR.instagramEmbed={};
+  var ie=SITE_AYARLAR.instagramEmbed;
+  // Profil
+  var aktifBtn=document.getElementById('tgl-ie-aktif');
+  ie.aktif=aktifBtn?aktifBtn.classList.contains('on'):true;
+  ['profilUrl','kullaniciAdi','tamIsim','slogan','profilResmi','bioMetin','bioIller','gonderiSayisi','takipciSayisi','takipSayisi'].forEach(function(k){
+    ie[k]=saG('ie-'+k)||'';
+  });
+  // 4 Reel
+  ie.reels=[];
+  for(var i=0;i<4;i++){
+    ie.reels.push({
+      url:saG('ie-r'+i+'-url')||'',
+      thumb:saG('ie-r'+i+'-thumb')||'',
+      video:saG('ie-r'+i+'-video')||'',
+      views:saG('ie-r'+i+'-views')||'',
+      label:saG('ie-r'+i+'-label')||''
+    });
+  }
+  siteAyarKaydet('Instagram Embed');
+}
+
 /* ── FOOTER AYARLARI ── */
 function saFooterHTML(){
   var ft=SITE_AYARLAR.footer||{};
@@ -14008,6 +14114,11 @@ function saListenerBagla(tab){
       });
     }
   }
+  // Instagram Embed - aktif toggle
+  if(tab==='instagramEmbed'){
+    var tglIE=document.getElementById('tgl-ie-aktif');
+    if(tglIE&&!tglIE._l){tglIE._l=true;tglIE.addEventListener('click',function(){tglIE.classList.toggle('on');});}
+  }
 }
 
 
@@ -14049,6 +14160,7 @@ function ayarlarTabRender(tab){
   else if(tab==='anasayfa') el.innerHTML=saAnaSayfaHTML();
   else if(tab==='seo') el.innerHTML=saSeoHTML();
   else if(tab==='sosyal') el.innerHTML=saSosyalHTML();
+  else if(tab==='instagramEmbed') el.innerHTML=saInstagramEmbedHTML();
   else if(tab==='footer') el.innerHTML=saFooterHTML();
   else if(tab==='medya') el.innerHTML=saMedyaHTML();
   else if(tab==='odeme'){el.innerHTML=saOdemeHTML();setTimeout(saOdemeListenerBagla,50);return;}
