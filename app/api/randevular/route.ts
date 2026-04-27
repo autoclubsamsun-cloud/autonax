@@ -48,11 +48,14 @@ export async function GET(req: NextRequest) {
     const q = searchParams.get('q')?.toLowerCase();
     const mod = searchParams.get('mod'); // 'musteri' = sadece kendi randevuları
 
-    // ─── HOTFIX — Mod kararı ──────────────────────────────────────
+    // ─── HOTFIX 3 — GET'te mod=musteri zorlama (POST/PUT ile aynı mantık) ──
     // ESKI: auth.kim === 'musteri' tek başına müşteri modu tetikliyordu
     //       → admin panel müşteri cookie'si de varsa kazara müşteri sanıyordu
+    // HOTFIX 2: POST/PUT'a mod=musteri zorla eklendi
+    // HOTFIX 3: GET'e de aynı mantık eklendi (önceden 403 dönüyordu çünkü
+    //   admin token varsa auth.kim='admin', mod=musteri kontrolü 403 atıyordu)
     // YENI: Müşteri modu SADECE şu durumda tetiklenir:
-    //       1) Açıkça ?mod=musteri query param VAR  (müşteri panelinden çağrılır)
+    //       1) Açıkça ?mod=musteri query param VAR (müşteri panelinden çağrılır)
     //       2) VEYA istek atan admin token YOK ve sadece müşteri token VAR
     //       Yani admin token varsa, mod=musteri olmadıkça admin akışı çalışır.
     // ─────────────────────────────────────────────────────────────
@@ -60,11 +63,37 @@ export async function GET(req: NextRequest) {
     const isMusteriRequest = (mod === 'musteri') || (auth.kim === 'musteri' && !adminToken);
 
     if (isMusteriRequest) {
-      // Müşteri ise zorla kendi verilerini çek
-      if (auth.kim !== 'musteri') {
+      // Müşteri ID'sini doğru kaynaktan al (admin token olsa bile mod=musteri zorlandıysa)
+      let aktiveMusteriId: string | null = null;
+      if (auth.kim === 'musteri') {
+        aktiveMusteriId = auth.musteriId;
+      } else if (mod === 'musteri') {
+        // Admin token kullanıldı ama mod=musteri zorlandı → müşteri cookie'sinden ID al
+        const musteriToken = req.cookies.get('autonax_musteri_token')?.value;
+        if (!musteriToken) {
+          return NextResponse.json(
+            { success: false, error: 'Müşteri girişi yok' },
+            { status: 401 }
+          );
+        }
+        try {
+          const parts = musteriToken.split('.');
+          if (parts.length !== 3) throw new Error('Geçersiz token');
+          const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+          if (Date.now() / 1000 > payload.exp) throw new Error('Süresi dolmuş');
+          aktiveMusteriId = payload.sub;
+        } catch (e) {
+          return NextResponse.json(
+            { success: false, error: 'Müşteri oturumu geçersiz' },
+            { status: 401 }
+          );
+        }
+      }
+
+      if (!aktiveMusteriId) {
         return NextResponse.json(
-          { success: false, error: 'Bu mod sadece müşteri girişiyle çalışır' },
-          { status: 403 }
+          { success: false, error: 'Müşteri kimliği bulunamadı' },
+          { status: 401 }
         );
       }
 
@@ -72,7 +101,7 @@ export async function GET(req: NextRequest) {
       const musteriRows = await sql`
         SELECT id, ad, soyad, tel
         FROM musteriler
-        WHERE id = ${auth.musteriId}
+        WHERE id = ${aktiveMusteriId}
         LIMIT 1
       `;
       if (musteriRows.length === 0) {
@@ -87,7 +116,7 @@ export async function GET(req: NextRequest) {
       const rows = await sql`
         SELECT * FROM randevular
         WHERE
-          musteri_id = ${auth.musteriId}
+          musteri_id = ${aktiveMusteriId}
           OR (
             musteri_id IS NULL
             AND (
