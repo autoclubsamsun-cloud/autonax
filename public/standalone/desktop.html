@@ -633,21 +633,21 @@ svg{display:block;flex-shrink:0}
   .ig-reel{height:0;padding-top:177.78%}
 }
 .ig-reel-thumb{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;border:0}
-.ig-reel-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:54px;height:54px;background:rgba(255,255,255,.92);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.3);transition:transform .2s;pointer-events:none}
+.ig-reel-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:38px;height:38px;background:rgba(255,255,255,.92);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,.3);transition:transform .2s;pointer-events:none}
 .ig-reel:hover .ig-reel-play{transform:translate(-50%,-50%) scale(1.08)}
-.ig-reel-play svg{width:24px;height:24px;fill:#000;margin-left:3px}
+.ig-reel-play svg{width:16px;height:16px;fill:#000;margin-left:2px}
 
 /* Reel Modal - Tıklayınca tam ekran açılır */
 .ig-reel-modal{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px)}
 .ig-reel-modal.acik{display:flex}
 .ig-reel-modal-icerik{position:relative;width:100%;max-width:420px;height:90vh;max-height:740px;background:#000;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .ig-reel-modal-iframe{width:100%;height:100%;border:0;display:block;background:#000}
-.ig-reel-modal-kapat{position:absolute;top:-50px;right:0;width:40px;height:40px;background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:background .2s}
-.ig-reel-modal-kapat:hover{background:rgba(255,255,255,.25)}
+.ig-reel-modal-kapat{position:absolute;top:10px;right:10px;width:36px;height:36px;background:rgba(0,0,0,.6);color:#fff;border:0;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);transition:background .2s;z-index:10;line-height:1}
+.ig-reel-modal-kapat:hover{background:rgba(0,0,0,.85)}
 .ig-reel-modal-instagram{position:absolute;bottom:-46px;left:50%;transform:translateX(-50%);background:linear-gradient(45deg,#feda75,#fa7e1e,#d62976,#962fbf);color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(0,0,0,.3);white-space:nowrap}
 @media (max-width:560px){
-  .ig-reel-modal{padding:50px 12px 80px}
-  .ig-reel-modal-icerik{max-width:none;height:calc(100vh - 130px);max-height:none}
+  .ig-reel-modal{padding:16px 12px 70px}
+  .ig-reel-modal-icerik{max-width:none;height:calc(100vh - 100px);max-height:none}
 }
 .ig-reel-embed-wrap.reel-ig-bg{background:linear-gradient(135deg,#f09433 0%,#e6683c 20%,#dc2743 45%,#cc2366 70%,#bc1888 100%)}
 .ig-reel-embed-wrap.reel-tt-bg{background:linear-gradient(135deg,#25f4ee 0%,#000 50%,#fe2c55 100%)}
@@ -9464,7 +9464,6 @@ function igReelsRender(reels){
 
   const html = liste.map((r, i) => {
     const thumb = escapeHTML(r.thumb || r.thumbnail || '');
-    // Tıklayınca modal açılır
     let inner;
     if(thumb){
       inner = `<img src="${thumb}" class="ig-reel-thumb" alt="Reel ${i+1}" loading="lazy" onerror="this.style.display='none';this.parentNode.style.background='linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)'">`;
@@ -9472,12 +9471,22 @@ function igReelsRender(reels){
       // Kapak resmi yoksa Instagram gradient fallback
       inner = `<div style="position:absolute;inset:0;background:linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)"></div>`;
     }
-    return `<div class="ig-reel" data-idx="${i}" onclick="igReelModalAc(${i})" role="button" tabindex="0" aria-label="Reel ${i+1} oynat">
+    return `<div class="ig-reel" data-reel-idx="${i}" role="button" tabindex="0" aria-label="Reel ${i+1} oynat">
       ${inner}
       <div class="ig-reel-play">${playSvg}</div>
     </div>`;
   }).join('');
   wrap.innerHTML = html;
+
+  // Click listener'ları SONRA bağla (event delegation)
+  wrap.querySelectorAll('.ig-reel').forEach(el => {
+    el.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      const idx = parseInt(el.getAttribute('data-reel-idx'), 10);
+      igReelModalAc(idx);
+    });
+  });
 }
 
 // Modal aç - tıklanınca büyük versiyonu göster
