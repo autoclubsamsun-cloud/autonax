@@ -626,10 +626,9 @@ svg{display:block;flex-shrink:0}
 .ig-tab.active svg path[fill="currentColor"]{fill:currentColor}
 .ig-tab-label{font-size:11px}
 
-/* Reels Grid - 4 sütun desktop, 3 sütun tablet/mobile */
-/* SABIT YÜKSEKLİK — iOS Safari uyumlu (markalardaki birebir aynı yapı) */
-.ig-reels{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:4px}
-.ig-reel{position:relative;background:#000;overflow:hidden;cursor:pointer;display:block;text-decoration:none;border-radius:2px;width:100%;height:480px}
+/* Reels Grid - 4 sütun desktop, 2 sütun tablet, 1 sütun mobile */
+.ig-reels{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:4px}
+.ig-reel{position:relative;background:#000;overflow:hidden;cursor:pointer;display:block;text-decoration:none;border-radius:8px;width:100%;height:480px}
 .ig-reel-embed-wrap{position:absolute;inset:0;width:100%;height:100%}
 .ig-reel-iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;background:transparent;display:block}
 .ig-reel-embed-wrap.reel-ig-bg{background:linear-gradient(135deg,#f09433 0%,#e6683c 20%,#dc2743 45%,#cc2366 70%,#bc1888 100%)}
@@ -646,8 +645,8 @@ svg{display:block;flex-shrink:0}
   .ig-avatar-fallback{font-size:28px}
   .ig-username{font-size:18px}
   .ig-stats{gap:16px;font-size:13px}
-  .ig-reels{grid-template-columns:repeat(3,1fr)}
-  .ig-reel{height:420px}
+  .ig-reels{grid-template-columns:repeat(2,1fr);gap:10px}
+  .ig-reel{height:560px;border-radius:10px}
 }
 
 /* Mobil — Instagram mobile layout birebir */
@@ -678,9 +677,9 @@ svg{display:block;flex-shrink:0}
   .ig-stats strong{font-size:15px;font-weight:700;color:var(--ink)}
 
   .ig-tabs{gap:30px;margin-top:6px}
-  .ig-reels{grid-template-columns:repeat(3,1fr);gap:2px}
-  .ig-reel{height:380px}
-  .ig-reels .ig-reel:nth-child(4){display:none}
+  .ig-reels{grid-template-columns:1fr;gap:14px;max-width:420px;margin:4px auto 0}
+  .ig-reel{height:640px;border-radius:12px}
+  .ig-reels .ig-reel:nth-child(4){display:block}
 }
 
 .plaka-sep{width:1px;height:24px;background:var(--bd);margin:0 4px;flex-shrink:0}
