@@ -646,8 +646,18 @@ svg{display:block;flex-shrink:0}
 .ig-reel-modal-kapat:hover{background:rgba(0,0,0,.85)}
 .ig-reel-modal-instagram{position:absolute;bottom:-46px;left:50%;transform:translateX(-50%);background:linear-gradient(45deg,#feda75,#fa7e1e,#d62976,#962fbf);color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(0,0,0,.3);white-space:nowrap}
 @media (max-width:560px){
-  .ig-reel-modal{padding:16px 12px 70px}
-  .ig-reel-modal-icerik{max-width:none;height:calc(100vh - 100px);max-height:none}
+  /* Mobilde: dvh kullan (Chrome URL bar'ı için), üstten hizala (taşma olmasın), kapat butonunu modal'a fixed bağla */
+  .ig-reel-modal{padding:60px 12px 70px;align-items:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  /* dvh destekleyen tarayıcılarda 100dvh, eski tarayıcılarda fallback */
+  @supports (height:100dvh){
+    .ig-reel-modal{height:100dvh}
+  }
+  .ig-reel-modal-icerik{max-width:none;height:calc(100vh - 130px);max-height:none}
+  @supports (height:100dvh){
+    .ig-reel-modal-icerik{height:calc(100dvh - 130px)}
+  }
+  /* Kapat butonu: modal'ın (overlay'in) sağ-üstüne sabitlen, scroll yapsa bile yerinde kalsın */
+  .ig-reel-modal-kapat{position:fixed;top:14px;right:14px;width:42px;height:42px;font-size:22px;background:rgba(0,0,0,.85);z-index:100000}
 }
 .ig-reel-embed-wrap.reel-ig-bg{background:linear-gradient(135deg,#f09433 0%,#e6683c 20%,#dc2743 45%,#cc2366 70%,#bc1888 100%)}
 .ig-reel-embed-wrap.reel-tt-bg{background:linear-gradient(135deg,#25f4ee 0%,#000 50%,#fe2c55 100%)}
