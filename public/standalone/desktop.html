@@ -626,11 +626,27 @@ svg{display:block;flex-shrink:0}
 .ig-tab.active svg path[fill="currentColor"]{fill:currentColor}
 .ig-tab-label{font-size:11px}
 
-/* Reels Grid - 4 sütun desktop, 2 sütun tablet, 1 sütun mobile */
-.ig-reels{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:4px}
-.ig-reel{position:relative;background:#000;overflow:hidden;cursor:pointer;display:block;text-decoration:none;border-radius:8px;width:100%;height:480px}
+/* Reels Grid - Tüm cihazlarda kompakt thumbnail grid */
+.ig-reels{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:4px}
+.ig-reel{position:relative;background:#000;overflow:hidden;cursor:pointer;display:block;text-decoration:none;border-radius:8px;width:100%;aspect-ratio:9/16}
+@supports not (aspect-ratio: 9/16){
+  .ig-reel{height:0;padding-top:177.78%}
+}
 .ig-reel-embed-wrap{position:absolute;inset:0;width:100%;height:100%}
-.ig-reel-iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;background:transparent;display:block}
+.ig-reel-iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;background:transparent;display:block;pointer-events:none}
+
+/* Reel Modal - Tıklayınca tam ekran açılır */
+.ig-reel-modal{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px)}
+.ig-reel-modal.acik{display:flex}
+.ig-reel-modal-icerik{position:relative;width:100%;max-width:420px;height:90vh;max-height:740px;background:#000;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.ig-reel-modal-iframe{width:100%;height:100%;border:0;display:block;background:#000}
+.ig-reel-modal-kapat{position:absolute;top:-50px;right:0;width:40px;height:40px;background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:background .2s}
+.ig-reel-modal-kapat:hover{background:rgba(255,255,255,.25)}
+.ig-reel-modal-instagram{position:absolute;bottom:-46px;left:50%;transform:translateX(-50%);background:linear-gradient(45deg,#feda75,#fa7e1e,#d62976,#962fbf);color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(0,0,0,.3);white-space:nowrap}
+@media (max-width:560px){
+  .ig-reel-modal{padding:50px 12px 80px}
+  .ig-reel-modal-icerik{max-width:none;height:calc(100vh - 130px);max-height:none}
+}
 .ig-reel-embed-wrap.reel-ig-bg{background:linear-gradient(135deg,#f09433 0%,#e6683c 20%,#dc2743 45%,#cc2366 70%,#bc1888 100%)}
 .ig-reel-embed-wrap.reel-tt-bg{background:linear-gradient(135deg,#25f4ee 0%,#000 50%,#fe2c55 100%)}
 .ig-reel-link{cursor:pointer}
@@ -645,8 +661,7 @@ svg{display:block;flex-shrink:0}
   .ig-avatar-fallback{font-size:28px}
   .ig-username{font-size:18px}
   .ig-stats{gap:16px;font-size:13px}
-  .ig-reels{grid-template-columns:repeat(2,1fr);gap:10px}
-  .ig-reel{height:560px;border-radius:10px}
+  .ig-reels{grid-template-columns:repeat(4,1fr);gap:5px}
 }
 
 /* Mobil — Instagram mobile layout birebir */
@@ -677,9 +692,9 @@ svg{display:block;flex-shrink:0}
   .ig-stats strong{font-size:15px;font-weight:700;color:var(--ink)}
 
   .ig-tabs{gap:30px;margin-top:6px}
-  .ig-reels{grid-template-columns:1fr;gap:14px;max-width:420px;margin:4px auto 0}
-  .ig-reel{height:640px;border-radius:12px}
-  .ig-reels .ig-reel:nth-child(4){display:block}
+  .ig-reels{grid-template-columns:repeat(3,1fr);gap:3px;max-width:none;margin:4px 0 0}
+  .ig-reel{border-radius:4px}
+  .ig-reels .ig-reel:nth-child(4){display:none}
 }
 
 .plaka-sep{width:1px;height:24px;background:var(--bd);margin:0 4px;flex-shrink:0}
@@ -9440,40 +9455,77 @@ function igReelsRender(reels){
 
   function escapeHTML(s){return String(s||'').replace(/[<>"&]/g, c=>({'<':'&lt;','>':'&gt;','"':'&quot;','&':'&amp;'}[c]));}
 
+  // Reel verilerini global'e koy (modal için)
+  window.__IG_REELS = liste;
+
   const html = liste.map((r, i) => {
-    const url = escapeHTML(r.url || '#');
     const views = escapeHTML(r.views || '');
     const label = escapeHTML(r.label || '');
     const v = igVideoParse(r.url);
     let inner = '';
     if(v){
-      // iframe embed - markalardaki gibi
       const bgClass = v.tur === 'instagram' ? 'reel-ig-bg' : (v.tur === 'tiktok' ? 'reel-tt-bg' : '');
       inner = `<div class="ig-reel-embed-wrap ${bgClass}">
         <iframe src="${escapeHTML(v.embed)}" allowfullscreen allowtransparency="true" frameborder="0" scrolling="no" allow="encrypted-media" loading="eager" class="ig-reel-iframe"></iframe>
       </div>`;
     } else {
-      // URL tanınmadı - boş kart göster
       inner = '<div style="width:100%;height:100%;background:linear-gradient(135deg,#222,#000);display:flex;align-items:center;justify-content:center;color:#888;font-size:11px">Video yüklenemedi</div>';
     }
-    // Tıklanabilir overlay (iframe'in üstünde click yakalar, Instagram'a gönderir)
-    return `<div class="ig-reel" data-idx="${i}">
+    // Tıklayınca modal açılır (Instagram'a gitmez)
+    return `<div class="ig-reel" data-idx="${i}" onclick="igReelModalAc(${i})" role="button" tabindex="0">
       ${inner}
-      <a href="${url}" target="_blank" rel="noopener" class="ig-reel-link" aria-label="Instagram'da aç" style="position:absolute;inset:0;z-index:5;background:transparent" onclick="return igReelTiklama(event,'${url}')"></a>
-      ${label ? `<div class="ig-reel-label" style="z-index:6">${label}</div>` : ''}
-      ${views ? `<div class="ig-reel-views" style="z-index:6"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 5C7 5 3 9 1.5 12 3 15 7 19 12 19s9-4 10.5-7C21 9 17 5 12 5zm0 11.5a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9zm0-7a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"/></svg><span>${views}</span></div>` : ''}
+      ${label ? `<div class="ig-reel-label" style="z-index:6;pointer-events:none">${label}</div>` : ''}
+      ${views ? `<div class="ig-reel-views" style="z-index:6;pointer-events:none"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 5C7 5 3 9 1.5 12 3 15 7 19 12 19s9-4 10.5-7C21 9 17 5 12 5zm0 11.5a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9zm0-7a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"/></svg><span>${views}</span></div>` : ''}
     </div>`;
   }).join('');
   wrap.innerHTML = html;
 }
 
-// Reel tıklama — overlay tıklanırsa Instagram'a yönlendir, iframe içine tıklayınca yeni sekmede açılmasın
-function igReelTiklama(e, url){
-  // Eğer hover ile iframe yüklenmiş ve içinde oynatma yapılıyorsa, boşa tıklama Instagram'a gitsin
-  e.preventDefault();
-  window.open(url, '_blank', 'noopener,noreferrer');
-  return false;
+// Modal aç - tıklanınca büyük versiyonu göster
+function igReelModalAc(idx){
+  const reels = window.__IG_REELS || [];
+  const r = reels[idx];
+  if(!r) return;
+  const v = igVideoParse(r.url);
+  if(!v) return;
+
+  function escapeHTML(s){return String(s||'').replace(/[<>"&]/g, c=>({'<':'&lt;','>':'&gt;','"':'&quot;','&':'&amp;'}[c]));}
+
+  // Modal varsa sil, yenisini oluştur
+  let modal = document.getElementById('ig-reel-modal');
+  if(modal) modal.remove();
+
+  modal = document.createElement('div');
+  modal.id = 'ig-reel-modal';
+  modal.className = 'ig-reel-modal acik';
+  modal.innerHTML = `
+    <div class="ig-reel-modal-icerik" onclick="event.stopPropagation()">
+      <button class="ig-reel-modal-kapat" onclick="igReelModalKapat()" aria-label="Kapat">✕</button>
+      <iframe class="ig-reel-modal-iframe" src="${escapeHTML(v.embed)}" allowfullscreen allowtransparency="true" frameborder="0" scrolling="no" allow="encrypted-media; autoplay" loading="eager"></iframe>
+      <a href="${escapeHTML(r.url)}" target="_blank" rel="noopener" class="ig-reel-modal-instagram">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16zM12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63c-.79.31-1.46.72-2.13 1.39C1.34 2.69.93 3.36.62 4.15c-.3.76-.5 1.64-.56 2.91C0 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.27.26 2.15.56 2.91.31.79.72 1.46 1.39 2.13.67.67 1.34 1.08 2.13 1.39.76.3 1.64.5 2.91.56C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c1.27-.06 2.15-.26 2.91-.56.79-.31 1.46-.72 2.13-1.39.67-.67 1.08-1.34 1.39-2.13.3-.76.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.56-2.91-.31-.79-.72-1.46-1.39-2.13C21.31 1.34 20.64.93 19.85.62c-.76-.3-1.64-.5-2.91-.56C15.67.01 15.26 0 12 0zm0 5.84A6.16 6.16 0 1 0 12 18.16 6.16 6.16 0 0 0 12 5.84zm0 10.16A4 4 0 1 1 12 8a4 4 0 0 1 0 8zm6.4-11.85a1.44 1.44 0 1 1 0 2.88 1.44 1.44 0 0 1 0-2.88z"/></svg>
+        Instagram'da Aç
+      </a>
+    </div>
+  `;
+  // Arka plan tıklayınca kapat
+  modal.addEventListener('click', igReelModalKapat);
+  document.body.appendChild(modal);
+  document.body.style.overflow = 'hidden';
 }
+
+function igReelModalKapat(){
+  const modal = document.getElementById('ig-reel-modal');
+  if(modal){
+    modal.remove();
+    document.body.style.overflow = '';
+  }
+}
+
+// ESC tuşu ile kapat
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape') igReelModalKapat();
+});
 
 // Tam render
 function igTumRender(){
