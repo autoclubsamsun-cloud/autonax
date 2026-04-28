@@ -724,30 +724,32 @@ svg{display:block;flex-shrink:0}
   .igbar .ig-profil-isim{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:clamp(11px,3.4vw,14px);font-weight:600;text-align:left;width:100%;display:block}
   .igbar .ig-profil-slogan{white-space:nowrap}
 
-  /* BIO ALANI — Sola hizalı, geniş alan, agresif küçük font */
+  /* BIO ALANI — ORTALI, geniş alan, agresif küçük font */
   /* Bio alanı kenardan kenara (negatif margin ile padding kazan) */
   .igbar .ig-bio{
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
     font-size:clamp(10px,3vw,13px);
-    text-align:left;
-    width:100%;
+    text-align:center;
+    width:100vw;
     display:block;
     padding-right:0;
-    margin-left:-86px; /* Avatar'ın altına da uzansın - ekstra alan kazan */
-    padding-left:0
+    margin-left:calc(-86px - 16px); /* Avatar ve gap'i sıfırla, ekrana kenardan kenara uzansın */
+    padding-left:14px;
+    padding-right:14px;
+    box-sizing:border-box
   }
-  /* "br" sonrası iller satırı - kendi satırında, tam sola hizalı, çok küçük */
+  /* "br" sonrası iller satırı - kendi satırında, ortalı, çok küçük */
   .igbar .ig-bio br{display:none}
   .igbar .ig-bio-iller{
     display:block;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
-    font-size:clamp(8.5px,2.5vw,11.5px);
+    font-size:clamp(7.5px,2.2vw,10.5px);
     margin-top:3px;
-    text-align:left;
+    text-align:center;
     width:100%
   }
   /* Bio emoji'yi de küçült */
