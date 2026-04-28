@@ -9281,13 +9281,25 @@ const IG_DEFAULT = {
 };
 
 // localStorage'dan oku (panelde yapılan değişiklikler)
+// Veri versiyonu - değişince eski cache geçersiz olur
+const IG_VERSION = '2026-04-28-v3';
+
 function igVeriOku(){
   try {
     const raw = localStorage.getItem('autonax_site_v1');
     if(!raw) return IG_DEFAULT;
     const sa = JSON.parse(raw);
+    // Versiyon farklıysa eski veriyi yok say
+    if(sa && sa._igVersion !== IG_VERSION){
+      // Eski veriyi temizle (sadece instagramEmbed kısmını)
+      try {
+        delete sa.instagramEmbed;
+        sa._igVersion = IG_VERSION;
+        localStorage.setItem('autonax_site_v1', JSON.stringify(sa));
+      } catch(e){}
+      return IG_DEFAULT;
+    }
     if(sa && sa.instagramEmbed && sa.instagramEmbed.aktif !== false){
-      // Default ile birleştir (eksik alan varsa default'tan al)
       const ie = sa.instagramEmbed;
       return {
         aktif: ie.aktif !== false,
@@ -9312,17 +9324,38 @@ function igVeriOku(){
 // Backend'den de çekmeye çalış (sayfa açılınca güncel veri)
 function igBackendCek(callback){
   fetch('/api/ayarlar?_t='+Date.now(), {credentials:'same-origin'})
-    .then(r => r.json())
-    .then(d => {
-      const sa = (d && d.data) || d;
-      if(sa && sa.instagramEmbed){
-        // localStorage'a yaz
+    .then(r => {
+      if(!r.ok){
+        // 401, 403, 500 gibi → backend down, eski cache de güvenilmez
+        // localStorage'taki instagramEmbed'i temizle, default'a düşsün
         try {
           const raw = localStorage.getItem('autonax_site_v1');
-          const cur = raw ? JSON.parse(raw) : {};
-          cur.instagramEmbed = sa.instagramEmbed;
-          localStorage.setItem('autonax_site_v1', JSON.stringify(cur));
+          if(raw){
+            const cur = JSON.parse(raw);
+            if(cur && cur.instagramEmbed){
+              delete cur.instagramEmbed;
+              cur._igVersion = IG_VERSION;
+              localStorage.setItem('autonax_site_v1', JSON.stringify(cur));
+            }
+          }
         } catch(e){}
+        return null;
+      }
+      return r.json();
+    })
+    .then(d => {
+      if(d){
+        const sa = (d && d.data) || d;
+        if(sa && sa.instagramEmbed){
+          // Backend'den geçerli veri geldi → localStorage'a yaz
+          try {
+            const raw = localStorage.getItem('autonax_site_v1');
+            const cur = raw ? JSON.parse(raw) : {};
+            cur.instagramEmbed = sa.instagramEmbed;
+            cur._igVersion = IG_VERSION;
+            localStorage.setItem('autonax_site_v1', JSON.stringify(cur));
+          } catch(e){}
+        }
       }
       if(callback) callback();
     })
