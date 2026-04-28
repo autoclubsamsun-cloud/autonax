@@ -9242,20 +9242,26 @@ function authCikis(){
    - Veri yoksa default değerler kullanılır (hiçbir şey bozulmaz)
 ════════════════════════════════════════════════════ */
 
-// Default veri (SITE_AYARLAR'da yoksa kullanılır)
+// Default veri - iPhone Safari localStorage temizliyor olsa bile çalışır
+// SITE_AYARLAR.instagramEmbed varsa onu kullanır, yoksa bunlar görünür
 const IG_DEFAULT = {
   aktif: true,
   profilUrl: 'https://www.instagram.com/autoclubsamsunmerkez/',
   kullaniciAdi: 'autoclubsamsunmerkez',
   tamIsim: 'Enes Koç',
   slogan: 'Autonax® Kaplama Sarrafı®',
-  profilResmi: '',
+  profilResmi: '/uploads/instagram/profil.jpg',
   bioMetin: "Karadeniz'in En Çok Tercih Edilen PPF Merkezi",
   bioIller: 'Samsun · Ordu · Giresun · Trabzon · Rize · Tokat · Amasya · Sinop',
   gonderiSayisi: '647',
   takipciSayisi: '17,7B',
   takipSayisi: '66',
-  reels: []
+  reels: [
+    {url:'https://www.instagram.com/reel/DCJvzdesVuG/', views:'1.9 Mn', label:''},
+    {url:'https://www.instagram.com/reel/DFsQ3LFsO9F/', views:'2.6 Mn', label:''},
+    {url:'https://www.instagram.com/reel/DXCfYGUAthG/', views:'2.5 Mn', label:''},
+    {url:'https://www.instagram.com/reel/DPRhN1bjB32/', views:'441 B',  label:''}
+  ]
 };
 
 // localStorage'dan oku (panelde yapılan değişiklikler)
