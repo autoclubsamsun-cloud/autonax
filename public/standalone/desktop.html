@@ -632,8 +632,9 @@ svg{display:block;flex-shrink:0}
 @supports not (aspect-ratio: 9/16){
   .ig-reel{height:0;padding-top:177.78%}
 }
-.ig-reel-embed-wrap{position:absolute;inset:0;width:100%;height:100%}
-.ig-reel-iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;background:transparent;display:block;pointer-events:none}
+.ig-reel-embed-wrap{position:absolute;inset:0;width:100%;height:100%;overflow:hidden}
+/* iframe'i hem yukarı hem aşağı uzat - üstteki "Profili Görüntüle" başlığı ve alttaki UI gizli, sadece video alanı görünür */
+.ig-reel-iframe{position:absolute;top:-54px;left:0;width:100%;height:calc(100% + 54px + 160px);border:0;background:transparent;display:block;pointer-events:none}
 
 /* Reel Modal - Tıklayınca tam ekran açılır */
 .ig-reel-modal{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px)}
