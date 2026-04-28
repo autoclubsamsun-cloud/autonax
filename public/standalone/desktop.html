@@ -756,20 +756,21 @@ svg{display:block;flex-shrink:0}
   .igbar .ig-bio-emoji{font-size:clamp(11px,3vw,13px)}
 }
 
-/* ══ IG AKSİYON BUTONLARI (Takip Et + Mesaj + İletişim) — Instagram tarzı ══ */
+/* ══ IG AKSİYON BUTONLARI (Takip Et + Mesaj + İletişim) — Instagram tarzı + MOBİL OPTİMİZE ══ */
 /* Eski username yanındaki Takip Et butonunu gizle (artık aksiyon barında var) */
 .igbar .ig-profil-ust .ig-takip-btn{display:none !important}
 .ig-aksiyon{display:flex;gap:8px;padding:10px 0 4px;margin:0}
 .ig-aksiyon-btn{
   flex:1;
   text-align:center;
-  padding:9px 12px;
+  padding:11px 12px;
+  min-height:44px; /* Apple HIG: tıklama alanı en az 44px */
   border-radius:8px;
   font-size:14px;
   font-weight:600;
   text-decoration:none;
   cursor:pointer;
-  transition:opacity .15s, background .15s;
+  transition:opacity .15s, background .15s, transform .08s;
   white-space:nowrap;
   font-family:'Outfit',sans-serif;
   display:flex;
@@ -777,17 +778,29 @@ svg{display:block;flex-shrink:0}
   justify-content:center;
   gap:6px;
   border:1px solid transparent;
-  box-sizing:border-box
+  box-sizing:border-box;
+  /* MOBİL OPTİMİZASYONLARI */
+  -webkit-tap-highlight-color:transparent; /* iOS gri tap kutusu kaldır */
+  -webkit-touch-callout:none; /* Uzun basınca menü çıkmasın */
+  -webkit-user-select:none;
+  user-select:none; /* Yazı seçilmesin */
+  touch-action:manipulation; /* 300ms tap gecikmesini ve double-tap zoom'u kaldır */
+  outline:none
 }
+/* Tıklama feedback'i — mobilde :active görünür */
+.ig-aksiyon-btn:active{transform:scale(.97);opacity:.9}
 .ig-aksiyon-takip{background:#0095f6;color:#fff !important}
 .ig-aksiyon-takip:hover{background:#1877f2}
+.ig-aksiyon-takip:active{background:#0077c4}
 .ig-aksiyon-mesaj{background:#efefef;color:var(--ink) !important}
 .ig-aksiyon-mesaj:hover{background:#dfdfdf}
+.ig-aksiyon-mesaj:active{background:#c5c5c5}
 .ig-aksiyon-iletisim{background:#efefef;color:var(--ink) !important}
 .ig-aksiyon-iletisim:hover{background:#dfdfdf}
+.ig-aksiyon-iletisim:active{background:#c5c5c5}
 @media (max-width:560px){
   .ig-aksiyon{padding:12px 0 4px;gap:6px}
-  .ig-aksiyon-btn{font-size:13px;padding:8px 6px}
+  .ig-aksiyon-btn{font-size:13px;padding:10px 6px;min-height:44px}
 }
 
 .plaka-sep{width:1px;height:24px;background:var(--bd);margin:0 4px;flex-shrink:0}
