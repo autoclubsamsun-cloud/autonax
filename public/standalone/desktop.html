@@ -9301,7 +9301,8 @@ function igVeriOku(){
         gonderiSayisi: ie.gonderiSayisi || IG_DEFAULT.gonderiSayisi,
         takipciSayisi: ie.takipciSayisi || IG_DEFAULT.takipciSayisi,
         takipSayisi: ie.takipSayisi || IG_DEFAULT.takipSayisi,
-        reels: (Array.isArray(ie.reels) && ie.reels.length) ? ie.reels.slice(0,4) : IG_DEFAULT.reels
+        // Reels: panelden gelen geçerli veri varsa onu kullan, yoksa default
+        reels: (Array.isArray(ie.reels) && ie.reels.length && ie.reels.some(r => r && r.url && r.url.trim())) ? ie.reels.slice(0,4) : IG_DEFAULT.reels
       };
     }
     return IG_DEFAULT;

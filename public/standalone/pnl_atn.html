@@ -5102,10 +5102,10 @@ var SITE_AYARLAR={
     takipciSayisi:'17,7B',
     takipSayisi:'66',
     reels:[
-      {url:'',views:'',label:''},
-      {url:'',views:'',label:''},
-      {url:'',views:'',label:''},
-      {url:'',views:'',label:''}
+      {url:'',thumb:'',views:'',label:''},
+      {url:'',thumb:'',views:'',label:''},
+      {url:'',thumb:'',views:'',label:''},
+      {url:'',thumb:'',views:'',label:''}
     ]
   },
   medya:[],
@@ -13416,7 +13416,7 @@ function saInstagramEmbedHTML(){
   }
   var ie=SITE_AYARLAR.instagramEmbed;
   if(!ie.reels) ie.reels=[];
-  while(ie.reels.length<4) ie.reels.push({url:'',views:'',label:''});
+  while(ie.reels.length<4) ie.reels.push({url:'',thumb:'',views:'',label:''});
 
   var IS='class="sa-inp"';
   var html='<div class="g2">';
@@ -13456,18 +13456,29 @@ function saInstagramEmbedHTML(){
 
   html+='<div class="mrk-galeri-grid">';
   for(var i=0;i<4;i++){
-    var r=ie.reels[i] || {url:'',views:'',label:''};
+    var r=ie.reels[i] || {url:'',thumb:'',views:'',label:''};
     var urlVal = esc(r.url||'');
+    var thumbVal = esc(r.thumb||'');
     var viewsVal = esc(r.views||'');
     var labelVal = esc(r.label||'');
 
     html+='<div class="mrk-foto-kutu" data-ie-r-idx="'+i+'">';
     html+='<div class="mrk-foto-kutu-lbl">REEL '+(i+1)+'</div>';
 
-    // Önizleme alanı
-    html+='<div data-ie-r-preview="'+i+'" class="mrk-foto-img" style="height:160px;background:#1a1a1a;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;border-radius:6px;margin-bottom:8px">';
-    html+= ieReelOnizle(r.url||'');
+    // Kapak resmi alanı (önizleme + dosya yükle)
+    html+='<div data-ie-r-thumb-prev="'+i+'" style="width:100%;height:140px;background:#1a1a1a center/cover;border-radius:6px;margin-bottom:6px;background-image:'+(thumbVal?'url(\''+thumbVal.replace(/\'/g,'%27')+'\')':'none')+';display:flex;align-items:center;justify-content:center;color:#888;font-size:11px;text-align:center">';
+    if(!thumbVal) html+='Kapak resmi yok<br><span style="font-size:10px">(Dosya seç)</span>';
     html+='</div>';
+
+    html+='<div style="display:flex;gap:6px;margin-bottom:8px">';
+    html+='<input type="file" accept="image/*" id="ie-r'+i+'-thumb-file" data-ie-r-thumb-file="'+i+'" style="display:none">';
+    html+='<button type="button" onclick="document.getElementById(\'ie-r'+i+'-thumb-file\').click()" style="flex:1;background:var(--r);color:#fff;border:0;padding:6px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer">📁 Kapak Resmi</button>';
+    if(thumbVal){
+      html+='<button type="button" onclick="ieReelThumbSil('+i+')" style="background:#fff;color:#dc2626;border:1px solid #dc2626;padding:6px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer" title="Kapak sil">✕</button>';
+    }
+    html+='</div>';
+    // Hidden input - kapak URL'sini saklar
+    html+='<input type="hidden" id="ie-r'+i+'-thumb" value="'+thumbVal+'">';
 
     // URL input
     html+='<input data-ie-r-url="'+i+'" id="ie-r'+i+'-url" value="'+urlVal+'" placeholder="https://www.instagram.com/reel/XXX/" '+IS+' style="font-size:13px" oninput="ieReelOnizlemeGuncelle('+i+')">';
@@ -13531,11 +13542,12 @@ function saInstagramEmbedKaydet(){
   ['profilUrl','kullaniciAdi','tamIsim','slogan','bioMetin','bioIller','gonderiSayisi','takipciSayisi','takipSayisi'].forEach(function(k){
     ie[k]=saG('ie-'+k)||'';
   });
-  // 4 Reel - sadece URL + İzlenme + Etiket (video alanı kaldırıldı, iframe embed kullanılıyor)
+  // 4 Reel - URL + Thumb + İzlenme + Etiket (iframe embed kullanılıyor)
   ie.reels=[];
   for(var i=0;i<4;i++){
     ie.reels.push({
       url:saG('ie-r'+i+'-url')||'',
+      thumb:saG('ie-r'+i+'-thumb')||'',
       views:saG('ie-r'+i+'-views')||'',
       label:saG('ie-r'+i+'-label')||''
     });
@@ -14261,7 +14273,91 @@ function saListenerBagla(tab){
         reader.readAsDataURL(file);
       });
     }
+
+    // 4 reel kapak resmi yükleme listener'ları
+    [0,1,2,3].forEach(function(idx){
+      var thumbInp=document.getElementById('ie-r'+idx+'-thumb-file');
+      if(thumbInp&&!thumbInp._l){
+        thumbInp._l=true;
+        thumbInp.addEventListener('change',function(e){
+          var file=e.target.files[0]; if(!file) return;
+          if(!file.type.startsWith('image/')){toast('Sadece resim!','red');return;}
+          if(file.size>5*1024*1024){toast('Max 5MB!','red');return;}
+          toast('⏳ Resim küçültülüyor...','blue');
+          // Canvas ile 270x480 (9:16 oran) küçült
+          var reader=new FileReader();
+          reader.onload=function(rev){
+            var img=new Image();
+            img.onload=function(){
+              try {
+                var targetW=270, targetH=480; // 9:16
+                var canvas=document.createElement('canvas');
+                canvas.width=targetW;
+                canvas.height=targetH;
+                var ctx=canvas.getContext('2d');
+                // 9:16 crop, ortala
+                var srcRatio=img.width/img.height;
+                var dstRatio=targetW/targetH;
+                var sx,sy,sw,sh;
+                if(srcRatio>dstRatio){
+                  sh=img.height;
+                  sw=img.height*dstRatio;
+                  sx=(img.width-sw)/2;
+                  sy=0;
+                } else {
+                  sw=img.width;
+                  sh=img.width/dstRatio;
+                  sx=0;
+                  sy=(img.height-sh)/2;
+                }
+                ctx.fillStyle='#000';
+                ctx.fillRect(0,0,targetW,targetH);
+                ctx.drawImage(img,sx,sy,sw,sh,0,0,targetW,targetH);
+                var smallBase64=canvas.toDataURL('image/jpeg',0.82);
+                ieReelThumbKaydet(idx,smallBase64);
+                var kb=Math.round(smallBase64.length/1024);
+                toast('✅ Kapak resmi kaydedildi ('+kb+' KB)','green');
+              } catch(err){toast('❌ Resim işlenemedi','red');}
+            };
+            img.onerror=function(){toast('❌ Resim okunamadı','red');};
+            img.src=rev.target.result;
+          };
+          reader.onerror=function(){toast('❌ Dosya okunamadı','red');};
+          reader.readAsDataURL(file);
+        });
+      }
+    });
   }
+}
+
+// Reel kapak resmini kaydet
+function ieReelThumbKaydet(idx,resimVeri){
+  if(!SITE_AYARLAR.instagramEmbed) SITE_AYARLAR.instagramEmbed={};
+  if(!SITE_AYARLAR.instagramEmbed.reels) SITE_AYARLAR.instagramEmbed.reels=[];
+  while(SITE_AYARLAR.instagramEmbed.reels.length<4){
+    SITE_AYARLAR.instagramEmbed.reels.push({url:'',thumb:'',views:'',label:''});
+  }
+  SITE_AYARLAR.instagramEmbed.reels[idx].thumb=resimVeri;
+  // Hidden input'a yaz
+  var hiddenInp=document.getElementById('ie-r'+idx+'-thumb');
+  if(hiddenInp) hiddenInp.value=resimVeri;
+  // Preview güncelle
+  var prev=document.querySelector('[data-ie-r-thumb-prev="'+idx+'"]');
+  if(prev){
+    prev.style.backgroundImage='url("'+resimVeri.replace(/"/g,'%22')+'")';
+    prev.innerHTML='';
+  }
+  siteAyarKaydet('Reel '+(idx+1)+' Kapak Resmi');
+}
+
+// Reel kapak resmini sil
+function ieReelThumbSil(idx){
+  if(!confirm('Reel '+(idx+1)+' kapak resmi silinsin mi?')) return;
+  if(SITE_AYARLAR.instagramEmbed && SITE_AYARLAR.instagramEmbed.reels && SITE_AYARLAR.instagramEmbed.reels[idx]){
+    SITE_AYARLAR.instagramEmbed.reels[idx].thumb='';
+  }
+  saSekmeRender('instagramEmbed');
+  siteAyarKaydet('Reel '+(idx+1)+' Kapak Resmi Silindi');
 }
 
 // Profil resmi kaydet (URL veya base64) - DRY
