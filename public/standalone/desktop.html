@@ -5723,31 +5723,9 @@ document.addEventListener('click',function(e){
   var btn=document.getElementById('hd-user-btn');
   if(btn&&!btn.contains(e.target))btn.classList.remove('open');
 });
-function authUIGuncelle(){
-  var user=AuthManager.getUser();
-  var ids_show=['hd-dd-info','hd-dd-sep','hd-dd-sep2','hd-dd-sep3','hd-dd-hesabim','hd-dd-garaj','hd-dd-cikis'];
-  var ids_hide=['hd-dd-giris','hd-dd-kayit'];
-  var label=document.getElementById('hd-user-label');
-  if(user){
-    if(label)label.textContent=user.ad;
-    var av=document.getElementById('hd-dd-avatar');if(av)av.textContent=user.avatar||user.ad[0]||'?';
-    var nm=document.getElementById('hd-dd-name');if(nm)nm.textContent=(user.ad+' '+(user.soyad||'')).trim();
-    var em=document.getElementById('hd-dd-email');if(em)em.textContent=user.email||'';
-    ids_show.forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='';});
-    ids_hide.forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
-    var cart=AuthManager.getCart();
-    if(cart.length&&typeof SEPET!=='undefined'){SEPET.items=cart;SEPET.updateBadge();}
-  } else {
-    if(label)label.textContent='Giriş Yap';
-    ids_show.forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
-    ids_hide.forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='';});
-  }
-}
-function authCikis(){
-  if(confirm('Çıkış yapmak istiyor musunuz?')){
-    AuthManager.logout();authUIGuncelle();closeUserMenu();
-  }
-}
+// authUIGuncelle ve authCikis aşağıda (satır 9580 civarı) tanımlı —
+// bu üst kopya kaldırıldı çünkü çift tanımlamada sonuncu kazanır,
+// drawer güncellemesi yapan asıl fonksiyon aşağıdaki.
 
 </script><script>
 /* ════════════════════════════════════════════════════
@@ -9621,6 +9599,8 @@ function authCikis(){
     AuthManager.logout();
     authUIGuncelle();
     closeUserMenu();
+    // Garantili temiz state için sayfayı yenile (kısa gecikme ile, logout API'nin tamamlanması için)
+    setTimeout(function(){ window.location.href = '/'; }, 200);
   }
 }
 </script>
