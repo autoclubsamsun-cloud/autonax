@@ -711,23 +711,47 @@ svg{display:block;flex-shrink:0}
 
 /* ══ IG PROFIL BAR — MOBIL TEK SATIR FIX ══
    Kullanıcı isteği: Tüm yazılar mobilde tek satırda kesinlikle kesilmeden görünsün.
-   Yöntem: clamp() ile ekran genişliğine göre otomatik küçülen font + nowrap.
+   Yöntem: clamp() ile ekran genişliğine göre otomatik küçülen font + nowrap + sola hizala.
    Mevcut kurallar değişmedi, sadece mobilde override. */
 @media (max-width:560px){
   /* Username - tek satır, taşmasın (flex item olarak shrink eder) */
-  .igbar .ig-username{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex-shrink:1;font-size:clamp(15px,4.4vw,18px)}
+  .igbar .ig-username{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex-shrink:1;font-size:clamp(15px,4.4vw,18px);text-align:left}
   /* Takip Et - inline, küçük, username ile aynı satırda */
   .igbar .ig-takip-btn{width:auto;padding:5px 14px;font-size:12px;margin-top:0;margin-left:auto;flex-shrink:0;white-space:nowrap}
   /* ig-profil-ust: yan yana hizala, satıra inmesin */
-  .igbar .ig-profil-ust{flex-wrap:nowrap;align-items:center;gap:6px}
-  /* İsim + slogan tek satır - clamp ile sığsın */
-  .igbar .ig-profil-isim{white-space:nowrap;overflow:hidden;font-size:clamp(11px,3.4vw,14px);font-weight:600}
+  .igbar .ig-profil-ust{flex-wrap:nowrap;align-items:center;gap:6px;justify-content:flex-start}
+  /* İsim + slogan tek satır - clamp ile sığsın, sola hizalı */
+  .igbar .ig-profil-isim{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:clamp(11px,3.4vw,14px);font-weight:600;text-align:left;width:100%;display:block}
   .igbar .ig-profil-slogan{white-space:nowrap}
-  /* Bio metni tek satır */
-  .igbar .ig-bio{white-space:nowrap;overflow:hidden;font-size:clamp(11px,3.3vw,13.5px)}
-  /* "br" sonrası iller satırı - inline'a çevir, tek satır */
+
+  /* BIO ALANI — Sola hizalı, geniş alan, agresif küçük font */
+  /* Bio alanı kenardan kenara (negatif margin ile padding kazan) */
+  .igbar .ig-bio{
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    font-size:clamp(10px,3vw,13px);
+    text-align:left;
+    width:100%;
+    display:block;
+    padding-right:0;
+    margin-left:-86px; /* Avatar'ın altına da uzansın - ekstra alan kazan */
+    padding-left:0
+  }
+  /* "br" sonrası iller satırı - kendi satırında, tam sola hizalı, çok küçük */
   .igbar .ig-bio br{display:none}
-  .igbar .ig-bio-iller{display:block;white-space:nowrap;overflow:hidden;font-size:clamp(9px,2.7vw,12.5px);margin-top:2px}
+  .igbar .ig-bio-iller{
+    display:block;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    font-size:clamp(8.5px,2.5vw,11.5px);
+    margin-top:3px;
+    text-align:left;
+    width:100%
+  }
+  /* Bio emoji'yi de küçült */
+  .igbar .ig-bio-emoji{font-size:clamp(11px,3vw,13px)}
 }
 
 .plaka-sep{width:1px;height:24px;background:var(--bd);margin:0 4px;flex-shrink:0}
