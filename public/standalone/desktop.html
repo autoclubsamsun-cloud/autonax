@@ -3857,8 +3857,8 @@ svg{display:block;flex-shrink:0}
           }
         } catch(e){}
 
-        // 2. Asıl kaynak: backend /api/ayarlar
-        fetch('/api/ayarlar?_t='+Date.now(), {credentials:'same-origin'})
+        // 2. Asıl kaynak: backend /api/ayarlar-public (login gerektirmez)
+        fetch('/api/ayarlar-public?_t='+Date.now(), {credentials:'same-origin'})
           .then(function(r){ return r.json(); })
           .then(function(d){
             var depo = (d && d.data && d.data.markalar_v1) || (d && d.markalar_v1) || null;
@@ -8232,8 +8232,8 @@ function siteAyarlariniCek() {
     if(raw) siteAyarlariniUygula(JSON.parse(raw));
   } catch(e) {}
   
-  // Sonra API'den güncel verileri çek
-  fetch('/api/ayarlar')
+  // Sonra API'den güncel verileri çek (public endpoint - login gerektirmez)
+  fetch('/api/ayarlar-public')
     .then(function(r){ return r.json(); })
     .then(function(res){
       var sa = null;
@@ -9308,9 +9308,9 @@ function igVeriOku(){
   } catch(e){ return IG_DEFAULT; }
 }
 
-// Backend'den de çekmeye çalış (sayfa açılınca güncel veri)
+// Backend'den de çekmeye çalış (sayfa açılınca güncel veri) — public endpoint, login gerektirmez
 function igBackendCek(callback){
-  fetch('/api/ayarlar?_t='+Date.now(), {credentials:'same-origin'})
+  fetch('/api/ayarlar-public?_t='+Date.now(), {credentials:'same-origin'})
     .then(r => {
       if(!r.ok) return null;
       return r.json();
