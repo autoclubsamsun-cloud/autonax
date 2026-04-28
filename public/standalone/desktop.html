@@ -9312,12 +9312,21 @@ function igVeriOku(){
 function igBackendCek(callback){
   fetch('/api/ayarlar?_t='+Date.now(), {credentials:'same-origin'})
     .then(r => {
-      if(!r.ok) return null; // 401, 500 vs - localStorage'a dokunma
+      if(!r.ok) return null;
       return r.json();
     })
-    .then(d => {
-      if(d){
-        const sa = (d && d.data) || d;
+    .then(res => {
+      if(res){
+        // Panel'in kaydettiği yapı: {success: true, site_ayarlar: {... instagramEmbed: ...}}
+        // siteAyarlariniCek ile aynı yapıyı kullan
+        let sa = null;
+        if(res.success && res.site_ayarlar){
+          sa = res.site_ayarlar;
+        } else if(res.data){
+          sa = res.data;
+        } else if(res.instagramEmbed){
+          sa = res; // Düz yapı
+        }
         if(sa && sa.instagramEmbed){
           // Backend'den geçerli veri geldi → localStorage'a yaz
           try {
