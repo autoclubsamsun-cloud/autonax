@@ -555,8 +555,8 @@ body::before{
       </h1>
       <p class="hero-sub">
         Değerli müşterilerimize teşekkür için <strong>indirim hediyeleri</strong> hazırladık.
-        Üye olduktan sonra çarkı <strong>3 kez</strong> çevirebilir, kuponlarınızı anında alırsınız.
-        <strong>Her katılımcı bir hediye kazanır.</strong>
+        Üye olduktan sonra çarkı <strong>3 kez</strong> çevirme hakkınız var.
+        Şansınızı bulduğunuz turda hediyenizi anında alırsınız.
       </p>
     </div>
   </div>
@@ -626,21 +626,23 @@ body::before{
 
       <!-- Sonuç ekranı -->
       <div class="sonuc" id="sonuc">
-        <div class="sonuc-tebrik">🎉 Tebrikler, Kazandın</div>
+        <div class="sonuc-tebrik" id="sonuc-tebrik">🎉 Tebrikler, Kazandınız</div>
         <h3 class="sonuc-baslik" id="sonuc-baslik">— —</h3>
         <p class="sonuc-aciklama" id="sonuc-aciklama">— —</p>
-        <div class="sonuc-kupon">
-          <span id="sonuc-kupon-kod">AUTONAX-XXXX</span>
-          <button class="kupon-kopyala" id="kupon-kopyala">Kopyala</button>
+        <div id="sonuc-kupon-wrap">
+          <div class="sonuc-kupon">
+            <span id="sonuc-kupon-kod">AUTONAX-XXXX</span>
+            <button class="kupon-kopyala" id="kupon-kopyala">Kopyala</button>
+          </div>
         </div>
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-          <button class="sonuc-cta" id="tekrar-cevir-btn" style="display:none;background:linear-gradient(135deg,#D4A24C,#8B6F2D);color:#0A0A0A">
-            🎡 Tekrar Çevir
-            <span style="opacity:.7;margin-left:4px" id="tekrar-kalan-hak">(2 hak)</span>
-          </button>
           <a href="/standalone/hesabim.html" class="sonuc-cta" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:var(--w);box-shadow:none">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             Hediyelerim
+          </a>
+          <a href="/" class="sonuc-cta">
+            Randevu Al
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </a>
         </div>
       </div>
@@ -718,10 +720,10 @@ body::before{
     <div class="sss-list">
       <div class="sss">
         <div class="sss-soru">
-          Çarkta gerçekten boş dilim yok mu?
+          Çarkta hangi hediyeler var?
           <div class="sss-ikon"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></div>
         </div>
-        <div class="sss-cevap">Evet, çarkın 6 dilimi de indirim hediyesi. Hiçbir dilim boş değildir. Her katılımcı çarkı çevirdiğinde mutlaka bir indirim kazanır. Sadece kazanılan indirimin oranı çarka göre değişir (%5'ten %35'e kadar).</div>
+        <div class="sss-cevap">Çarkımızda 3 farklı indirim oranı var: %5, %10 ve %15. Bunun yanında "Tekrar Deneyin" dilimleri de bulunmaktadır. 3 çevirme hakkınızdan birinde hediyenizi mutlaka kazanırsınız.</div>
       </div>
       <div class="sss">
         <div class="sss-soru">
@@ -732,10 +734,10 @@ body::before{
       </div>
       <div class="sss">
         <div class="sss-soru">
-          Birden fazla kez çevirebilir miyim?
+          Kaç kez çevirebilirim?
           <div class="sss-ikon"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></div>
         </div>
-        <div class="sss-cevap">Evet, her üye çarkı toplam <strong>3 kez</strong> çevirebilir. Her çevirmede yeni bir kupon kazanırsınız. Aynı oran tekrar çıksa da kupon kodları farklı olur. 3 hak bittikten sonra çevirme sona erer.</div>
+        <div class="sss-cevap">Her üyenin <strong>3 çevirme hakkı</strong> vardır. Hediye kazandığınız anda çark durur, kalan haklarınızı kullanamazsınız. Hediye kazandığınız tur şanstır — bazen ilk hakta, bazen son hakta çıkabilir.</div>
       </div>
       <div class="sss">
         <div class="sss-soru">
@@ -783,23 +785,26 @@ body::before{
 <script>
 (function(){
   // ════════════════════════════════════════════
-  // ÖDÜLLER (görsel için - 6 dilim çark)
-  // Backend gerçek olasılıkları kontrol eder.
-  // Burada sadece çarkın görsel olarak doğru dilimde durması için lazım.
+  // ÇARK DİLİMLERİ (görsel - 6 dilim)
+  // 3 ödül dilimi + 3 "Tekrar Dene" dilimi
+  // Backend gerçek sonucu belirler, çark sadece görsel
   // ════════════════════════════════════════════
   var ODULLER = [
-    { yuzde:5,  renk:'#444',    yazi:'%5\nİNDİRİM',   yazi_renk:'#fff' },
-    { yuzde:10, renk:'#3A5A8C', yazi:'%10\nİNDİRİM',  yazi_renk:'#fff' },
-    { yuzde:5,  renk:'#666',    yazi:'%5\nİNDİRİM',   yazi_renk:'#fff' },
-    { yuzde:15, renk:'#D4A24C', yazi:'%15\nBÜYÜK',    yazi_renk:'#0A0A0A' },
-    { yuzde:5,  renk:'#2D8B6A', yazi:'%5\nİNDİRİM',   yazi_renk:'#fff' },
-    { yuzde:10, renk:'#7B2D8B', yazi:'%10\nİNDİRİM',  yazi_renk:'#fff' }
+    { tip:'odul',   yuzde:5,  renk:'#444',    yazi:'%5\nİNDİRİM',  yazi_renk:'#fff' },
+    { tip:'tekrar', yuzde:0,  renk:'#1F1F1F', yazi:'TEKRAR\nDENE',  yazi_renk:'#888' },
+    { tip:'odul',   yuzde:10, renk:'#3A5A8C', yazi:'%10\nİNDİRİM', yazi_renk:'#fff' },
+    { tip:'tekrar', yuzde:0,  renk:'#1F1F1F', yazi:'TEKRAR\nDENE',  yazi_renk:'#888' },
+    { tip:'odul',   yuzde:15, renk:'#D4A24C', yazi:'%15\nBÜYÜK',    yazi_renk:'#0A0A0A' },
+    { tip:'tekrar', yuzde:0,  renk:'#1F1F1F', yazi:'TEKRAR\nDENE',  yazi_renk:'#888' }
   ];
-  // Yüzde → çarkta hangi dilim göstereceğiz (görsel mantık)
+  // Backend dönüşüne göre hangi dilimde duracağını seç
+  // - Kazandıysa: o yüzdedeki ödül dilimi
+  // - Tekrar dene: 3 "tekrar dene" diliminden rastgele biri
   var YUZDE_DILIM = {
-    5:  [0, 2, 4],  // 3 farklı %5 dilimi (rastgele biri)
-    10: [1, 5],     // 2 farklı %10 dilimi
-    15: [3]         // 1 tane %15 dilimi
+    5:  [0],      // %5 dilimi
+    10: [2],      // %10 dilimi
+    15: [4],      // %15 dilimi
+    0:  [1, 3, 5] // tekrar dene dilimleri
   };
 
   var DILIM_SAYISI = ODULLER.length;
@@ -906,22 +911,22 @@ body::before{
     } catch(e){
       donuyor = false;
       btn.classList.remove('disabled');
-      btn.querySelector('.cm-buyuk').textContent = 'TEKRAR DENE';
-      btn.querySelector('.cm-kucuk').textContent = '⚠';
+      btn.querySelector('.cm-buyuk').textContent = 'ÇEVİR';
+      btn.querySelector('.cm-kucuk').textContent = 'TEKRAR DENE';
       alert('Bağlantı hatası. Lütfen tekrar deneyin.');
       return;
     }
 
     if(!sonuc.success){
       donuyor = false;
-      btn.classList.remove('disabled');
+      btn.classList.add('disabled');
       if(sonuc.kalan_hak === 0){
-        btn.querySelector('.cm-buyuk').textContent = 'BİTTİ';
-        btn.querySelector('.cm-kucuk').textContent = 'HAK YOK';
-        btn.classList.add('disabled');
+        btn.querySelector('.cm-buyuk').textContent = 'KULLANILDI';
+        btn.querySelector('.cm-kucuk').textContent = '✓';
       } else {
-        btn.querySelector('.cm-buyuk').textContent = 'TEKRAR DENE';
-        btn.querySelector('.cm-kucuk').textContent = '⚠';
+        btn.classList.remove('disabled');
+        btn.querySelector('.cm-buyuk').textContent = 'ÇEVİR';
+        btn.querySelector('.cm-kucuk').textContent = 'TEKRAR DENE';
       }
       alert(sonuc.error || 'Bir hata oluştu');
       return;
@@ -946,50 +951,69 @@ body::before{
 
     setTimeout(function(){
       svg.classList.remove('donuyor');
-      gosterSonuc(sonuc.odul, sonuc.kalan_hak);
+      gosterSonuc(sonuc.odul, sonuc.kalan_hak, sonuc.kazandi);
     }, 5000);
   }
 
   // ════════════════════════════════════════════
   // SONUCU GÖSTER
   // ════════════════════════════════════════════
-  function gosterSonuc(odul, kalanHak){
-    var basliklar = {
-      5:  '%5 İndirim Kazandınız',
-      10: '%10 İndirim Kazandınız',
-      15: '%15 BÜYÜK ÖDÜL!'
-    };
-    var aciklamalar = {
-      5:  'Tüm hizmetlerimizde geçerli %5 indirim kuponunuz hesabınıza işlendi.',
-      10: 'Süper! Tüm hizmetlerimizde geçerli %10 indirim kuponunuz hesabınıza işlendi.',
-      15: 'Tebrikler! Çarkımızın en büyük hediyesi olan %15 indirim kuponunu kazandınız.'
-    };
-
-    document.getElementById('sonuc-baslik').textContent = basliklar[odul.yuzde] || odul.isim;
-    document.getElementById('sonuc-aciklama').textContent = aciklamalar[odul.yuzde] || '';
-    document.getElementById('sonuc-kupon-kod').textContent = odul.kupon;
-
-    // Tekrar çevir butonu
-    var tekrarBtn = document.getElementById('tekrar-cevir-btn');
+  function gosterSonuc(odul, kalanHak, kazandi){
     var btn = document.getElementById('cark-cevir-btn');
 
-    if(kalanHak > 0){
-      tekrarBtn.style.display = '';
-      document.getElementById('tekrar-kalan-hak').textContent = '('+kalanHak+' hak kaldı)';
-      btn.classList.remove('disabled');
-      btn.querySelector('.cm-buyuk').textContent = 'TEKRAR ÇEVİR';
-      btn.querySelector('.cm-kucuk').textContent = kalanHak + ' HAK KALDI';
-    } else {
-      tekrarBtn.style.display = 'none';
-      btn.querySelector('.cm-buyuk').textContent = 'BİTTİ';
-      btn.querySelector('.cm-kucuk').textContent = 'TÜM HAKLAR KULLANILDI';
+    if(kazandi){
+      // KAZANDI! Gerçek kupon
+      var basliklar = {
+        5:  '%5 İndirim Kazandınız!',
+        10: '%10 İndirim Kazandınız!',
+        15: '%15 BÜYÜK ÖDÜL!'
+      };
+      var aciklamalar = {
+        5:  'Tüm hizmetlerimizde geçerli %5 indirim kuponunuz hesabınıza işlendi.',
+        10: 'Süper! Tüm hizmetlerimizde geçerli %10 indirim kuponunuz hesabınıza işlendi.',
+        15: 'Tebrikler! Çarkımızın en büyük hediyesi olan %15 indirim kuponunu kazandınız.'
+      };
+
+      document.getElementById('sonuc-tebrik').textContent = '🎉 Tebrikler, Kazandınız';
+      document.getElementById('sonuc-baslik').textContent = basliklar[odul.yuzde] || odul.isim;
+      document.getElementById('sonuc-aciklama').textContent = aciklamalar[odul.yuzde] || '';
+      document.getElementById('sonuc-kupon-kod').textContent = odul.kupon;
+      document.getElementById('sonuc-kupon-wrap').style.display = '';
+
+      // Çarkı kapat (kazandı, daha çeviremez)
+      btn.querySelector('.cm-buyuk').textContent = 'KAZANDINIZ';
+      btn.querySelector('.cm-kucuk').textContent = '✓';
       btn.classList.add('disabled');
+
+      konfetiAt();
+    } else {
+      // KAZANAMADI - Tekrar deneyin
+      document.getElementById('sonuc-tebrik').textContent = '🎯 Tekrar Deneyin';
+      document.getElementById('sonuc-baslik').textContent = kalanHak > 0 ? 'Bu Sefer Olmadı' : 'Hediye Çıkmadı';
+
+      if(kalanHak > 0){
+        document.getElementById('sonuc-aciklama').textContent =
+          'Şansınızı tekrar deneyin! ' + kalanHak + ' hakkınız daha var.';
+
+        btn.classList.remove('disabled');
+        btn.querySelector('.cm-buyuk').textContent = 'TEKRAR ÇEVİR';
+        btn.querySelector('.cm-kucuk').textContent = kalanHak + ' HAK KALDI';
+      } else {
+        document.getElementById('sonuc-aciklama').textContent =
+          'Maalesef bu sefer hediye çıkmadı. Bizi takip etmeye devam edin, yeni kampanyalar sizi bekliyor!';
+
+        btn.querySelector('.cm-buyuk').textContent = 'BİTTİ';
+        btn.querySelector('.cm-kucuk').textContent = '✗';
+        btn.classList.add('disabled');
+      }
+
+      // Kupon yok, gizle
+      document.getElementById('sonuc-kupon-wrap').style.display = 'none';
     }
 
     document.getElementById('sonuc').classList.add('aktif');
     document.getElementById('sonuc').scrollIntoView({behavior:'smooth',block:'center'});
 
-    konfetiAt();
     donuyor = false;
   }
 
@@ -1037,14 +1061,6 @@ body::before{
     document.body.removeChild(ta);
   }
 
-  // Tekrar çevir butonuna tıklayınca aynı çevir fonksiyonu
-  document.getElementById('tekrar-cevir-btn').addEventListener('click', function(){
-    document.getElementById('sonuc').classList.remove('aktif');
-    setTimeout(cark_cevir, 300);
-    // Sayfayı yukarı kaydır
-    document.getElementById('cark').scrollIntoView({behavior:'smooth',block:'start'});
-  });
-
   // ════════════════════════════════════════════
   // SAYFA YÜKLENDİĞİNDE: KULLANICI DURUMU KONTROL
   // ════════════════════════════════════════════
@@ -1085,42 +1101,44 @@ body::before{
     kilitGizle();
     var btn = document.getElementById('cark-cevir-btn');
 
-    if(durum.kalan_hak <= 0){
-      // Hakları bitmiş — son sonucu göster
+    // Senaryo 1: Kazandı zaten
+    if(durum.kazanildi){
       btn.classList.add('disabled');
-      btn.querySelector('.cm-buyuk').textContent = 'BİTTİ';
-      btn.querySelector('.cm-kucuk').textContent = 'HAK YOK';
+      btn.querySelector('.cm-buyuk').textContent = 'KAZANDINIZ';
+      btn.querySelector('.cm-kucuk').textContent = '✓';
 
-      // Son kazanılan hediyeyi göster
       if(durum.kayitlar && durum.kayitlar.length > 0){
         var son = durum.kayitlar[0];
-        var basliklar = {5:'%5 İndirim', 10:'%10 İndirim', 15:'%15 Büyük Ödül'};
+        var basliklar = {5:'%5 İndirim Kazandınız!', 10:'%10 İndirim Kazandınız!', 15:'%15 BÜYÜK ÖDÜL!'};
+        document.getElementById('sonuc-tebrik').textContent = '🎉 Tebrikler, Kazandınız';
         document.getElementById('sonuc-baslik').textContent = basliklar[son.odul_yuzde] || ('%'+son.odul_yuzde+' İndirim');
-        document.getElementById('sonuc-aciklama').textContent = 'Tüm haklarınızı kullandınız. En son kazandığınız kupon aşağıda. Hediyelerim sayfasından tüm kuponlarınızı görebilirsiniz.';
+        document.getElementById('sonuc-aciklama').textContent = 'Kazandığınız kupon aşağıda. Hediyelerim sayfasından da görebilirsiniz.';
         document.getElementById('sonuc-kupon-kod').textContent = son.kupon_kod;
-        document.getElementById('tekrar-cevir-btn').style.display = 'none';
+        document.getElementById('sonuc-kupon-wrap').style.display = '';
         document.getElementById('sonuc').classList.add('aktif');
       }
       return;
     }
 
-    // Aktif - çevirmeye hazır
+    // Senaryo 2: Tüm hakları kullanmış ama kazanamamış (3 kez "tekrar dene")
+    if(durum.kalan_hak <= 0){
+      btn.classList.add('disabled');
+      btn.querySelector('.cm-buyuk').textContent = 'BİTTİ';
+      btn.querySelector('.cm-kucuk').textContent = '✗';
+
+      document.getElementById('sonuc-tebrik').textContent = '🎯 Çark Bitti';
+      document.getElementById('sonuc-baslik').textContent = 'Hediye Çıkmadı';
+      document.getElementById('sonuc-aciklama').textContent = 'Maalesef bu sefer hediye çıkmadı. Bizi takip etmeye devam edin, yeni kampanyalar sizi bekliyor!';
+      document.getElementById('sonuc-kupon-wrap').style.display = 'none';
+      document.getElementById('sonuc').classList.add('aktif');
+      return;
+    }
+
+    // Senaryo 3: Aktif çevirme hakkı var
     btn.classList.remove('disabled');
     btn.querySelector('.cm-buyuk').textContent = 'ÇEVİR';
     btn.querySelector('.cm-kucuk').textContent = durum.kalan_hak + ' HAK';
     btn.addEventListener('click', cark_cevir);
-
-    // Eğer önceki kazançları varsa son kazancı göster (zorunlu değil)
-    if(durum.kayitlar && durum.kayitlar.length > 0){
-      var son = durum.kayitlar[0];
-      var basliklar = {5:'%5 İndirim', 10:'%10 İndirim', 15:'%15 Büyük Ödül'};
-      document.getElementById('sonuc-baslik').textContent = basliklar[son.odul_yuzde] || ('%'+son.odul_yuzde+' İndirim');
-      document.getElementById('sonuc-aciklama').textContent = 'Önceki kazandığınız kupon aşağıda. '+durum.kalan_hak+' çevirme hakkınız daha var.';
-      document.getElementById('sonuc-kupon-kod').textContent = son.kupon_kod;
-      document.getElementById('tekrar-cevir-btn').style.display = '';
-      document.getElementById('tekrar-kalan-hak').textContent = '('+durum.kalan_hak+' hak)';
-      document.getElementById('sonuc').classList.add('aktif');
-    }
   }
 
   basla();
