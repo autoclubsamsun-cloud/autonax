@@ -5307,6 +5307,22 @@ svg{display:block;flex-shrink:0}
 
 </style>
 
+<!-- ROBOT MODAL — MOBIL FIX (sadece <=560px). Mevcut kurallar değişmedi, sadece mobilde override -->
+<style>
+@media (max-width:560px){
+  /* Overlay'in dvh kullanması için (Chrome mobil URL bar fix) */
+  #robot-ovl{padding:12px}
+  @supports (height:100dvh){
+    #robot-ovl{height:100dvh}
+  }
+  /* Modal max-height'ı dvh'ye göre ayarla — başlık URL bar'ının arkasına gizlenmesin */
+  #robot-modal{max-height:calc(100vh - 24px)}
+  @supports (height:100dvh){
+    #robot-modal{max-height:calc(100dvh - 24px)}
+  }
+}
+</style>
+
 <!-- MODAL HTML -->
 <div id="robot-ovl">
   <div id="robot-modal">
