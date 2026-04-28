@@ -646,18 +646,8 @@ svg{display:block;flex-shrink:0}
 .ig-reel-modal-kapat:hover{background:rgba(0,0,0,.85)}
 .ig-reel-modal-instagram{position:absolute;bottom:-46px;left:50%;transform:translateX(-50%);background:linear-gradient(45deg,#feda75,#fa7e1e,#d62976,#962fbf);color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(0,0,0,.3);white-space:nowrap}
 @media (max-width:560px){
-  /* Mobilde: dvh kullan (Chrome URL bar'ı için), üstten hizala (taşma olmasın), kapat butonunu modal'a fixed bağla */
-  .ig-reel-modal{padding:60px 12px 70px;align-items:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch}
-  /* dvh destekleyen tarayıcılarda 100dvh, eski tarayıcılarda fallback */
-  @supports (height:100dvh){
-    .ig-reel-modal{height:100dvh}
-  }
-  .ig-reel-modal-icerik{max-width:none;height:calc(100vh - 130px);max-height:none}
-  @supports (height:100dvh){
-    .ig-reel-modal-icerik{height:calc(100dvh - 130px)}
-  }
-  /* Kapat butonu: modal'ın (overlay'in) sağ-üstüne sabitlen, scroll yapsa bile yerinde kalsın */
-  .ig-reel-modal-kapat{position:fixed;top:14px;right:14px;width:42px;height:42px;font-size:22px;background:rgba(0,0,0,.85);z-index:100000}
+  .ig-reel-modal{padding:16px 12px 70px}
+  .ig-reel-modal-icerik{max-width:none;height:calc(100vh - 100px);max-height:none}
 }
 .ig-reel-embed-wrap.reel-ig-bg{background:linear-gradient(135deg,#f09433 0%,#e6683c 20%,#dc2743 45%,#cc2366 70%,#bc1888 100%)}
 .ig-reel-embed-wrap.reel-tt-bg{background:linear-gradient(135deg,#25f4ee 0%,#000 50%,#fe2c55 100%)}
@@ -707,100 +697,6 @@ svg{display:block;flex-shrink:0}
   .ig-reels{grid-template-columns:repeat(3,1fr);gap:3px;max-width:none;margin:4px 0 0}
   .ig-reel{border-radius:4px}
   .ig-reels .ig-reel:nth-child(4){display:none}
-}
-
-/* ══ IG PROFIL BAR — MOBIL TEK SATIR FIX ══
-   Kullanıcı isteği: Tüm yazılar mobilde tek satırda kesinlikle kesilmeden görünsün.
-   Yöntem: clamp() ile ekran genişliğine göre otomatik küçülen font + nowrap + sola hizala.
-   Mevcut kurallar değişmedi, sadece mobilde override. */
-@media (max-width:560px){
-  /* Username - tek satır, tam genişlik (artık Takip Et yanında değil) */
-  .igbar .ig-username{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;font-size:clamp(15px,4.4vw,18px);text-align:left;max-width:100%}
-  /* Takip Et - kullanıcı adının ALTINDA, küçük buton (önceki gibi tam ekran değil) */
-  .igbar .ig-takip-btn{width:auto;padding:6px 22px;font-size:12.5px;font-weight:600;border-radius:8px;margin-top:6px;margin-left:0;display:inline-block;text-align:center;flex-shrink:0;white-space:nowrap;align-self:flex-start}
-  /* ig-profil-ust: username + verified yan yana, takip et alta düşsün */
-  .igbar .ig-profil-ust{flex-wrap:wrap;align-items:center;gap:6px;justify-content:flex-start}
-  /* İsim + slogan tek satır - clamp ile sığsın, sola hizalı */
-  .igbar .ig-profil-isim{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:clamp(11px,3.4vw,14px);font-weight:600;text-align:left;width:100%;display:block}
-  .igbar .ig-profil-slogan{white-space:nowrap}
-
-  /* BIO ALANI — ORTALI, geniş alan, agresif küçük font */
-  /* Bio alanı kenardan kenara (negatif margin ile padding kazan) */
-  .igbar .ig-bio{
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    font-size:clamp(10px,3vw,13px);
-    text-align:center;
-    width:100vw;
-    display:block;
-    padding-right:0;
-    margin-left:calc(-86px - 16px); /* Avatar ve gap'i sıfırla, ekrana kenardan kenara uzansın */
-    padding-left:14px;
-    padding-right:14px;
-    box-sizing:border-box
-  }
-  /* "br" sonrası iller satırı - kendi satırında, ortalı, çok küçük */
-  .igbar .ig-bio br{display:none}
-  .igbar .ig-bio-iller{
-    display:block;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    font-size:clamp(7.5px,2.2vw,10.5px);
-    margin-top:3px;
-    text-align:center;
-    width:100%
-  }
-  /* Bio emoji'yi de küçült */
-  .igbar .ig-bio-emoji{font-size:clamp(11px,3vw,13px)}
-}
-
-/* ══ IG AKSİYON BUTONLARI (Takip Et + Mesaj + İletişim) — Instagram tarzı + MOBİL OPTİMİZE ══ */
-/* Eski username yanındaki Takip Et butonunu gizle (artık aksiyon barında var) */
-.igbar .ig-profil-ust .ig-takip-btn{display:none !important}
-.ig-aksiyon{display:flex;gap:8px;padding:10px 0 4px;margin:0}
-.ig-aksiyon-btn{
-  flex:1;
-  text-align:center;
-  padding:11px 12px;
-  min-height:44px; /* Apple HIG: tıklama alanı en az 44px */
-  border-radius:8px;
-  font-size:14px;
-  font-weight:600;
-  text-decoration:none;
-  cursor:pointer;
-  transition:opacity .15s, background .15s, transform .08s;
-  white-space:nowrap;
-  font-family:'Outfit',sans-serif;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  border:1px solid transparent;
-  box-sizing:border-box;
-  /* MOBİL OPTİMİZASYONLARI */
-  -webkit-tap-highlight-color:transparent; /* iOS gri tap kutusu kaldır */
-  -webkit-touch-callout:none; /* Uzun basınca menü çıkmasın */
-  -webkit-user-select:none;
-  user-select:none; /* Yazı seçilmesin */
-  touch-action:manipulation; /* 300ms tap gecikmesini ve double-tap zoom'u kaldır */
-  outline:none
-}
-/* Tıklama feedback'i — mobilde :active görünür */
-.ig-aksiyon-btn:active{transform:scale(.97);opacity:.9}
-.ig-aksiyon-takip{background:#0095f6;color:#fff !important}
-.ig-aksiyon-takip:hover{background:#1877f2}
-.ig-aksiyon-takip:active{background:#0077c4}
-.ig-aksiyon-mesaj{background:#efefef;color:var(--ink) !important}
-.ig-aksiyon-mesaj:hover{background:#dfdfdf}
-.ig-aksiyon-mesaj:active{background:#c5c5c5}
-.ig-aksiyon-iletisim{background:#efefef;color:var(--ink) !important}
-.ig-aksiyon-iletisim:hover{background:#dfdfdf}
-.ig-aksiyon-iletisim:active{background:#c5c5c5}
-@media (max-width:560px){
-  .ig-aksiyon{padding:12px 0 4px;gap:6px}
-  .ig-aksiyon-btn{font-size:13px;padding:10px 6px;min-height:44px}
 }
 
 .plaka-sep{width:1px;height:24px;background:var(--bd);margin:0 4px;flex-shrink:0}
@@ -2586,13 +2482,387 @@ svg{display:block;flex-shrink:0}
   </div>
 </div>
 
+<!-- ════════════════════════════════════════════════════════ -->
+<!--   KAMPANYA BANNER + FLOATING BUTON                       -->
+<!-- ════════════════════════════════════════════════════════ -->
+<style>
+/* ═══ KAMPANYA BANNER ═══ */
+.kampanya-banner{
+  position:relative;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(212,162,76,.18) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 50%, rgba(176,28,46,.22) 0%, transparent 60%),
+    linear-gradient(135deg, #1a0a0a 0%, #0d0508 50%, #1a0a05 100%);
+  border-bottom:1px solid rgba(212,162,76,.25);
+  overflow:hidden;
+  cursor:pointer;
+  transition:filter .25s;
+  display:block;
+  text-decoration:none;
+  color:inherit;
+}
+.kampanya-banner:hover{filter:brightness(1.15)}
+.kampanya-banner::before{
+  content:'';
+  position:absolute;top:0;left:-100%;
+  width:30%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);
+  animation:bnShine 5s infinite;
+  pointer-events:none;
+}
+@keyframes bnShine{0%{left:-100%}40%{left:130%}100%{left:130%}}
+
+.kb-inner{
+  max-width:1240px;margin:0 auto;
+  padding:14px 24px;
+  display:flex;align-items:center;gap:18px;
+  position:relative;z-index:2;
+}
+.kb-cark{
+  flex-shrink:0;
+  width:52px;height:52px;
+  position:relative;
+}
+.kb-cark-svg{
+  width:100%;height:100%;
+  animation:kbSpin 8s linear infinite;
+  filter:drop-shadow(0 0 8px rgba(212,162,76,.5));
+}
+@keyframes kbSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+.kb-metin{flex:1;min-width:0}
+.kb-baslik{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:21px;letter-spacing:2.5px;
+  background:linear-gradient(135deg,#E8C474,#D4A24C 50%,#B01C2E);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  line-height:1;margin-bottom:3px;
+}
+.kb-baslik .kb-emoji{
+  -webkit-text-fill-color:initial;
+  background:none;
+  margin-right:6px;
+  font-size:18px;
+  vertical-align:middle;
+}
+.kb-alt{
+  font-family:'Outfit',sans-serif;
+  font-size:12.5px;color:#bbb;
+  letter-spacing:.3px;font-weight:500;
+}
+.kb-alt strong{color:#E8C474;font-weight:700}
+
+.kb-cta{
+  flex-shrink:0;
+  display:inline-flex;align-items:center;gap:8px;
+  padding:11px 22px;
+  background:linear-gradient(135deg,#B01C2E,#8A1522);
+  color:#fff;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:13px;letter-spacing:2px;
+  border-radius:100px;
+  box-shadow:0 6px 20px rgba(176,28,46,.5),inset 0 1px 0 rgba(255,255,255,.2);
+  transition:transform .2s,box-shadow .2s;
+  white-space:nowrap;
+}
+.kampanya-banner:hover .kb-cta{
+  transform:translateY(-1px);
+  box-shadow:0 10px 24px rgba(176,28,46,.65),inset 0 1px 0 rgba(255,255,255,.2);
+}
+.kb-cta svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5}
+
+.kb-kapat{
+  position:absolute;top:8px;right:14px;
+  width:26px;height:26px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;
+  color:rgba(255,255,255,.4);
+  background:transparent;border:0;cursor:pointer;
+  font-size:18px;line-height:1;
+  transition:.2s;
+  z-index:3;
+}
+.kb-kapat:hover{color:#fff;background:rgba(255,255,255,.1)}
+
+/* ═══ FLOATING BUTON ═══ */
+.kampanya-fab{
+  position:fixed;
+  right:24px;bottom:24px;
+  z-index:9998;
+  display:none;
+  text-decoration:none;
+  animation:fabIn .5s cubic-bezier(.2,.8,.2,1) .3s both;
+}
+@keyframes fabIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.kampanya-fab.aktif{display:block}
+
+.fab-inner{
+  display:flex;align-items:center;gap:0;
+  background:linear-gradient(135deg,#1a0a0a,#0d0508);
+  border:1px solid rgba(212,162,76,.4);
+  border-radius:100px;
+  padding:8px 8px 8px 8px;
+  box-shadow:
+    0 12px 32px rgba(0,0,0,.5),
+    0 0 0 1px rgba(212,162,76,.15),
+    inset 0 1px 0 rgba(255,255,255,.05);
+  transition:transform .25s,box-shadow .25s;
+  overflow:hidden;
+  position:relative;
+}
+.fab-inner::before{
+  content:'';
+  position:absolute;top:0;left:-100%;
+  width:50%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(212,162,76,.15),transparent);
+  animation:fabShine 4s infinite;
+  pointer-events:none;
+}
+@keyframes fabShine{0%{left:-100%}50%{left:200%}100%{left:200%}}
+.kampanya-fab:hover .fab-inner{
+  transform:scale(1.04);
+  box-shadow:0 16px 40px rgba(176,28,46,.4),0 0 0 1px rgba(212,162,76,.3);
+}
+
+.fab-cark{
+  flex-shrink:0;
+  width:44px;height:44px;
+  background:linear-gradient(135deg,#B01C2E,#8A1522);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:inset 0 -2px 0 rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.2);
+  position:relative;
+}
+.fab-cark svg{
+  width:26px;height:26px;
+  animation:kbSpin 6s linear infinite;
+}
+.fab-pulse{
+  position:absolute;inset:-4px;
+  border-radius:50%;
+  border:2px solid rgba(212,162,76,.6);
+  animation:fabPulse 2s infinite;
+  pointer-events:none;
+}
+@keyframes fabPulse{
+  0%{transform:scale(1);opacity:.7}
+  70%{transform:scale(1.4);opacity:0}
+  100%{transform:scale(1.4);opacity:0}
+}
+
+.fab-text{
+  padding:0 18px 0 14px;
+  font-family:'Bebas Neue',sans-serif;
+  color:#fff;line-height:1;
+  white-space:nowrap;
+}
+.fab-baslik{
+  font-size:15px;letter-spacing:1.5px;
+  background:linear-gradient(135deg,#E8C474,#D4A24C);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  margin-bottom:3px;
+}
+.fab-alt{
+  font-family:'Outfit',sans-serif;
+  font-size:10.5px;letter-spacing:.5px;
+  color:#aaa;font-weight:500;
+}
+
+.fab-kapat{
+  position:absolute;
+  top:-6px;right:-6px;
+  width:22px;height:22px;border-radius:50%;
+  background:#222;color:#888;
+  border:1px solid rgba(255,255,255,.1);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:13px;line-height:1;
+  transition:.15s;
+}
+.fab-kapat:hover{background:#333;color:#fff}
+
+/* MOBILE */
+@media (max-width:768px){
+  .kb-inner{padding:11px 14px;gap:11px}
+  .kb-cark{width:42px;height:42px}
+  .kb-baslik{font-size:17px;letter-spacing:1.5px}
+  .kb-baslik .kb-emoji{font-size:15px}
+  .kb-alt{font-size:11px}
+  .kb-cta{padding:9px 16px;font-size:11.5px;letter-spacing:1.2px}
+  .kb-cta-text-uzun{display:none}
+  .kb-kapat{top:4px;right:6px;width:22px;height:22px;font-size:15px}
+
+  .kampanya-fab{right:14px;bottom:14px}
+  .fab-inner{padding:6px 6px 6px 6px}
+  .fab-cark{width:38px;height:38px}
+  .fab-cark svg{width:22px;height:22px}
+  .fab-text{padding:0 14px 0 11px}
+  .fab-baslik{font-size:13px}
+  .fab-alt{font-size:9.5px}
+}
+@media (max-width:480px){
+  .kb-alt-uzun{display:none}
+  .fab-text{display:none}
+  .fab-inner{padding:6px}
+  .fab-cark{width:42px;height:42px}
+  .fab-cark svg{width:24px;height:24px}
+  .fab-kapat{top:-4px;right:-4px;width:20px;height:20px;font-size:12px}
+}
+</style>
+
+<a href="/standalone/kampanya.html" class="kampanya-banner" id="kampanya-banner">
+  <button class="kb-kapat" onclick="kampanyaBannerKapat(event)" aria-label="Kapat">×</button>
+  <div class="kb-inner">
+    <div class="kb-cark">
+      <svg class="kb-cark-svg" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="kb-grad-1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#D4A24C"/>
+            <stop offset="100%" stop-color="#B01C2E"/>
+          </linearGradient>
+        </defs>
+        <circle cx="26" cy="26" r="24" fill="none" stroke="url(#kb-grad-1)" stroke-width="2"/>
+        <!-- 6 dilim -->
+        <g>
+          <path d="M26 26 L26 4 A22 22 0 0 1 45 14.5 Z" fill="#B01C2E" opacity=".85"/>
+          <path d="M26 26 L45 14.5 A22 22 0 0 1 45 37.5 Z" fill="#3A5A8C" opacity=".7"/>
+          <path d="M26 26 L45 37.5 A22 22 0 0 1 26 48 Z" fill="#D4A24C" opacity=".9"/>
+          <path d="M26 26 L26 48 A22 22 0 0 1 7 37.5 Z" fill="#2D8B6A" opacity=".7"/>
+          <path d="M26 26 L7 37.5 A22 22 0 0 1 7 14.5 Z" fill="#7B2D8B" opacity=".75"/>
+          <path d="M26 26 L7 14.5 A22 22 0 0 1 26 4 Z" fill="#444" opacity=".7"/>
+        </g>
+        <!-- Aydınlatma noktaları -->
+        <circle cx="26" cy="4" r="1.5" fill="#fff"/>
+        <circle cx="45" cy="14.5" r="1.5" fill="#D4A24C"/>
+        <circle cx="45" cy="37.5" r="1.5" fill="#fff"/>
+        <circle cx="26" cy="48" r="1.5" fill="#D4A24C"/>
+        <circle cx="7" cy="37.5" r="1.5" fill="#fff"/>
+        <circle cx="7" cy="14.5" r="1.5" fill="#D4A24C"/>
+        <!-- Merkez -->
+        <circle cx="26" cy="26" r="6" fill="#0a0a0a" stroke="#D4A24C" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <div class="kb-metin">
+      <div class="kb-baslik"><span class="kb-emoji">🎁</span>HEDİYE ÇARKI</div>
+      <div class="kb-alt"><span class="kb-alt-uzun">Üye olan herkese </span><strong>%5'ten %15'e</strong> indirim — hediye çarkını çevir!</div>
+    </div>
+    <div class="kb-cta">
+      <span class="kb-cta-text-uzun">ŞANSINI DENE</span>
+      <span style="display:none" class="kb-cta-text-kisa">DENE</span>
+      <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </div>
+  </div>
+</a>
+
+<a href="/standalone/kampanya.html" class="kampanya-fab" id="kampanya-fab" aria-label="Hediye Çarkı">
+  <div class="fab-inner">
+    <div class="fab-cark">
+      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="16" cy="16" r="14" fill="none" stroke="#D4A24C" stroke-width="1.5"/>
+        <path d="M16 16 L16 2 A14 14 0 0 1 28 9 Z" fill="#fff" opacity=".95"/>
+        <path d="M16 16 L28 9 A14 14 0 0 1 28 23 Z" fill="#D4A24C" opacity=".9"/>
+        <path d="M16 16 L28 23 A14 14 0 0 1 16 30 Z" fill="#fff" opacity=".95"/>
+        <path d="M16 16 L16 30 A14 14 0 0 1 4 23 Z" fill="#D4A24C" opacity=".9"/>
+        <path d="M16 16 L4 23 A14 14 0 0 1 4 9 Z" fill="#fff" opacity=".95"/>
+        <path d="M16 16 L4 9 A14 14 0 0 1 16 2 Z" fill="#D4A24C" opacity=".9"/>
+        <circle cx="16" cy="16" r="3.5" fill="#B01C2E"/>
+      </svg>
+      <div class="fab-pulse"></div>
+    </div>
+    <div class="fab-text">
+      <div class="fab-baslik">HEDİYE ÇARKI</div>
+      <div class="fab-alt">Şansını dene</div>
+    </div>
+  </div>
+  <button class="fab-kapat" onclick="kampanyaFabKapat(event)" aria-label="Kapat">×</button>
+</a>
+
+<script>
+(function(){
+  // localStorage'da kapatma kayıtları (24 saat süreli)
+  var BANNER_KEY = 'autonax_kb_kapali';
+  var FAB_KEY = 'autonax_fab_kapali';
+  var KAPALI_SURE = 24 * 3600 * 1000; // 24 saat
+
+  function kapaliMi(key){
+    try {
+      var v = localStorage.getItem(key);
+      if(!v) return false;
+      var t = parseInt(v, 10);
+      if(isNaN(t)) return false;
+      if(Date.now() - t > KAPALI_SURE){
+        localStorage.removeItem(key);
+        return false;
+      }
+      return true;
+    } catch(e){ return false; }
+  }
+  function kapatKaydet(key){
+    try { localStorage.setItem(key, String(Date.now())); } catch(e){}
+  }
+
+  // Banner kontrol
+  if(kapaliMi(BANNER_KEY)){
+    var bn = document.getElementById('kampanya-banner');
+    if(bn) bn.style.display = 'none';
+  }
+
+  // Floating buton — scroll edince göster
+  var fab = document.getElementById('kampanya-fab');
+  if(!kapaliMi(FAB_KEY)){
+    function fabKontrol(){
+      if(window.scrollY > 400){
+        fab.classList.add('aktif');
+      } else {
+        fab.classList.remove('aktif');
+      }
+    }
+    window.addEventListener('scroll', fabKontrol, {passive:true});
+    fabKontrol();
+  }
+
+  // Global fonksiyonlar
+  window.kampanyaBannerKapat = function(e){
+    if(e){ e.preventDefault(); e.stopPropagation(); }
+    var bn = document.getElementById('kampanya-banner');
+    if(bn){
+      bn.style.transition = 'opacity .25s, max-height .35s, padding .25s, margin .25s';
+      bn.style.maxHeight = bn.offsetHeight + 'px';
+      // Force reflow
+      bn.offsetHeight;
+      bn.style.maxHeight = '0';
+      bn.style.opacity = '0';
+      bn.style.padding = '0';
+      bn.style.overflow = 'hidden';
+      setTimeout(function(){ bn.style.display = 'none'; }, 350);
+    }
+    kapatKaydet(BANNER_KEY);
+    return false;
+  };
+
+  window.kampanyaFabKapat = function(e){
+    if(e){ e.preventDefault(); e.stopPropagation(); }
+    var fb = document.getElementById('kampanya-fab');
+    if(fb){
+      fb.style.transition = 'opacity .25s, transform .25s';
+      fb.style.opacity = '0';
+      fb.style.transform = 'translateY(20px) scale(.9)';
+      setTimeout(function(){ fb.classList.remove('aktif'); fb.style.opacity=''; fb.style.transform=''; }, 250);
+    }
+    kapatKaydet(FAB_KEY);
+    return false;
+  };
+})();
+</script>
+
 <!-- INSTAGRAM PROFIL + REELS BAR -->
 <div class="igbar" id="ig-bar">
   <div class="wrap">
 
     <!-- Profil Üst -->
     <div class="ig-profil">
-      <a href="https://www.instagram.com/autoclubsamsunmerkez/" target="_blank" rel="noopener" class="ig-avatar-link" id="ig-avatar-link" aria-label="Instagram'da takip et" onclick="return igTakipEt(event)">
+      <a href="https://www.instagram.com/autoclubsamsunmerkez/" target="_blank" rel="noopener" class="ig-avatar-link" id="ig-avatar-link" aria-label="Instagram'da takip et">
         <div class="ig-avatar-ring">
           <img src="" alt="Enes Koc" class="ig-avatar" id="ig-avatar-img" style="display:none">
           <div class="ig-avatar-fallback" style="display:flex">EK</div>
@@ -2600,7 +2870,7 @@ svg{display:block;flex-shrink:0}
       </a>
       <div class="ig-profil-bilgi">
         <div class="ig-profil-ust">
-          <a href="https://www.instagram.com/autoclubsamsunmerkez/" target="_blank" rel="noopener" class="ig-username" id="ig-username" onclick="return igTakipEt(event)">autoclubsamsunmerkez</a>
+          <a href="https://www.instagram.com/autoclubsamsunmerkez/" target="_blank" rel="noopener" class="ig-username" id="ig-username">autoclubsamsunmerkez</a>
           <svg class="ig-verified" viewBox="0 0 24 24"><path d="M12 2l2.4 1.8L17.4 3l1 2.8 2.8 1L20.4 9.6 21 12.6l-2.4 1.8L18 17.4l-2.8 0.4L13.4 20 12 18l-2.4 2-1.8-2.4L5 17l-0.6-2.8L2.4 12.6 3 9.6 1.4 6.8 4.2 5.8 5.2 3 8 3.8z" fill="#3897f0"/><path d="M9.5 12.5l1.8 1.8 3.7-3.7" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <a href="https://www.instagram.com/autoclubsamsunmerkez/" target="_blank" rel="noopener" class="ig-takip-btn" id="ig-takip-btn" onclick="return igTakipEt(event)">Takip Et</a>
         </div>
@@ -2615,13 +2885,6 @@ svg{display:block;flex-shrink:0}
           <span class="ig-bio-iller" id="ig-bio-iller">Samsun · Ordu · Giresun · Trabzon · Rize · Tokat · Amasya · Sinop</span>
         </div>
       </div>
-    </div>
-
-    <!-- AKSİYON BUTONLARI (Takip Et + Mesaj + İletişim) - Instagram tarzı -->
-    <div class="ig-aksiyon">
-      <a href="https://www.instagram.com/autoclubsamsunmerkez/" target="_blank" rel="noopener" class="ig-aksiyon-btn ig-aksiyon-takip" id="ig-aksiyon-takip" onclick="return igTakipEt(event)">Takip Et</a>
-      <a href="https://wa.me/905523104055" target="_blank" rel="noopener" class="ig-aksiyon-btn ig-aksiyon-mesaj">Mesaj</a>
-      <a href="tel:08503052055" class="ig-aksiyon-btn ig-aksiyon-iletisim">İletişim</a>
     </div>
 
     <!-- Tab Bar -->
@@ -3968,8 +4231,8 @@ svg{display:block;flex-shrink:0}
           }
         } catch(e){}
 
-        // 2. Asıl kaynak: backend /api/ayarlar-public (login gerektirmez)
-        fetch('/api/ayarlar-public?_t='+Date.now(), {credentials:'same-origin'})
+        // 2. Asıl kaynak: backend /api/ayarlar
+        fetch('/api/ayarlar?_t='+Date.now(), {credentials:'same-origin'})
           .then(function(r){ return r.json(); })
           .then(function(d){
             var depo = (d && d.data && d.data.markalar_v1) || (d && d.markalar_v1) || null;
@@ -5406,22 +5669,6 @@ svg{display:block;flex-shrink:0}
 .mk-kamp-sepet{padding:9px;background:transparent;color:#B01C2E;border:1.5px solid #B01C2E;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif}
 .mk-kamp-sepet:hover{background:rgba(176,28,46,.1)}
 
-</style>
-
-<!-- ROBOT MODAL — MOBIL FIX (sadece <=560px). Mevcut kurallar değişmedi, sadece mobilde override -->
-<style>
-@media (max-width:560px){
-  /* Overlay'in dvh kullanması için (Chrome mobil URL bar fix) */
-  #robot-ovl{padding:12px}
-  @supports (height:100dvh){
-    #robot-ovl{height:100dvh}
-  }
-  /* Modal max-height'ı dvh'ye göre ayarla — başlık URL bar'ının arkasına gizlenmesin */
-  #robot-modal{max-height:calc(100vh - 24px)}
-  @supports (height:100dvh){
-    #robot-modal{max-height:calc(100dvh - 24px)}
-  }
-}
 </style>
 
 <!-- MODAL HTML -->
@@ -8359,8 +8606,8 @@ function siteAyarlariniCek() {
     if(raw) siteAyarlariniUygula(JSON.parse(raw));
   } catch(e) {}
   
-  // Sonra API'den güncel verileri çek (public endpoint - login gerektirmez)
-  fetch('/api/ayarlar-public')
+  // Sonra API'den güncel verileri çek
+  fetch('/api/ayarlar')
     .then(function(r){ return r.json(); })
     .then(function(res){
       var sa = null;
@@ -9435,9 +9682,9 @@ function igVeriOku(){
   } catch(e){ return IG_DEFAULT; }
 }
 
-// Backend'den de çekmeye çalış (sayfa açılınca güncel veri) — public endpoint, login gerektirmez
+// Backend'den de çekmeye çalış (sayfa açılınca güncel veri)
 function igBackendCek(callback){
-  fetch('/api/ayarlar-public?_t='+Date.now(), {credentials:'same-origin'})
+  fetch('/api/ayarlar?_t='+Date.now(), {credentials:'same-origin'})
     .then(r => {
       if(!r.ok) return null;
       return r.json();
@@ -9478,15 +9725,10 @@ function igProfilRender(d){
   bar.style.display = '';
 
   // Profil URL'lerini güncelle (avatar + username + takip butonu)
-  // Safari iOS için: hem .href hem setAttribute kullan + data-href yedeği
   const profilUrl = d.profilUrl || IG_DEFAULT.profilUrl;
   ['ig-avatar-link','ig-username','ig-takip-btn'].forEach(id => {
     const el = document.getElementById(id);
-    if(el){
-      el.href = profilUrl;
-      el.setAttribute('href', profilUrl);
-      el.setAttribute('data-href', profilUrl);
-    }
+    if(el) el.href = profilUrl;
   });
 
   // Avatar resmi - iOS Safari uyumlu render
@@ -9544,37 +9786,22 @@ function igProfilRender(d){
   if(bmEl) bmEl.textContent = d.bioMetin || IG_DEFAULT.bioMetin;
   if(biEl) biEl.textContent = d.bioIller || IG_DEFAULT.bioIller;
 
-  // igTakipEt fonksiyonu için username + profilUrl güncelle (mobil iPhone/Android için kritik!)
+  // igTakipEt fonksiyonu için username güncelle
   window.__IG_USERNAME = d.kullaniciAdi || IG_DEFAULT.kullaniciAdi;
-  window.__IG_PROFIL_URL = d.profilUrl || IG_DEFAULT.profilUrl;
 }
 
 // Instagram Takip Et — Mobile'da app aç, desktop'ta tarayıcıda
-// FIX: Mobil iPhone'da panelden değişen profilUrl yansımıyordu (eski kod username'den
-// URL kuruyordu). Şimdi panelin profilUrl'ini AYNEN kullanıyor.
 function igTakipEt(e){
-  // Her tıklamada GÜNCEL veriyi localStorage'dan oku (Safari iOS cache koruması)
-  var guncel = null;
-  try { if(typeof igVeriOku === 'function') guncel = igVeriOku(); } catch(_){}
-
-  var profilUrl = (guncel && guncel.profilUrl) || window.__IG_PROFIL_URL || IG_DEFAULT.profilUrl;
-  var username  = (guncel && guncel.kullaniciAdi) || window.__IG_USERNAME || IG_DEFAULT.kullaniciAdi;
-
-  // Tıklanan link href'ini son anda da güncelle (iOS Safari için ekstra güvence)
-  try {
-    if(e && e.currentTarget && e.currentTarget.tagName === 'A'){
-      e.currentTarget.href = profilUrl;
-    }
-  } catch(_){}
-
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  if(!isMobile) return true; // Desktop: <a href> normal işlesin
-
+  if(!isMobile) return true; // Desktop normal davransın
   e.preventDefault();
+  const username = window.__IG_USERNAME || 'autoclubsamsunmerkez';
   const appUrl = 'instagram://user?username=' + username;
-  const webUrl = profilUrl; // ← KRİTİK: Panelden gelen URL'i AYNEN kullan (eski kod burayı uyduruyordu)
+  const webUrl = 'https://www.instagram.com/' + username + '/';
   const startTime = Date.now();
+  // App'i açmaya çalış
   window.location.href = appUrl;
+  // 1.5 saniye içinde uygulama açılmazsa web'e fallback
   setTimeout(function(){
     if(Date.now() - startTime < 2000 && document.visibilityState !== 'hidden'){
       window.location.href = webUrl;
