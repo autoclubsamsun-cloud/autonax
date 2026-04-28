@@ -2488,7 +2488,7 @@ svg{display:block;flex-shrink:0}
 
     <!-- Profil Üst -->
     <div class="ig-profil">
-      <a href="https://www.instagram.com/autoclubsamsunmerkez/" target="_blank" rel="noopener" class="ig-avatar-link" id="ig-avatar-link" aria-label="Instagram'da takip et">
+      <a href="https://www.instagram.com/autoclubsamsunmerkez/" target="_blank" rel="noopener" class="ig-avatar-link" id="ig-avatar-link" aria-label="Instagram'da takip et" onclick="return igTakipEt(event)">
         <div class="ig-avatar-ring">
           <img src="" alt="Enes Koc" class="ig-avatar" id="ig-avatar-img" style="display:none">
           <div class="ig-avatar-fallback" style="display:flex">EK</div>
@@ -2496,7 +2496,7 @@ svg{display:block;flex-shrink:0}
       </a>
       <div class="ig-profil-bilgi">
         <div class="ig-profil-ust">
-          <a href="https://www.instagram.com/autoclubsamsunmerkez/" target="_blank" rel="noopener" class="ig-username" id="ig-username">autoclubsamsunmerkez</a>
+          <a href="https://www.instagram.com/autoclubsamsunmerkez/" target="_blank" rel="noopener" class="ig-username" id="ig-username" onclick="return igTakipEt(event)">autoclubsamsunmerkez</a>
           <svg class="ig-verified" viewBox="0 0 24 24"><path d="M12 2l2.4 1.8L17.4 3l1 2.8 2.8 1L20.4 9.6 21 12.6l-2.4 1.8L18 17.4l-2.8 0.4L13.4 20 12 18l-2.4 2-1.8-2.4L5 17l-0.6-2.8L2.4 12.6 3 9.6 1.4 6.8 4.2 5.8 5.2 3 8 3.8z" fill="#3897f0"/><path d="M9.5 12.5l1.8 1.8 3.7-3.7" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <a href="https://www.instagram.com/autoclubsamsunmerkez/" target="_blank" rel="noopener" class="ig-takip-btn" id="ig-takip-btn" onclick="return igTakipEt(event)">Takip Et</a>
         </div>
@@ -9351,10 +9351,15 @@ function igProfilRender(d){
   bar.style.display = '';
 
   // Profil URL'lerini güncelle (avatar + username + takip butonu)
+  // Safari iOS için: hem .href hem setAttribute kullan + data-href yedeği
   const profilUrl = d.profilUrl || IG_DEFAULT.profilUrl;
   ['ig-avatar-link','ig-username','ig-takip-btn'].forEach(id => {
     const el = document.getElementById(id);
-    if(el) el.href = profilUrl;
+    if(el){
+      el.href = profilUrl;
+      el.setAttribute('href', profilUrl);
+      el.setAttribute('data-href', profilUrl);
+    }
   });
 
   // Avatar resmi - iOS Safari uyumlu render
@@ -9412,22 +9417,37 @@ function igProfilRender(d){
   if(bmEl) bmEl.textContent = d.bioMetin || IG_DEFAULT.bioMetin;
   if(biEl) biEl.textContent = d.bioIller || IG_DEFAULT.bioIller;
 
-  // igTakipEt fonksiyonu için username güncelle
+  // igTakipEt fonksiyonu için username + profilUrl güncelle (mobil iPhone/Android için kritik!)
   window.__IG_USERNAME = d.kullaniciAdi || IG_DEFAULT.kullaniciAdi;
+  window.__IG_PROFIL_URL = d.profilUrl || IG_DEFAULT.profilUrl;
 }
 
 // Instagram Takip Et — Mobile'da app aç, desktop'ta tarayıcıda
+// FIX: Mobil iPhone'da panelden değişen profilUrl yansımıyordu (eski kod username'den
+// URL kuruyordu). Şimdi panelin profilUrl'ini AYNEN kullanıyor.
 function igTakipEt(e){
+  // Her tıklamada GÜNCEL veriyi localStorage'dan oku (Safari iOS cache koruması)
+  var guncel = null;
+  try { if(typeof igVeriOku === 'function') guncel = igVeriOku(); } catch(_){}
+
+  var profilUrl = (guncel && guncel.profilUrl) || window.__IG_PROFIL_URL || IG_DEFAULT.profilUrl;
+  var username  = (guncel && guncel.kullaniciAdi) || window.__IG_USERNAME || IG_DEFAULT.kullaniciAdi;
+
+  // Tıklanan link href'ini son anda da güncelle (iOS Safari için ekstra güvence)
+  try {
+    if(e && e.currentTarget && e.currentTarget.tagName === 'A'){
+      e.currentTarget.href = profilUrl;
+    }
+  } catch(_){}
+
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  if(!isMobile) return true; // Desktop normal davransın
+  if(!isMobile) return true; // Desktop: <a href> normal işlesin
+
   e.preventDefault();
-  const username = window.__IG_USERNAME || 'autoclubsamsunmerkez';
   const appUrl = 'instagram://user?username=' + username;
-  const webUrl = 'https://www.instagram.com/' + username + '/';
+  const webUrl = profilUrl; // ← KRİTİK: Panelden gelen URL'i AYNEN kullan (eski kod burayı uyduruyordu)
   const startTime = Date.now();
-  // App'i açmaya çalış
   window.location.href = appUrl;
-  // 1.5 saniye içinde uygulama açılmazsa web'e fallback
   setTimeout(function(){
     if(Date.now() - startTime < 2000 && document.visibilityState !== 'hidden'){
       window.location.href = webUrl;
