@@ -628,8 +628,13 @@ svg{display:block;flex-shrink:0}
 
 /* Reels Grid - 4 sütun desktop, 3 sütun tablet/mobile */
 .ig-reels{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:4px}
-.ig-reel{position:relative;aspect-ratio:9/16;background:#000;overflow:hidden;cursor:pointer;display:block;text-decoration:none;border-radius:2px}
+/* iOS Safari < 15 için aspect-ratio fallback (padding-top hack) */
+.ig-reel{position:relative;background:#000;overflow:hidden;cursor:pointer;display:block;text-decoration:none;border-radius:2px;width:100%;padding-top:177.78%;height:0}
+@supports (aspect-ratio: 9/16){
+  .ig-reel{aspect-ratio:9/16;padding-top:0;height:auto}
+}
 .ig-reel-embed-wrap{position:absolute;inset:0;width:100%;height:100%}
+.ig-reel-iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;background:transparent;display:block}
 .ig-reel-embed-wrap.reel-ig-bg{background:linear-gradient(135deg,#f09433 0%,#e6683c 20%,#dc2743 45%,#cc2366 70%,#bc1888 100%)}
 .ig-reel-embed-wrap.reel-tt-bg{background:linear-gradient(135deg,#25f4ee 0%,#000 50%,#fe2c55 100%)}
 .ig-reel-link{cursor:pointer}
@@ -9434,14 +9439,14 @@ function igReelsRender(reels){
       // iframe embed - markalardaki gibi
       const bgClass = v.tur === 'instagram' ? 'reel-ig-bg' : (v.tur === 'tiktok' ? 'reel-tt-bg' : '');
       inner = `<div class="ig-reel-embed-wrap ${bgClass}">
-        <iframe src="${escapeHTML(v.embed)}" allowfullscreen allowtransparency="true" frameborder="0" scrolling="no" allow="encrypted-media" loading="lazy" style="width:100%;height:100%;border:0;position:absolute;top:0;left:0;background:transparent"></iframe>
+        <iframe src="${escapeHTML(v.embed)}" allowfullscreen allowtransparency="true" frameborder="0" scrolling="no" allow="encrypted-media" loading="eager" class="ig-reel-iframe"></iframe>
       </div>`;
     } else {
       // URL tanınmadı - boş kart göster
       inner = '<div style="width:100%;height:100%;background:linear-gradient(135deg,#222,#000);display:flex;align-items:center;justify-content:center;color:#888;font-size:11px">Video yüklenemedi</div>';
     }
     // Tıklanabilir overlay (iframe'in üstünde click yakalar, Instagram'a gönderir)
-    return `<div class="ig-reel" data-idx="${i}" style="position:relative">
+    return `<div class="ig-reel" data-idx="${i}">
       ${inner}
       <a href="${url}" target="_blank" rel="noopener" class="ig-reel-link" aria-label="Instagram'da aç" style="position:absolute;inset:0;z-index:5;background:transparent" onclick="return igReelTiklama(event,'${url}')"></a>
       ${label ? `<div class="ig-reel-label" style="z-index:6">${label}</div>` : ''}
