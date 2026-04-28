@@ -714,12 +714,12 @@ svg{display:block;flex-shrink:0}
    Yöntem: clamp() ile ekran genişliğine göre otomatik küçülen font + nowrap + sola hizala.
    Mevcut kurallar değişmedi, sadece mobilde override. */
 @media (max-width:560px){
-  /* Username - tek satır, taşmasın (flex item olarak shrink eder) */
-  .igbar .ig-username{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex-shrink:1;font-size:clamp(15px,4.4vw,18px);text-align:left}
-  /* Takip Et - inline, küçük, username ile aynı satırda */
-  .igbar .ig-takip-btn{width:auto;padding:5px 14px;font-size:12px;margin-top:0;margin-left:auto;flex-shrink:0;white-space:nowrap}
-  /* ig-profil-ust: yan yana hizala, satıra inmesin */
-  .igbar .ig-profil-ust{flex-wrap:nowrap;align-items:center;gap:6px;justify-content:flex-start}
+  /* Username - tek satır, tam genişlik (artık Takip Et yanında değil) */
+  .igbar .ig-username{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;font-size:clamp(15px,4.4vw,18px);text-align:left;max-width:100%}
+  /* Takip Et - kullanıcı adının ALTINDA, küçük buton (önceki gibi tam ekran değil) */
+  .igbar .ig-takip-btn{width:auto;padding:6px 22px;font-size:12.5px;font-weight:600;border-radius:8px;margin-top:6px;margin-left:0;display:inline-block;text-align:center;flex-shrink:0;white-space:nowrap;align-self:flex-start}
+  /* ig-profil-ust: username + verified yan yana, takip et alta düşsün */
+  .igbar .ig-profil-ust{flex-wrap:wrap;align-items:center;gap:6px;justify-content:flex-start}
   /* İsim + slogan tek satır - clamp ile sığsın, sola hizalı */
   .igbar .ig-profil-isim{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:clamp(11px,3.4vw,14px);font-weight:600;text-align:left;width:100%;display:block}
   .igbar .ig-profil-slogan{white-space:nowrap}
