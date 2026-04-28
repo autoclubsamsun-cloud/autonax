@@ -16,6 +16,18 @@ const nextConfig = {
         destination: '/standalone/hesabim.html',
       },
       {
+        source: '/hesabim.html',
+        destination: '/standalone/hesabim.html',
+      },
+      {
+        source: '/kampanya',
+        destination: '/standalone/kampanya.html',
+      },
+      {
+        source: '/kampanya.html',
+        destination: '/standalone/kampanya.html',
+      },
+      {
         source: '/odeme/:kod',
         destination: '/standalone/odeme.html',
       },
