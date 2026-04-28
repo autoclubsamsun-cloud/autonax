@@ -756,6 +756,40 @@ svg{display:block;flex-shrink:0}
   .igbar .ig-bio-emoji{font-size:clamp(11px,3vw,13px)}
 }
 
+/* ══ IG AKSİYON BUTONLARI (Takip Et + Mesaj + İletişim) — Instagram tarzı ══ */
+/* Eski username yanındaki Takip Et butonunu gizle (artık aksiyon barında var) */
+.igbar .ig-profil-ust .ig-takip-btn{display:none !important}
+.ig-aksiyon{display:flex;gap:8px;padding:10px 0 4px;margin:0}
+.ig-aksiyon-btn{
+  flex:1;
+  text-align:center;
+  padding:9px 12px;
+  border-radius:8px;
+  font-size:14px;
+  font-weight:600;
+  text-decoration:none;
+  cursor:pointer;
+  transition:opacity .15s, background .15s;
+  white-space:nowrap;
+  font-family:'Outfit',sans-serif;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  border:1px solid transparent;
+  box-sizing:border-box
+}
+.ig-aksiyon-takip{background:#0095f6;color:#fff !important}
+.ig-aksiyon-takip:hover{background:#1877f2}
+.ig-aksiyon-mesaj{background:#efefef;color:var(--ink) !important}
+.ig-aksiyon-mesaj:hover{background:#dfdfdf}
+.ig-aksiyon-iletisim{background:#efefef;color:var(--ink) !important}
+.ig-aksiyon-iletisim:hover{background:#dfdfdf}
+@media (max-width:560px){
+  .ig-aksiyon{padding:12px 0 4px;gap:6px}
+  .ig-aksiyon-btn{font-size:13px;padding:8px 6px}
+}
+
 .plaka-sep{width:1px;height:24px;background:var(--bd);margin:0 4px;flex-shrink:0}
 /* marka scroll — plaka bar içinde */
 .marka-scroll{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0;align-items:center}
@@ -2568,6 +2602,13 @@ svg{display:block;flex-shrink:0}
           <span class="ig-bio-iller" id="ig-bio-iller">Samsun · Ordu · Giresun · Trabzon · Rize · Tokat · Amasya · Sinop</span>
         </div>
       </div>
+    </div>
+
+    <!-- AKSİYON BUTONLARI (Takip Et + Mesaj + İletişim) - Instagram tarzı -->
+    <div class="ig-aksiyon">
+      <a href="https://www.instagram.com/autoclubsamsunmerkez/" target="_blank" rel="noopener" class="ig-aksiyon-btn ig-aksiyon-takip" id="ig-aksiyon-takip" onclick="return igTakipEt(event)">Takip Et</a>
+      <a href="https://wa.me/905523104055" target="_blank" rel="noopener" class="ig-aksiyon-btn ig-aksiyon-mesaj">Mesaj</a>
+      <a href="tel:08503052055" class="ig-aksiyon-btn ig-aksiyon-iletisim">İletişim</a>
     </div>
 
     <!-- Tab Bar -->
