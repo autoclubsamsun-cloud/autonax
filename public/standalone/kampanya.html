@@ -790,12 +790,12 @@ body::before{
   // Backend gerçek sonucu belirler, çark sadece görsel
   // ════════════════════════════════════════════
   var ODULLER = [
-    { tip:'odul',   yuzde:5,  renk:'#444',    yazi:'%5\nİNDİRİM',  yazi_renk:'#fff' },
-    { tip:'tekrar', yuzde:0,  renk:'#1F1F1F', yazi:'TEKRAR\nDENE',  yazi_renk:'#888' },
-    { tip:'odul',   yuzde:10, renk:'#3A5A8C', yazi:'%10\nİNDİRİM', yazi_renk:'#fff' },
-    { tip:'tekrar', yuzde:0,  renk:'#1F1F1F', yazi:'TEKRAR\nDENE',  yazi_renk:'#888' },
-    { tip:'odul',   yuzde:15, renk:'#D4A24C', yazi:'%15\nBÜYÜK',    yazi_renk:'#0A0A0A' },
-    { tip:'tekrar', yuzde:0,  renk:'#1F1F1F', yazi:'TEKRAR\nDENE',  yazi_renk:'#888' }
+    { tip:'odul',   yuzde:5,  renk:'#444',    yazi:'%5\nİNDİRİM',   yazi_renk:'#fff' },
+    { tip:'tekrar', yuzde:0,  renk:'#1F1F1F', yazi:'TEKRAR\nDENE',  yazi_renk:'#999' },
+    { tip:'odul',   yuzde:10, renk:'#3A5A8C', yazi:'%10\nİNDİRİM',  yazi_renk:'#fff' },
+    { tip:'tekrar', yuzde:0,  renk:'#1F1F1F', yazi:'TEKRAR\nDENE',  yazi_renk:'#999' },
+    { tip:'odul',   yuzde:15, renk:'#D4A24C', yazi:'%15\nBÜYÜK ÖDÜL',  yazi_renk:'#0A0A0A' },
+    { tip:'tekrar', yuzde:0,  renk:'#1F1F1F', yazi:'TEKRAR\nDENE',  yazi_renk:'#999' }
   ];
   // Backend dönüşüne göre hangi dilimde duracağını seç
   // - Kazandıysa: o yüzdedeki ödül dilimi
@@ -829,39 +829,53 @@ body::before{
       var x2 = cx + r * Math.cos(rad2);
       var y2 = cy + r * Math.sin(rad2);
 
+      // Dilim path
       var path = document.createElementNS(SVG_NS, 'path');
       var d = 'M '+cx+' '+cy+' L '+x1+' '+y1+' A '+r+' '+r+' 0 0 1 '+x2+' '+y2+' Z';
       path.setAttribute('d', d);
       path.setAttribute('fill', odul.renk);
-      path.setAttribute('stroke', '#fff');
-      path.setAttribute('stroke-width', '2');
-      path.setAttribute('stroke-opacity', '.15');
+      path.setAttribute('stroke', 'rgba(255,255,255,.15)');
+      path.setAttribute('stroke-width', '1.5');
       dilimGrup.appendChild(path);
 
-      // Yazı
+      // Yazıyı dilim merkezine yerleştir, dilim açısı ile döndür
+      // Dilim merkezinin açısı (yukarıdan saat yönünde)
       var ortaDerece = basla + DILIM_DERECE/2;
+      // Yazı merkez radius (dilimin merkez noktası, çark merkezinden 65% uzakta)
+      var yaziR = r * 0.62;
+      // Yazı pozisyonu - dilim merkezi
       var ortaRad = ortaDerece * Math.PI / 180;
-      var yaziR = r * 0.65;
       var yx = cx + yaziR * Math.cos(ortaRad);
       var yy = cy + yaziR * Math.sin(ortaRad);
 
+      // Yazıyı, dilim merkezinden çarkın merkezine bakacak şekilde döndür
+      // ortaDerece: 0=sağ, 90=alt, 180=sol, 270=üst (sayısal SVG koordinatı)
+      // Yazıyı okunabilir tutmak için: 90 derece ekleyip dik konumla
+      var rotAci = ortaDerece + 90;
+
       var satirlar = odul.yazi.split('\n');
-      var lineHeight = 22;
+      var fontSize = odul.tip === 'tekrar' ? 14 : 17;
+      var lineHeight = fontSize + 4;
+
+      // Grup oluştur, yazıyı içine koy ve grubu döndür
+      var g = document.createElementNS(SVG_NS, 'g');
+      g.setAttribute('transform', 'translate('+yx+','+yy+') rotate('+rotAci+')');
+
       satirlar.forEach(function(satir, si){
         var text = document.createElementNS(SVG_NS, 'text');
         var offsetY = (si - (satirlar.length-1)/2) * lineHeight;
-        text.setAttribute('x', yx);
-        text.setAttribute('y', yy + offsetY);
+        text.setAttribute('x', '0');
+        text.setAttribute('y', offsetY);
         text.setAttribute('text-anchor', 'middle');
         text.setAttribute('dominant-baseline', 'central');
         text.setAttribute('fill', odul.yazi_renk);
         text.setAttribute('font-family', "'Bebas Neue', sans-serif");
-        text.setAttribute('font-size', '20');
-        text.setAttribute('letter-spacing', '1');
-        text.setAttribute('transform', 'rotate('+ortaDerece+', '+yx+', '+yy+') rotate(90, '+yx+', '+(yy+offsetY)+')');
+        text.setAttribute('font-size', String(fontSize));
+        text.setAttribute('letter-spacing', '0.5');
         text.textContent = satir;
-        dilimGrup.appendChild(text);
+        g.appendChild(text);
       });
+      dilimGrup.appendChild(g);
     });
 
     // Aydınlatma noktaları
