@@ -7573,6 +7573,8 @@ document.querySelectorAll('.tool-btn,.mbctr,.mbctr-btn').forEach(el=>{if(el.text
 ════════════════════════════════════════════════════ */
 var SEPET = {
   items: [],
+  // KUPON STATE
+  kupon: null, // { kupon_kod, yuzde, kalan_gun }
   add(item){
     const mevcut = this.items.find(i=>i.id===item.id);
     if(!mevcut) this.items.push({...item});
@@ -7580,10 +7582,64 @@ var SEPET = {
   },
   remove(id){
     this.items = this.items.filter(i=>i.id!==id);
+    // Sepet boşalırsa kuponu da sıfırla
+    if(this.items.length === 0) this.kupon = null;
+    // PPF kalmazsa kuponu kaldır
+    if(this.kupon && !this.ppfVarMi()){
+      this.kupon = null;
+    }
     this.render(); this.updateBadge(); AuthManager.saveCart(this.items);
   },
-  total(){
+  // Sepette PPF kaplama hizmeti var mı?
+  ppfVarMi(){
+    return this.items.some(function(i){
+      var s = ((i.isim||'') + ' ' + (i.aciklama||'') + ' ' + (i.kategori||'')).toLowerCase();
+      return s.indexOf('ppf') !== -1;
+    });
+  },
+  // Toplam — kuponsuz
+  araToplam(){
     return this.items.reduce((s,i)=>s+(i.fiyat||0),0);
+  },
+  // İndirim tutarı (sadece PPF hizmetleri üzerinden)
+  indirimTutari(){
+    if(!this.kupon || !this.ppfVarMi()) return 0;
+    var ppfToplam = this.items.reduce(function(s,i){
+      var bilgi = ((i.isim||'') + ' ' + (i.aciklama||'') + ' ' + (i.kategori||'')).toLowerCase();
+      return s + (bilgi.indexOf('ppf') !== -1 ? (i.fiyat||0) : 0);
+    }, 0);
+    return Math.round(ppfToplam * this.kupon.yuzde / 100);
+  },
+  // Toplam — indirimli
+  total(){
+    return this.araToplam() - this.indirimTutari();
+  },
+  // Kupon uygula
+  kuponUygula: async function(kuponKod){
+    var kod = (kuponKod || '').trim().toUpperCase();
+    if(!kod) return { success:false, hata:'Kupon kodu girin' };
+    if(!this.ppfVarMi()) return { success:false, hata:'Kupon sadece PPF kaplama hizmetlerinde geçerlidir' };
+    try {
+      var r = await fetch('/api/musteri/cark/kupon-kontrol', {
+        method:'POST',
+        credentials:'same-origin',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({kupon_kod: kod})
+      });
+      var d = await r.json();
+      if(!d.success){
+        return { success:false, hata: d.error || 'Geçersiz kupon' };
+      }
+      this.kupon = d.kupon;
+      this.render();
+      return { success:true };
+    } catch(e){
+      return { success:false, hata:'Bağlantı hatası, tekrar deneyin' };
+    }
+  },
+  kuponKaldir(){
+    this.kupon = null;
+    this.render();
   },
   updateBadge(){
     const cnt = document.querySelector('.cart-cnt');
@@ -7604,7 +7660,10 @@ var SEPET = {
       if(footer) footer.style.display='none';
       if(sub) sub.textContent='Sepetiniz boş';
     } else {
+      const araToplam = this.araToplam();
+      const indirim = this.indirimTutari();
       const total = this.total();
+      const ppfVar = this.ppfVarMi();
       body.innerHTML = this.items.map(i=>`
         <div class="sepet-item">
           <div class="sepet-item-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
@@ -7615,9 +7674,31 @@ var SEPET = {
           </div>
           <button class="sepet-item-del" onclick="SEPET.remove('${i.id}')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>`).join('') +
+        // ── KUPON BÖLÜMÜ ──
+        (ppfVar ? (
+          this.kupon ? `
+          <div class="sepet-coupon-wrap">
+            <div class="sepet-coupon-ok">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Kupon uygulandı: <strong>${this.kupon.kupon_kod}</strong> (-%${this.kupon.yuzde})</span>
+              <span class="sepet-coupon-ok-remove" onclick="SEPET.kuponKaldir()">KALDIR ✕</span>
+            </div>
+          </div>` : `
+          <div class="sepet-coupon-wrap">
+            <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">🎁 İndirim Kuponu</div>
+            <div class="sepet-coupon-row">
+              <input type="text" class="sepet-coupon-inp" id="sepet-coupon-inp" placeholder="Kupon kodunu yapıştırın" autocomplete="off">
+              <button class="sepet-coupon-btn" onclick="kuponUygulaClick()">UYGULA</button>
+            </div>
+            <div class="sepet-coupon-err" id="sepet-coupon-err" style="display:none"></div>
+            <div style="font-size:10.5px;color:#999;margin-top:6px">Hediye çarkından kazandığınız kuponu PPF kaplama hizmetlerinde kullanabilirsiniz.</div>
+          </div>`
+        ) : '') +
         `<div class="sepet-summary">
-          <div class="sepet-sum-row"><span>${this.items.length} Hizmet</span><span>${this.items.map(i=>i.fiyatStr||'-').join(', ')}</span></div>
-          <div class="sepet-sum-row total"><span>Toplam</span><span>${total>0?'₺'+total.toLocaleString('tr-TR'):'Fiyat için arayın'}</span></div>
+          <div class="sepet-sum-row"><span>${this.items.length} Hizmet</span><span>${araToplam>0?'₺'+araToplam.toLocaleString('tr-TR'):'-'}</span></div>` +
+          (indirim > 0 ? `
+          <div class="sepet-indirim-row"><span>İndirim (-%${this.kupon.yuzde})</span><span>-₺${indirim.toLocaleString('tr-TR')}</span></div>` : '') +
+          `<div class="sepet-sum-row total"><span>Toplam</span><span>${total>0?'₺'+total.toLocaleString('tr-TR'):'Fiyat için arayın'}</span></div>
         </div>
         <div class="sepet-rdv-sec" style="margin:16px 0;padding:14px;background:#f8f8f8;border-radius:12px;border:1.5px solid #e0e0e0">
           <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:10px">📅 Randevu Tarihi ve Saati Seçin</div>
@@ -7641,6 +7722,14 @@ var SEPET = {
         </div>`;
       if(footer) footer.style.display='block';
       if(sub) sub.textContent = this.items.length + ' ürün · ' + (total>0?'₺'+total.toLocaleString('tr-TR'):'');
+
+      // Eğer URL'de hediyelerim'den gelen kupon varsa otomatik input'a yaz
+      var urlParam = new URLSearchParams(window.location.search);
+      var autoKupon = urlParam.get('kupon');
+      if(autoKupon && !this.kupon && ppfVar){
+        var inp = document.getElementById('sepet-coupon-inp');
+        if(inp) inp.value = autoKupon;
+      }
     }
   },
   secilenTarih: '',
@@ -7732,6 +7821,38 @@ function openSepet(){
 }
 function closeSepet(){ document.getElementById('sepet-ovl').classList.remove('show'); document.body.style.overflow=''; }
 function sepetOverlayClick(e){ if(e.target===document.getElementById('sepet-ovl')) closeSepet(); }
+
+// ════════════════════════════════════════════
+// KUPON UYGULA — sepet input'tan
+// ════════════════════════════════════════════
+async function kuponUygulaClick(){
+  var inp = document.getElementById('sepet-coupon-inp');
+  var err = document.getElementById('sepet-coupon-err');
+  var btn = document.querySelector('.sepet-coupon-btn');
+  if(!inp) return;
+  var kod = (inp.value || '').trim().toUpperCase();
+  if(!kod){
+    if(err){ err.textContent='Kupon kodu girin'; err.style.display='block'; }
+    inp.focus();
+    return;
+  }
+  if(btn){ btn.textContent='...'; btn.disabled=true; }
+  if(err) err.style.display='none';
+  // Login kontrolü
+  var loggedUser = (typeof AuthManager!=='undefined' && AuthManager.getUser) ? AuthManager.getUser() : null;
+  if(!loggedUser){
+    if(err){ err.textContent='Kupon kullanmak için üye girişi gerekli'; err.style.display='block'; }
+    if(btn){ btn.textContent='UYGULA'; btn.disabled=false; }
+    return;
+  }
+  var sonuc = await SEPET.kuponUygula(kod);
+  if(!sonuc.success){
+    if(err){ err.textContent = sonuc.hata || 'Bir hata oluştu'; err.style.display='block'; }
+    if(btn){ btn.textContent='UYGULA'; btn.disabled=false; }
+  }
+  // Başarılı ise SEPET.render() zaten çalışmıştı
+}
+
 function sepetOde(){
   if(!SEPET.secilenTarih||!SEPET.secilenSaat){
     // Tarih seçilmemişse input'u kırmızı yap ve odaklan
@@ -7749,6 +7870,8 @@ function sepetOde(){
   }
   // Randevuyu /api/randevular'a gönder
   var hizmetler=SEPET.items.map(function(i){return i.isim;}).join(' + ');
+  var araToplam=SEPET.araToplam();
+  var indirim=SEPET.indirimTutari();
   var toplam=SEPET.total();
   
   // Giriş durumunu kontrol et (FIX: currentUser yerine getUser() kullan!)
@@ -7869,7 +7992,12 @@ function sepetOde(){
     odendi: false,
     islem: false,
     odemeGecmisi: [],
-    odenenToplam: 0
+    odenenToplam: 0,
+    // ── KUPON BİLGİSİ ──
+    kupon_kod: SEPET.kupon ? SEPET.kupon.kupon_kod : null,
+    kupon_yuzde: SEPET.kupon ? SEPET.kupon.yuzde : null,
+    kupon_indirimi: indirim || 0,
+    ara_toplam: araToplam
   };
   // Üye giriş yapmışsa müşteri akışını zorla → musteri_id otomatik atanır
   // Üye değilse eski akış (admin modu, musteri_id boş kalır) — geriye uyumlu
@@ -7880,6 +8008,7 @@ function sepetOde(){
   .then(function(d){
     if(d.success){
       SEPET.items=[];
+      SEPET.kupon=null;
       SEPET.secilenTarih='';
       SEPET.secilenSaat='';
       SEPET.updateBadge();
@@ -9933,6 +10062,30 @@ function igTumRender(){
 // Sayfa açıldığında: önce localStorage'dan render et (anında görünür), sonra backend'den güncel veri çek
 igTumRender();
 igBackendCek(function(){ igTumRender(); });
+
+// ════════════════════════════════════════════════════════
+// URL'DEN KUPON PARAMETRESİ — Hediyelerim'den "Randevu Al" tıklandığında
+// ════════════════════════════════════════════════════════
+(function(){
+  var urlParam = new URLSearchParams(window.location.search);
+  var kuponKod = urlParam.get('kupon');
+  if(!kuponKod) return;
+
+  // Sayfa yüklendikten sonra bilgilendirici toast göster
+  setTimeout(function(){
+    // Üye değilse hatırlat
+    var loggedUser = (typeof AuthManager!=='undefined' && AuthManager.getUser) ? AuthManager.getUser() : null;
+    var msg = document.createElement('div');
+    msg.style.cssText = 'position:fixed;top:80px;right:20px;left:20px;max-width:400px;margin:0 auto;background:linear-gradient(135deg,#D4A24C,#B01C2E);color:#fff;padding:14px 18px;border-radius:12px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 12px 32px rgba(0,0,0,.3);animation:fadeIn .3s';
+    if(loggedUser){
+      msg.innerHTML = '🎁 <strong>Kuponunuz hazır!</strong><br><span style="font-weight:400;font-size:12px">PPF kaplama hizmeti seçin → sepette <code style="background:rgba(0,0,0,.25);padding:2px 6px;border-radius:4px">'+kuponKod+'</code> kodu otomatik gelecek.</span>';
+    } else {
+      msg.innerHTML = '🔒 <strong>Önce giriş yapın</strong><br><span style="font-weight:400;font-size:12px">Kuponunuzu kullanmak için üye girişi gerekli.</span>';
+    }
+    document.body.appendChild(msg);
+    setTimeout(function(){ msg.style.transition='opacity .4s';msg.style.opacity='0'; setTimeout(function(){msg.remove()},400); }, 6000);
+  }, 1000);
+})();
 </script>
 
 </body>
