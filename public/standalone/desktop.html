@@ -9322,24 +9322,31 @@ function igProfilRender(d){
     if(el) el.href = profilUrl;
   });
 
-  // Avatar resmi
+  // Avatar resmi - iOS Safari uyumlu render
   const avEl = document.getElementById('ig-avatar-img');
   if(avEl){
     const yeniSrc = d.profilResmi || '';
     const fb = avEl.parentNode && avEl.parentNode.querySelector('.ig-avatar-fallback');
     if(yeniSrc){
+      // Önce fallback'i gizle, sonra img'i göster (sırayla, race condition olmasın)
+      if(fb){ fb.style.cssText = 'display:none !important'; }
+      avEl.style.cssText = 'display:block';
+      // src'yi ayarla - eğer base64 ise iOS Safari büyük string kontrol etsin
       avEl.src = yeniSrc;
-      avEl.style.display = '';
-      if(fb) fb.style.display = 'none';
       // Yeni src yüklenemezse fallback aç
       avEl.onerror = function(){
-        avEl.style.display = 'none';
-        if(fb) fb.style.display = 'flex';
+        avEl.style.cssText = 'display:none';
+        if(fb){ fb.style.cssText = 'display:flex'; }
+      };
+      avEl.onload = function(){
+        // Başarıyla yüklendi - kesinleştir
+        avEl.style.cssText = 'display:block';
+        if(fb){ fb.style.cssText = 'display:none'; }
       };
     } else {
       // URL yok → fallback (EK) göster
-      avEl.style.display = 'none';
-      if(fb) fb.style.display = 'flex';
+      avEl.style.cssText = 'display:none';
+      if(fb){ fb.style.cssText = 'display:flex'; }
     }
   }
 

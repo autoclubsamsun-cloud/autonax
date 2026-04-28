@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Ödeme — Autonax</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #fff5f3 0%, #fae4de 100%);
+      min-height: 100vh;
+      color: #2d1b16;
+      padding: 20px;
+    }
+    .konteyner { max-width: 580px; margin: 0 auto; padding-top: 30px; }
+
+    .logo-alan { text-align: center; margin-bottom: 30px; }
+    .logo-alan h1 {
+      font-family: 'Bebas Neue', sans-serif; color: #a13128; font-size: 48px;
+      margin: 0; letter-spacing: 3px;
+    }
+
+    .kart {
+      background: white; border-radius: 16px; padding: 30px;
+      box-shadow: 0 10px 40px rgba(161, 49, 40, 0.12);
+      margin-bottom: 20px;
+    }
+
+    .ozet-baslik { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+    .ozet-baslik h2 { margin: 0; color: #a13128; font-size: 18px; font-weight: 600; }
+    .ozet-baslik p { margin: 4px 0 0; font-size: 13px; color: #8a6d63; }
+
+    .tutar-kart {
+      background: linear-gradient(135deg, #fff5f3 0%, #ffe0d9 100%);
+      padding: 20px; border-radius: 12px; margin: 16px 0; text-align: center;
+      border: 2px solid #f9d2c8;
+      transition: all 0.3s;
+    }
+    .tutar-kart .etiket { font-size: 12px; color: #a13128; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; }
+    .tutar-kart .deger { font-size: 36px; font-weight: 700; color: #7a231a; margin-top: 4px; }
+    .tutar-kart .eski-tutar { font-size: 13px; color: #8a6d63; text-decoration: line-through; margin-top: 4px; }
+    .tutar-kart .vade-not {
+      font-size: 11px; color: #a13128; margin-top: 6px; font-weight: 600;
+      padding-top: 6px; border-top: 1px solid #f9d2c8;
+    }
+    .tutar-kart .vade-not.firma { color: #16a34a; }
+
+    .bilgi-sati { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f4e3dd; }
+    .bilgi-sati:last-child { border-bottom: none; }
+    .bilgi-sati .etiket { color: #8a6d63; font-size: 14px; }
+    .bilgi-sati .deger { color: #2d1b16; font-weight: 500; font-size: 14px; }
+
+    .form-baslik { color: #a13128; font-size: 16px; font-weight: 600; margin: 0 0 12px; }
+    .form-grup { margin-bottom: 14px; }
+    .form-grup label {
+      display: block; font-size: 12px; color: #8a6d63;
+      font-weight: 600; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .form-grup input, .form-grup select, .form-grup textarea {
+      width: 100%; padding: 12px 14px; border: 1px solid #e8d4ce;
+      border-radius: 8px; font-family: inherit; font-size: 15px; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s; background: white;
+    }
+    .form-grup input:focus, .form-grup select:focus, .form-grup textarea:focus {
+      border-color: #a13128; box-shadow: 0 0 0 3px rgba(161, 49, 40, 0.1);
+    }
+    .form-grup select:disabled {
+      background: #f5f5f5; color: #999; cursor: not-allowed;
+    }
+    .form-grup textarea { resize: vertical; min-height: 60px; }
+    .form-satir-3 { display: grid; grid-template-columns: 2fr 2fr 1.5fr; gap: 12px; }
+
+    /* Vade secici butonlari */
+    .vade-secici { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .vade-btn {
+      padding: 12px; border: 2px solid #e8d4ce; border-radius: 10px;
+      background: white; cursor: pointer; transition: all 0.2s;
+      font-family: inherit; text-align: center;
+    }
+    .vade-btn:hover { border-color: #a13128; background: #fff5f3; }
+    .vade-btn.secili {
+      background: linear-gradient(135deg, #a13128, #7a231a);
+      border-color: #7a231a; color: white;
+    }
+    .vade-baslik { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+    .vade-aciklama { font-size: 11px; opacity: 0.75; }
+
+    .kart-marka-bilgi {
+      margin-top: 6px; padding: 8px 10px; background: #fff5f3; border-radius: 6px;
+      font-size: 11px; color: #a13128; display: none;
+    }
+    .kart-marka-bilgi.gorunur { display: block; }
+    .kart-marka-bilgi.uyari {
+      background: #fff8e1; color: #92400e; border: 1px solid #fde68a;
+    }
+    .kart-marka-bilgi.hata {
+      background: #fff5f3; color: #991b1b; border: 1px solid #f9d2c8;
+    }
+    .kart-marka-bilgi .marka { font-weight: 700; }
+
+    .taksit-uyari {
+      margin-top: 8px; padding: 10px 12px; background: #fff8e1;
+      border: 1px solid #fde68a; border-radius: 8px;
+      font-size: 12px; color: #78350f; display: none;
+    }
+    .taksit-uyari.gorunur { display: block; }
+
+    .odeme-btn {
+      width: 100%; padding: 16px; background: linear-gradient(135deg, #a13128, #7a231a);
+      color: white; border: none; border-radius: 10px; font-size: 17px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s; margin-top: 20px;
+    }
+    .odeme-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(161, 49, 40, 0.3); }
+    .odeme-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .guven-bilgi {
+      text-align: center; color: #8a6d63; font-size: 12px; margin-top: 16px;
+    }
+
+    .yukleniyor { display: none; text-align: center; padding: 40px 20px; }
+    .yukleniyor.gorunur { display: block; }
+    .yukleniyor .spinner {
+      width: 40px; height: 40px; border: 3px solid #f9d2c8;
+      border-top-color: #a13128; border-radius: 50%;
+      animation: spin 1s linear infinite; margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hata-mesaj {
+      display: none; background: #fff5f3; border: 1px solid #a13128;
+      color: #7a231a; padding: 12px 14px; border-radius: 8px;
+      margin-bottom: 16px; font-size: 14px; font-weight: 500;
+    }
+    .hata-mesaj.gorunur { display: block; }
+
+    @media (max-width: 520px) {
+      .form-satir-3 { grid-template-columns: 1fr 1fr; }
+      .vade-secici { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="konteyner">
+    <div class="logo-alan">
+      <h1>AUTONAX</h1>
+    </div>
+
+    <div id="yukleniyor" class="yukleniyor">
+      <div class="spinner"></div>
+      <p style="color: #8a6d63;">Ödeme bilgileri yükleniyor...</p>
+    </div>
+
+    <div id="icerik" style="display: none;">
+      <div class="kart">
+        <div class="ozet-baslik">
+          <div>
+            <h2>Ödeme Özeti</h2>
+            <p>Bilgileri kontrol edip ödemenizi tamamlayın</p>
+          </div>
+        </div>
+
+        <div class="tutar-kart" id="tutar-kart">
+          <div class="etiket">Ödenecek Tutar</div>
+          <div class="deger" id="ozet-tutar">--</div>
+          <div class="eski-tutar" id="eski-tutar" style="display:none"></div>
+          <div class="vade-not" id="vade-not" style="display:none"></div>
+        </div>
+
+        <div id="ozet-bilgileri"></div>
+      </div>
+
+      <div class="kart">
+        <h3 class="form-baslik">Kredi Kartı / Banka Kartı ile Ödeme</h3>
+
+        <div id="hata-mesaj" class="hata-mesaj"></div>
+
+        <form id="odeme-form">
+          <div class="form-grup">
+            <label for="cc_owner">Kart Üzerindeki İsim</label>
+            <input type="text" id="cc_owner" name="cc_owner" required autocomplete="cc-name" placeholder="JOHN DOE" />
+          </div>
+
+          <div class="form-grup">
+            <label for="card_number">Kart Numarası</label>
+            <input type="text" id="card_number" name="card_number" required inputmode="numeric" autocomplete="cc-number" maxlength="23" placeholder="0000 0000 0000 0000" />
+            <div id="kart-marka-bilgi" class="kart-marka-bilgi">
+              <span id="kart-ikon">🏦</span>
+              <span> <span id="kart-durum-metin"></span></span>
+              <span class="marka" id="kart-marka"></span>
+              <span id="kart-banka"></span>
+            </div>
+          </div>
+
+          <div class="form-satir-3">
+            <div class="form-grup">
+              <label for="expiry_month">Son Kul. Ay</label>
+              <input type="text" id="expiry_month" name="expiry_month" required inputmode="numeric" autocomplete="cc-exp-month" maxlength="2" placeholder="12" />
+            </div>
+            <div class="form-grup">
+              <label for="expiry_year">Son Kul. Yıl</label>
+              <input type="text" id="expiry_year" name="expiry_year" required inputmode="numeric" autocomplete="cc-exp-year" maxlength="2" placeholder="26" />
+            </div>
+            <div class="form-grup">
+              <label for="cvv">CVC / CVV</label>
+              <input type="text" id="cvv" name="cvv" required inputmode="numeric" autocomplete="cc-csc" maxlength="4" placeholder="000" />
+            </div>
+          </div>
+
+          <div class="form-grup">
+            <label>Vade Farkı</label>
+            <div class="vade-secici">
+              <button type="button" class="vade-btn" data-vade="firma" id="vade-btn-firma">
+                <div class="vade-baslik">Firmadan Kesilsin</div>
+                <div class="vade-aciklama">Tutar sabit kalır</div>
+              </button>
+              <button type="button" class="vade-btn" data-vade="musteri" id="vade-btn-musteri">
+                <div class="vade-baslik">Müşteriden Kesilsin</div>
+                <div class="vade-aciklama">Tutara eklenir</div>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-grup">
+            <label for="taksit">Taksit Seçimi</label>
+            <select id="taksit" name="taksit">
+              <option value="0">Tek Çekim</option>
+            </select>
+            <div id="taksit-uyari" class="taksit-uyari"></div>
+            <div id="taksit-detay" style="margin-top:8px;font-size:12px;color:#8a6d63;display:none"></div>
+          </div>
+
+          <div class="form-grup">
+            <label for="musteri_notu">Not (Opsiyonel)</label>
+            <textarea id="musteri_notu" name="musteri_notu" placeholder="Siparişinizle ilgili notunuz..."></textarea>
+          </div>
+
+          <button type="submit" class="odeme-btn" id="odeme-btn">
+            💳 Ödeme Yap
+          </button>
+
+          <div class="guven-bilgi">
+            🔒 SSL güvenli · PayTR altyapısı · 3D Secure
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="genel-hata" style="display: none;" class="kart">
+      <h2 style="color: #a13128; margin: 0 0 12px;">⚠️ Ödeme Başlatılamadı</h2>
+      <p id="genel-hata-mesaj" style="color: #2d1b16; margin: 0;"></p>
+    </div>
+  </div>
+
+  <script>
+    var KOD = window.location.pathname.split('/').pop();
+    var mevcutBorc = null;
+    var TAKSIT_ORANLARI = {};
+    var VADE_KARSILAYAN_FIRMA = true;
+    var SECILEN_MARKA = null;
+    var MARKA_DURUMU = 'bekleniyor'; // 'bekleniyor' | 'tanindi' | 'tanimsiz'
+    var BIN_SORGU_TIMER = null;
+    var SON_BIN = null;
+
+    var yukleniyorEl = document.getElementById('yukleniyor');
+    var icerikEl = document.getElementById('icerik');
+    var genelHataEl = document.getElementById('genel-hata');
+    var genelHataMesajEl = document.getElementById('genel-hata-mesaj');
+    var hataMesajEl = document.getElementById('hata-mesaj');
+    var formEl = document.getElementById('odeme-form');
+    var odemeBtn = document.getElementById('odeme-btn');
+    var taksitSelectEl = document.getElementById('taksit');
+    var taksitDetayEl = document.getElementById('taksit-detay');
+    var taksitUyariEl = document.getElementById('taksit-uyari');
+    var ozetTutarEl = document.getElementById('ozet-tutar');
+    var eskiTutarEl = document.getElementById('eski-tutar');
+    var vadeNotEl = document.getElementById('vade-not');
+    var kartMarkaBilgiEl = document.getElementById('kart-marka-bilgi');
+    var kartIkonEl = document.getElementById('kart-ikon');
+    var kartDurumMetinEl = document.getElementById('kart-durum-metin');
+    var kartMarkaEl = document.getElementById('kart-marka');
+    var kartBankaEl = document.getElementById('kart-banka');
+
+    function paraFormat(tutar) {
+      return tutar.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺';
+    }
+
+    document.getElementById('card_number').addEventListener('input', function(e) {
+      var v = e.target.value.replace(/\s/g, '');
+      if (v.length > 16) v = v.substring(0, 16);
+      e.target.value = v.replace(/(.{4})/g, '$1 ').trim();
+
+      if (v.length >= 6) {
+        var bin = v.substring(0, 6);
+        if (bin !== SON_BIN) {
+          SON_BIN = bin;
+          MARKA_DURUMU = 'bekleniyor';
+          kartIkonEl.textContent = '⏳';
+          kartDurumMetinEl.textContent = 'Kart kontrol ediliyor... ';
+          kartMarkaEl.textContent = '';
+          kartBankaEl.textContent = '';
+          kartMarkaBilgiEl.className = 'kart-marka-bilgi gorunur';
+          if (BIN_SORGU_TIMER) clearTimeout(BIN_SORGU_TIMER);
+          BIN_SORGU_TIMER = setTimeout(function() { binSorgu(bin); }, 500);
+        }
+      } else {
+        SECILEN_MARKA = null;
+        SON_BIN = null;
+        MARKA_DURUMU = 'bekleniyor';
+        kartMarkaBilgiEl.classList.remove('gorunur');
+        kartMarkaBilgiEl.classList.remove('uyari');
+        kartMarkaBilgiEl.classList.remove('hata');
+        taksitSeceneklerGuncelle();
+      }
+    });
+
+    ['expiry_month', 'expiry_year', 'cvv'].forEach(function(id){
+      document.getElementById(id).addEventListener('input', function(e) {
+        e.target.value = e.target.value.replace(/\D/g, '');
+      });
+    });
+
+    taksitSelectEl.addEventListener('change', function() {
+      tutarGuncelle();
+    });
+
+    // Vade butonlari
+    var vadeBtnFirma = document.getElementById('vade-btn-firma');
+    var vadeBtnMusteri = document.getElementById('vade-btn-musteri');
+
+    function vadeButonGuncelle() {
+      if (VADE_KARSILAYAN_FIRMA) {
+        vadeBtnFirma.classList.add('secili');
+        vadeBtnMusteri.classList.remove('secili');
+      } else {
+        vadeBtnMusteri.classList.add('secili');
+        vadeBtnFirma.classList.remove('secili');
+      }
+    }
+
+    vadeBtnFirma.addEventListener('click', function() {
+      VADE_KARSILAYAN_FIRMA = true;
+      vadeButonGuncelle();
+      taksitSeceneklerGuncelle();
+    });
+
+    vadeBtnMusteri.addEventListener('click', function() {
+      VADE_KARSILAYAN_FIRMA = false;
+      vadeButonGuncelle();
+      taksitSeceneklerGuncelle();
+    });
+
+    function binSorgu(bin) {
+      fetch('/api/odeme/paytr/bin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ binNumber: bin })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.success && d.data) {
+          var marka = d.data.brand || '';
+          var banka = d.data.bank || '';
+          var eslesenMarka = markaEslestir(marka);
+
+          if (eslesenMarka && TAKSIT_ORANLARI[eslesenMarka]) {
+            // Marka tanındı VE taksit oranlari var
+            SECILEN_MARKA = eslesenMarka;
+            MARKA_DURUMU = 'tanindi';
+            kartIkonEl.textContent = '✓';
+            kartDurumMetinEl.textContent = 'Kart tanındı: ';
+            kartMarkaEl.textContent = marka || eslesenMarka;
+            kartBankaEl.textContent = banka ? ' (' + banka + ')' : '';
+            kartMarkaBilgiEl.className = 'kart-marka-bilgi gorunur';
+          } else {
+            // Marka PayTR'dan geldi ama bizim taksit tablosunda YOK (örn Ziraat Combo, Halkbank Paraf vs)
+            SECILEN_MARKA = null;
+            MARKA_DURUMU = 'tanimsiz';
+            kartIkonEl.textContent = 'ℹ️';
+            kartDurumMetinEl.textContent = 'Bu kart için sadece tek çekim: ';
+            kartMarkaEl.textContent = marka || 'Bilinmeyen';
+            kartBankaEl.textContent = banka ? ' (' + banka + ')' : '';
+            kartMarkaBilgiEl.className = 'kart-marka-bilgi gorunur uyari';
+          }
+        } else {
+          // PayTR BIN'i bilmiyor (yabanci kart vs)
+          SECILEN_MARKA = null;
+          MARKA_DURUMU = 'tanimsiz';
+          kartIkonEl.textContent = 'ℹ️';
+          kartDurumMetinEl.textContent = 'Bu kart için sadece tek çekim yapılabilir';
+          kartMarkaEl.textContent = '';
+          kartBankaEl.textContent = '';
+          kartMarkaBilgiEl.className = 'kart-marka-bilgi gorunur uyari';
+        }
+        taksitSeceneklerGuncelle();
+      })
+      .catch(function(err) {
+        console.error('BIN sorgu hatasi:', err);
+        SECILEN_MARKA = null;
+        MARKA_DURUMU = 'tanimsiz';
+        kartIkonEl.textContent = 'ℹ️';
+        kartDurumMetinEl.textContent = 'Kart kontrol edilemedi - tek çekim öneriyoruz';
+        kartMarkaEl.textContent = '';
+        kartBankaEl.textContent = '';
+        kartMarkaBilgiEl.className = 'kart-marka-bilgi gorunur uyari';
+        taksitSeceneklerGuncelle();
+      });
+    }
+
+    function markaEslestir(paytrMarka) {
+      if (!paytrMarka) return null;
+      var keys = Object.keys(TAKSIT_ORANLARI);
+      var paytrLower = paytrMarka.toLowerCase();
+      for (var i = 0; i < keys.length; i++) {
+        if (keys[i].toLowerCase() === paytrLower) return keys[i];
+      }
+      for (var i = 0; i < keys.length; i++) {
+        if (paytrLower.indexOf(keys[i].toLowerCase()) !== -1 ||
+            keys[i].toLowerCase().indexOf(paytrLower) !== -1) return keys[i];
+      }
+      return null;
+    }
+
+    function aktifOranlariAl() {
+      // Marka tespit edilmediyse veya bizim tabloda yoksa - taksit vermeyelim
+      if (!SECILEN_MARKA || MARKA_DURUMU === 'tanimsiz') return null;
+      if (!TAKSIT_ORANLARI[SECILEN_MARKA]) return null;
+      return TAKSIT_ORANLARI[SECILEN_MARKA];
+    }
+
+    function taksitSeceneklerGuncelle() {
+      if (!mevcutBorc) return;
+      var tutar = mevcutBorc.tutar;
+      var oranlar = aktifOranlariAl();
+      var secili = taksitSelectEl.value;
+
+      taksitSelectEl.innerHTML = '';
+      taksitUyariEl.classList.remove('gorunur');
+      taksitUyariEl.textContent = '';
+
+      // TEK CEKIM - her zaman var
+      var opt1 = document.createElement('option');
+      opt1.value = '0';
+      opt1.textContent = 'Tek Çekim - ' + paraFormat(tutar);
+      taksitSelectEl.appendChild(opt1);
+
+      // Marka tanınmadı veya taksit tablosu yok - SADECE TEK CEKIM
+      if (!oranlar) {
+        taksitSelectEl.value = '0';
+        taksitSelectEl.disabled = false; // etkinlik korunuyor ama sadece 1 secenek
+
+        // Durum bazlı uyarı
+        if (MARKA_DURUMU === 'tanimsiz') {
+          taksitUyariEl.innerHTML = '<strong>ℹ️ Bilgi:</strong> Bu kart markası taksitli ödeme desteklemiyor. Tek çekim ile devam edebilirsiniz.';
+          taksitUyariEl.classList.add('gorunur');
+        } else if (MARKA_DURUMU === 'bekleniyor') {
+          taksitUyariEl.innerHTML = '<strong>⏳ Beklenyor:</strong> Kart kontrolü yapılıyor, taksit seçenekleri birazdan açılacak.';
+          taksitUyariEl.classList.add('gorunur');
+        }
+
+        tutarGuncelle();
+        return;
+      }
+
+      // Marka tanındı - taksit seçenekleri varsa göster
+      var eklenenAy = 0;
+      for (var ay = 2; ay <= 12; ay++) {
+        var oran = oranlar[ay];
+        // Oran TANIMLI DEGIL (undefined) ise o taksiti atla - desteklenmiyor demektir
+        // Oran 0 ise bile taksit vardır ama firma yüzdelik almıyor - yine göster
+        if (oran === undefined || oran === null) continue;
+
+        var metin = ay + ' Taksit';
+        if (oran > 0) {
+          if (VADE_KARSILAYAN_FIRMA) {
+            var aylik = tutar / ay;
+            metin += ' - ' + paraFormat(aylik) + '/ay (%' + oran + ' firma)';
+          } else {
+            var yeniTop = tutar * (1 + oran/100);
+            var aylikYeni = yeniTop / ay;
+            metin += ' - ' + paraFormat(aylikYeni) + '/ay (Toplam ' + paraFormat(yeniTop) + ')';
+          }
+        } else {
+          metin += ' - ' + paraFormat(tutar / ay) + '/ay';
+        }
+        var opt = document.createElement('option');
+        opt.value = ay.toString();
+        opt.textContent = metin;
+        taksitSelectEl.appendChild(opt);
+        eklenenAy++;
+      }
+
+      if (eklenenAy === 0) {
+        taksitUyariEl.innerHTML = '<strong>ℹ️ Bilgi:</strong> Bu kart için taksit tanımı yok. Tek çekim ile devam edin.';
+        taksitUyariEl.classList.add('gorunur');
+      }
+
+      taksitSelectEl.disabled = false;
+      taksitSelectEl.value = secili || '0';
+      tutarGuncelle();
+    }
+
+    function tutarGuncelle() {
+      if (!mevcutBorc) return;
+      var tutar = mevcutBorc.tutar;
+      var secim = parseInt(taksitSelectEl.value) || 0;
+      var oranlar = aktifOranlariAl();
+      var ay = secim === 0 ? 1 : secim;
+      var oran = (oranlar && oranlar[ay]) ? oranlar[ay] : 0;
+      var gosterilecekTutar = tutar;
+
+      if (oran > 0 && !VADE_KARSILAYAN_FIRMA) {
+        gosterilecekTutar = tutar * (1 + oran/100);
+        ozetTutarEl.textContent = paraFormat(gosterilecekTutar);
+        eskiTutarEl.textContent = paraFormat(tutar);
+        eskiTutarEl.style.display = 'block';
+        vadeNotEl.textContent = 'Vade farkı (+%' + oran + ') tutara dahildir';
+        vadeNotEl.className = 'vade-not';
+        vadeNotEl.style.display = 'block';
+      } else if (oran > 0 && VADE_KARSILAYAN_FIRMA) {
+        ozetTutarEl.textContent = paraFormat(tutar);
+        eskiTutarEl.style.display = 'none';
+        vadeNotEl.textContent = 'Vade farkı (%' + oran + ') firma tarafından karşılanır';
+        vadeNotEl.className = 'vade-not firma';
+        vadeNotEl.style.display = 'block';
+      } else {
+        ozetTutarEl.textContent = paraFormat(tutar);
+        eskiTutarEl.style.display = 'none';
+        vadeNotEl.style.display = 'none';
+      }
+
+      if (secim >= 2) {
+        var aylikTut = gosterilecekTutar / secim;
+        taksitDetayEl.textContent = secim + ' x ' + paraFormat(aylikTut) + ' aylık ödeme';
+        taksitDetayEl.style.display = 'block';
+      } else {
+        taksitDetayEl.style.display = 'none';
+      }
+    }
+
+    function linkYukle() {
+      fetch('/api/odeme/link/' + KOD)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (!d.success) {
+            genelHataMesajEl.textContent = d.error || 'Ödeme linki bulunamadı';
+            yukleniyorEl.style.display = 'none';
+            genelHataEl.style.display = 'block';
+            return null;
+          }
+          mevcutBorc = d.data;
+          if (mevcutBorc.durum === 'ODENDI') {
+            window.location.href = '/odeme-basarili?oid=' + mevcutBorc.siparisId;
+            return null;
+          }
+          if (new Date(mevcutBorc.sonGecerlilik) < new Date()) {
+            genelHataMesajEl.textContent = 'Bu ödeme linkinin süresi dolmuş.';
+            yukleniyorEl.style.display = 'none';
+            genelHataEl.style.display = 'block';
+            return null;
+          }
+
+          ozetTutarEl.textContent = paraFormat(mevcutBorc.tutar);
+          var bilgiHTML =
+            '<div class="bilgi-sati"><span class="etiket">Hizmet</span><span class="deger">' + (mevcutBorc.aciklama || 'Autonax Hizmeti') + '</span></div>' +
+            '<div class="bilgi-sati"><span class="etiket">Ad Soyad</span><span class="deger">' + mevcutBorc.musteriAdi + '</span></div>' +
+            (mevcutBorc.musteriEmailMaskeli ? '<div class="bilgi-sati"><span class="etiket">E-posta</span><span class="deger">' + mevcutBorc.musteriEmailMaskeli + '</span></div>' : '') +
+            '<div class="bilgi-sati"><span class="etiket">Son Geçerlilik</span><span class="deger">' + new Date(mevcutBorc.sonGecerlilik).toLocaleString('tr-TR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) + '</span></div>';
+          document.getElementById('ozet-bilgileri').innerHTML = bilgiHTML;
+
+          return fetch('/api/odeme/taksit-bilgi');
+        })
+        .then(function(r) { return r ? r.json() : null; })
+        .then(function(d) {
+          if (d && d.success && d.data) {
+            TAKSIT_ORANLARI = d.data.taksitOranlari || {};
+            VADE_KARSILAYAN_FIRMA = d.data.vadeKarsilayanFirma !== false;
+          }
+          vadeButonGuncelle();
+          taksitSeceneklerGuncelle();
+          yukleniyorEl.style.display = 'none';
+          icerikEl.style.display = 'block';
+        })
+        .catch(function(err) {
+          console.error('Yukleme hatasi:', err);
+          genelHataMesajEl.textContent = 'Bağlantı hatası: ' + err.message;
+          yukleniyorEl.style.display = 'none';
+          genelHataEl.style.display = 'block';
+        });
+    }
+
+    formEl.addEventListener('submit', function(e) {
+      e.preventDefault();
+      hataMesajEl.classList.remove('gorunur');
+      hataMesajEl.textContent = '';
+
+      var ccOwner = document.getElementById('cc_owner').value.trim();
+      var cardNumber = document.getElementById('card_number').value.replace(/\s/g, '');
+      var expiryMonth = document.getElementById('expiry_month').value;
+      var expiryYear = document.getElementById('expiry_year').value;
+      var cvv = document.getElementById('cvv').value;
+      var installmentCount = parseInt(taksitSelectEl.value) || 0;
+      var musteriNotu = document.getElementById('musteri_notu').value.trim();
+
+      if (cardNumber.length < 13 || cardNumber.length > 19) {
+        hataMesajEl.textContent = 'Kart numarası geçersiz';
+        hataMesajEl.classList.add('gorunur'); return;
+      }
+      if (cvv.length < 3) {
+        hataMesajEl.textContent = 'CVV geçersiz';
+        hataMesajEl.classList.add('gorunur'); return;
+      }
+
+      // EK GUVENLIK: Marka tespit edilmediyse ama taksit secildiyse ENGELLE
+      if (installmentCount > 1 && !SECILEN_MARKA) {
+        hataMesajEl.innerHTML = '<strong>⚠️ Uyarı:</strong> Bu kart için taksit desteklenmiyor olabilir. Lütfen "Tek Çekim" seçerek devam edin.';
+        hataMesajEl.classList.add('gorunur');
+        taksitSelectEl.value = '0';
+        tutarGuncelle();
+        return;
+      }
+
+      odemeBtn.disabled = true;
+      odemeBtn.innerHTML = '⏳ Ödeme İşleniyor...';
+
+      fetch('/api/odeme/paytr/direct', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          kod: KOD,
+          ccOwner: ccOwner,
+          cardNumber: cardNumber,
+          expiryMonth: expiryMonth,
+          expiryYear: expiryYear,
+          cvv: cvv,
+          installmentCount: installmentCount,
+          musteriNotu: musteriNotu,
+          vadeKarsilayanFirma: VADE_KARSILAYAN_FIRMA,
+          secilenMarka: SECILEN_MARKA || null
+        })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (!d.success) {
+          // PayTR hatasi - taksit sorunu olabilir, "Tek Cekim ile Dene" butonu ekle
+          var hataMetni = d.error || 'Ödeme başlatılamadı';
+          var taksitSorunuMu = installmentCount > 1;
+          if (taksitSorunuMu) {
+            hataMesajEl.innerHTML = '<div><strong>Ödeme reddedildi:</strong> ' + hataMetni + '</div>' +
+              '<div style="margin-top:8px"><button type="button" id="tek-cekim-btn" style="padding:8px 14px;background:#16a34a;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px">↻ Tek Çekim ile Tekrar Dene</button></div>';
+            hataMesajEl.classList.add('gorunur');
+            setTimeout(function() {
+              var btn = document.getElementById('tek-cekim-btn');
+              if (btn) btn.onclick = function() {
+                taksitSelectEl.value = '0';
+                tutarGuncelle();
+                hataMesajEl.classList.remove('gorunur');
+                hataMesajEl.innerHTML = '';
+              };
+            }, 50);
+          } else {
+            hataMesajEl.textContent = hataMetni;
+            hataMesajEl.classList.add('gorunur');
+          }
+          odemeBtn.disabled = false;
+          odemeBtn.innerHTML = '💳 Ödeme Yap';
+          return;
+        }
+        if (d.data && d.data.type === 'sync_success') {
+          window.location.href = d.data.redirectUrl;
+          return;
+        }
+        if (d.data && d.data.type === '3ds_redirect' && d.data.html3ds) {
+          document.open();
+          document.write(d.data.html3ds);
+          document.close();
+          return;
+        }
+        hataMesajEl.textContent = 'Beklenmeyen yanıt';
+        hataMesajEl.classList.add('gorunur');
+        odemeBtn.disabled = false;
+        odemeBtn.innerHTML = '💳 Ödeme Yap';
+      })
+      .catch(function(err) {
+        hataMesajEl.textContent = 'Bağlantı hatası: ' + err.message;
+        hataMesajEl.classList.add('gorunur');
+        odemeBtn.disabled = false;
+        odemeBtn.innerHTML = '💳 Ödeme Yap';
+      });
+    });
+
+    linkYukle();
+  </script>
+</body>
+</html>

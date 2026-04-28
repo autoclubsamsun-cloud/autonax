@@ -14175,45 +14175,113 @@ function saListenerBagla(tab){
     var tglIE=document.getElementById('tgl-ie-aktif');
     if(tglIE&&!tglIE._l){tglIE._l=true;tglIE.addEventListener('click',function(){tglIE.classList.toggle('on');});}
 
-    // Profil resmi dosya yükleme
+    // Profil resmi dosya yükleme - canvas ile küçült (iOS Safari uyumlu)
     var fileInp=document.getElementById('ie-profilResmi-file');
     if(fileInp&&!fileInp._l){
       fileInp._l=true;
       fileInp.addEventListener('change',function(e){
         var file=e.target.files[0]; if(!file) return;
         if(!file.type.startsWith('image/')){toast('Sadece resim dosyası!','red');return;}
-        if(file.size>2*1024*1024){toast('Max 2MB olmalı!','red');return;}
-        toast('⏳ Yükleniyor...','blue');
-        var fd=new FormData();
-        fd.append('file',file);
-        fd.append('klasor','instagram');
-        fetch('/api/resim',{method:'POST',body:fd,credentials:'same-origin'})
-        .then(function(r){return r.json();})
-        .then(function(d){
-          if(d.success){
-            // SITE_AYARLAR'a yaz
-            if(!SITE_AYARLAR.instagramEmbed) SITE_AYARLAR.instagramEmbed={};
-            SITE_AYARLAR.instagramEmbed.profilResmi=d.url;
-            // Preview güncelle (URL'i CSS-safe yap)
-            var prev=document.getElementById('ie-profilResmi-preview');
-            if(prev){
-              var safeUrl=String(d.url).replace(/'/g,'%27').replace(/"/g,'%22');
-              prev.style.backgroundImage='url(\''+safeUrl+'\')';
+        if(file.size>5*1024*1024){toast('Max 5MB olmalı!','red');return;}
+        toast('⏳ Resim küçültülüyor...','blue');
+
+        // Resmi canvas ile 200x200'e küçült
+        var reader=new FileReader();
+        reader.onload=function(rev){
+          var img=new Image();
+          img.onload=function(){
+            try {
+              // Square crop + 200x200 resize
+              var size=200;
+              var canvas=document.createElement('canvas');
+              canvas.width=size;
+              canvas.height=size;
+              var ctx=canvas.getContext('2d');
+
+              // Aspect ratio koruyarak kare crop
+              var srcSize=Math.min(img.width,img.height);
+              var srcX=(img.width-srcSize)/2;
+              var srcY=(img.height-srcSize)/2;
+
+              // Beyaz arka plan
+              ctx.fillStyle='#fff';
+              ctx.fillRect(0,0,size,size);
+              ctx.drawImage(img,srcX,srcY,srcSize,srcSize,0,0,size,size);
+
+              // JPEG quality 0.85 (yaklaşık 15-30KB)
+              var smallBase64=canvas.toDataURL('image/jpeg',0.85);
+
+              // Önce backend'e dene, başarısız olursa base64 fallback
+              var blob=null;
+              try {
+                var arr=smallBase64.split(',');
+                var mime=arr[0].match(/:(.*?);/)[1];
+                var bstr=atob(arr[1]);
+                var n=bstr.length;
+                var u8=new Uint8Array(n);
+                while(n--) u8[n]=bstr.charCodeAt(n);
+                blob=new Blob([u8],{type:mime});
+              } catch(e){}
+
+              if(blob){
+                var fd=new FormData();
+                fd.append('file',blob,'instagram-profil.jpg');
+                fd.append('klasor','instagram');
+                fetch('/api/resim',{method:'POST',body:fd,credentials:'same-origin'})
+                .then(function(r){return r.json();})
+                .then(function(d){
+                  if(d&&d.success&&d.url){
+                    instagramProfilResmiKaydet(d.url,file.name,blob.size);
+                    toast('✅ Profil resmi sunucuya yüklendi','green');
+                  } else {
+                    // Backend yanıt verdi ama success=false → base64 kullan
+                    instagramProfilResmiKaydet(smallBase64,file.name,smallBase64.length);
+                    toast('✅ Profil resmi kaydedildi (yerel)','green');
+                  }
+                })
+                .catch(function(){
+                  // Backend hata → base64 fallback
+                  instagramProfilResmiKaydet(smallBase64,file.name,smallBase64.length);
+                  toast('✅ Profil resmi kaydedildi (yerel)','green');
+                });
+              } else {
+                // Blob oluşturulamadı → direkt base64
+                instagramProfilResmiKaydet(smallBase64,file.name,smallBase64.length);
+                toast('✅ Profil resmi kaydedildi','green');
+              }
+            } catch(err){
+              console.error('Resim işleme hatası:',err);
+              toast('❌ Resim işlenemedi','red');
             }
-            // Durum metni güncelle
-            var durum=document.getElementById('ie-profilResmi-durum');
-            if(durum){durum.textContent='✅ Yüklendi';durum.style.color='#16a34a';}
-            // Medyaya da ekle
-            if(!SITE_AYARLAR.medya) SITE_AYARLAR.medya=[];
-            SITE_AYARLAR.medya.push({url:d.url,isim:file.name,boyut:file.size,tarih:new Date().toISOString()});
-            siteAyarKaydet('Instagram Profil Resmi');
-            toast('✅ Profil resmi yüklendi','green');
-          } else {toast('❌ Yükleme hatası','red');}
-        })
-        .catch(function(){toast('❌ Bağlantı hatası','red');});
+          };
+          img.onerror=function(){toast('❌ Resim okunamadı','red');};
+          img.src=rev.target.result;
+        };
+        reader.onerror=function(){toast('❌ Dosya okunamadı','red');};
+        reader.readAsDataURL(file);
       });
     }
   }
+}
+
+// Profil resmi kaydet (URL veya base64) - DRY
+function instagramProfilResmiKaydet(resimVeri,isim,boyut){
+  if(!SITE_AYARLAR.instagramEmbed) SITE_AYARLAR.instagramEmbed={};
+  SITE_AYARLAR.instagramEmbed.profilResmi=resimVeri;
+  // Preview güncelle (CSS-safe)
+  var prev=document.getElementById('ie-profilResmi-preview');
+  if(prev){
+    var safeUrl=String(resimVeri).replace(/'/g,'%27').replace(/"/g,'%22');
+    prev.style.backgroundImage='url("'+safeUrl+'")';
+  }
+  // Durum metni
+  var durum=document.getElementById('ie-profilResmi-durum');
+  if(durum){
+    var kb=Math.round(boyut/1024);
+    durum.textContent='✅ Yüklendi ('+kb+' KB)';
+    durum.style.color='#16a34a';
+  }
+  siteAyarKaydet('Instagram Profil Resmi');
 }
 
 
