@@ -632,9 +632,10 @@ svg{display:block;flex-shrink:0}
 @supports not (aspect-ratio: 9/16){
   .ig-reel{height:0;padding-top:177.78%}
 }
-.ig-reel-embed-wrap{position:absolute;inset:0;width:100%;height:100%;overflow:hidden}
-/* iframe'i hem yukarı hem aşağı uzat - üstteki "Profili Görüntüle" başlığı ve alttaki UI gizli, sadece video alanı görünür */
-.ig-reel-iframe{position:absolute;top:-54px;left:0;width:100%;height:calc(100% + 54px + 160px);border:0;background:transparent;display:block;pointer-events:none}
+.ig-reel-thumb{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;border:0}
+.ig-reel-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:54px;height:54px;background:rgba(255,255,255,.92);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.3);transition:transform .2s;pointer-events:none}
+.ig-reel:hover .ig-reel-play{transform:translate(-50%,-50%) scale(1.08)}
+.ig-reel-play svg{width:24px;height:24px;fill:#000;margin-left:3px}
 
 /* Reel Modal - Tıklayınca tam ekran açılır */
 .ig-reel-modal{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px)}
@@ -9272,10 +9273,10 @@ const IG_DEFAULT = {
   takipciSayisi: '17,7B',
   takipSayisi: '66',
   reels: [
-    {url:'https://www.instagram.com/reel/DCJvzdesVuG/', views:'1.9 Mn', label:''},
-    {url:'https://www.instagram.com/reel/DFsQ3LFsO9F/', views:'2.6 Mn', label:''},
-    {url:'https://www.instagram.com/reel/DXCfYGUAthG/', views:'2.5 Mn', label:''},
-    {url:'https://www.instagram.com/reel/DPRhN1bjB32/', views:'441 B',  label:''}
+    {url:'https://www.instagram.com/reel/DCJvzdesVuG/', thumb:'/uploads/instagram/reel1.jpg', views:'1.9 Mn', label:''},
+    {url:'https://www.instagram.com/reel/DFsQ3LFsO9F/', thumb:'/uploads/instagram/reel2.jpg', views:'2.6 Mn', label:''},
+    {url:'https://www.instagram.com/reel/DXCfYGUAthG/', thumb:'/uploads/instagram/reel3.jpg', views:'2.5 Mn', label:''},
+    {url:'https://www.instagram.com/reel/DPRhN1bjB32/', thumb:'',                              views:'441 B',  label:''}
   ]
 };
 
@@ -9459,24 +9460,21 @@ function igReelsRender(reels){
   // Reel verilerini global'e koy (modal için)
   window.__IG_REELS = liste;
 
+  const playSvg = '<svg viewBox="0 0 24 24"><polygon points="8,5 21,12 8,19"/></svg>';
+
   const html = liste.map((r, i) => {
-    const views = escapeHTML(r.views || '');
-    const label = escapeHTML(r.label || '');
-    const v = igVideoParse(r.url);
-    let inner = '';
-    if(v){
-      const bgClass = v.tur === 'instagram' ? 'reel-ig-bg' : (v.tur === 'tiktok' ? 'reel-tt-bg' : '');
-      inner = `<div class="ig-reel-embed-wrap ${bgClass}">
-        <iframe src="${escapeHTML(v.embed)}" allowfullscreen allowtransparency="true" frameborder="0" scrolling="no" allow="encrypted-media" loading="eager" class="ig-reel-iframe"></iframe>
-      </div>`;
+    const thumb = escapeHTML(r.thumb || r.thumbnail || '');
+    // Tıklayınca modal açılır
+    let inner;
+    if(thumb){
+      inner = `<img src="${thumb}" class="ig-reel-thumb" alt="Reel ${i+1}" loading="lazy" onerror="this.style.display='none';this.parentNode.style.background='linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)'">`;
     } else {
-      inner = '<div style="width:100%;height:100%;background:linear-gradient(135deg,#222,#000);display:flex;align-items:center;justify-content:center;color:#888;font-size:11px">Video yüklenemedi</div>';
+      // Kapak resmi yoksa Instagram gradient fallback
+      inner = `<div style="position:absolute;inset:0;background:linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)"></div>`;
     }
-    // Tıklayınca modal açılır (Instagram'a gitmez)
-    return `<div class="ig-reel" data-idx="${i}" onclick="igReelModalAc(${i})" role="button" tabindex="0">
+    return `<div class="ig-reel" data-idx="${i}" onclick="igReelModalAc(${i})" role="button" tabindex="0" aria-label="Reel ${i+1} oynat">
       ${inner}
-      ${label ? `<div class="ig-reel-label" style="z-index:6;pointer-events:none">${label}</div>` : ''}
-      ${views ? `<div class="ig-reel-views" style="z-index:6;pointer-events:none"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 5C7 5 3 9 1.5 12 3 15 7 19 12 19s9-4 10.5-7C21 9 17 5 12 5zm0 11.5a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9zm0-7a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"/></svg><span>${views}</span></div>` : ''}
+      <div class="ig-reel-play">${playSvg}</div>
     </div>`;
   }).join('');
   wrap.innerHTML = html;
