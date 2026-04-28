@@ -932,7 +932,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
         <div class="kart-body" style="padding:24px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap">
           <div style="flex:1;min-width:240px">
             <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--ink);letter-spacing:.5px;margin-bottom:6px">🎡 Hediye Çarkı</div>
-            <div style="font-size:13.5px;color:var(--ink3);line-height:1.5"><span id="cark-cta-mesaj">Hediye çarkımızı henüz çevirmediniz. <strong id="cark-cta-hak">3</strong> çevirme hakkınız var!</span></div>
+            <div style="font-size:13.5px;color:var(--ink3);line-height:1.5"><span id="cark-cta-mesaj">Hediye çarkımızı henüz çevirmediniz. Çark sizi bekliyor!</span></div>
           </div>
           <a href="/standalone/kampanya.html" class="btn-primary" style="padding:11px 22px;background:var(--r);color:#fff;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;gap:8px">
             Çarka Git
@@ -1603,18 +1603,13 @@ function hediyelerimYukle(){
       if(hediyeler.length === 0){
         ctaKart.style.display = '';
         document.getElementById('cark-cta-mesaj').innerHTML =
-          'Hediye çarkımızı henüz çevirmediniz. <strong>3</strong> çevirme hakkınız var!';
+          'Hediye çarkımızı henüz çevirmediniz. Çark sizi bekliyor!';
         bos.style.display = '';
         return;
       }
 
-      // Kalan hak varsa CTA göster
-      var kalanHak = 3 - ozetData.toplam;
-      if(kalanHak > 0){
-        ctaKart.style.display = '';
-        document.getElementById('cark-cta-mesaj').innerHTML =
-          'Çarkı tekrar çevirme hakkınız var. <strong>'+kalanHak+'</strong> hakkınız kaldı!';
-      }
+      // Çevirmiş, kupon var — CTA gizle (artık tekrar çeviremez)
+      ctaKart.style.display = 'none';
 
       // Özet kartlar
       ozet.style.display = '';
@@ -2642,18 +2637,8 @@ function sepetBadgeGoster(){
 
 
 function geriDon(){
-  // Referrer varsa oraya dön
-  if(document.referrer && document.referrer.indexOf('hesabim') === -1){
-    window.location.href = document.referrer;
-  } else if(window.history.length > 1){
-    // history.back() yerine — file:// protokolünde sorun çıkarıyor
-    // Aynı klasördeki ana dosyaya git
-    var base = window.location.href.split('/');
-    base.pop(); // hesabim.html'i kaldır
-    window.location.href = base.join('/') + '/autonax.com.tr';
-  } else {
-    window.location.href = 'autonax.com.tr';
-  }
+  // Her durumda anasayfaya dön (kök URL)
+  window.location.href = '/';
 }
 
 </script>
