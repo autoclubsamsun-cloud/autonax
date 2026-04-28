@@ -628,6 +628,11 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
     <div class="sidebar-sep"></div>
     <div class="sidebar-section">
       <div class="sidebar-label">Hesap</div>
+      <div class="sn" onclick="goster('hediyelerim')">
+        <svg viewBox="0 0 24 24"><path d="M20 12v9H4v-9"/><rect x="2" y="7" width="20" height="5" rx="1"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+        Hediyelerim
+        <span class="sn-badge" id="hediye-badge" style="display:none">0</span>
+      </div>
       <div class="sn" onclick="goster('sadakat')">
         <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         Sadakat Puanı
@@ -913,6 +918,121 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
         </div>
       </div>
     </div>
+
+    <!-- ══ HEDİYELERİM ══ -->
+    <div id="pg-hediyelerim" style="display:none">
+      <div class="page-header">
+        <div class="page-eyebrow">Kampanya & Hediyeler</div>
+        <div class="page-title">Hediyelerim 🎁</div>
+        <div class="page-sub">Kazandığınız indirim kuponları ve hediyeler. Randevu alırken kupon kodunu kullanın.</div>
+      </div>
+
+      <!-- Çark CTA - kullanıcı henüz çevirmediyse -->
+      <div id="cark-cta-kart" class="kart" style="background:linear-gradient(135deg,rgba(176,28,46,.08),rgba(212,162,76,.05));border:1px solid rgba(176,28,46,.25);display:none;margin-bottom:20px">
+        <div class="kart-body" style="padding:24px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap">
+          <div style="flex:1;min-width:240px">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--ink);letter-spacing:.5px;margin-bottom:6px">🎡 Hediye Çarkı</div>
+            <div style="font-size:13.5px;color:var(--ink3);line-height:1.5"><span id="cark-cta-mesaj">Hediye çarkımızı henüz çevirmediniz. <strong id="cark-cta-hak">3</strong> çevirme hakkınız var!</span></div>
+          </div>
+          <a href="/standalone/kampanya.html" class="btn-primary" style="padding:11px 22px;background:var(--r);color:#fff;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;gap:8px">
+            Çarka Git
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Özet kartları -->
+      <div class="grid-3" id="hediye-ozet" style="display:none">
+        <div class="stat-kart green">
+          <div class="stat-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="stat-val" id="hediye-aktif">0</div>
+          <div class="stat-label">Aktif Kupon</div>
+        </div>
+        <div class="stat-kart blue">
+          <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 012-2h14a2 2 0 012 2v3a2 2 0 010 4v3a2 2 0 01-2 2H5a2 2 0 01-2-2v-3a2 2 0 010-4V8z"/></svg></div>
+          <div class="stat-val" id="hediye-toplam">0</div>
+          <div class="stat-label">Toplam Hediye</div>
+        </div>
+        <div class="stat-kart amber">
+          <div class="stat-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div class="stat-val" id="hediye-kullanilan">0</div>
+          <div class="stat-label">Kullanılan</div>
+        </div>
+      </div>
+
+      <!-- Kupon listesi -->
+      <div class="kart" id="hediye-liste-kart" style="display:none;margin-top:20px">
+        <div class="kart-head"><div class="kart-title">Kuponlarım</div></div>
+        <div class="kart-body" id="hediye-liste"></div>
+      </div>
+
+      <!-- Boş durum -->
+      <div class="kart" id="hediye-bos" style="display:none;margin-top:20px">
+        <div class="kart-body" style="text-align:center;padding:60px 24px">
+          <div style="font-size:64px;margin-bottom:12px;opacity:.4">🎁</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--ink);margin-bottom:8px;letter-spacing:.5px">Henüz Hediyeniz Yok</div>
+          <div style="font-size:14px;color:var(--ink3);max-width:380px;margin:0 auto 18px;line-height:1.6">Hediye çarkını çevirin ve indirim kuponları kazanın. Her üyenin 3 çevirme hakkı var.</div>
+          <a href="/standalone/kampanya.html" style="display:inline-flex;align-items:center;gap:8px;padding:11px 22px;background:var(--r);color:#fff;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;text-decoration:none">Çarka Git →</a>
+        </div>
+      </div>
+
+      <!-- Yükleniyor -->
+      <div class="kart" id="hediye-yukleniyor" style="margin-top:20px">
+        <div class="kart-body" style="text-align:center;padding:40px 24px;color:var(--ink3);font-size:14px">Hediyeleriniz yükleniyor...</div>
+      </div>
+    </div>
+
+    <!-- ══ HEDİYELERİM CSS ══ -->
+    <style>
+    .kupon-item{
+      display:flex;align-items:center;gap:14px;padding:16px;
+      border:1px solid var(--bd);border-radius:10px;
+      margin-bottom:10px;background:#fff;
+      transition:.2s;
+    }
+    .kupon-item:last-child{margin-bottom:0}
+    .kupon-item.aktif{border-color:rgba(22,163,74,.3);background:linear-gradient(180deg,rgba(22,163,74,.04),#fff)}
+    .kupon-item.kullanildi{opacity:.5}
+    .kupon-item.suresi-doldu{opacity:.5;border-style:dashed}
+    .kupon-rozet{
+      flex-shrink:0;width:54px;height:54px;border-radius:12px;
+      display:flex;align-items:center;justify-content:center;
+      font-family:'Bebas Neue',sans-serif;font-size:18px;color:#fff;
+      letter-spacing:.5px;
+    }
+    .kupon-bilgi{flex:1;min-width:0}
+    .kupon-isim{font-size:14.5px;font-weight:600;color:var(--ink);margin-bottom:3px}
+    .kupon-meta{font-size:12px;color:var(--ink3);line-height:1.5}
+    .kupon-kod-box{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:6px 12px;background:var(--bg);
+      border:1px dashed var(--bd2,#999);
+      border-radius:6px;font-family:'Bebas Neue',sans-serif;
+      font-size:14px;letter-spacing:1.5px;color:var(--ink);
+      margin-top:6px;
+    }
+    .kupon-kopya-btn{
+      flex-shrink:0;padding:8px 14px;border-radius:8px;
+      background:var(--ink);color:#fff;border:0;
+      font-size:11.5px;font-weight:600;letter-spacing:.5px;
+      cursor:pointer;transition:.15s;
+      font-family:'Outfit',sans-serif;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .kupon-kopya-btn:hover{transform:scale(1.04)}
+    .kupon-kopya-btn.kopyalandi{background:#16A34A}
+    .kupon-durum-rozet{
+      display:inline-block;padding:3px 8px;border-radius:100px;
+      font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+    }
+    .kupon-durum-aktif{background:#DCFCE7;color:#15803D}
+    .kupon-durum-kullanildi{background:#E5E5E5;color:#666}
+    .kupon-durum-doldu{background:#FEE2E2;color:#B91C1C}
+    @media (max-width:560px){
+      .kupon-item{padding:14px;flex-wrap:wrap}
+      .kupon-kopya-btn{order:3;width:100%;margin-top:10px;padding:10px}
+    }
+    </style>
 
     <!-- ══ PROFİL ══ -->
     <div id="pg-profil" style="display:none">
@@ -1318,6 +1438,17 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   // 6) DB'den randevuları çek (Sprint 2A — hizmet geçmişi + randevu listesi için)
   randevularYukle();
 
+  // 7) Hediye sayısını sessizce sidebar badge için yükle (ekran açılmadan)
+  fetch('/api/musteri/cark/hediyelerim', {credentials:'same-origin', cache:'no-store'})
+    .then(function(r){return r.json();})
+    .then(function(j){
+      if(j && j.success && j.ozet && j.ozet.aktif > 0){
+        var badge = document.getElementById('hediye-badge');
+        if(badge){ badge.textContent = j.ozet.aktif; badge.style.display = ''; }
+      }
+    })
+    .catch(function(){/* sessiz */});
+
   // 7) Bekleyen ödemeleri sessizce arka planda yukle (dashboard karti ve badge icin)
   odemelerimSessizYukle();
 });
@@ -1372,6 +1503,7 @@ function goster(id){
 
   // Tab'a ozel yukleme
   if(id==='odemelerim') odemelerimYukle();
+  if(id==='hediyelerim') hediyelerimYukle();
 
   // FAB sayfa bazlı güncelle
   if(typeof fabGuncelleH==='function') fabGuncelleH(id);
@@ -1435,6 +1567,145 @@ function tarihFormat(iso){
     var d=new Date(iso);
     return d.toLocaleDateString('tr-TR') + ' ' + d.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
   }catch(e){return '—';}
+}
+
+// ════════════════════════════════════════════════════════
+// HEDİYELERİM (Çark kuponları)
+// ════════════════════════════════════════════════════════
+function hediyelerimYukle(){
+  var yukleniyor = document.getElementById('hediye-yukleniyor');
+  var liste = document.getElementById('hediye-liste-kart');
+  var bos = document.getElementById('hediye-bos');
+  var ozet = document.getElementById('hediye-ozet');
+  var ctaKart = document.getElementById('cark-cta-kart');
+
+  // Reset
+  yukleniyor.style.display = '';
+  liste.style.display = 'none';
+  bos.style.display = 'none';
+  ozet.style.display = 'none';
+  ctaKart.style.display = 'none';
+
+  fetch('/api/musteri/cark/hediyelerim', {credentials:'same-origin', cache:'no-store'})
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      yukleniyor.style.display = 'none';
+
+      if(!j.success){
+        bos.style.display = '';
+        return;
+      }
+
+      var hediyeler = j.hediyeler || [];
+      var ozetData = j.ozet || {toplam:0, aktif:0, kullanildi:0, suresi_doldu:0};
+
+      // Kullanıcı henüz hiç çevirmemiş → çark CTA göster
+      if(hediyeler.length === 0){
+        ctaKart.style.display = '';
+        document.getElementById('cark-cta-mesaj').innerHTML =
+          'Hediye çarkımızı henüz çevirmediniz. <strong>3</strong> çevirme hakkınız var!';
+        bos.style.display = '';
+        return;
+      }
+
+      // Kalan hak varsa CTA göster
+      var kalanHak = 3 - ozetData.toplam;
+      if(kalanHak > 0){
+        ctaKart.style.display = '';
+        document.getElementById('cark-cta-mesaj').innerHTML =
+          'Çarkı tekrar çevirme hakkınız var. <strong>'+kalanHak+'</strong> hakkınız kaldı!';
+      }
+
+      // Özet kartlar
+      ozet.style.display = '';
+      document.getElementById('hediye-aktif').textContent = ozetData.aktif;
+      document.getElementById('hediye-toplam').textContent = ozetData.toplam;
+      document.getElementById('hediye-kullanilan').textContent = ozetData.kullanildi;
+
+      // Liste
+      liste.style.display = '';
+      var html = '';
+      hediyeler.forEach(function(h){
+        html += hediyeHtml(h);
+      });
+      document.getElementById('hediye-liste').innerHTML = html;
+
+      // Sidebar badge
+      var badge = document.getElementById('hediye-badge');
+      if(badge && ozetData.aktif > 0){
+        badge.textContent = ozetData.aktif;
+        badge.style.display = '';
+      }
+    })
+    .catch(function(err){
+      yukleniyor.style.display = 'none';
+      bos.style.display = '';
+      console.warn('[hediyelerim] hata:', err);
+    });
+}
+
+function hediyeHtml(h){
+  // Renk yüzdeye göre
+  var renk = '#666', bg = '#444';
+  if(h.odul_yuzde === 5){ bg = 'linear-gradient(135deg,#666,#333)'; }
+  else if(h.odul_yuzde === 10){ bg = 'linear-gradient(135deg,#3A5A8C,#1F3A5F)'; }
+  else if(h.odul_yuzde === 15){ bg = 'linear-gradient(135deg,#D4A24C,#8B6F2D)'; }
+
+  var durumKlas = '', durumRozet = '', durumText = '';
+  if(h.durum === 'aktif'){
+    durumKlas = 'aktif';
+    durumRozet = 'kupon-durum-aktif';
+    durumText = 'AKTİF · ' + h.kalan_gun + ' GÜN';
+  } else if(h.durum === 'kullanildi'){
+    durumKlas = 'kullanildi';
+    durumRozet = 'kupon-durum-kullanildi';
+    durumText = 'KULLANILDI';
+  } else {
+    durumKlas = 'suresi-doldu';
+    durumRozet = 'kupon-durum-doldu';
+    durumText = 'SÜRESİ DOLDU';
+  }
+
+  var kopyaBtn = h.durum === 'aktif'
+    ? '<button class="kupon-kopya-btn" onclick="kuponKopyala(this, \''+h.kupon_kod+'\')">Kopyala</button>'
+    : '';
+
+  return ''+
+    '<div class="kupon-item '+durumKlas+'">'+
+      '<div class="kupon-rozet" style="background:'+bg+'">%'+h.odul_yuzde+'</div>'+
+      '<div class="kupon-bilgi">'+
+        '<div class="kupon-isim">%'+h.odul_yuzde+' İndirim Kuponu</div>'+
+        '<div class="kupon-meta">'+
+          '<span class="kupon-durum-rozet '+durumRozet+'">'+durumText+'</span>'+
+        '</div>'+
+        '<div class="kupon-kod-box">'+
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8a2 2 0 012-2h14a2 2 0 012 2v3a2 2 0 010 4v3a2 2 0 01-2 2H5a2 2 0 01-2-2v-3a2 2 0 010-4V8z"/></svg>'+
+          h.kupon_kod+
+        '</div>'+
+      '</div>'+
+      kopyaBtn+
+    '</div>';
+}
+
+function kuponKopyala(btn, kod){
+  function ok(){
+    var orj = btn.textContent;
+    btn.textContent = 'Kopyalandı ✓';
+    btn.classList.add('kopyalandi');
+    setTimeout(function(){btn.textContent='Kopyala';btn.classList.remove('kopyalandi');}, 2000);
+  }
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(kod).then(ok).catch(function(){ fallbackKopya(kod, ok); });
+  } else {
+    fallbackKopya(kod, ok);
+  }
+}
+function fallbackKopya(kod, cb){
+  var ta = document.createElement('textarea');
+  ta.value = kod; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); cb && cb(); }catch(e){}
+  document.body.removeChild(ta);
 }
 
 function odemelerimYukle(){
