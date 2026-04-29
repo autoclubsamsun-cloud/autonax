@@ -340,6 +340,32 @@ export async function POST(req: NextRequest) {
         odeme_gecmisi = ${JSON.stringify(b.odemeGecmisi || [])}::jsonb,
         guncelleme = NOW()
     `;
+
+    // ─── KUPON İŞARETLEME ─────────────────────────────────────────
+    // Body'de kupon_kod varsa, kuponu "kullanıldı" işaretle ve randevuya bağla
+    // Hata olursa randevu yine kaydedilir, sadece logla
+    if (b.kupon_kod && typeof b.kupon_kod === 'string') {
+      try {
+        const kuponKod = b.kupon_kod.trim().toUpperCase();
+        // Sadece bu müşterinin kuponuysa ve henüz kullanılmamışsa işaretle
+        const ownerCheck = aktiveMusteriId
+          ? await sql`SELECT id FROM cark_kayit WHERE kupon_kod = ${kuponKod} AND musteri_id = ${aktiveMusteriId} AND kullanildi = FALSE LIMIT 1`
+          : await sql`SELECT id FROM cark_kayit WHERE kupon_kod = ${kuponKod} AND kullanildi = FALSE LIMIT 1`;
+        if (ownerCheck.length > 0) {
+          await sql`
+            UPDATE cark_kayit
+            SET kullanildi = TRUE,
+                kullanma_tarih = NOW(),
+                rezerve_randevu_id = ${id}
+            WHERE kupon_kod = ${kuponKod}
+          `;
+        }
+      } catch (kupErr: any) {
+        // Kupon işaretleme hatası kritik değil, randevu yine geçerli
+        console.warn('[RANDEVULAR POST] Kupon işaretleme uyarısı:', kupErr.message);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       data: { ...b, id, musteriId },
@@ -478,6 +504,36 @@ export async function PUT(req: NextRequest) {
         );
       }
 
+      // ─── KUPON İADE — 24 SAAT KURALI ──────────────────────────
+      // Bu randevuya bağlı kupon var mı? Varsa ve 24 saat içindeyse iade et.
+      // 24 saat kuralı: kupon kullanma_tarih'inden itibaren 24 saat
+      let kuponIade = false;
+      try {
+        const kuponRows = await sql`
+          SELECT kupon_kod, kullanma_tarih FROM cark_kayit
+          WHERE rezerve_randevu_id = ${b.id} AND kullanildi = TRUE
+          LIMIT 1
+        `;
+        if (kuponRows.length > 0) {
+          const k: any = kuponRows[0];
+          const kullanmaTarih = new Date(k.kullanma_tarih);
+          const simdi = new Date();
+          const farkSaat = (simdi.getTime() - kullanmaTarih.getTime()) / (1000 * 60 * 60);
+          if (farkSaat <= 24) {
+            await sql`
+              UPDATE cark_kayit
+              SET kullanildi = FALSE,
+                  kullanma_tarih = NULL,
+                  rezerve_randevu_id = NULL
+              WHERE kupon_kod = ${k.kupon_kod}
+            `;
+            kuponIade = true;
+          }
+        }
+      } catch (kupErr: any) {
+        console.warn('[RANDEVULAR PUT iptal] Kupon iade uyarısı:', kupErr.message);
+      }
+
       // Eski randevuya musteri_id ata (bir defaya mahsus migrasyon)
       // ve durum iptal yap
       if (migrate) {
@@ -492,10 +548,42 @@ export async function PUT(req: NextRequest) {
           WHERE id = ${b.id} AND musteri_id = ${musteriId}
         `;
       }
-      return NextResponse.json({ success: true, data: { id: b.id, durum: 'iptal' } });
+      return NextResponse.json({
+        success: true,
+        data: { id: b.id, durum: 'iptal' },
+        kuponIade
+      });
     }
 
     // ─── ADMIN MODU (mevcut davranış aynen) ───────────────────────
+    // Admin iptal yapıyorsa → 24 saat kuralı ile kupon iade
+    if (b.durum === 'iptal') {
+      try {
+        const kuponRows = await sql`
+          SELECT kupon_kod, kullanma_tarih FROM cark_kayit
+          WHERE rezerve_randevu_id = ${b.id} AND kullanildi = TRUE
+          LIMIT 1
+        `;
+        if (kuponRows.length > 0) {
+          const k: any = kuponRows[0];
+          const kullanmaTarih = new Date(k.kullanma_tarih);
+          const simdi = new Date();
+          const farkSaat = (simdi.getTime() - kullanmaTarih.getTime()) / (1000 * 60 * 60);
+          if (farkSaat <= 24) {
+            await sql`
+              UPDATE cark_kayit
+              SET kullanildi = FALSE,
+                  kullanma_tarih = NULL,
+                  rezerve_randevu_id = NULL
+              WHERE kupon_kod = ${k.kupon_kod}
+            `;
+          }
+        }
+      } catch (kupErr: any) {
+        console.warn('[RANDEVULAR PUT admin iptal] Kupon iade uyarısı:', kupErr.message);
+      }
+    }
+
     await sql`
       UPDATE randevular SET
         tarih = ${b.tarih}, saat = ${b.saat}, musteri = ${b.musteri},
@@ -527,6 +615,41 @@ export async function DELETE(req: NextRequest) {
     await ensureDB();
     const id = new URL(req.url).searchParams.get('id');
     if (!id) return NextResponse.json({ success: false, error: 'ID gerekli' }, { status: 400 });
+
+    // ─── KUPON İADE — 24 SAAT KURALI ──────────────────────────
+    // Silinen randevuya bağlı kupon varsa ve 24 saat içindeyse iade et
+    try {
+      const kuponRows = await sql`
+        SELECT kupon_kod, kullanma_tarih FROM cark_kayit
+        WHERE rezerve_randevu_id = ${id} AND kullanildi = TRUE
+        LIMIT 1
+      `;
+      if (kuponRows.length > 0) {
+        const k: any = kuponRows[0];
+        const kullanmaTarih = new Date(k.kullanma_tarih);
+        const simdi = new Date();
+        const farkSaat = (simdi.getTime() - kullanmaTarih.getTime()) / (1000 * 60 * 60);
+        if (farkSaat <= 24) {
+          await sql`
+            UPDATE cark_kayit
+            SET kullanildi = FALSE,
+                kullanma_tarih = NULL,
+                rezerve_randevu_id = NULL
+            WHERE kupon_kod = ${k.kupon_kod}
+          `;
+        } else {
+          // 24 saat geçmiş — sadece bağlantıyı temizle, kupon kullanılmış kalır
+          await sql`
+            UPDATE cark_kayit
+            SET rezerve_randevu_id = NULL
+            WHERE kupon_kod = ${k.kupon_kod}
+          `;
+        }
+      }
+    } catch (kupErr: any) {
+      console.warn('[RANDEVULAR DELETE] Kupon temizleme uyarısı:', kupErr.message);
+    }
+
     await sql`DELETE FROM randevular WHERE id=${id}`;
     return NextResponse.json({ success: true, message: 'Silindi' });
   } catch (e: any) {

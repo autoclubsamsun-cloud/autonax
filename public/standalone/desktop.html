@@ -7664,6 +7664,10 @@ var SEPET = {
               <span>Kupon uygulandı: <strong>${this.kupon.kupon_kod}</strong> (-%${this.kupon.yuzde})</span>
               <span class="sepet-coupon-ok-remove" onclick="SEPET.kuponKaldir()">KALDIR ✕</span>
             </div>
+            <div style="margin-top:8px;padding:10px 12px;background:#FFF8E1;border:1px solid #FFE082;border-radius:8px;font-size:11.5px;color:#7A5A00;line-height:1.55">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-weight:700"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7A5A00" stroke-width="2.5" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Önemli Bilgi</div>
+              Kupon, randevu alındığı anda kullanılır. Randevu <strong>24 saat içinde</strong> iptal edilirse kupon iade edilir; sonrasında geri alınamaz.
+            </div>
           </div>` : `
           <div class="sepet-coupon-wrap">
             <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">🎁 İndirim Kuponu</div>
@@ -7672,7 +7676,7 @@ var SEPET = {
               <button class="sepet-coupon-btn" onclick="kuponUygulaClick()">UYGULA</button>
             </div>
             <div class="sepet-coupon-err" id="sepet-coupon-err" style="display:none"></div>
-            <div style="font-size:10.5px;color:#999;margin-top:6px">Hediye çarkından kazandığınız kuponu PPF kaplama hizmetlerinde kullanabilirsiniz.</div>
+            <div style="font-size:10.5px;color:#999;margin-top:6px;line-height:1.5">Hediye çarkından kazandığınız kuponu PPF kaplama hizmetlerinde kullanabilirsiniz. Kupon randevu alındığında kullanılır, 24 saat içinde iptal ederseniz iade edilir.</div>
           </div>`
         ) : '') +
         `<div class="sepet-summary">
@@ -7988,6 +7992,23 @@ function sepetOde(){
   .then(function(r){return r.json();})
   .then(function(d){
     if(d.success){
+      // Kupon uygulanmışsa backend'de "kullanıldı" işaretle
+      var kullanilanKupon = SEPET.kupon ? SEPET.kupon.kupon_kod : null;
+      if(kullanilanKupon){
+        var randevuId = (d.randevu && d.randevu.id) ? d.randevu.id : null;
+        var randevuKod = (d.randevu && d.randevu.kod) ? d.randevu.kod : null;
+        // Fire-and-forget: kupon zaten randevuya yazıldı, kullan işareti ekstra güvence
+        fetch('/api/musteri/cark/kupon-kullan', {
+          method:'POST',
+          credentials:'same-origin',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            kupon_kod: kullanilanKupon,
+            randevu_id: randevuId,
+            randevu_kod: randevuKod
+          })
+        }).catch(function(e){ console.warn('[Kupon] kullan hata:', e && e.message); });
+      }
       SEPET.items=[];
       SEPET.kupon=null;
       SEPET.secilenTarih='';
