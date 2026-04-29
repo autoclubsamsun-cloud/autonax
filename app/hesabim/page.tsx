@@ -1,13 +1,19 @@
+'use client';
+
+import { useEffect } from 'react';
+
 /**
  * Müşteri Paneli — Hesabım
- *
- * Bu dosya artık redirect yapmıyor.
- * /hesabim URL'sine gelen istekler vercel.json'daki rewrite kuralı
- * tarafından /standalone/hesabim.html'e yönlendirilir (URL korunur).
- *
- * Bu sayfa fallback olarak duruyor — eğer rewrite çalışmazsa
- * boş bir sayfa gösterir, redirect yapmaz.
+ * Şu an standalone HTML. Production'da Next.js sayfasıyla değiştir.
  */
 export default function HesabimPage() {
-  return null;
+  useEffect(() => {
+    window.location.replace('/standalone/hesabim.html');
+  }, []);
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0a0a0a', color: '#B01C2E', fontFamily: 'sans-serif', fontSize: 18 }}>
+      Yükleniyor...
+    </div>
+  );
 }
