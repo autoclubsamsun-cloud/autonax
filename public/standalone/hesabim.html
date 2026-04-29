@@ -1290,16 +1290,23 @@ const AuthManager = {
     }
   },
 
-  /** Çıkış yap. Cache hemen, API arka planda. */
-  logout(){
+  /** Çıkış yap. Cookie tam silindikten sonra redirect. */
+  logout: async function(){
     _currentUser = null;
-    fetch('/api/musteri/auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'same-origin',
-      body: JSON.stringify({ action: 'logout' })
-    }).catch(function(e){ console.warn('[Auth] logout hata:', e && e.message); });
-    geriDon();
+    try {
+      await fetch('/api/musteri/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ action: 'logout' })
+      });
+    } catch(e){
+      console.warn('[Auth] logout hata:', e && e.message);
+    }
+    // localStorage'daki sepeti de temizle (kullanıcıya özelse)
+    try { localStorage.removeItem('autonax_cart'); } catch(e){}
+    // replace → history'de iz yok, browser cache'i temizler
+    window.location.replace('/');
   },
 
   getCart(){ try{ return JSON.parse(localStorage.getItem(CART_KEY)||'[]'); } catch(e){ return []; } },
@@ -2564,9 +2571,9 @@ function sidebarToggle(){
 }
 
 /* ══ ÇIKIŞ ══ */
-function cikisYap(){
+async function cikisYap(){
   if(confirm('Çıkış yapmak istediğinize emin misiniz?')){
-    AuthManager.logout(); // Cookie temizle + redirect
+    await AuthManager.logout(); // Cookie tam silinene kadar bekle, sonra redirect
   }
 }
 
