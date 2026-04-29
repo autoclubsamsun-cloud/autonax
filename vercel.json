@@ -37,6 +37,8 @@
     { "source": "/", "destination": "/standalone/desktop.html" },
     { "source": "/hesabim", "destination": "/standalone/hesabim.html" },
     { "source": "/hesabim.html", "destination": "/standalone/hesabim.html" },
+    { "source": "/kampanya", "destination": "/standalone/kampanya.html" },
+    { "source": "/kampanya.html", "destination": "/standalone/kampanya.html" },
     { "source": "/pnl_atn", "destination": "/standalone/pnl_atn.html" },
     { "source": "/standalone/:file", "destination": "/standalone/:file" }
   ]
