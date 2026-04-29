@@ -488,36 +488,97 @@ body::before{
   100%{transform:translateY(110vh) rotate(720deg);opacity:0}
 }
 
-/* ═══ RESPONSIVE ═══ */
+/* ═══ RESPONSIVE — MOBİL OPTİMİZASYONU ═══ */
 @media (max-width:1024px){
   .steps{grid-template-columns:1fr;max-width:520px}
   .oduller-grid{grid-template-columns:repeat(2,1fr)}
 }
 @media (max-width:768px){
-  .bolum{padding:70px 0}
-  .cark-bolum{padding:30px 0 60px}
-  .cark-stage{padding:36px 18px;border-radius:24px}
+  .bolum{padding:60px 0}
+  .cark-bolum{padding:30px 0 50px}
+  .cark-stage{padding:32px 16px;border-radius:22px}
+  .hero{padding:40px 0 20px}
+  .hero-baslik{margin-bottom:14px}
+  .hero-pre{font-size:11px;letter-spacing:3.5px}
+  .bolum-baslik{margin-bottom:36px}
+  .bolum-baslik h2{margin-bottom:8px}
 }
 @media (max-width:560px){
-  .wrap{padding:0 18px}
-  .hd{padding:13px 0}
-  .logo{font-size:24px;letter-spacing:3px;gap:10px}
-  .logo small{font-size:8px;letter-spacing:2px}
+  .wrap{padding:0 16px}
+  .hd{padding:11px 0}
+  .logo{font-size:22px;letter-spacing:2.5px;gap:8px}
+  .logo small{font-size:8px;letter-spacing:1.8px}
   .hd-back{padding:7px 12px;font-size:11.5px}
+  .hd-back svg{width:12px;height:12px}
+
+  /* Çark optimizasyonu */
+  .cark-stage{padding:26px 12px 32px;border-radius:20px}
+  .cark-baslik{font-size:22px;letter-spacing:2.5px;margin-bottom:6px}
+  .cark-aciklama{font-size:12.5px;margin-bottom:24px}
+  .cark-wrap{margin-bottom:22px}
   .cark-merkez{width:88px;height:88px}
-  .cark-merkez .cm-buyuk{font-size:18px}
-  .cark-merkez .cm-kucuk{font-size:8.5px}
-  .cark-baslik{font-size:24px}
-  .cark-aciklama{font-size:13px}
-  .sonuc{padding:24px 18px}
-  .sonuc-baslik{font-size:28px}
-  .sonuc-kupon{font-size:18px;letter-spacing:2px;padding:12px 18px;flex-wrap:wrap;justify-content:center}
-  .oduller-grid{grid-template-columns:1fr}
+  .cark-merkez .cm-buyuk{font-size:17px;letter-spacing:1.5px}
+  .cark-merkez .cm-kucuk{font-size:8.5px;margin-top:2px}
+  .cark-pointer{width:38px;height:48px}
+
+  /* Sonuç ekranı */
+  .sonuc{padding:24px 16px;border-radius:20px}
+  .sonuc-tebrik{font-size:11px;letter-spacing:2.5px}
+  .sonuc-baslik{font-size:26px;line-height:1.15}
+  .sonuc-aciklama{font-size:13.5px;margin-bottom:20px}
+  .sonuc-kupon{font-size:16px;letter-spacing:1.8px;padding:11px 16px;flex-wrap:wrap;justify-content:center;gap:10px;width:100%;box-sizing:border-box}
+  .sonuc-cta{padding:13px 20px;font-size:12.5px;letter-spacing:1.2px;width:auto}
+  .sonuc-cta svg{width:13px;height:13px}
+  .kupon-kopyala{padding:8px 14px;font-size:11.5px;min-height:32px}
+
+  /* Ödüller grid */
+  .oduller-grid{grid-template-columns:1fr;gap:12px}
   .odul-mini{padding:18px}
-  .step{padding:24px 22px}
-  .step-num{font-size:60px}
-  .sss-soru{padding:18px 20px;font-size:14px}
-  .sss-cevap{padding:0 20px;font-size:13.5px}
+  .odul-yuzde{font-size:42px}
+  .odul-isim{font-size:13px}
+
+  /* Adımlar */
+  .step{padding:22px 20px}
+  .step-num{font-size:50px;top:14px;right:18px}
+  .step-baslik{font-size:15px}
+  .step-aciklama{font-size:13px}
+
+  /* SSS */
+  .sss{margin-bottom:10px}
+  .sss-soru{padding:16px 18px;font-size:13.5px;gap:14px;min-height:52px}
+  .sss-cevap{padding:0 18px;font-size:13px;line-height:1.6}
+  .sss.acik .sss-cevap{padding:0 18px 16px}
+  .sss-ikon{width:24px;height:24px}
+
+  /* Bölüm başlıkları */
+  .bolum{padding:50px 0}
+  .bolum-baslik{margin-bottom:32px}
+  .bolum-baslik-pre{font-size:10.5px;letter-spacing:2.5px}
+  .bolum-baslik h2{font-size:32px;letter-spacing:1.5px}
+  .bolum-baslik p{font-size:13.5px}
+
+  /* Footer */
+  .footer{padding:30px 0;font-size:12px}
+  .footer-links{gap:14px;flex-wrap:wrap}
+  .footer-links a{font-size:12px}
+
+  /* Kilit overlay */
+  .cark-kilit{padding:32px 22px}
+  .cark-kilit-baslik{font-size:18px}
+  .cark-kilit-aciklama{font-size:13px}
+  .cark-kilit-cta{padding:13px 24px;font-size:12.5px}
+}
+/* Çok dar ekranlar (Galaxy fold, dar telefonlar) */
+@media (max-width:380px){
+  .wrap{padding:0 14px}
+  .hero-pre{font-size:10px;letter-spacing:3px}
+  .cark-stage{padding:22px 10px 28px}
+  .cark-merkez{width:80px;height:80px}
+  .cark-merkez .cm-buyuk{font-size:15px}
+  .cark-merkez .cm-kucuk{font-size:8px}
+  .sonuc-baslik{font-size:23px}
+  .sonuc-kupon{font-size:14px;letter-spacing:1.5px;padding:10px 12px}
+  .bolum-baslik h2{font-size:28px}
 }
 </style>
 </head>
