@@ -5867,19 +5867,22 @@ const AuthManager = {
   },
 
   /**
-   * Çıkış yap. Cache'i hemen temizler (UI sync güncellenebilsin),
-   * backend'e logout isteği arka planda gönderilir.
+   * Çıkış yap. Cookie tam silinene kadar bekler, sonra UI güncellenir.
    */
-  logout(){
-    // Cache'i hemen temizle — UI hemen güncellesin
+  logout: async function(){
+    // Cache'i hemen temizle
     _currentUser = null;
-    // Backend'e logout isteği (arka planda, hata olsa bile cache temiz)
-    fetch('/api/musteri/auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'same-origin',
-      body: JSON.stringify({ action: 'logout' })
-    }).catch(function(e){ console.warn('[Auth] logout hata (göz ardı):', e && e.message); });
+    // Backend'e logout isteği — TAM TAMAMLANANA KADAR BEKLE
+    try {
+      await fetch('/api/musteri/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ action: 'logout' })
+      });
+    } catch(e){
+      console.warn('[Auth] logout hata:', e && e.message);
+    }
   },
 
   saveCart(items){ localStorage.setItem(CART_KEY, JSON.stringify(items||[])); },
@@ -9320,14 +9323,17 @@ document.addEventListener('DOMContentLoaded',()=>{
       }).catch(function(){});
     }
   });
-  // Başlangıç — URL'de ?logout varsa oturumu temizle
+  // Başlangıç — URL'de ?logout varsa oturumu temizle (cookie tam silinmeli)
+  var _logoutPromise = null;
   if(window.location.search.includes('logout')){
-    AuthManager.logout();
+    _logoutPromise = AuthManager.logout();
     history.replaceState(null,'',window.location.pathname);
   }
   SEPET.updateBadge();
-  // Önce session'ı yükle (cookie varsa kullanıcı doldurulur), sonra UI'ı render et
-  AuthManager.loadSession().finally(function(){ authUIGuncelle(); });
+  // Önce logout (varsa) tamamlansın, sonra session yükle, sonra UI render et
+  (_logoutPromise || Promise.resolve()).then(function(){
+    return AuthManager.loadSession();
+  }).finally(function(){ authUIGuncelle(); });
   // Robot overlay başlangıçta kapalı olsun
   var robotOvl=document.getElementById('robot-ovl');
   if(robotOvl){ robotOvl.style.display='none'; robotOvl.classList.remove('show'); }
@@ -9594,13 +9600,15 @@ function authUIGuncelle(){
     if(drwHesabim) drwHesabim.style.display='none';
   }
 }
-function authCikis(){
+async function authCikis(){
   if(confirm('Çıkış yapmak istiyor musunuz?')){
-    AuthManager.logout();
-    authUIGuncelle();
     closeUserMenu();
-    // Garantili temiz state için sayfayı yenile (kısa gecikme ile, logout API'nin tamamlanması için)
-    setTimeout(function(){ window.location.href = '/'; }, 200);
+    // Logout API'sinin TAM tamamlanmasını bekle (cookie silinmeli)
+    await AuthManager.logout();
+    // localStorage cache'i temizle
+    try { localStorage.removeItem('autonax_cart'); } catch(e){}
+    // replace ile sayfayı sıkıca yenile (history'de iz kalmaz, cache zorlanır)
+    window.location.replace('/');
   }
 }
 </script>
