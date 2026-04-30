@@ -5,9 +5,8 @@ import { requireAuth } from '@/lib/utils/auth-check';
 let dbReady = false;
 async function ensureDB() { if (!dbReady) { await initDB(); dbReady = true; } }
 
+// GET: PUBLIC - site ayarlari (logo, banner, instagram, sosyal medya vb.) anasayfada gosterilir
 export async function GET(req: NextRequest) {
-  const auth = requireAuth(req);
-  if (auth instanceof NextResponse) return auth;
   try {
     await ensureDB();
     const rows = await sql`SELECT anahtar, deger FROM site_ayarlar`;
@@ -18,6 +17,7 @@ export async function GET(req: NextRequest) {
   } catch (e: any) { return NextResponse.json({ success: false, error: e.message }, { status: 500 }); }
 }
 
+// POST: ADMIN ONLY - ayar guncelleme sadece yetkili kullanici
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req);
   if (auth instanceof NextResponse) return auth;
