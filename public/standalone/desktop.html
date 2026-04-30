@@ -5632,6 +5632,11 @@ svg{display:block;flex-shrink:0}
 .rc-price-label{font-size:10px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
 .rc-price{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--r);letter-spacing:1px}
 .rc-garanti{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#888;background:rgba(176,28,46,.1);padding:6px 10px;border-radius:6px;border:1px solid rgba(176,28,46,.2)}
+.rc-taksit{display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,#0a4d3a 0%,#0d6e51 50%,#0a4d3a 100%);background-size:200% 100%;color:#fff;padding:9px 12px;border-radius:7px;border:1px solid #1a8c6a;margin-bottom:10px;font-size:12px;line-height:1.3;animation:taksitBgShift 4s ease-in-out infinite;position:relative;overflow:hidden}
+.rc-taksit::before{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent);animation:taksitShine 3s ease-in-out infinite;pointer-events:none}
+.rc-taksit b{font-size:13px}
+.rc-taksit svg{flex-shrink:0;z-index:1;position:relative}
+.rc-taksit span{z-index:1;position:relative}
 .rc-btn{width:100%;background:var(--r);color:#fff;border:none;border-radius:7px;padding:11px 0;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1.5px;cursor:pointer;margin-bottom:7px;transition:.15s}
 .rc-btn:hover{background:var(--rd)}
 .rc-btn-sec{width:100%;background:transparent;color:#666;border:1px solid #2A2A2A;border-radius:7px;padding:9px 0;font-size:12px;font-weight:500;cursor:pointer;transition:.15s}
@@ -7297,6 +7302,8 @@ function gosterOneri(){
           </div>
           <div class="rc-garanti"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#B01C2E" stroke-width="1.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>${R.s.garanti} Yıl Garanti</div>
         </div>
+        ${(R.akis==='komple' || R.akis==='kombo') ? `
+        <div class="rc-taksit"><svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" style="flex-shrink:0"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg><span><b>Vade Farksız 3 Taksit</b> · Tüm kredi kartlarına</span></div>` : ''}
         <button class="rc-btn" onclick="robotSepeteAktar()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Hemen Randevu Al</button>
         <button class="rc-btn-sec" onclick="robotuYenile()">↩ Yeni Sorgu Başlat</button>`;
       C().appendChild(card); scroll();
@@ -7541,7 +7548,9 @@ Tüm garantiler Nidojp üretici belgesiyle desteklenir.`,
 <b>Sadece Kaput Fiyatları:</b><br>
 • N8 (10 yıl): ₺7.000 · N7 (8 yıl): ₺5.000 · S75 (6 yıl): ₺4.000 · CS75 (3 yıl): ₺3.000<br><br>
 <b>Ön 3 Parça Fiyatları:</b><br>
-• N8 (10 yıl): ₺20.000 · N7 (8 yıl): ₺17.000 · S75 (6 yıl): ₺15.000 · CS75 (3 yıl): ₺13.000`,
+• N8 (10 yıl): ₺20.000 · N7 (8 yıl): ₺17.000 · S75 (6 yıl): ₺15.000 · CS75 (3 yıl): ₺13.000<br><br>
+<b style="color:#0d6e51">💳 Vade Farksız 3 Taksit Fırsatı!</b><br>
+<span style="color:#0d6e51;font-size:13px">Tüm komple PPF kaplamalarda, tüm kredi kartlarına vade farksız 3 taksit yapabilirsiniz.</span>`,
 };
 
 async function cevapla(val){
@@ -7549,7 +7558,7 @@ async function cevapla(val){
   showTyping();
   try{
     const s=R.s;
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,system:`Sen Autonax PPF Kaplama Robotu'sun. Uzman olduğun konular: TPU poliüretan PPF film, seramik kaplama, cam filmi, detailing. Müşteri: ${s.marka} ${s.aractipi}, akış: ${R.akis}, garanti: ${s.garanti} yıl, bütçe: ${s.butce}. Kısa (3-4 cümle), samimi, Türkçe cevap ver. Sonunda randevu öner.`,messages:[...R.msgs,{role:'user',content:val}]})});
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,system:`Sen Autonax PPF Kaplama Robotu'sun. Uzman olduğun konular: TPU poliüretan PPF film, seramik kaplama, cam filmi, detailing. Müşteri: ${s.marka} ${s.aractipi}, akış: ${R.akis}, garanti: ${s.garanti} yıl, bütçe: ${s.butce}. ÖNEMLİ KAMPANYA: Komple PPF kaplamalarda tüm kredi kartlarına vade farksız 3 taksit fırsatı var. Müşteri komple PPF veya fiyat sorduğunda mutlaka 3 taksit fırsatından bahset. Kısa (3-4 cümle), samimi, Türkçe cevap ver. Sonunda randevu öner.`,messages:[...R.msgs,{role:'user',content:val}]})});
     const data=await res.json(); hideTyping();
     const reply=data.content?.[0]?.text||'Detay için 0850 305 20 55 numaramızı arayabilirsiniz.';
     R.msgs.push({role:'user',content:val},{role:'assistant',content:reply});
