@@ -5,14 +5,48 @@ User-agent: *
 Allow: /
 
 # Admin panel (yönetim paneli indexlenmesin)
+Disallow: /pnl_atn
+Disallow: /pnl_atn/
 Disallow: /standalone/pnl_atn.html
 Disallow: /panel/
 Disallow: /admin/
+
+# Müşteri paneli (kişisel veri koruması)
+Disallow: /hesabim
+Disallow: /hesabim/
+Disallow: /standalone/hesabim.html
+
+# API endpoint'leri
 Disallow: /api/
 
 # Test/development paths
 Disallow: /test/
 Disallow: /dev/
+
+# AI tarama botları (içerik kazıma engellemesi)
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
 
 # Sitemap
 Sitemap: https://www.autonax.com.tr/sitemap.xml
