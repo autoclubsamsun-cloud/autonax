@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { put } from '@vercel/blob';
 import { neon } from '@neondatabase/serverless';
 import { requireAuth } from '@/lib/utils/auth-check';
 
@@ -20,27 +21,44 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Sadece JPG, PNG, WEBP, GIF yuklenebilir' }, { status: 400 });
     }
 
-    if (file.size > 1 * 1024 * 1024) {
-      return NextResponse.json({ success: false, error: 'Dosya 1MB den kucuk olmali' }, { status: 400 });
+    // Frontend ile uyumlu: 2MB sinir
+    if (file.size > 2 * 1024 * 1024) {
+      return NextResponse.json({ success: false, error: 'Dosya 2MB den kucuk olmali' }, { status: 400 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const base64 = buffer.toString('base64');
-    const dataUrl = `data:${file.type};base64,${base64}`;
-
-    const sql = neon(process.env.DATABASE_URL!);
+    // Dosya ismini guvenli hale getir
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const fileName = `${Date.now()}_${safeName}`;
+    // Blob path: klasor/dosya.jpg (orn: urunler/1735000000_foto.jpg)
+    const blobPath = `${klasor}/${fileName}`;
+
+    // Vercel Blob'a yukle - public erisim, cache'lenir
+    const blob = await put(blobPath, file, {
+      access: 'public',
+      addRandomSuffix: false, // Bizim fileName zaten timestamp icerdigi icin unique
+      contentType: file.type,
+    });
+
+    // Metadata'yi DB'ye kaydet (URL referansi, gercek resim Blob'da)
+    const sql = neon(process.env.DATABASE_URL!);
     const key = `resim_${klasor}_${fileName}`;
 
     await sql`
       INSERT INTO site_ayarlar (anahtar, deger)
-      VALUES (${key}, ${JSON.stringify({ url: dataUrl, klasor, urunId, fileName, tip: file.type, boyut: file.size })}::jsonb)
+      VALUES (${key}, ${JSON.stringify({
+        url: blob.url,
+        klasor,
+        urunId,
+        fileName,
+        tip: file.type,
+        boyut: file.size,
+        blobPath,
+      })}::jsonb)
       ON CONFLICT (anahtar) DO UPDATE SET deger = EXCLUDED.deger
     `;
 
-    return NextResponse.json({ success: true, url: dataUrl, fileName, key });
+    // Frontend ile uyumlu response: { success, url, fileName, key }
+    return NextResponse.json({ success: true, url: blob.url, fileName, key });
 
   } catch (e: any) {
     return NextResponse.json({ success: false, error: e.message }, { status: 500 });
