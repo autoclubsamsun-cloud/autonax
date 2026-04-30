@@ -628,6 +628,31 @@ svg{display:block;flex-shrink:0}
 .ig-rozetler{display:flex;flex-direction:column;gap:4px;margin-top:8px}
 .ig-rozet{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink);font-weight:500;line-height:1.3}
 .ig-rozet svg{width:14px;height:14px;flex-shrink:0}
+/* ══ TAKSIT BANDI (PPF section ustu) ══ */
+.taksit-bandi{background:linear-gradient(90deg,#0a4d3a 0%,#0d6e51 50%,#0a4d3a 100%);background-size:200% 100%;color:#fff;padding:14px 18px;border-radius:12px;display:flex;align-items:center;gap:14px;margin:24px 0 16px;border:1px solid #1a8c6a;position:relative;overflow:hidden;animation:taksitBgShift 4s ease-in-out infinite}
+.taksit-bandi::before{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent);animation:taksitShine 3s ease-in-out infinite}
+.taksit-bandi-icon{width:42px;height:42px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;animation:taksitPulse 2s ease-in-out infinite;border:1.5px solid rgba(255,255,255,0.3)}
+.taksit-bandi-icon svg{width:22px;height:22px;fill:#fff}
+.taksit-bandi-text{flex:1;line-height:1.3;z-index:1;position:relative}
+.taksit-bandi-baslik{font-size:16px;font-weight:700;letter-spacing:0.3px;display:block;margin-bottom:2px}
+.taksit-bandi-alt{font-size:12px;font-weight:400;opacity:0.92}
+.taksit-bandi-rozet{background:#22c55e;color:#fff;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.5px;flex-shrink:0;z-index:1;position:relative;animation:taksitBadgeBlink 1.5s ease-in-out infinite;text-transform:uppercase}
+@keyframes taksitBgShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes taksitShine{0%{left:-100%}50%{left:160%}100%{left:160%}}
+@keyframes taksitPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(255,255,255,0.4)}50%{transform:scale(1.06);box-shadow:0 0 0 8px rgba(255,255,255,0)}}
+@keyframes taksitBadgeBlink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.85;transform:scale(1.04)}}
+@media (max-width:560px){
+  .taksit-bandi{padding:12px 14px;gap:10px;margin:20px 0 14px}
+  .taksit-bandi-icon{width:36px;height:36px}
+  .taksit-bandi-icon svg{width:18px;height:18px}
+  .taksit-bandi-baslik{font-size:14px}
+  .taksit-bandi-alt{font-size:11px}
+  .taksit-bandi-rozet{font-size:10px;padding:4px 9px}
+}
+/* ══ Urun karti taksit etiketi ══ */
+.svc-taksit{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#0d6e51;margin-top:8px;animation:svcTaksitPulse 2.5s ease-in-out infinite;line-height:1.2;background:#f0fdf4;padding:6px 10px;border-radius:6px;border-left:3px solid #22c55e}
+.svc-taksit svg{width:13px;height:13px;fill:#0d6e51;flex-shrink:0}
+@keyframes svcTaksitPulse{0%,100%{opacity:1}50%{opacity:0.55}}
 .ig-bio{font-size:13px;color:var(--ink2);line-height:1.5}
 .ig-bio-emoji{font-size:14px}
 .ig-bio-iller{color:var(--ink3);font-size:12.5px}
@@ -749,6 +774,13 @@ svg{display:block;flex-shrink:0}
 .hero-sec{color:var(--ink4);font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:4px}
 .hero-sec:hover{color:var(--r)}
 .hero-sec svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.hero-taksit{display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#0a4d3a 0%,#0d6e51 50%,#0a4d3a 100%);background-size:200% 100%;color:#fff;padding:8px 14px 8px 10px;border-radius:8px;border:1px solid #1a8c6a;position:relative;overflow:hidden;animation:taksitBgShift 4s ease-in-out infinite}
+.hero-taksit::before{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent);animation:taksitShine 3s ease-in-out infinite;pointer-events:none}
+.hero-taksit-icon{width:32px;height:32px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;animation:taksitPulse 2s ease-in-out infinite;border:1.5px solid rgba(255,255,255,0.3);z-index:1}
+.hero-taksit-icon svg{width:16px;height:16px;fill:#fff}
+.hero-taksit-text{display:flex;flex-direction:column;line-height:1.2;z-index:1;position:relative}
+.hero-taksit-baslik{font-size:13px;font-weight:700;letter-spacing:0.3px}
+.hero-taksit-alt{font-size:10.5px;font-weight:400;opacity:0.92;margin-top:1px}
 .hero-r{flex:0 0 290px;background:var(--ink);border-left:2px solid var(--r);display:flex;align-items:center;justify-content:space-evenly;position:relative}
 .hs{text-align:center;padding:15px 12px}
 .hs-n{font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:1px;color:#fff;line-height:1}
@@ -1287,6 +1319,11 @@ svg{display:block;flex-shrink:0}
   .hs-n{font-size:22px}
   .hs-div{height:26px}
   .hero-btns{flex-wrap:wrap;gap:10px}
+  .hero-taksit{flex:1;min-width:200px}
+  .hero-taksit-icon{width:28px;height:28px}
+  .hero-taksit-icon svg{width:14px;height:14px}
+  .hero-taksit-baslik{font-size:12px}
+  .hero-taksit-alt{font-size:10px}
   .sh h2{font-size:16px}
   .sh-eyebrow{font-size:9px}
   .sh-left{min-width:0;overflow:hidden}
@@ -2937,7 +2974,15 @@ svg{display:block;flex-shrink:0}
       <div class="hero-sub">Samsun merkezli Karadeniz'in en büyük araç kaplama tesisi. Togg, BYD, Chery, Toyota, Tesla ve tüm marka araçlara Nidojp USA · N7/N8/N9 TPU PPF uygulaması · Üretici Garantili · Aynı Gün Teslim</div>
       <div class="hero-btns">
         <button class="hero-btn" onclick="openSepet()"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>RANDEVU AL</button>
-        <div class="hero-sec">Paketi İncele <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="hero-taksit" aria-label="Vade farksız 3 taksit fırsatı">
+          <div class="hero-taksit-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+          </div>
+          <div class="hero-taksit-text">
+            <span class="hero-taksit-baslik">Vade Farksız 3 Taksit</span>
+            <span class="hero-taksit-alt">Tüm kredi kartlarına · Komple PPF</span>
+          </div>
+        </div>
       </div>
     </div>
     <div class="hero-r">
@@ -3020,6 +3065,17 @@ svg{display:block;flex-shrink:0}
       </div><!-- /slider-track -->
       <div class="slider-dots" id="sl-one-d"></div>
     </div><!-- /slider-wrap -->
+
+        <div class="taksit-bandi" role="region" aria-label="Vade Farksiz 3 Taksit Kampanyasi">
+          <div class="taksit-bandi-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+          </div>
+          <div class="taksit-bandi-text">
+            <span class="taksit-bandi-baslik">Vade Farksız 3 Taksit</span>
+            <span class="taksit-bandi-alt">Tüm kredi kartlarına · Komple PPF kaplamada geçerli</span>
+          </div>
+          <div class="taksit-bandi-rozet">FIRSAT</div>
+        </div>
 
         <div id="bolum-ppf" class="sh"><div class="sh-left"><div class="sh-eyebrow">🇺🇸 Amerikan Ürünü · Nidojp</div><h2>PPF Kaplama TPU (USA)</h2></div><div class="sh-right"><div class="sh-more">Tümünü Gör <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div></div>
     <div class="svc-grid">
@@ -4134,7 +4190,7 @@ svg{display:block;flex-shrink:0}
 
         <article id="ppf-fiyatlari" style="background:#fff;padding:20px;border-radius:12px;border:1px solid var(--bd)">
           <h3 style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;margin-bottom:8px;color:var(--r)">PPF Fiyatları</h3>
-          <p style="font-size:12px;line-height:1.7;color:var(--ink3)">PPF kaplama fiyatı aracın boyutuna, seçilen pakete ve kullanılan film kalitesine göre değişir. Komple PPF kaplama fiyatları ve paket detayları için "Paketi İncele" butonuna tıklayın veya WhatsApp üzerinden fiyat teklifi alın.</p>
+          <p style="font-size:12px;line-height:1.7;color:var(--ink3)">PPF kaplama fiyatı aracın boyutuna, seçilen pakete ve kullanılan film kalitesine göre değişir. Komple PPF kaplama fiyatları ve paket detayları için aşağıdaki ürün listesinden inceleyebilir veya WhatsApp üzerinden fiyat teklifi alabilirsiniz. Tüm komple PPF kaplamalarda vade farksız 3 taksit fırsatı geçerlidir.</p>
         </article>
 
       </div>
@@ -6396,6 +6452,20 @@ function fiyatKartlariniYenile(){
         } catch(err) {
           console.error('[Autonax] Resim ekleme hatasi:',id,err);
         }
+      }
+      // Taksit etiketi (SADECE PPF kategorisi + komple kaplama fiyati)
+      try {
+        if(u.kat==='ppf' && tip==='full'){
+          var priceEl=svc.querySelector('.svc-price');
+          if(priceEl && !priceEl.parentNode.querySelector('.svc-taksit')){
+            var taksitEl=document.createElement('div');
+            taksitEl.className='svc-taksit';
+            taksitEl.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg><span>Vade farksız 3 taksit</span>';
+            priceEl.insertAdjacentElement('afterend',taksitEl);
+          }
+        }
+      } catch(err) {
+        console.warn('[Autonax] Taksit etiketi eklenemedi:',id,err);
       }
     }
   });
