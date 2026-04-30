@@ -6221,9 +6221,9 @@ function hizmetBolumleriniRender(bolumler) {
         var fiyatStr = k.fiyat ? '₺' + k.fiyat.toLocaleString('tr-TR') : (k.fiyat_str || 'Fiyat için arayın');
         var ozellikler = k.ozellikler ? k.ozellikler.split(',').map(function(o){ return o.trim(); }).filter(Boolean) : [];
 
-        svc.innerHTML = '<div class="svc-img" style="position:relative">'
-          + (k.resim ? '<img loading="lazy" src="' + k.resim + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4;border-radius:inherit">' : '')
-          + '<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>'
+        svc.innerHTML = '<div class="svc-img" style="position:relative;overflow:hidden">'
+          + (k.resim ? '<img loading="lazy" src="' + k.resim + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;z-index:2;border-radius:inherit">' : '')
+          + (k.resim ? '' : '<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>')
           + (k.rozet ? '<div class="svc-bdg">' + k.rozet + '</div>' : '')
           + '</div>'
           + '<div class="svc-body">'
@@ -6335,9 +6335,12 @@ function fiyatKartlariniYenile(){
             var imgEl=document.createElement('img');
             imgEl.className='urun-resim';
             imgEl.loading='lazy';
-            imgEl.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45;border-radius:inherit;pointer-events:none';
+            imgEl.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;z-index:2;border-radius:inherit;pointer-events:none';
             imgEl.alt=id; imgEl.src=u.resim;
             svcImg.insertBefore(imgEl,svcImg.firstChild);
+            // Placeholder SVG'i gizle (resim varken kalkan ikonu görünmesin)
+            var ph=svcImg.querySelector('svg.svc-placeholder');
+            if(ph) ph.style.display='none';
           } else { existing.src=u.resim; }
         }
       }
