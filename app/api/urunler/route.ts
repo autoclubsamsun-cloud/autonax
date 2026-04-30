@@ -7,9 +7,8 @@ async function ensureDB() {
   if (!dbReady) { await initDB(); dbReady = true; }
 }
 
+// GET: PUBLIC - urun listesi anasayfada herkese gosterildigi icin auth gerekmez
 export async function GET(req: NextRequest) {
-  const auth = requireAuth(req);
-  if (auth instanceof NextResponse) return auth;
   try {
     await ensureDB();
     const rows = await sql`SELECT * FROM urunler WHERE aktif=true ORDER BY id`;
@@ -17,6 +16,7 @@ export async function GET(req: NextRequest) {
   } catch (e: any) { return NextResponse.json({ success: false, error: e.message }, { status: 500 }); }
 }
 
+// POST: ADMIN ONLY - urun ekleme/guncelleme sadece yetkili kullanici
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req);
   if (auth instanceof NextResponse) return auth;
