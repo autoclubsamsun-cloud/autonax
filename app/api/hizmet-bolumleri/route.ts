@@ -5,9 +5,8 @@ import { requireAuth } from '@/lib/utils/auth-check';
 let dbReady = false;
 async function ensureDB() { if (!dbReady) { await initDB(); dbReady = true; } }
 
+// GET: PUBLIC - hizmet bolumleri ve kartlari anasayfada gosterildigi icin auth gerekmez
 export async function GET(req: NextRequest) {
-  const auth = requireAuth(req);
-  if (auth instanceof NextResponse) return auth;
   try {
     await ensureDB();
     const bolumleri = await sql`SELECT * FROM hizmet_bolumleri ORDER BY sira, olusturma`;
@@ -17,6 +16,7 @@ export async function GET(req: NextRequest) {
   } catch (e: any) { return NextResponse.json({ success: false, error: e.message }, { status: 500 }); }
 }
 
+// POST: ADMIN ONLY - bolum ekleme/guncelleme sadece yetkili kullanici
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req);
   if (auth instanceof NextResponse) return auth;
@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
   } catch (e: any) { return NextResponse.json({ success: false, error: e.message }, { status: 500 }); }
 }
 
+// DELETE: ADMIN ONLY
 export async function DELETE(req: NextRequest) {
   const auth = requireAuth(req);
   if (auth instanceof NextResponse) return auth;
