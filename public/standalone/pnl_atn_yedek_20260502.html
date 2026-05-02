@@ -10000,9 +10000,9 @@ function urunleriApiSenkronEt(){
     var u=URUNLER[k];
     urunDizisi.push({id:k,isim:u.isim,kat:u.kat||'ppf',altKat:u.altKat||'',mikron:u.mikron||'',mensei:u.mensei||'',garanti:u.garanti||5,full:u.full||0,on3:u.on3||0,kaput:u.kaput||0,tutar:u.tutar||0,bayiIndirim:u.bayiIndirim||0,rozet:u.rozet||'',aciklama:u.aciklama||'',resim:u.resim||null});
   });
-  // Seramik — resim, garanti, rozet ve fiyat alanları da dahil (desktop kart render için)
+  // Seramik
   SERAMIK.forEach(function(u,i){
-    urunDizisi.push({id:'seramik_'+i,isim:u.isim,kat:'seramik',altKat:u.altKat||'',garanti:u.garanti||0,full:u.full||0,on3:u.on3||0,kaput:u.kaput||0,tutar:u.tutar||0,bayiIndirim:u.bayiIndirim||0,rozet:u.rozet||'',aciklama:u.aciklama||'',resim:u.resim||null});
+    urunDizisi.push({id:'seramik_'+i,isim:u.isim,kat:'seramik',altKat:u.altKat||'',tutar:u.tutar||0,bayiIndirim:u.bayiIndirim||0,aciklama:u.aciklama||''});
   });
   fetch('/api/urunler',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(urunDizisi),credentials:'same-origin'})
   .then(function(r){return r.json();})
@@ -10586,19 +10586,7 @@ function fAltKatRender(kat, altKat){
     });
   } else {
     var liste=(kat==='seramik'?SERAMIK:DIGER_HIZMETLER).filter(function(s){return s.altKat===altKat;});
-    // Seramik için tip='seramik' (silme/aktif fonksiyonları seramik dalına girer)
-    // Diğer hizmetler için tip='diger' ve id'ye SERAMIK.length offset ekle (urunSil idx3 hesabıyla uyumlu)
-    if(kat==='seramik'){
-      liste.forEach(function(s,i){
-        var globalIdx=SERAMIK.indexOf(s);
-        urunler.push({id:'s'+globalIdx, tip:'seramik', u:s, idx:globalIdx, liste:SERAMIK});
-      });
-    } else {
-      liste.forEach(function(s,i){
-        var globalIdx=DIGER_HIZMETLER.indexOf(s);
-        urunler.push({id:'s'+(SERAMIK.length+globalIdx), tip:'diger', u:s, idx:globalIdx, liste:DIGER_HIZMETLER});
-      });
-    }
+    liste.forEach(function(s,i){urunler.push({id:'s'+i, tip:'diger', u:s, idx:i, liste:kat==='seramik'?SERAMIK:DIGER_HIZMETLER});});
   }
 
   if(!urunler.length){
