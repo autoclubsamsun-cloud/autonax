@@ -10087,11 +10087,44 @@ function dbSyncYukle(){
   // Ürünleri DB'den çek — fiyat yönetimi ile senkron
   fetch('/api/urunler',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
     if(d.success&&d.data&&d.data.length>0){
-      // DB'de var ama URUNLER'de olmayan özel ürünleri yakala (DENEMME gibi)
+      // ÖNCE: DB'den gelen seramik ürünleri lokal SERAMIK dizisine senkronize et.
+      // Bu sayede yeni eklenen ürünler DB Özel'e düşmez, doğrudan seramik sekmesinde görünür.
+      // SERAMIK'ı DB'deki seramik_X ID'lerine göre yeniden inşa ediyoruz (tek doğruluk kaynağı: DB).
+      var dbSeramik=d.data.filter(function(u){return u && u.kat==='seramik' && u.id && /^seramik_\d+$/.test(u.id);});
+      if(dbSeramik.length){
+        // ID'deki numerik index'e göre sırala (seramik_0, seramik_1, ...)
+        dbSeramik.sort(function(a,b){
+          var ai=parseInt((a.id||'').replace('seramik_',''),10);
+          var bi=parseInt((b.id||'').replace('seramik_',''),10);
+          return ai-bi;
+        });
+        // Lokal SERAMIK'i DB'den gelen veriyle eşitle
+        SERAMIK.length=0;
+        dbSeramik.forEach(function(u){
+          SERAMIK.push({
+            isim:u.isim||'',
+            kat:'seramik',
+            altKat:u.alt_kat||'',
+            garanti:u.garanti||0,
+            full:u.full_fiyat||0,
+            on3:u.on3_fiyat||0,
+            kaput:u.kaput_fiyat||0,
+            tutar:u.tutar||0,
+            bayiIndirim:u.bayi_indirim||0,
+            rozet:u.rozet||'',
+            aciklama:u.aciklama||'',
+            resim:u.resim||null,
+            aktif:u.aktif!==false
+          });
+        });
+        // localStorage'ı da güncelle (tutarlılık için)
+        if(typeof storageKaydet==='function') storageKaydet();
+      }
+      // SONRA: DB Özel ürünlerini yakala (seramik artık tanınıyor, gerçek özel ürünler kalır)
       _dbOzelUrunleriYakala(d.data);
       d.data.forEach(function(u){
         if(u.id&&URUNLER[u.id]){
-          // Mevcut ürünü güncelle
+          // Mevcut PPF ürününü güncelle
           var t=URUNLER[u.id];
           if(u.full_fiyat!=null) t.full=u.full_fiyat;
           if(u.on3_fiyat!=null) t.on3=u.on3_fiyat;
@@ -11053,9 +11086,10 @@ function fiyatYeniUrunKaydet(){
     var kod=isim.replace(/[^a-zA-Z0-9]/g,'').toUpperCase().slice(0,8)||('U'+Date.now());
     URUNLER[kod]={isim:isim,kat:kat,altKat:altKat,garanti:gar,full:full,on3:on3,kaput:kaput,bayiIndirim:bayi,rozet:rozet,aciklama:ac};
   } else if(kat==='seramik'){
-    SERAMIK.push({isim:isim,kat:kat,altKat:altKat,tutar:full||0,bayiIndirim:bayi,aciklama:ac});
+    // Tüm alanları doldur — desktop kart render ve API senkron için kritik
+    SERAMIK.push({isim:isim,kat:kat,altKat:altKat,garanti:gar,full:full||0,on3:on3||0,kaput:kaput||0,tutar:full||0,bayiIndirim:bayi,rozet:rozet,aciklama:ac,resim:null,aktif:true});
   } else {
-    DIGER_HIZMETLER.push({isim:isim,kat:kat,altKat:altKat,tutar:full||0,bayiIndirim:bayi,aciklama:ac});
+    DIGER_HIZMETLER.push({isim:isim,kat:kat,altKat:altKat,garanti:gar,tutar:full||0,bayiIndirim:bayi,rozet:rozet,aciklama:ac,resim:null,aktif:true});
   }
   hizmetListesiniOlustur();
   storageKaydet();
