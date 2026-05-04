@@ -1292,6 +1292,34 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
         </div>
       </div>
 
+      <!-- ══ ÜYE & GÜVENLİK İSTATİSTİKLERİ ══ -->
+      <div class="g4">
+        <div class="sk" onclick="doPg('musteriler')" style="cursor:pointer">
+          <div class="sk-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div class="sk-val" id="dash-toplam-uye">0</div>
+          <div class="sk-lbl">Toplam Üye (Aktif)</div>
+          <div class="sk-trend up" id="dash-uye-trend"><svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>Yükleniyor...</div>
+        </div>
+        <div class="sk g" onclick="doPg('musteriler')" style="cursor:pointer">
+          <div class="sk-icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></div>
+          <div class="sk-val" id="dash-bugun-yeni">0</div>
+          <div class="sk-lbl">Bugün Yeni Üye</div>
+          <div class="sk-trend up" id="dash-yeni-trend"><svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>Yükleniyor...</div>
+        </div>
+        <div class="sk b" onclick="doPg('musteriler')" style="cursor:pointer">
+          <div class="sk-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div class="sk-val" id="dash-aktif-1saat">0</div>
+          <div class="sk-lbl">Son 1 Saat Aktif</div>
+          <div class="sk-trend up" id="dash-aktif-trend"><svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>Yükleniyor...</div>
+        </div>
+        <div class="sk a">
+          <div class="sk-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <div class="sk-val" id="dash-kilitli-ip">0</div>
+          <div class="sk-lbl">Kilitli IP (Güvenlik)</div>
+          <div class="sk-trend up" id="dash-kilit-trend"><svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>Yükleniyor...</div>
+        </div>
+      </div>
+
       <div class="g21">
         <!-- Bugünkü Randevular -->
         <div class="k">
@@ -2463,10 +2491,60 @@ function doCikis(){
 /* ══ SAYFA ══ */
 
 /* ══ DASHBOARD YUKLE ══ */
+// ── Üye & Güvenlik İstatistikleri (Dashboard 2. satır kartları) ──
+// /api/dashboard-istatistik'ten 4 sayıyı çekip kartlara basar
+// Hata olursa sessizce 0 gösterir, mevcut akışı bozmaz
+async function uyeIstatistikleriYukle() {
+  // Loading state
+  ['dash-toplam-uye','dash-bugun-yeni','dash-aktif-1saat','dash-kilitli-ip'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el && (el.textContent==='0' || el.textContent==='')) el.style.opacity='0.3';
+  });
+  try {
+    var res = await fetch('/api/dashboard-istatistik',{credentials:'same-origin'}).then(function(r){return r.json();});
+    if(!res || !res.success || !res.data) return;
+    var d = res.data;
+
+    var setEl = function(id, val){
+      var el=document.getElementById(id);
+      if(!el) return;
+      el.style.opacity='1';
+      el.textContent = val.toLocaleString('tr-TR');
+    };
+    setEl('dash-toplam-uye', d.toplam_uye||0);
+    setEl('dash-bugun-yeni', d.bugun_yeni||0);
+    setEl('dash-aktif-1saat', d.son_1_saat_aktif||0);
+    setEl('dash-kilitli-ip', d.kilitli_ip||0);
+
+    // Trend yazıları
+    var setTrend=function(id, txt, isAlert){
+      var el=document.getElementById(id);
+      if(!el) return;
+      el.className='sk-trend '+(isAlert?'dn':'up');
+      el.innerHTML='<svg viewBox="0 0 24 24"><polyline points="'+(isAlert?'6 9 12 15 18 9':'18 15 12 9 6 15')+'"/></svg>'+txt;
+    };
+    setTrend('dash-uye-trend',  (d.toplam_uye>0?'Sistemdeki üye':'Henüz üye yok'), false);
+    setTrend('dash-yeni-trend', (d.bugun_yeni>0?d.bugun_yeni+' yeni kayıt':'Bugün yeni yok'), false);
+    setTrend('dash-aktif-trend',(d.son_1_saat_aktif>0?'Şu an aktif':'Aktif kullanıcı yok'), false);
+    setTrend('dash-kilit-trend',(d.kilitli_ip>0?d.kilitli_ip+' IP kilitli':'Saldırı yok'), d.kilitli_ip>0);
+  } catch(e){
+    console.warn('[Dashboard] Üye istatistikleri yüklenemedi:', e && e.message);
+    // Sessizce 0'da bırak, mevcut akışı bozma
+    ['dash-toplam-uye','dash-bugun-yeni','dash-aktif-1saat','dash-kilitli-ip'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el) el.style.opacity='1';
+    });
+  }
+}
+
 async function dashboardYukle() {
   // Yükleniyor göster
   var skVals0=document.querySelectorAll('#pg-dashboard .sk-val');
   skVals0.forEach(function(el){if(el.textContent==='0'||el.textContent==='₺0')el.style.opacity='0.3';});
+
+  // Yeni: Üye & güvenlik istatistiklerini paralel çek (mevcut akışı bloklamaz)
+  uyeIstatistikleriYukle();
+
   try {
     var rdvRes = await fetch('/api/randevular',{credentials:'same-origin'}).then(function(r){return r.json();});
     var mstRes = await fetch('/api/musteriler',{credentials:'same-origin'}).then(function(r){return r.json();});
