@@ -3,9 +3,9 @@ import { sql, initDB } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 // MÜŞTERİ AUTH — Üye olma, giriş, oturum, profil güncelleme
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 
 const JWT_SECRET = process.env.JWT_SECRET || 'autonax-fallback-secret-degistir';
 const TOKEN_COOKIE = 'autonax_musteri_token';
@@ -95,9 +95,128 @@ async function ensureDB() {
   if (!dbReady) { await initDB(); dbReady = true; }
 }
 
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
+// Rate Limit Koruması — Brute force ve spam kayıt engellemesi
+// ══════════════════════════════════════════════════════════════════
+// LOGIN:    1 dk içinde 5 yanlış → 15 dk kilit
+// REGISTER: 10 dk içinde 5 kayıt → 30 dk kilit
+// ══════════════════════════════════════════════════════════════════
+
+const LOGIN_MAX_ATTEMPTS = 5;
+const LOGIN_WINDOW_MIN = 1;
+const LOGIN_LOCKOUT_MIN = 15;
+
+const REGISTER_MAX_ATTEMPTS = 5;
+const REGISTER_WINDOW_MIN = 10;
+const REGISTER_LOCKOUT_MIN = 30;
+
+let musteriRateTableReady = false;
+async function ensureMusteriRateTable() {
+  if (musteriRateTableReady) return;
+  await sql`CREATE TABLE IF NOT EXISTS musteri_rate_limit (
+    ip TEXT NOT NULL,
+    action_type TEXT NOT NULL,
+    fail_count INTEGER NOT NULL DEFAULT 0,
+    first_fail_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    locked_until TIMESTAMPTZ,
+    PRIMARY KEY (ip, action_type)
+  )`;
+  musteriRateTableReady = true;
+}
+
+function getClientIP(req: NextRequest): string {
+  const xff = req.headers.get('x-forwarded-for');
+  if (xff) return xff.split(',')[0].trim();
+  const xri = req.headers.get('x-real-ip');
+  if (xri) return xri.trim();
+  return 'unknown';
+}
+
+/**
+ * IP+action_type için rate limit kontrolü.
+ * Kilitliyse → { blocked: true, retryAfterSec }
+ */
+async function checkMusteriRateLimit(ip: string, actionType: 'login' | 'register'): Promise<{ blocked: boolean; retryAfterSec?: number }> {
+  try {
+    await ensureMusteriRateTable();
+    const rows = await sql`
+      SELECT fail_count, first_fail_at, locked_until
+      FROM musteri_rate_limit
+      WHERE ip = ${ip} AND action_type = ${actionType}
+      LIMIT 1
+    `;
+    if (rows.length === 0) return { blocked: false };
+    const r = rows[0] as { fail_count: number; first_fail_at: string; locked_until: string | null };
+    if (r.locked_until) {
+      const until = new Date(r.locked_until).getTime();
+      const now = Date.now();
+      if (until > now) {
+        return { blocked: true, retryAfterSec: Math.ceil((until - now) / 1000) };
+      }
+      // Kilit süresi geçmiş → temizle
+      await sql`DELETE FROM musteri_rate_limit WHERE ip = ${ip} AND action_type = ${actionType}`;
+    }
+    return { blocked: false };
+  } catch (e) {
+    console.error('[MUSTERI AUTH] Rate limit kontrol hatası:', e);
+    // Hata olursa engelleme — sistem çalışmaya devam etsin
+    return { blocked: false };
+  }
+}
+
+/** Sayacı artır, gerekirse kilitle */
+async function recordMusteriAttempt(ip: string, actionType: 'login' | 'register'): Promise<void> {
+  try {
+    await ensureMusteriRateTable();
+    const windowMin = actionType === 'login' ? LOGIN_WINDOW_MIN : REGISTER_WINDOW_MIN;
+    const maxAttempts = actionType === 'login' ? LOGIN_MAX_ATTEMPTS : REGISTER_MAX_ATTEMPTS;
+    const lockoutMin = actionType === 'login' ? LOGIN_LOCKOUT_MIN : REGISTER_LOCKOUT_MIN;
+
+    const rows = await sql`
+      SELECT fail_count, first_fail_at FROM musteri_rate_limit
+      WHERE ip = ${ip} AND action_type = ${actionType} LIMIT 1
+    `;
+    if (rows.length === 0) {
+      await sql`INSERT INTO musteri_rate_limit (ip, action_type, fail_count, first_fail_at)
+        VALUES (${ip}, ${actionType}, 1, NOW())`;
+      return;
+    }
+    const r = rows[0] as { fail_count: number; first_fail_at: string };
+    const windowStart = new Date(r.first_fail_at).getTime();
+    const elapsedMin = (Date.now() - windowStart) / 60000;
+    if (elapsedMin > windowMin) {
+      // Pencere geçmiş → sayacı sıfırla
+      await sql`UPDATE musteri_rate_limit SET fail_count = 1, first_fail_at = NOW(), locked_until = NULL
+        WHERE ip = ${ip} AND action_type = ${actionType}`;
+      return;
+    }
+    const newCount = r.fail_count + 1;
+    if (newCount >= maxAttempts) {
+      const lockUntil = new Date(Date.now() + lockoutMin * 60000);
+      await sql`UPDATE musteri_rate_limit SET fail_count = ${newCount}, locked_until = ${lockUntil.toISOString()}
+        WHERE ip = ${ip} AND action_type = ${actionType}`;
+    } else {
+      await sql`UPDATE musteri_rate_limit SET fail_count = ${newCount}
+        WHERE ip = ${ip} AND action_type = ${actionType}`;
+    }
+  } catch (e) {
+    console.error('[MUSTERI AUTH] Failed attempt kayıt hatası:', e);
+  }
+}
+
+/** Başarılı işlem sonrası sayacı sıfırla */
+async function clearMusteriAttempts(ip: string, actionType: 'login' | 'register'): Promise<void> {
+  try {
+    await ensureMusteriRateTable();
+    await sql`DELETE FROM musteri_rate_limit WHERE ip = ${ip} AND action_type = ${actionType}`;
+  } catch (e) {
+    console.error('[MUSTERI AUTH] Clear attempts hatası:', e);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
 // POST — Tüm aksiyonlar
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 
 export async function POST(req: NextRequest) {
   try {
@@ -109,6 +228,17 @@ export async function POST(req: NextRequest) {
     // REGISTER
     // ──────────────────────────────────────────────────────────────
     if (action === 'register') {
+      // Rate limit: 10 dk içinde 5 kayıt → 30 dk kilit (spam koruması)
+      const clientIP = getClientIP(req);
+      const rateCheck = await checkMusteriRateLimit(clientIP, 'register');
+      if (rateCheck.blocked) {
+        const dakika = Math.ceil((rateCheck.retryAfterSec || 0) / 60);
+        return NextResponse.json(
+          { success: false, error: `Çok fazla kayıt denemesi. ${dakika} dakika sonra tekrar deneyin.` },
+          { status: 429 }
+        );
+      }
+
       const ad = (body.ad || '').trim();
       const soyad = (body.soyad || '').trim();
       const email = normalizeEmail(body.email);
@@ -130,6 +260,7 @@ export async function POST(req: NextRequest) {
         SELECT id, sifre_hash FROM musteriler WHERE LOWER(email) = ${email} LIMIT 1
       `;
       if (mevcutEmail.length > 0 && mevcutEmail[0].sifre_hash) {
+        await recordMusteriAttempt(clientIP, 'register');
         return NextResponse.json({ success: false, error: 'Bu e-posta zaten kayıtlı' }, { status: 409 });
       }
 
@@ -137,6 +268,7 @@ export async function POST(req: NextRequest) {
         SELECT id, sifre_hash FROM musteriler WHERE tel = ${tel} LIMIT 1
       `;
       if (mevcutTel.length > 0 && mevcutTel[0].sifre_hash) {
+        await recordMusteriAttempt(clientIP, 'register');
         return NextResponse.json({ success: false, error: 'Bu telefon numarası zaten kayıtlı' }, { status: 409 });
       }
 
@@ -171,6 +303,8 @@ export async function POST(req: NextRequest) {
       }
 
       const token = createToken(musteriId, email);
+      // Başarılı kayıtlar da sayılır (10 dk içinde 5 kayıt limiti)
+      await recordMusteriAttempt(clientIP, 'register');
       const res = NextResponse.json({
         success: true,
         user: { id: musteriId, ad, soyad, email, tel, avatar, puan: 0, seviye: 'Bronz' },
@@ -183,6 +317,17 @@ export async function POST(req: NextRequest) {
     // LOGIN
     // ──────────────────────────────────────────────────────────────
     if (action === 'login') {
+      // Rate limit: 1 dk içinde 5 yanlış → 15 dk kilit (brute force koruması)
+      const clientIP = getClientIP(req);
+      const rateCheck = await checkMusteriRateLimit(clientIP, 'login');
+      if (rateCheck.blocked) {
+        const dakika = Math.ceil((rateCheck.retryAfterSec || 0) / 60);
+        return NextResponse.json(
+          { success: false, error: `Çok fazla başarısız deneme. ${dakika} dakika sonra tekrar deneyin.` },
+          { status: 429 }
+        );
+      }
+
       const email = normalizeEmail(body.email);
       const sifre = body.sifre || '';
 
@@ -196,6 +341,7 @@ export async function POST(req: NextRequest) {
       `;
 
       if (rows.length === 0 || !rows[0].sifre_hash) {
+        await recordMusteriAttempt(clientIP, 'login');
         return NextResponse.json({ success: false, error: 'E-posta veya şifre hatalı' }, { status: 401 });
       }
 
@@ -206,10 +352,13 @@ export async function POST(req: NextRequest) {
 
       const dogru = await bcrypt.compare(sifre, m.sifre_hash);
       if (!dogru) {
+        await recordMusteriAttempt(clientIP, 'login');
         return NextResponse.json({ success: false, error: 'E-posta veya şifre hatalı' }, { status: 401 });
       }
 
       await sql`UPDATE musteriler SET son_giris = NOW() WHERE id = ${m.id}`.catch(() => {});
+      // Başarılı login → sayacı temizle
+      await clearMusteriAttempts(clientIP, 'login');
 
       const token = createToken(m.id, m.email);
       const res = NextResponse.json({
@@ -360,9 +509,9 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 // GET — Hızlı oturum kontrolü
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 
 export async function GET(req: NextRequest) {
   const token = req.cookies.get(TOKEN_COOKIE)?.value;
