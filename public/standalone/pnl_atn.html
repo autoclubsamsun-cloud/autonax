@@ -2420,8 +2420,15 @@ function doLogin(){
       kullaniciBilgiAyarla(d);
       panelAc();
     } else {
+      // Backend'den gelen mesajı göster (rate limit/brute force mesajları için)
+      err.textContent = d.error || 'Kullanıcı adı veya şifre hatalı!';
       err.style.display='block';
-      setTimeout(function(){err.style.display='none';},2500);
+      // Rate limit kilidi gibi uzun mesajlar için 6 saniye, normal hatalar için 2.5 saniye
+      var sure = (d.error && d.error.length > 30) ? 6000 : 2500;
+      setTimeout(function(){
+        err.style.display='none';
+        err.textContent='Kullanıcı adı veya şifre hatalı!';
+      }, sure);
     }
   })
   .catch(function(){
