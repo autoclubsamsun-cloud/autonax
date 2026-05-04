@@ -2288,7 +2288,15 @@ svg{display:block;flex-shrink:0}
 }
 
 </style>
-<script>window.onerror=function(msg,url,line,col,err){console.error("Autonax Global Error:",msg,"at",url+":"+line+":"+col);return false;};</script>
+<script>
+window.onerror=function(msg,url,line,col,err){console.error("Autonax Global Error:",msg,"at",url+":"+line+":"+col);return false;};
+/* XSS koruması — admin panelinden gelen metinleri HTML'e basmadan önce mutlaka bu fonksiyondan geçir */
+window.escapeHTML = function(s){
+  return String(s == null ? '' : s).replace(/[<>"'&]/g, function(c){
+    return {'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'}[c];
+  });
+};
+</script>
 </head>
 <body>
 
@@ -6312,18 +6320,18 @@ function hizmetBolumleriniRender(bolumler) {
         var ozellikler = k.ozellikler ? k.ozellikler.split(',').map(function(o){ return o.trim(); }).filter(Boolean) : [];
 
         svc.innerHTML = '<div class="svc-img" style="position:relative;overflow:hidden">'
-          + (k.resim ? '<img src="' + k.resim + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;z-index:2;border-radius:inherit">' : '')
+          + (k.resim ? '<img src="' + escapeHTML(k.resim) + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;z-index:2;border-radius:inherit">' : '')
           + (k.resim ? '' : '<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>')
-          + (k.rozet ? '<div class="svc-bdg">' + k.rozet + '</div>' : '')
+          + (k.rozet ? '<div class="svc-bdg">' + escapeHTML(k.rozet) + '</div>' : '')
           + '</div>'
           + '<div class="svc-body">'
             + '<div class="svc-tag-row">'
-              + '<span class="svc-brand">' + k.isim + '</span>'
-              + (k.garanti ? '<span class="svc-garanti">' + k.garanti + '</span>' : '')
+              + '<span class="svc-brand">' + escapeHTML(k.isim) + '</span>'
+              + (k.garanti ? '<span class="svc-garanti">' + escapeHTML(k.garanti) + '</span>' : '')
             + '</div>'
-            + '<div class="svc-name">' + (k.alt_isim || k.isim) + '</div>'
-            + (ozellikler.length ? '<div class="svc-sub">' + ozellikler.join(' · ') + '</div>' : '')
-            + '<div class="svc-price">' + fiyatStr + '</div>'
+            + '<div class="svc-name">' + escapeHTML(k.alt_isim || k.isim) + '</div>'
+            + (ozellikler.length ? '<div class="svc-sub">' + ozellikler.map(escapeHTML).join(' · ') + '</div>' : '')
+            + '<div class="svc-price">' + escapeHTML(fiyatStr) + '</div>'
             + '<button class="svc-btn">Randevu Al</button>'
           + '</div>';
 
