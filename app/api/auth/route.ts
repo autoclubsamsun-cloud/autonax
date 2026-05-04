@@ -83,6 +83,108 @@ async function ensureDB() {
   if (!dbReady) { await initDB(); dbReady = true; }
 }
 
+// ── Brute Force Koruması ─────────────────────────────────────────────
+// Aynı IP'den dakikada 5'ten fazla başarısız login → 15 dk kilit
+const RATE_LIMIT_MAX_ATTEMPTS = 5;
+const RATE_LIMIT_WINDOW_MIN = 1;       // dakika içindeki denemeleri say
+const RATE_LIMIT_LOCKOUT_MIN = 15;     // limit aşılırsa kaç dakika kilitli
+
+let rateTableReady = false;
+async function ensureRateTable() {
+  if (rateTableReady) return;
+  await sql`CREATE TABLE IF NOT EXISTS auth_rate_limit (
+    ip TEXT PRIMARY KEY,
+    fail_count INTEGER NOT NULL DEFAULT 0,
+    first_fail_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    locked_until TIMESTAMPTZ
+  )`;
+  rateTableReady = true;
+}
+
+/** İstemci IP'sini header'lardan çek (Vercel x-forwarded-for kullanır) */
+function getClientIP(req: NextRequest): string {
+  const xff = req.headers.get('x-forwarded-for');
+  if (xff) return xff.split(',')[0].trim();
+  const xri = req.headers.get('x-real-ip');
+  if (xri) return xri.trim();
+  return 'unknown';
+}
+
+/**
+ * Login denemeden önce IP kilitli mi kontrol et.
+ * Kilitliyse → { blocked: true, retryAfterSec }
+ * Değilse → { blocked: false }
+ */
+async function checkRateLimit(ip: string): Promise<{ blocked: boolean; retryAfterSec?: number }> {
+  try {
+    await ensureRateTable();
+    const rows = await sql`
+      SELECT fail_count, first_fail_at, locked_until
+      FROM auth_rate_limit
+      WHERE ip = ${ip}
+      LIMIT 1
+    `;
+    if (rows.length === 0) return { blocked: false };
+    const r = rows[0] as { fail_count: number; first_fail_at: string; locked_until: string | null };
+    if (r.locked_until) {
+      const until = new Date(r.locked_until).getTime();
+      const now = Date.now();
+      if (until > now) {
+        return { blocked: true, retryAfterSec: Math.ceil((until - now) / 1000) };
+      }
+      // Kilit süresi geçmiş → temizle
+      await sql`DELETE FROM auth_rate_limit WHERE ip = ${ip}`;
+    }
+    return { blocked: false };
+  } catch (e) {
+    console.error('[AUTH] Rate limit kontrol hatası:', e);
+    // Hata olursa engelleme — sistem çalışmaya devam etsin
+    return { blocked: false };
+  }
+}
+
+/** Başarısız login sonrası sayacı artır, gerekirse kilitle */
+async function recordFailedAttempt(ip: string): Promise<void> {
+  try {
+    await ensureRateTable();
+    const rows = await sql`
+      SELECT fail_count, first_fail_at FROM auth_rate_limit WHERE ip = ${ip} LIMIT 1
+    `;
+    if (rows.length === 0) {
+      await sql`INSERT INTO auth_rate_limit (ip, fail_count, first_fail_at)
+        VALUES (${ip}, 1, NOW())`;
+      return;
+    }
+    const r = rows[0] as { fail_count: number; first_fail_at: string };
+    const windowStart = new Date(r.first_fail_at).getTime();
+    const elapsedMin = (Date.now() - windowStart) / 60000;
+    if (elapsedMin > RATE_LIMIT_WINDOW_MIN) {
+      // Pencere geçmiş → sayacı sıfırla
+      await sql`UPDATE auth_rate_limit SET fail_count = 1, first_fail_at = NOW(), locked_until = NULL WHERE ip = ${ip}`;
+      return;
+    }
+    const newCount = r.fail_count + 1;
+    if (newCount >= RATE_LIMIT_MAX_ATTEMPTS) {
+      const lockUntil = new Date(Date.now() + RATE_LIMIT_LOCKOUT_MIN * 60000);
+      await sql`UPDATE auth_rate_limit SET fail_count = ${newCount}, locked_until = ${lockUntil.toISOString()} WHERE ip = ${ip}`;
+    } else {
+      await sql`UPDATE auth_rate_limit SET fail_count = ${newCount} WHERE ip = ${ip}`;
+    }
+  } catch (e) {
+    console.error('[AUTH] Failed attempt kayıt hatası:', e);
+  }
+}
+
+/** Başarılı login sonrası kayıt sıfırla */
+async function clearFailedAttempts(ip: string): Promise<void> {
+  try {
+    await ensureRateTable();
+    await sql`DELETE FROM auth_rate_limit WHERE ip = ${ip}`;
+  } catch (e) {
+    console.error('[AUTH] Clear attempts hatası:', e);
+  }
+}
+
 async function getCredentials() {
   const rows = await sql`SELECT deger FROM site_ayarlar WHERE anahtar='admin_credentials'`;
   if (rows.length > 0) {
@@ -100,9 +202,21 @@ export async function POST(req: NextRequest) {
 
     // ── LOGIN: şifreyi doğrula → JWT cookie set ────────────────────
     if (action === 'login') {
+      // 0) IP rate limit kontrolü — 5 yanlış denemeden sonra 15 dk kilit
+      const clientIP = getClientIP(req);
+      const rateCheck = await checkRateLimit(clientIP);
+      if (rateCheck.blocked) {
+        const dakika = Math.ceil((rateCheck.retryAfterSec || 0) / 60);
+        return NextResponse.json(
+          { success: false, error: `Çok fazla başarısız deneme. ${dakika} dakika sonra tekrar deneyin.` },
+          { status: 429 }
+        );
+      }
+
       // 1) Önce admin credentials kontrolü
       const creds = await getCredentials();
       if (username === creds.username && password === creds.password) {
+        await clearFailedAttempts(clientIP);
         const token = createToken(username, 'super_admin', 'admin');
         const res = NextResponse.json({
           success: true,
@@ -163,6 +277,7 @@ export async function POST(req: NextRequest) {
             aktif: boolean; yetkiler: Record<string, boolean>;
             sifre: string; kullanici_adi: string;
           };
+          await clearFailedAttempts(clientIP);
           const token = createToken(p.kullanici_adi || p.email || username, p.rol || 'teknisyen', 'personel');
           const res = NextResponse.json({
             success: true,
@@ -182,6 +297,7 @@ export async function POST(req: NextRequest) {
       }
 
       // 3) Hiçbiri eşleşmediyse
+      await recordFailedAttempt(clientIP);
       return NextResponse.json(
         { success: false, error: 'Hatalı giriş' },
         { status: 401 }
