@@ -2572,11 +2572,15 @@ async function dashboardYukle() {
           if(origIdx<0) origIdx=0;  // fallback
           var renk=r.durum==='onay'||r.islem?'#16a34a':r.durum==='iptal'?'#dc2626':'#d97706';
           var kalan=(r.tutar||0)-(r.odenenToplam||0);
+          // Büyük araç rozeti — pickup/minivan için fiyat doğrulama uyarısı
+          var buyukArac=r.aracBuyuk||(r.aracSinif==='pickup')||(r.aracSinif==='minivan');
+          var buyukRozet=buyukArac?'<div style="background:#fef3c7;border:1.5px solid #d97706;color:#92400e;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700;margin:4px 0;display:flex;align-items:center;gap:4px">🛻 BÜYÜK ARAÇ — FİYAT DOĞRULA</div>':'';
           return '<div class="mcard" onclick="rdvDetay('+origIdx+')">'
             +'<div class="mcard-top">'
               +'<span class="mcard-plaka">'+(r.plaka||'—')+'</span>'
               +'<span class="mcard-status" style="background:'+renk+'22;color:'+renk+'">'+(s.txt||'Bekliyor')+'</span>'
             +'</div>'
+            +buyukRozet
             +'<div class="mcard-musteri">'+(r.musteri||'—')+'</div>'
             +'<div class="mcard-meta">'
               +'📅 <b>'+(r.tarih||'—')+'</b>'+(r.saat?' · '+r.saat:'')
@@ -2905,7 +2909,7 @@ function doRdvListele(){
     return '<tr style="background:'+s.bg+';border-left:'+s.border+';transition:.2s;cursor:pointer" data-rdv-idx="'+i+'" onclick="rdvSatirSec('+i+')">'
       +'<td><b>'+r.tarih+'</b><br><small>'+r.saat+'</small></td>'
       +'<td><b>'+r.musteri+'</b>'+onlineRow+'<br><small style="color:var(--ink4)">'+r.tel+'</small></td>'
-      +'<td><span class="tbl-plaka">'+r.plaka+'</span>'+(r.arac&&r.arac!=='—'?'<br><small>'+r.arac+'</small>':'')+'</td>'
+      +'<td><span class="tbl-plaka">'+r.plaka+'</span>'+(r.arac&&r.arac!=='—'?'<br><small>'+r.arac+'</small>':'')+((r.aracBuyuk||r.aracSinif==='pickup'||r.aracSinif==='minivan')?'<br><span title="Pickup/Minivan — fiyat doğrulama gerekli" style="display:inline-block;background:#fef3c7;border:1px solid #d97706;color:#92400e;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700;margin-top:2px">🛻 BÜYÜK ARAÇ</span>':'')+'</td>'
       +'<td>'+r.hizmet+'</td>'
       +'<td class="tbl-fiyat" data-col="tutar">'+tutarStr+'</td>'
       +'<td><span class="tag '+s.tag+'">'+s.txt+'</span></td>'
@@ -4400,6 +4404,15 @@ function rdvDetay(idx){
         +'<div onclick="document.getElementById(&quot;rdv-modal-ovl&quot;).remove()" style="cursor:pointer;color:#666;font-size:24px;line-height:1">&#215;</div>'
       +'</div>'
       +'<div style="padding:16px">'
+        // BÜYÜK ARAÇ UYARISI (pickup/minivan ise göster)
+        +((r.aracBuyuk||r.aracSinif==='pickup'||r.aracSinif==='minivan')
+          ?'<div style="background:#fef3c7;border:1.5px solid #d97706;border-radius:10px;padding:12px;margin-bottom:12px">'
+            +'<div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#92400e;margin-bottom:4px">🛻 BÜYÜK ARAÇ — FİYAT DOĞRULA</div>'
+            +'<div style="font-size:11px;color:#78350f;line-height:1.5">Bu randevu <b>'+(r.aracSinif==='pickup'?'Pickup':r.aracSinif==='minivan'?'Minivan/Panelvan/Minibüs':'büyük araç')+'</b> sınıfı için alınmıştır. '
+            +(r.aracEkUcret>0?'Robot otomatik <b>+₺'+(r.aracEkUcret||0).toLocaleString("tr-TR")+'</b> boyut farkı eklemiştir. ':'')
+            +'Müşteriyi arayıp net fiyat doğrulaması yapmanız önerilir.</div>'
+          +'</div>'
+          :'')
         // Müşteri bilgileri
         +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
           +'<div style="background:var(--bg);border-radius:8px;padding:8px 12px"><div style="font-size:9px;color:var(--ink4);font-weight:700;text-transform:uppercase;margin-bottom:2px">Müşteri</div><div style="font-size:13px;font-weight:700">'+r.musteri+'</div></div>'
