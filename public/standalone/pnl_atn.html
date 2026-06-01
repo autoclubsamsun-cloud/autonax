@@ -6318,6 +6318,10 @@ function faturaMobilKartlariRender(liste){
 function faturaFiltreTemizle(){['fat-arama','fat-tip','fat-durum'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});faturaListeYukle();}
 
 function faturaYeniAc(onceden){
+  // Onceki oturumdan kalan state temizle
+  window._fatAlici=null;window._fatOdeme=null;window._fatKalemler=null;
+  window._fatGenelIskonto=0;window._fatIskontoTip='yuzde';window._fatAdim=1;
+  window._fatPre=null;window._fatEdmUyari=null;
   var pre=onceden||{};
   var ovl=document.createElement('div');
   ovl.id='fatura-yeni-ovl';
@@ -7382,83 +7386,62 @@ function faturaSecimDegisti(){
   }
 }
 
-/** KESILDI/HATA durumundaki faturayı düzenle - mevcut bilgilerle formu aç */
+/** KESILDI/HATA durumundaki faturayi duzenle - wizard ile ac */
 function faturaDuzenle(idx){
   var f=FATURALAR[idx];
   if(!f) return;
   if(f.durum!=='KESILDI' && f.durum!=='HATA'){
-    toast('Sadece bekleyen veya hatalı faturalar düzenlenebilir','red');
+    toast('Sadece bekleyen veya hatali faturalar duzenlenebilir','red');
     return;
   }
 
-  // Eskisini sil (yeni kayıt oluşturulacak)
+  // Eskisini sil (yeni kayit olusturulacak)
   var silinen=FATURALAR.splice(idx,1)[0];
   faturaKaydet();
   if(typeof faturaSayfasiYukle==='function') faturaSayfasiYukle();
 
-  // Form aç — musteri/tel/hizmet/tutar pre-fill ile
+  // Wizard ac - onceki fatura bilgileriyle
   setTimeout(function(){
     faturaYeniAc({
       musteri: silinen.musteri,
       tel: silinen.tel,
       hizmet: silinen.hizmet,
       tutar: silinen.toplamTutar,
-      randevuId: silinen.randevuId||''
+      randevuId: silinen.randevuId||'',
+      plaka: silinen.plaka||''
     });
-    // Form DOM'a yerleşince kalan alanları doldur
+    // Form DOM yerlesince ek alanlari doldur
     setTimeout(function(){
-      var set=function(id,val){ var el=document.getElementById(id); if(el) el.value=val||''; };
-
-      // TC/VKN → otomatik algılamayı tetikle
+      var set=function(id,val){var el=document.getElementById(id);if(el)el.value=val||'';};
       if(silinen.vknTckn){
-        set('fat-vkn', silinen.vknTckn);
+        set('fat-vkn',silinen.vknTckn);
         if(typeof faturaVknOtoAlgila==='function') faturaVknOtoAlgila();
+        if(typeof fatVdGoster==='function') fatVdGoster();
       }
-
-      // Müşteri alanları (faturaYeniAc bazen pre'den musteri geçirse bile güvence)
-      set('fat-musteri-adi', silinen.musteri);
-      set('fat-tel', silinen.tel);
-      set('fat-email', silinen.email);
-      set('fat-adres', silinen.adres);
-      set('fat-il', silinen.il);
-      set('fat-ilce', silinen.ilce);
-      set('fat-hizmet', silinen.hizmet);
-      set('fat-tutar', silinen.toplamTutar);
-      set('fat-kdv', String(silinen.kdvOrani||20));
-      set('fat-not', silinen.not);
-
-      // Fatura tipini (e-Arşiv / e-Fatura) geri yükle
-      var tipHidden=document.getElementById('fat-yeni-tip');
-      var musteriTipHidden=document.getElementById('fat-musteri-tip');
-      var aliasHidden=document.getElementById('fat-alias');
-      if(silinen.faturaTipi && tipHidden){
-        tipHidden.value=silinen.faturaTipi;
+      set('fat-musteri-adi',silinen.musteri);
+      set('fat-tel',silinen.tel);
+      set('fat-email',silinen.email);
+      set('fat-adres',silinen.adres);
+      set('fat-il',silinen.il);
+      set('fat-ilce',silinen.ilce);
+      set('fat-vergi-dairesi',silinen.vergiDairesi||'');
+      // Fatura tipi geri yukle
+      var tipH=document.getElementById('fat-yeni-tip');
+      var mTipH=document.getElementById('fat-musteri-tip');
+      var aliasH=document.getElementById('fat-alias');
+      if(silinen.faturaTipi && tipH){
+        tipH.value=silinen.faturaTipi;
         if(typeof faturaTipiButonGuncelle==='function') faturaTipiButonGuncelle(silinen.faturaTipi);
-        var tipBilgi=document.getElementById('fat-tip-bilgi');
-        if(tipBilgi){
-          if(silinen.faturaTipi==='EFATURA'){
-            tipBilgi.innerHTML='✎ <b>Düzenleme modu:</b> e-Fatura olarak kaydedilecek';
-            tipBilgi.style.color='#16a34a';
-          } else {
-            tipBilgi.innerHTML='✎ <b>Düzenleme modu:</b> e-Arşiv olarak kaydedilecek';
-            tipBilgi.style.color='#d97706';
-          }
-        }
       }
-      if(silinen.musteriTip && musteriTipHidden) musteriTipHidden.value=silinen.musteriTip;
-      if(silinen.alias && aliasHidden) aliasHidden.value=silinen.alias;
-
-      // KDV hesap özetini güncelle
-      if(typeof faturaTutarHesapla==='function') faturaTutarHesapla();
-
-      // Modal başlığını "Düzenle" yap
+      if(silinen.musteriTip && mTipH) mTipH.value=silinen.musteriTip;
+      if(silinen.alias && aliasH) aliasH.value=silinen.alias;
+      // Baslik guncelle
       var baslik=document.querySelector('#fatura-yeni-ovl div[style*="Bebas Neue"]');
-      if(baslik && baslik.textContent.indexOf('YENİ FATURA')>-1){
-        baslik.textContent='✎ FATURA DÜZENLE · '+silinen.faturaNo;
+      if(baslik && baslik.textContent.indexOf('FATURA')>-1){
+        baslik.textContent='\ud83d\udcdd FATURA D\u00dcZENLE \u00b7 '+silinen.faturaNo;
       }
     },120);
   },150);
-  toast('Düzenleme açıldı — değişiklikleri yapıp "Kaydet + Önizle"ye basın','green');
 }
 
 /** Fatura yeniden gönder (hata olmuşsa) */
