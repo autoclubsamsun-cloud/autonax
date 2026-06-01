@@ -2018,6 +2018,14 @@ function randevuListesiGoster(){
     const t = _rdvTariheCevir(r.tarih);
     const gun = t ? t.getDate() : '?';
     const ay = t ? _AY_KISA[t.getMonth()] : '';
+    let aciklamaNot = '';
+    if(!gecmisMi){
+      if(r.durum === 'bekl'){
+        aciklamaNot = `<div style="font-size:11px;color:#ea580c;margin-top:6px;line-height:1.4">⏳ Talebiniz onay bekliyor. Onaylandığında size dönüş yapılacaktır.</div>`;
+      } else if(r.durum === 'onay'){
+        aciklamaNot = `<div style="font-size:11px;color:#16a34a;margin-top:6px;line-height:1.4">✓ Randevunuz onaylandı. En kısa sürede sizinle iletişime geçeceğiz.</div>`;
+      }
+    }
     const iptalBtn = (!gecmisMi && r.durum !== 'iptal' && r.durum !== 'tmm' && r.durum !== 'tamamlandi')
       ? `<button onclick="randevuIptalEt('${r.id}')" class="btn-secondary" style="font-size:11px;padding:8px 16px;margin-top:8px;border:1px solid #fee2e2;background:#fff;color:#dc2626;border-radius:8px;cursor:pointer">İptal Et</button>`
       : '';
@@ -2029,6 +2037,7 @@ function randevuListesiGoster(){
       <div class="rdv-body">
         <div class="rdv-isim">${_escapeHtml(r.hizmet || '—')}</div>
         <div class="rdv-plaka">${_escapeHtml(r.plaka || '')} ${r.arac ? '— '+_escapeHtml(r.arac) : ''}</div>
+        ${aciklamaNot}
         ${iptalBtn}
       </div>
       <div>
@@ -2301,7 +2310,8 @@ async function randevuTalebGonder(btn){
         arac: aracIsim,
         hizmet: hizmet + (notVal ? ' [Not: ' + notVal + ']' : ''),
         tutar: 0,
-        durum: 'bekl'
+        durum: 'bekl',
+        kaynak: 'online'        // ← müşteri siteden kendi oluşturdu (panelde ayırt etmek için)
       })
     });
     const d = await res.json();
@@ -2311,7 +2321,7 @@ async function randevuTalebGonder(btn){
       return;
     }
     document.getElementById('yeni-rdv-modal')?.remove();
-    _toast('✓ Talebiniz alındı, en kısa sürede dönüş yapacağız', 'green');
+    _toast('✓ Talebiniz alındı. Onaylandıktan sonra size dönüş yapılacaktır.', 'green');
     if(typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([20, 50, 20]);
     // Listeyi yenile
     await randevularYukle();
