@@ -6857,12 +6857,8 @@ function faturaEDMSorgu(){
     if(sonucEl) sonucEl.innerHTML='<span style="color:#991b1b">⚠️ Önce TC/VKN giriniz</span>';
     return;
   }
-  if(tip==='bireysel' && no.length!==11){
-    if(sonucEl) sonucEl.innerHTML='<span style="color:#991b1b">⚠️ TC 11 hane olmalı</span>';
-    return;
-  }
-  if(tip==='kurumsal' && no.length!==10){
-    if(sonucEl) sonucEl.innerHTML='<span style="color:#991b1b">⚠️ VKN 10 hane olmalı</span>';
+  if(no.length!==10 && no.length!==11){
+    if(sonucEl) sonucEl.innerHTML='<span style="color:#991b1b">TC 11 hane, VKN 10 hane olmalidir</span>';
     return;
   }
 
@@ -6902,8 +6898,10 @@ function faturaEDMSorgu(){
       // e-Fatura mükellefi
       if(sonucEl) sonucEl.innerHTML='<span style="color:#16a34a">✅ e-Fatura mükellefi bulundu: <b>'+r.unvan+'</b>'+(r.etiket?' · '+r.etiket:'')+'</span>';
       var mEl=document.getElementById('fat-musteri-adi');
-      if(mEl && !mEl.value) mEl.value=r.unvan||'';
+      if(mEl) mEl.value=r.unvan||mEl.value||'';
       if(aliasEl) aliasEl.value=r.etiket||'';
+      var vdEl=document.getElementById('fat-vergi-dairesi');
+      if(vdEl && r.vergiDairesi) vdEl.value=r.vergiDairesi;
       if(tipBilgi) tipBilgi.innerHTML='✅ <b>e-Fatura</b> olarak kesilecek (müşteri GİB mükellefi)';
       if(tipBilgi) tipBilgi.style.color='#16a34a';
       if(tipHidden) tipHidden.value='EFATURA';

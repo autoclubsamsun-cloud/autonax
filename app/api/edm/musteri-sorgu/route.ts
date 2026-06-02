@@ -1,16 +1,16 @@
-/**
+﻿/**
  * POST /api/edm/musteri-sorgu
- * VKN/TC ile müşteri sorgulama
+ * VKN/TC ile musteri sorgulama (GIB e-fatura mukellef listesi)
  *
- * NOT: EDM'nin TC → müşteri bilgisi servisi YOK.
- * Bu endpoint sadece VKN için GİB e-fatura mükellef listesini sorgular.
- * TC sorgulama için NVI/KPS ayrı başvuru ister — şimdilik "bulunamadı" dönüyoruz.
+ * Akis:
+ *   1. Login -> SessionID al
+ *   2. checkGIBUser (SessionID ile) -> mukellef bilgisi don
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiResponse } from '@/lib/types';
 import { requireAuth } from '@/lib/utils/auth-check';
-import { soapCagri, tagCek, xmlEsc } from '@/lib/edm/soap-client';
+import { soapCagri, tagCek, xmlEsc, login } from '@/lib/edm/soap-client';
 
 interface MusteriSorguIstegi {
   kullaniciAdi: string;
@@ -24,6 +24,7 @@ interface MusteriSorguYaniti {
   bulundu: boolean;
   unvan?: string | null;
   etiket?: string | null;
+  vergiDairesi?: string | null;
   mesaj: string;
 }
 
@@ -35,10 +36,9 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) as MusteriSorguIstegi;
 
     if (!body.kullaniciAdi || !body.sifre) {
-      // Test modunda credentials zorunlu degil
       if (!body.testMod) {
         return NextResponse.json<ApiResponse>(
-          { success: false, error: 'EDM kullanıcı bilgileri eksik' },
+          { success: false, error: 'EDM kullanici bilgileri eksik' },
           { status: 400 }
         );
       }
@@ -50,36 +50,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ═══ TEST MODU SİMÜLASYONU ═══
-    // Credentials yoksa veya testMod=true ise sahte başarılı yanıt dön
+    // === TEST MODU SIMULASYONU ===
     const simulasyon = !!body.testMod || !body.kullaniciAdi || !body.sifre;
 
     if (simulasyon) {
-      // Bireysel TC simulasyonu
       if (body.tip === 'bireysel') {
         return NextResponse.json<ApiResponse<MusteriSorguYaniti>>({
           success: true,
           data: {
             bulundu: false,
-            mesaj:
-              '[TEST MODU] Bireysel müşteriler için EDM sorgu servisi yoktur — alanları manuel doldurun.',
+            mesaj: '[TEST MODU] Bireysel musteriler icin e-Fatura mukellef sorgusu yapildi - GIB listesinde bulunamadi (simulasyon).',
           },
         });
       }
-
-      // Kurumsal VKN simulasyonu
-      // VKN son hanesi tekse -> mükellef BULUNDU (e-Fatura)
-      // VKN son hanesi çiftse -> BULUNAMADI (e-Arşiv)
       const sonHane = parseInt(body.no.charAt(body.no.length - 1)) || 0;
       if (sonHane % 2 === 1) {
-        // Mukellef bulundu simulasyonu
         return NextResponse.json<ApiResponse<MusteriSorguYaniti>>({
           success: true,
           data: {
             bulundu: true,
-            unvan: '[TEST] ÖRNEK ŞİRKET LTD. ŞTİ.',
+            unvan: '[TEST] ORNEK SIRKET LTD. STI.',
             etiket: 'urn:mail:defaultpk@ornekfirma.com.tr',
-            mesaj: '[TEST MODU] Müşteri e-fatura mükellefi olarak bulundu (simülasyon)',
+            vergiDairesi: '[TEST] SAMSUN VD',
+            mesaj: '[TEST MODU] Musteri e-fatura mukellefi olarak bulundu (simulasyon)',
           },
         });
       } else {
@@ -87,65 +80,95 @@ export async function POST(req: NextRequest) {
           success: true,
           data: {
             bulundu: false,
-            mesaj:
-              '[TEST MODU] Bu VKN mükellef listesinde bulunamadı — e-Arşiv olarak kesilecek (simülasyon)',
+            mesaj: '[TEST MODU] Bu VKN mukellef listesinde bulunamadi - e-Arsiv olarak kesilecek (simulasyon)',
           },
         });
       }
     }
 
-    // ═══ GERÇEK EDM ÇAĞRISI ═══
+    // === GERCEK EDM CAGRISI ===
 
-    // Bireysel (TC) için EDM'de servis yok
-    if (body.tip === 'bireysel') {
+    // 1) LOGIN - SessionID al
+    const edmAuth = {
+      kullaniciAdi: body.kullaniciAdi,
+      sifre: body.sifre,
+      testMod: false,
+    };
+
+    const loginSonuc = await login(edmAuth);
+    if (!loginSonuc.basarili || !loginSonuc.sessionId) {
       return NextResponse.json<ApiResponse<MusteriSorguYaniti>>({
         success: true,
         data: {
           bulundu: false,
-          mesaj:
-            'Bireysel müşteriler için EDM sorgulama servisi yoktur — alanları manuel doldurun.',
+          mesaj: 'EDM login basarisiz: ' + (loginSonuc.hata?.mesaj || 'SessionID alinamadi') + ' - Bilgileri kontrol edin.',
         },
       });
     }
 
-    // Kurumsal: GİB e-fatura mükellef listesinde ara
-    const soapBody = `
-      <con:checkGIBUserRequest>
-        <REQUEST_HEADER>
-          <SESSION_ID></SESSION_ID>
-        </REQUEST_HEADER>
-        <INPUT>
-          <VKN_TCKN>${xmlEsc(body.no)}</VKN_TCKN>
-        </INPUT>
-      </con:checkGIBUserRequest>`;
+    const sessionId = loginSonuc.sessionId;
 
-    const sonuc = await soapCagri('checkGIBUser', soapBody, {
-      kullaniciAdi: body.kullaniciAdi,
-      sifre: body.sifre,
-      testMod: !!body.testMod,
-    });
+    // 2) checkGIBUser - VKN/TC ile mukellef sorgula
+    const soapBody = `
+      <checkGIBUserRequest xmlns="http://tempuri.org/">
+        <REQUEST_HEADER xmlns="">
+          <SESSION_ID>${xmlEsc(sessionId)}</SESSION_ID>
+        </REQUEST_HEADER>
+        <VKN_TCKN xmlns="">${xmlEsc(body.no)}</VKN_TCKN>
+      </checkGIBUserRequest>`;
+
+    const sonuc = await soapCagri('checkGIBUserRequest', soapBody, edmAuth);
 
     if (!sonuc.basarili) {
+      const hataMesaj = sonuc.hata?.mesaj || 'Bilinmeyen hata';
+      if (hataMesaj.toLowerCase().includes('not found') ||
+          hataMesaj.toLowerCase().includes('bulunamad') ||
+          hataMesaj.toLowerCase().includes('kayit yok') ||
+          hataMesaj.includes('1003')) {
+        return NextResponse.json<ApiResponse<MusteriSorguYaniti>>({
+          success: true,
+          data: {
+            bulundu: false,
+            mesaj: body.tip === 'bireysel'
+              ? 'Bu TC GIB e-fatura mukellef listesinde bulunamadi - e-Arsiv olarak kesilecek.'
+              : 'Bu VKN GIB e-fatura mukellef listesinde bulunamadi - e-Arsiv olarak kesilecek.',
+          },
+        });
+      }
       return NextResponse.json<ApiResponse<MusteriSorguYaniti>>({
         success: true,
         data: {
           bulundu: false,
-          mesaj: sonuc.hata?.mesaj || 'Sorgulama başarısız',
+          mesaj: 'EDM sorgu hatasi: ' + hataMesaj,
         },
       });
     }
 
     const xml = sonuc.xml ?? '';
-    const unvan = tagCek(xml, 'TITLE') || tagCek(xml, 'DEFINITION');
-    const etiket = tagCek(xml, 'ALIAS') || tagCek(xml, 'URN');
+    const unvan = tagCek(xml, 'TITLE') || tagCek(xml, 'DEFINITION') || tagCek(xml, 'IDENTIFIER');
+    const etiket = tagCek(xml, 'ALIAS') || tagCek(xml, 'URN') || tagCek(xml, 'IDENTIFIER');
+
+    const returnCode = tagCek(xml, 'RETURN_CODE') || tagCek(xml, 'ERROR_CODE');
+    if (returnCode && returnCode !== '0' && !unvan) {
+      return NextResponse.json<ApiResponse<MusteriSorguYaniti>>({
+        success: true,
+        data: {
+          bulundu: false,
+          mesaj: body.tip === 'bireysel'
+            ? 'Bu TC GIB e-fatura mukellef listesinde bulunamadi - e-Arsiv olarak kesilecek.'
+            : 'Bu VKN GIB e-fatura mukellef listesinde bulunamadi - e-Arsiv olarak kesilecek.',
+        },
+      });
+    }
 
     if (!unvan) {
       return NextResponse.json<ApiResponse<MusteriSorguYaniti>>({
         success: true,
         data: {
           bulundu: false,
-          mesaj:
-            'Bu VKN GİB e-fatura mükellef listesinde bulunamadı — e-Arşiv olarak kesilecek.',
+          mesaj: body.tip === 'bireysel'
+            ? 'Bu TC GIB e-fatura mukellef listesinde bulunamadi - e-Arsiv olarak kesilecek.'
+            : 'Bu VKN GIB e-fatura mukellef listesinde bulunamadi - e-Arsiv olarak kesilecek.',
         },
       });
     }
@@ -156,14 +179,14 @@ export async function POST(req: NextRequest) {
         bulundu: true,
         unvan,
         etiket,
-        mesaj: 'Müşteri e-fatura mükellefi olarak bulundu.',
+        mesaj: 'Musteri e-fatura mukellefi olarak bulundu.',
       },
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error('EDM musteri-sorgu hatası:', msg);
+    console.error('EDM musteri-sorgu hatasi:', msg);
     return NextResponse.json<ApiResponse>(
-      { success: false, error: 'Sunucu hatası: ' + msg },
+      { success: false, error: 'Sunucu hatasi: ' + msg },
       { status: 500 }
     );
   }
