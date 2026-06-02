@@ -6120,8 +6120,8 @@ function saFaturaListenerBagla(){
   tL('edm-bag',function(){
     var s=document.getElementById('edm-sonuc');if(!s)return;
     if(!EDM_AYAR.kullaniciAdi){s.innerHTML='<div style="padding:10px;background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.2);border-radius:8px;font-size:11px;color:#dc2626;margin-bottom:10px">Kullanici adi zorunlu!</div>';return;}
-    s.innerHTML='<div style="padding:10px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.2);border-radius:8px;font-size:11px;color:#2563EB;margin-bottom:10px">Test ediliyor... Kullanici: '+EDM_AYAR.kullaniciAdi+' | Sifre uzunluk: '+(EDM_AYAR.sifre?EDM_AYAR.sifre.length:'YOK')+'</div>';
     s.innerHTML='<div style="padding:10px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.2);border-radius:8px;font-size:11px;color:#2563EB;margin-bottom:10px">Baglanti test ediliyor...</div>';
+    fetch('/api/edm/test-baglanti',{
       method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
       body:JSON.stringify({kullaniciAdi:EDM_AYAR.kullaniciAdi,sifre:EDM_AYAR.sifre,testMod:!!EDM_AYAR.testMod,vknTckn:EDM_AYAR.vknTckn||''})
     }).then(function(r){return r.json();}).then(function(d){
