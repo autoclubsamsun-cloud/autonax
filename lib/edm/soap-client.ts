@@ -196,11 +196,11 @@ export async function login(auth: EdmAuth): Promise<SoapSonuc> {
         <CHANNEL_NAME>WEB</CHANNEL_NAME>
         <COMPRESSED>N</COMPRESSED>
       </REQUEST_HEADER>
-      <USER_NAME xmlns="">${xmlEsc(auth.kullaniciAdi)}</USER_NAME>
-      <PASSWORD xmlns="">${xmlEsc(auth.sifre)}</PASSWORD>
+      <USER_NAME xmlns=""><![CDATA[${auth.kullaniciAdi}]]></USER_NAME>
+      <PASSWORD xmlns=""><![CDATA[${auth.sifre}]]></PASSWORD>
     </LoginRequest>`;
 
-  console.log('[EDM LOGIN] kullaniciAdi:', auth.kullaniciAdi, 'sifre uzunluk:', auth.sifre?.length, 'sifre ilk2:', auth.sifre?.slice(0,2)+'***');
+  console.log('[EDM LOGIN] kullaniciAdi:', auth.kullaniciAdi, '| sifre uzunluk:', auth.sifre?.length, '| sifre hash:', Array.from(auth.sifre||'').reduce((a:number,c:string)=>a+c.charCodeAt(0),0));
   const sonuc = await soapCagri('LoginRequest', body, auth);
   if (!sonuc.basarili) return sonuc;
 
