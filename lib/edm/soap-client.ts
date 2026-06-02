@@ -1,13 +1,18 @@
-/**
- * EDM Bilişim EFaturaEDMConnectorService SOAP İstemcisi v2
+﻿/**
+ * EDM Bilisim EFaturaEDMConnectorService SOAP Istemcisi v3
  *
- * Doğru endpoint'ler:
+ * WSDL'den tespit edilen dogru yapilar:
+ *   - SOAP 1.1 (text/xml)
+ *   - targetNamespace: http://tempuri.org/
+ *   - Login SOAPAction: "LoginRequest"
+ *   - CheckUser SOAPAction: "CheckUserRequest"
+ *   - SendInvoice SOAPAction: "SendInvoiceRequest"
+ *   - ArchiveInvoice SOAPAction: "ArchiveInvoiceRequest"
+ *   - Elementler form="unqualified" -> namespace prefix'siz
+ *
+ * Endpoint'ler:
  *   Test:  https://test.edmbilisim.com.tr/EFaturaEDM21ea/EFaturaEDM.svc
- *   Canlı: https://interaktif.edmbilisim.com.tr/EFaturaEDM/EFaturaEDM.svc
- *
- * Akış:
- *   1. login(kullaniciAdi, sifre) → SessionID döner
- *   2. SessionID ile diğer operasyonlar (CheckUser, SendInvoice...)
+ *   Canli: https://interaktif.edmbilisim.com.tr/EFaturaEDM/EFaturaEDM.svc
  */
 
 export interface EdmAuth {
@@ -38,14 +43,14 @@ const EDM_ENDPOINTS = {
 
 const EDM_NAMESPACE = 'http://tempuri.org/';
 
-/** XML için özel karakterleri kaçış */
+/** XML icin ozel karakterleri kacis */
 export function xmlEsc(s: unknown): string {
   return String(s ?? '').replace(/[&<>"']/g, (c) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]!)
   );
 }
 
-/** SOAP yanıtından belirli bir XML tag'inin içeriğini çıkarır */
+/** SOAP yanitindan belirli bir XML tag'inin icerigini cikarir */
 export function tagCek(xml: string, tagAdi: string): string | null {
   const re = new RegExp(
     `<(?:[\\w]+:)?${tagAdi}[^>]*>([\\s\\S]*?)<\\/(?:[\\w]+:)?${tagAdi}>`,
@@ -55,27 +60,33 @@ export function tagCek(xml: string, tagAdi: string): string | null {
   return m ? m[1].trim() : null;
 }
 
-/** SOAP Fault varsa mesajı çıkarır */
+/** SOAP Fault varsa mesaji cikarir */
 export function soapFaultKontrol(xml: string): SoapHata | null {
   const faultString = tagCek(xml, 'faultstring') || tagCek(xml, 'Reason') || tagCek(xml, 'Text');
   if (faultString) {
     const errCode = tagCek(xml, 'errorCode') || tagCek(xml, 'faultcode') || tagCek(xml, 'Code') || 'SOAP_FAULT';
     return { kod: errCode, mesaj: faultString };
   }
+  // EDM ozel hata formati: RequestFault -> errorCode + errorShortDes
+  const errCode2 = tagCek(xml, 'errorCode');
+  const errDesc2 = tagCek(xml, 'errorShortDes') || tagCek(xml, 'ERROR_SHORT_DES');
+  if (errCode2 && errDesc2) {
+    return { kod: errCode2, mesaj: errDesc2 };
+  }
   return null;
 }
 
-/** SOAP 1.1 zarfı oluşturur */
+/** SOAP 1.1 zarfi olusturur - EDM WSDL'e gore dogru format */
 function soapEnvelopeOlustur(bodyXml: string): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
-  <s:Body xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <s:Body>
     ${bodyXml}
   </s:Body>
 </s:Envelope>`;
 }
 
-/** EDM SOAP endpoint'ine POST gönderir */
+/** EDM SOAP endpoint'ine POST gonderir */
 export async function soapCagri(
   soapAction: string,
   bodyXml: string,
@@ -84,37 +95,33 @@ export async function soapCagri(
   const endpoint = auth.testMod ? EDM_ENDPOINTS.test : EDM_ENDPOINTS.canli;
   const envelope = soapEnvelopeOlustur(bodyXml);
 
-  console.log('[EDM SOAP] ===== İstek başlıyor =====');
+  console.log('[EDM SOAP] ===== Istek basliyor =====');
   console.log('[EDM SOAP] Endpoint:', endpoint);
-  console.log('[EDM SOAP] Operasyon:', soapAction);
+  console.log('[EDM SOAP] SOAPAction:', soapAction);
   console.log('[EDM SOAP] testMod:', auth.testMod);
-  console.log('[EDM SOAP] Envelope ilk 500 char:', envelope.slice(0, 500));
+  console.log('[EDM SOAP] Envelope:\n', envelope);
 
   try {
     const baslangic = Date.now();
-    // EDM WSDL'e göre SOAPAction = operasyon adı + "Request" (tırnak içinde)
-    // Örn: "LoginRequest", "SendInvoiceRequest", "ArchiveInvoiceRequest"
-    const soapActionUrl = soapAction;
-    console.log('[EDM SOAP] Tam SOAPAction URL:', soapActionUrl);
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'text/xml; charset=UTF-8',
-        SOAPAction: `"${soapActionUrl}"`,
+        SOAPAction: `"${soapAction}"`,
       },
       body: envelope,
     });
     const sure = Date.now() - baslangic;
 
-    console.log('[EDM SOAP] Yanıt geldi, HTTP status:', response.status, '- süre:', sure, 'ms');
+    console.log('[EDM SOAP] HTTP status:', response.status, '- sure:', sure, 'ms');
 
     const xmlYanit = await response.text();
-    console.log('[EDM SOAP] Yanıt gövdesi ilk 500 char:', xmlYanit.slice(0, 500));
+    console.log('[EDM SOAP] Yanit:\n', xmlYanit.slice(0, 1000));
 
     const debugInfo = {
       gonderilenEnvelope: envelope,
       endpoint,
-      soapAction: soapActionUrl,
+      soapAction,
     };
 
     const fault = soapFaultKontrol(xmlYanit);
@@ -124,7 +131,7 @@ export async function soapCagri(
     }
 
     if (!response.ok) {
-      console.log('[EDM SOAP] HTTP başarısız:', response.status, response.statusText);
+      console.log('[EDM SOAP] HTTP basarisiz:', response.status, response.statusText);
       return {
         basarili: false,
         hata: {
@@ -136,20 +143,16 @@ export async function soapCagri(
       };
     }
 
-    console.log('[EDM SOAP] BAŞARILI');
+    console.log('[EDM SOAP] BASARILI');
     return { basarili: true, xml: xmlYanit, ...debugInfo };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    const stack = err instanceof Error ? err.stack : '';
     const cause = err instanceof Error && 'cause' in err ? (err as any).cause : undefined;
 
     console.error('[EDM SOAP] ===== HATA =====');
-    console.error('[EDM SOAP] Hata mesajı:', msg);
-    console.error('[EDM SOAP] Hata stack:', stack);
-    console.error('[EDM SOAP] Hata cause:', cause);
+    console.error('[EDM SOAP] Hata mesaji:', msg);
     console.error('[EDM SOAP] Endpoint:', endpoint);
 
-    // cause nesnesi Node.js fetch hatalarında TLS/DNS detayları içerir
     let detayliMesaj = msg;
     if (cause && typeof cause === 'object') {
       const c = cause as any;
@@ -157,7 +160,6 @@ export async function soapCagri(
       if (c.errno) detayliMesaj += ` [errno=${c.errno}]`;
       if (c.hostname) detayliMesaj += ` [host=${c.hostname}]`;
       if (c.syscall) detayliMesaj += ` [syscall=${c.syscall}]`;
-      if (c.reason) detayliMesaj += ` [reason=${c.reason}]`;
     }
 
     return {
@@ -170,25 +172,27 @@ export async function soapCagri(
 }
 
 /**
- * LOGIN — kullanıcı/şifre ile giriş yap, SessionID al
+ * LOGIN - kullanici/sifre ile giris yap, SessionID al
  *
- * WSDL'den öğrendiğimiz üzere SOAPAction = "LoginRequest" (tırnaklı literal)
- * Element adı da LoginRequest, namespace tempuri.org
+ * WSDL'den:
+ *   SOAPAction = "LoginRequest" (tirnak icinde)
+ *   Element: <LoginRequest xmlns="http://tempuri.org/">
+ *   LoginRequest extends REQUEST -> REQUEST_HEADER + USER_NAME + PASSWORD
+ *   Tum child elementler form="unqualified" -> namespace prefix'siz
  */
 export async function login(auth: EdmAuth): Promise<SoapSonuc> {
   const actionDate = new Date().toISOString();
 
+  // WSDL'e gore dogru yapi:
+  // LoginRequest elementinin namespace = http://tempuri.org/
+  // Child elementler unqualified = namespace prefix'siz
   const body = `<LoginRequest xmlns="${EDM_NAMESPACE}">
-      <REQUEST_HEADER xmlns="">
+      <REQUEST_HEADER>
+        <SESSION_ID/>
         <ACTION_DATE>${actionDate}</ACTION_DATE>
-        <REASON>Autonax EDM entegrasyonu</REASON>
-        <APPLICATION_NAME>Autonax</APPLICATION_NAME>
-        <HOSTNAME>autonax.com.tr</HOSTNAME>
-        <CHANNEL_NAME>WEB</CHANNEL_NAME>
-        <COMPRESSED>N</COMPRESSED>
       </REQUEST_HEADER>
-      <USER_NAME xmlns="">${xmlEsc(auth.kullaniciAdi)}</USER_NAME>
-      <PASSWORD xmlns="">${xmlEsc(auth.sifre)}</PASSWORD>
+      <USER_NAME>${xmlEsc(auth.kullaniciAdi)}</USER_NAME>
+      <PASSWORD>${xmlEsc(auth.sifre)}</PASSWORD>
     </LoginRequest>`;
 
   const sonuc = await soapCagri('LoginRequest', body, auth);
@@ -206,7 +210,7 @@ export async function login(auth: EdmAuth): Promise<SoapSonuc> {
       basarili: false,
       hata: {
         kod: 'NO_SESSION',
-        mesaj: 'Login başarılı gözüküyor ama SessionID alınamadı. Yanıt: ' + xml.slice(0, 500),
+        mesaj: 'Login basarili gozukuyor ama SessionID alinamadi. Yanit: ' + xml.slice(0, 500),
       },
       xml,
       gonderilenEnvelope: sonuc.gonderilenEnvelope,
@@ -223,4 +227,30 @@ export async function login(auth: EdmAuth): Promise<SoapSonuc> {
     endpoint: sonuc.endpoint,
     soapAction: sonuc.soapAction,
   };
+}
+
+/**
+ * CheckUser - VKN/TC ile GIB mukellef sorgula
+ *
+ * WSDL'den:
+ *   SOAPAction = "CheckUserRequest"
+ *   Element: <CheckUserRequest xmlns="http://tempuri.org/">
+ *   CheckUserRequest extends REQUEST -> REQUEST_HEADER + USER (GIBUSER tipi)
+ *   GIBUSER: IDENTIFIER, ALIAS, TITLE, TYPE, REGISTER_TIME, ...
+ */
+export async function checkGIBUser(
+  sessionId: string,
+  vknTckn: string,
+  auth: EdmAuth
+): Promise<SoapSonuc> {
+  const body = `<CheckUserRequest xmlns="${EDM_NAMESPACE}">
+      <REQUEST_HEADER>
+        <SESSION_ID>${xmlEsc(sessionId)}</SESSION_ID>
+      </REQUEST_HEADER>
+      <USER>
+        <IDENTIFIER>${xmlEsc(vknTckn)}</IDENTIFIER>
+      </USER>
+    </CheckUserRequest>`;
+
+  return soapCagri('CheckUserRequest', body, auth);
 }

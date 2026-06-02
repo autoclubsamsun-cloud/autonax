@@ -4,13 +4,13 @@
  *
  * Akis:
  *   1. Login -> SessionID al
- *   2. checkGIBUser (SessionID ile) -> mukellef bilgisi don
+ *   2. CheckUser (SessionID ile, IDENTIFIER = VKN/TC) -> mukellef bilgisi don
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiResponse } from '@/lib/types';
 import { requireAuth } from '@/lib/utils/auth-check';
-import { soapCagri, tagCek, xmlEsc, login } from '@/lib/edm/soap-client';
+import { login, checkGIBUser, tagCek, xmlEsc } from '@/lib/edm/soap-client';
 
 interface MusteriSorguIstegi {
   kullaniciAdi: string;
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
           success: true,
           data: {
             bulundu: false,
-            mesaj: '[TEST MODU] Bireysel musteriler icin e-Fatura mukellef sorgusu yapildi - GIB listesinde bulunamadi (simulasyon).',
+            mesaj: '[TEST MODU] Bireysel musteriler icin sorgulandi - GIB listesinde bulunamadi (simulasyon).',
           },
         });
       }
@@ -88,43 +88,34 @@ export async function POST(req: NextRequest) {
 
     // === GERCEK EDM CAGRISI ===
 
-    // 1) LOGIN - SessionID al
     const edmAuth = {
       kullaniciAdi: body.kullaniciAdi,
       sifre: body.sifre,
       testMod: false,
     };
 
+    // 1) LOGIN - SessionID al
     const loginSonuc = await login(edmAuth);
     if (!loginSonuc.basarili || !loginSonuc.sessionId) {
       return NextResponse.json<ApiResponse<MusteriSorguYaniti>>({
         success: true,
         data: {
           bulundu: false,
-          mesaj: 'EDM login basarisiz: ' + (loginSonuc.hata?.mesaj || 'SessionID alinamadi') + ' - Bilgileri kontrol edin.',
+          mesaj: 'EDM login basarisiz: ' + (loginSonuc.hata?.mesaj || 'SessionID alinamadi') + ' - Kullanici adi/sifre kontrol edin.',
         },
       });
     }
 
-    const sessionId = loginSonuc.sessionId;
-
-    // 2) checkGIBUser - VKN/TC ile mukellef sorgula
-    const soapBody = `
-      <checkGIBUserRequest xmlns="http://tempuri.org/">
-        <REQUEST_HEADER xmlns="">
-          <SESSION_ID>${xmlEsc(sessionId)}</SESSION_ID>
-        </REQUEST_HEADER>
-        <VKN_TCKN xmlns="">${xmlEsc(body.no)}</VKN_TCKN>
-      </checkGIBUserRequest>`;
-
-    const sonuc = await soapCagri('checkGIBUserRequest', soapBody, edmAuth);
+    // 2) CheckUser - WSDL'e gore dogru yapi
+    const sonuc = await checkGIBUser(loginSonuc.sessionId, body.no, edmAuth);
 
     if (!sonuc.basarili) {
       const hataMesaj = sonuc.hata?.mesaj || 'Bilinmeyen hata';
+      // "not found" veya benzer mesajlar = mukellef degil
       if (hataMesaj.toLowerCase().includes('not found') ||
           hataMesaj.toLowerCase().includes('bulunamad') ||
-          hataMesaj.toLowerCase().includes('kayit yok') ||
-          hataMesaj.includes('1003')) {
+          hataMesaj.includes('1003') ||
+          hataMesaj.includes('1006')) {
         return NextResponse.json<ApiResponse<MusteriSorguYaniti>>({
           success: true,
           data: {
@@ -145,9 +136,16 @@ export async function POST(req: NextRequest) {
     }
 
     const xml = sonuc.xml ?? '';
+    // CheckUserResponse icindeki GIBUSER alanlari
     const unvan = tagCek(xml, 'TITLE') || tagCek(xml, 'DEFINITION') || tagCek(xml, 'IDENTIFIER');
-    const etiket = tagCek(xml, 'ALIAS') || tagCek(xml, 'URN') || tagCek(xml, 'IDENTIFIER');
+    const etiket = tagCek(xml, 'ALIAS') || tagCek(xml, 'URN');
+    const tip = tagCek(xml, 'TYPE');
 
+    // Eger IDENTIFIER var ama TITLE yoksa, sorgulanan VKN'in kendisi donmus olabilir
+    // Bu durumda mukellef bulunamadi demek
+    const identifier = tagCek(xml, 'IDENTIFIER');
+    
+    // RETURN_CODE kontrolu
     const returnCode = tagCek(xml, 'RETURN_CODE') || tagCek(xml, 'ERROR_CODE');
     if (returnCode && returnCode !== '0' && !unvan) {
       return NextResponse.json<ApiResponse<MusteriSorguYaniti>>({
@@ -161,7 +159,8 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    if (!unvan) {
+    // Bos CheckUserResponse - mukellef yok
+    if (!identifier && !unvan && !etiket) {
       return NextResponse.json<ApiResponse<MusteriSorguYaniti>>({
         success: true,
         data: {
@@ -173,11 +172,12 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Mukellef bulundu
     return NextResponse.json<ApiResponse<MusteriSorguYaniti>>({
       success: true,
       data: {
         bulundu: true,
-        unvan,
+        unvan: unvan || identifier,
         etiket,
         mesaj: 'Musteri e-fatura mukellefi olarak bulundu.',
       },

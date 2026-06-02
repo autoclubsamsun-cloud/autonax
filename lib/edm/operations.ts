@@ -1,8 +1,8 @@
-/**
- * EDM EFaturaEDMConnectorService operasyonları
+﻿/**
+ * EDM EFaturaEDMConnectorService operasyonlari
  */
 
-import { soapCagri, tagCek, xmlEsc, login, type EdmAuth, type SoapHata } from './soap-client';
+import { soapCagri, tagCek, xmlEsc, login, checkGIBUser, type EdmAuth, type SoapHata } from './soap-client';
 import { faturaUblOlustur, type FaturaData, type GondericiData } from './ubl-builder';
 
 export interface CheckUserSonuc {
@@ -25,10 +25,8 @@ export interface FaturaGonderimSonuc {
 }
 
 /**
- * CheckUser — Login testi (kullanıcı/şifre doğruluğunu test eder)
- *
- * EDM'de "Login" doğrudan kimlik doğrulama operasyonudur.
- * Login başarılıysa SessionID döner = credentials doğru.
+ * CheckUser - Login testi (kullanici/sifre dogrulugunu test eder)
+ * Login basariliysa SessionID doner = credentials dogru.
  */
 export async function checkUser(auth: EdmAuth): Promise<CheckUserSonuc> {
   const sonuc = await login(auth);
@@ -47,7 +45,7 @@ export async function checkUser(auth: EdmAuth): Promise<CheckUserSonuc> {
 
   return {
     basarili: true,
-    mesaj: 'Bağlantı başarılı, kullanıcı doğrulandı. (SessionID alındı)',
+    mesaj: 'Baglanti basarili, kullanici dogrulandi. (SessionID alindi)',
     firma: null,
     xml: sonuc.xml,
     gonderilenEnvelope: sonuc.gonderilenEnvelope,
@@ -57,7 +55,9 @@ export async function checkUser(auth: EdmAuth): Promise<CheckUserSonuc> {
 }
 
 /**
- * 2. ArchiveInvoice — e-Arşiv fatura gönderimi
+ * 2. ArchiveInvoice - e-Arsiv fatura gonderimi
+ *
+ * WSDL'den SOAPAction = "ArchiveInvoiceRequest"
  */
 export async function archiveInvoiceGonder(
   fatura: FaturaData,
@@ -65,13 +65,21 @@ export async function archiveInvoiceGonder(
   auth: EdmAuth,
   xsltIcerik?: string
 ): Promise<FaturaGonderimSonuc> {
+  // Once login yap
+  const loginSonuc = await login(auth);
+  if (!loginSonuc.basarili || !loginSonuc.sessionId) {
+    return {
+      basarili: false,
+      hata: { kod: 'LOGIN_FAIL', mesaj: 'Login basarisiz: ' + (loginSonuc.hata?.mesaj || 'SessionID alinamadi') },
+    };
+  }
+
   const ublXml = faturaUblOlustur(fatura, gonderici, xsltIcerik);
   const ublBase64 = Buffer.from(ublXml, 'utf-8').toString('base64');
 
-  const body = `
-    <con:archiveInvoiceRequest>
+  const body = `<ArchiveInvoiceRequest xmlns="http://tempuri.org/">
       <REQUEST_HEADER>
-        <SESSION_ID></SESSION_ID>
+        <SESSION_ID>${xmlEsc(loginSonuc.sessionId)}</SESSION_ID>
         <CLIENT_TXN_ID>${xmlEsc(fatura.faturaNo)}</CLIENT_TXN_ID>
       </REQUEST_HEADER>
       <ARCHIVE>
@@ -80,9 +88,9 @@ export async function archiveInvoiceGonder(
         </HEADER>
         <CONTENT>${ublBase64}</CONTENT>
       </ARCHIVE>
-    </con:archiveInvoiceRequest>`;
+    </ArchiveInvoiceRequest>`;
 
-  const sonuc = await soapCagri('archiveInvoice', body, auth);
+  const sonuc = await soapCagri('ArchiveInvoiceRequest', body, auth);
   if (!sonuc.basarili) return { basarili: false, hata: sonuc.hata };
 
   const xml = sonuc.xml ?? '';
@@ -92,7 +100,7 @@ export async function archiveInvoiceGonder(
   if (errorCode && errorCode !== '0') {
     return {
       basarili: false,
-      hata: { kod: errorCode, mesaj: errorDesc || 'EDM hatası' },
+      hata: { kod: errorCode, mesaj: errorDesc || 'EDM hatasi' },
     };
   }
 
@@ -103,7 +111,9 @@ export async function archiveInvoiceGonder(
 }
 
 /**
- * 3. SendInvoice — e-Fatura gönderimi (kurumsal)
+ * 3. SendInvoice - e-Fatura gonderimi (kurumsal)
+ *
+ * WSDL'den SOAPAction = "SendInvoiceRequest"
  */
 export async function sendInvoiceGonder(
   fatura: FaturaData,
@@ -111,13 +121,21 @@ export async function sendInvoiceGonder(
   auth: EdmAuth,
   xsltIcerik?: string
 ): Promise<FaturaGonderimSonuc> {
+  // Once login yap
+  const loginSonuc = await login(auth);
+  if (!loginSonuc.basarili || !loginSonuc.sessionId) {
+    return {
+      basarili: false,
+      hata: { kod: 'LOGIN_FAIL', mesaj: 'Login basarisiz: ' + (loginSonuc.hata?.mesaj || 'SessionID alinamadi') },
+    };
+  }
+
   const ublXml = faturaUblOlustur(fatura, gonderici, xsltIcerik);
   const ublBase64 = Buffer.from(ublXml, 'utf-8').toString('base64');
 
-  const body = `
-    <con:sendInvoiceRequest>
+  const body = `<SendInvoiceRequest xmlns="http://tempuri.org/">
       <REQUEST_HEADER>
-        <SESSION_ID></SESSION_ID>
+        <SESSION_ID>${xmlEsc(loginSonuc.sessionId)}</SESSION_ID>
         <CLIENT_TXN_ID>${xmlEsc(fatura.faturaNo)}</CLIENT_TXN_ID>
       </REQUEST_HEADER>
       <INVOICE>
@@ -127,9 +145,9 @@ export async function sendInvoiceGonder(
         </HEADER>
         <CONTENT>${ublBase64}</CONTENT>
       </INVOICE>
-    </con:sendInvoiceRequest>`;
+    </SendInvoiceRequest>`;
 
-  const sonuc = await soapCagri('sendInvoice', body, auth);
+  const sonuc = await soapCagri('SendInvoiceRequest', body, auth);
   if (!sonuc.basarili) return { basarili: false, hata: sonuc.hata };
 
   const xml = sonuc.xml ?? '';
@@ -139,7 +157,7 @@ export async function sendInvoiceGonder(
   if (errorCode && errorCode !== '0') {
     return {
       basarili: false,
-      hata: { kod: errorCode, mesaj: errorDesc || 'EDM hatası' },
+      hata: { kod: errorCode, mesaj: errorDesc || 'EDM hatasi' },
     };
   }
 
@@ -148,7 +166,7 @@ export async function sendInvoiceGonder(
 }
 
 /**
- * Router — fatura tipine göre uygun operasyonu çağır
+ * Router - fatura tipine gore uygun operasyonu cagir
  */
 export async function faturaGonder(
   fatura: FaturaData,
@@ -164,6 +182,6 @@ export async function faturaGonder(
   }
   return {
     basarili: false,
-    hata: { kod: 'INVALID_TIP', mesaj: 'Fatura tipi EARSIV veya EFATURA olmalı' },
+    hata: { kod: 'INVALID_TIP', mesaj: 'Fatura tipi EARSIV veya EFATURA olmali' },
   };
 }
