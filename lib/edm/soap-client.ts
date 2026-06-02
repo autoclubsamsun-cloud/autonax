@@ -188,8 +188,12 @@ export async function login(auth: EdmAuth): Promise<SoapSonuc> {
   // Child elementler unqualified = namespace prefix'siz
   const body = `<LoginRequest xmlns="${EDM_NAMESPACE}">
       <REQUEST_HEADER xmlns="">
-        <SESSION_ID/>
+        <SESSION_ID></SESSION_ID>
         <ACTION_DATE>${actionDate}</ACTION_DATE>
+        <APPLICATION_NAME>Autonax</APPLICATION_NAME>
+        <HOSTNAME>autonax.com.tr</HOSTNAME>
+        <CHANNEL_NAME>WEB</CHANNEL_NAME>
+        <COMPRESSED>N</COMPRESSED>
       </REQUEST_HEADER>
       <USER_NAME xmlns="">${xmlEsc(auth.kullaniciAdi)}</USER_NAME>
       <PASSWORD xmlns="">${xmlEsc(auth.sifre)}</PASSWORD>
