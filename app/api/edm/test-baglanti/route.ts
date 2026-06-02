@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
       success: true,
       data: {
         basarili: false,
-        mesaj: sonuc.hata?.mesaj || 'Kullanici adi veya sifre hatali',
+          mesaj: (sonuc.hata?.mesaj || 'Kullanici adi veya sifre hatali') + ' | Kullanici: ' + body.kullaniciAdi + ' | Sifre uzunluk: ' + gercekSifre.length + ' | b64: ' + body.sifre.startsWith('b64:'),
         kod: sonuc.hata?.kod,
         endpoint: sonuc.endpoint,
         envelope: sonuc.gonderilenEnvelope,
