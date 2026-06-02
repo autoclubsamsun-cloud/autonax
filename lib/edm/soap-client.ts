@@ -12,7 +12,7 @@
  *
  * Endpoint'ler:
  *   Test:  https://test.edmbilisim.com.tr/EFaturaEDM21ea/EFaturaEDM.svc
- *   Canli: https://interaktif.edmbilisim.com.tr/EFaturaEDM/EFaturaEDM.svc
+ *   Canli: https://portal2.edmbilisim.com.tr/EFaturaEDM/EFaturaEDM.svc
  */
 
 export interface EdmAuth {
@@ -38,7 +38,7 @@ export interface SoapSonuc {
 
 const EDM_ENDPOINTS = {
   test: 'https://test.edmbilisim.com.tr/EFaturaEDM21ea/EFaturaEDM.svc',
-  canli: 'https://interaktif.edmbilisim.com.tr/EFaturaEDM/EFaturaEDM.svc',
+  canli: 'https://portal2.edmbilisim.com.tr/EFaturaEDM/EFaturaEDM.svc',
 } as const;
 
 const EDM_NAMESPACE = 'http://tempuri.org/';
@@ -196,8 +196,8 @@ export async function login(auth: EdmAuth): Promise<SoapSonuc> {
         <CHANNEL_NAME>WEB</CHANNEL_NAME>
         <COMPRESSED>N</COMPRESSED>
       </REQUEST_HEADER>
-      <USER_NAME xmlns=""><![CDATA[${auth.kullaniciAdi}]]></USER_NAME>
-      <PASSWORD xmlns=""><![CDATA[${auth.sifre}]]></PASSWORD>
+      <USER_NAME xmlns="">${xmlEsc(auth.kullaniciAdi)}</USER_NAME>
+      <PASSWORD xmlns="">${xmlEsc(auth.sifre)}</PASSWORD>
     </LoginRequest>`;
 
   console.log('[EDM LOGIN] kullaniciAdi:', auth.kullaniciAdi, '| sifre uzunluk:', auth.sifre?.length, '| sifre hash:', Array.from(auth.sifre||'').reduce((a:number,c:string)=>a+c.charCodeAt(0),0));

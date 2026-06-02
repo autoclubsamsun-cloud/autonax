@@ -1,4 +1,4 @@
-/**
+﻿/**
  * GET /api/edm/wsdl-debug
  * EDM WSDL'sini fetch eder, SOAPAction'ları çıkarır ve log'a yazar.
  * Gerçek action isimleri ve operasyon adlarını tespit etmek için geçici araç.
@@ -9,7 +9,7 @@ import type { ApiResponse } from '@/lib/types';
 import { requireAuth } from '@/lib/utils/auth-check';
 
 const WSDL_URLS = {
-  canli: 'https://interaktif.edmbilisim.com.tr/EFaturaEDM/EFaturaEDM.svc?wsdl',
+  canli: 'https://portal2.edmbilisim.com.tr/EFaturaEDM/EFaturaEDM.svc?wsdl',
   test: 'https://test.edmbilisim.com.tr/EFaturaEDM21ea/EFaturaEDM.svc?wsdl',
 };
 
