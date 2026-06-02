@@ -2584,6 +2584,8 @@ async function dashboardYukle() {
     var onlineBekleyen = randevular.filter(function(r){ return r.kaynak==='online' && _rdvGercekDurum(r)==='bekl'; }).length;
     var onlEl=document.getElementById('dash-online-talep'); if(onlEl) onlEl.textContent=onlineBekleyen;
     var onlCard=document.getElementById('dash-online-card'); if(onlCard) onlCard.style.display=onlineBekleyen>0?'flex':'none';
+
+    var skVals = document.querySelectorAll('#pg-dashboard .sk-val');
     skVals.forEach(function(el){el.style.opacity='1';});
     if(skVals[0]) skVals[0].textContent = bugunRdv.length;
     if(skVals[1]) skVals[1].textContent = '₺' + haftaGelir.toLocaleString('tr-TR');
