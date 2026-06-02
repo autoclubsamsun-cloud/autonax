@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
       '</s:Body></s:Envelope>';
 
     const endpoints = [
-      'https://interaktif.edmbilisim.com.tr/EFaturaEDM/EFaturaEDM.svc',
+      'https://portal2.edmbilisim.com.tr/EFaturaEDM/EFaturaEDM.svc',
       'https://portal2.edmbilisim.com.tr/EFaturaEDM/EFaturaEDM.svc',
       'https://test.edmbilisim.com.tr/EFaturaEDM21ea/EFaturaEDM.svc',
     ];
