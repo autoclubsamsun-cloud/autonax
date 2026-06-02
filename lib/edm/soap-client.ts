@@ -190,6 +190,7 @@ export async function login(auth: EdmAuth): Promise<SoapSonuc> {
       <REQUEST_HEADER xmlns="">
         <SESSION_ID></SESSION_ID>
         <ACTION_DATE>${actionDate}</ACTION_DATE>
+        <REASON>Autonax EDM entegrasyonu</REASON>
         <APPLICATION_NAME>Autonax</APPLICATION_NAME>
         <HOSTNAME>autonax.com.tr</HOSTNAME>
         <CHANNEL_NAME>WEB</CHANNEL_NAME>
