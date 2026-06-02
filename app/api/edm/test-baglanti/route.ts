@@ -84,6 +84,8 @@ export async function POST(req: NextRequest) {
 
     console.log('[TEST-BAGLANTI] Secili mod:', body.testMod ? 'TEST' : 'CANLI');
     console.log('[TEST-BAGLANTI] Kullanici:', body.kullaniciAdi);
+    const codes: number[] = []; for(let i=0;i<gercekSifre.length;i++) codes.push(gercekSifre.charCodeAt(i));
+    console.log('[TEST-BAGLANTI] sifre uzunluk:', gercekSifre.length, 'charCodes:', codes);
 
     const sonuc = await login(seciliMod);
 
@@ -146,7 +148,7 @@ export async function POST(req: NextRequest) {
       success: true,
       data: {
         basarili: false,
-          mesaj: (sonuc.hata?.mesaj || 'Kullanici adi veya sifre hatali') + ' | Kullanici: ' + body.kullaniciAdi + ' | Sifre uzunluk: ' + gercekSifre.length + ' | b64: ' + body.sifre.startsWith('b64:'),
+          mesaj: (sonuc.hata?.mesaj || 'Kullanici adi veya sifre hatali') + ' | Kullanici: ' + body.kullaniciAdi + ' | Sifre uzunluk: ' + gercekSifre.length + ' | b64: ' + body.sifre.startsWith('b64:') + ' | charCodes:' + JSON.stringify(codes),
         kod: sonuc.hata?.kod,
         endpoint: sonuc.endpoint,
         envelope: sonuc.gonderilenEnvelope,
