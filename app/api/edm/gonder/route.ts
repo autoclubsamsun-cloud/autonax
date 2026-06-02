@@ -158,7 +158,7 @@ export async function POST(req: NextRequest) {
     const gonderici: GondericiData = {
       vknTckn: body.vknTckn || '',
       gondericEtiketi: body.gondericEtiketi || '',
-      unvan: 'AUTONAX',
+      unvan: 'TEKNOTURK BILGI ISLEM TICARET',
       adres: '',
       il: 'Samsun',
       ilce: '',
