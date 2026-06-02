@@ -187,12 +187,12 @@ export async function login(auth: EdmAuth): Promise<SoapSonuc> {
   // LoginRequest elementinin namespace = http://tempuri.org/
   // Child elementler unqualified = namespace prefix'siz
   const body = `<LoginRequest xmlns="${EDM_NAMESPACE}">
-      <REQUEST_HEADER>
+      <REQUEST_HEADER xmlns="">
         <SESSION_ID/>
         <ACTION_DATE>${actionDate}</ACTION_DATE>
       </REQUEST_HEADER>
-      <USER_NAME>${xmlEsc(auth.kullaniciAdi)}</USER_NAME>
-      <PASSWORD>${xmlEsc(auth.sifre)}</PASSWORD>
+      <USER_NAME xmlns="">${xmlEsc(auth.kullaniciAdi)}</USER_NAME>
+      <PASSWORD xmlns="">${xmlEsc(auth.sifre)}</PASSWORD>
     </LoginRequest>`;
 
   const sonuc = await soapCagri('LoginRequest', body, auth);
@@ -244,10 +244,10 @@ export async function checkGIBUser(
   auth: EdmAuth
 ): Promise<SoapSonuc> {
   const body = `<CheckUserRequest xmlns="${EDM_NAMESPACE}">
-      <REQUEST_HEADER>
+      <REQUEST_HEADER xmlns="">
         <SESSION_ID>${xmlEsc(sessionId)}</SESSION_ID>
       </REQUEST_HEADER>
-      <USER>
+      <USER xmlns="">
         <IDENTIFIER>${xmlEsc(vknTckn)}</IDENTIFIER>
       </USER>
     </CheckUserRequest>`;

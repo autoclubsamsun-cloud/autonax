@@ -78,11 +78,11 @@ export async function archiveInvoiceGonder(
   const ublBase64 = Buffer.from(ublXml, 'utf-8').toString('base64');
 
   const body = `<ArchiveInvoiceRequest xmlns="http://tempuri.org/">
-      <REQUEST_HEADER>
+      <REQUEST_HEADER xmlns="">
         <SESSION_ID>${xmlEsc(loginSonuc.sessionId)}</SESSION_ID>
         <CLIENT_TXN_ID>${xmlEsc(fatura.faturaNo)}</CLIENT_TXN_ID>
       </REQUEST_HEADER>
-      <ARCHIVE>
+      <ARCHIVE xmlns="">
         <HEADER>
           <SENDER_URN>${xmlEsc(gonderici.gondericEtiketi || '')}</SENDER_URN>
         </HEADER>
@@ -134,11 +134,11 @@ export async function sendInvoiceGonder(
   const ublBase64 = Buffer.from(ublXml, 'utf-8').toString('base64');
 
   const body = `<SendInvoiceRequest xmlns="http://tempuri.org/">
-      <REQUEST_HEADER>
+      <REQUEST_HEADER xmlns="">
         <SESSION_ID>${xmlEsc(loginSonuc.sessionId)}</SESSION_ID>
         <CLIENT_TXN_ID>${xmlEsc(fatura.faturaNo)}</CLIENT_TXN_ID>
       </REQUEST_HEADER>
-      <INVOICE>
+      <INVOICE xmlns="">
         <HEADER>
           <SENDER_URN>${xmlEsc(gonderici.gondericEtiketi || '')}</SENDER_URN>
           <RECEIVER_URN>urn:mail:defaultpk@${xmlEsc(fatura.vknTckn)}</RECEIVER_URN>
