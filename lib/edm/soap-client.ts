@@ -249,9 +249,16 @@ export async function checkGIBUser(
   vknTckn: string,
   auth: EdmAuth
 ): Promise<SoapSonuc> {
+  const actionDate = new Date().toISOString();
   const body = `<CheckUserRequest xmlns="${EDM_NAMESPACE}">
       <REQUEST_HEADER xmlns="">
         <SESSION_ID>${xmlEsc(sessionId)}</SESSION_ID>
+        <ACTION_DATE>${actionDate}</ACTION_DATE>
+        <REASON>Teknoturk EDM entegrasyonu</REASON>
+        <APPLICATION_NAME>TEKNOTURK</APPLICATION_NAME>
+        <HOSTNAME>teknoturk.com.tr</HOSTNAME>
+        <CHANNEL_NAME>WEB</CHANNEL_NAME>
+        <COMPRESSED>N</COMPRESSED>
       </REQUEST_HEADER>
       <USER xmlns="">
         <IDENTIFIER>${xmlEsc(vknTckn)}</IDENTIFIER>
