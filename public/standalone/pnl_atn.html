@@ -6954,7 +6954,7 @@ function faturaEDMSorgu(){
 
     if(r.bulundu){
       // e-Fatura mükellefi
-      if(sonucEl) sonucEl.innerHTML='<span style="color:#16a34a">✅ e-Fatura mükellefi bulundu: <b>'+r.unvan+'</b>'+(r.etiket?' · '+r.etiket:'')+'<br><small style="color:#666">+(r.adres?"Adres: "+r.adres+" | ":"")+(r.il?(r.ilce?r.ilce+"/":"")+r.il+" | ":"")+(r.telefon?"Tel: "+r.telefon+" | ":"")+(r.email?r.email:"")+"</small></span>';
+      if(sonucEl) sonucEl.innerHTML='<span style="color:#16a34a">✅ e-Fatura m\u00fckellefi bulundu: <b>'+r.unvan+'</b>'+(r.etiket?' \u00b7 '+r.etiket:'')+(r.adres||r.il||r.telefon||r.email?'<br><small style="color:#666">'+(r.adres?'Adres: '+r.adres+' | ':'')+(r.il?(r.ilce?r.ilce+'/':'')+r.il+' | ':'')+(r.telefon?'Tel: '+r.telefon+' | ':'')+(r.email?r.email:'')+'</small>':'')+'</span>';
       var mEl=document.getElementById('fat-musteri-adi');
       if(mEl) mEl.value=r.unvan||mEl.value||'';
       if(aliasEl) aliasEl.value=r.etiket||'';

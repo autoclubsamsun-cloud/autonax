@@ -206,6 +206,7 @@ export async function POST(req: NextRequest) {
 
     try {
       const supplierSonuc = await getSupplier(loginSonuc.sessionId!, body.no, edmAuth);
+      console.log('[MUSTERI-SORGU] GetSuppliers raw XML:', supplierSonuc.xml?.substring(0, 1000));
       if (supplierSonuc.basarili && supplierSonuc.xml) {
         const sx = supplierSonuc.xml;
         adres = tagCek(sx, 'ADRES') || null;
@@ -223,6 +224,8 @@ export async function POST(req: NextRequest) {
     } catch (e) {
       console.warn('GetSuppliers detay cekilemedi:', e);
     }
+
+    console.log('[MUSTERI-SORGU] GetSuppliers sonuc:', JSON.stringify({ adres, il, ilce, telefon, cepTelefon, email, kepEmail, vergiDairesi, mersisNo }));
 
     return NextResponse.json<ApiResponse<MusteriSorguYaniti>>({
       success: true,
