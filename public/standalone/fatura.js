@@ -43,12 +43,21 @@ function faturaSayfasiYukle(){
 
 function faturaKPIGuncelle(){
   var el=document.getElementById('fatura-kpiler');if(!el)return;
-  var top=0,kdvTop=0,kes=0,ipt=0;
-  FATURALAR.forEach(function(f){top+=f.toplamTutar||0;kdvTop+=f.kdvTutar||0;if(f.durum==='KESILDI')kes++;if(f.durum==='IPTAL')ipt++;});
-  el.innerHTML='<div class="sk"><div class="sk-val">'+FATURALAR.length+'</div><div class="sk-lbl">Toplam Fatura</div></div>'
+  var top=0,kdvTop=0,kes=0,gon=0,ipt=0,hata=0,bekl=0;
+  FATURALAR.forEach(function(f){
+    top+=f.toplamTutar||0; kdvTop+=f.kdvTutar||0;
+    if(f.durum==='KESILDI')bekl++;
+    if(f.durum==='GONDERILDI'||f.durum==='ONAYLANDI')gon++;
+    if(f.durum==='IPTAL')ipt++;
+    if(f.durum==='HATA')hata++;
+  });
+  kes=gon+bekl+hata;
+  el.innerHTML='<div class="sk"><div class="sk-val">'+FATURALAR.length+'</div><div class="sk-lbl">Toplam</div></div>'
     +'<div class="sk"><div class="sk-val" style="color:#16a34a">₺'+top.toLocaleString('tr-TR')+'</div><div class="sk-lbl">Toplam Tutar</div></div>'
     +'<div class="sk"><div class="sk-val" style="color:#d97706">₺'+kdvTop.toLocaleString('tr-TR')+'</div><div class="sk-lbl">Toplam KDV</div></div>'
-    +'<div class="sk"><div class="sk-val" style="color:var(--r)">'+kes+'</div><div class="sk-lbl">Kesilen Fatura</div></div>';
+    +'<div class="sk"><div class="sk-val" style="color:#16a34a">'+gon+'</div><div class="sk-lbl">Gönderildi</div></div>'
+    +(hata?'<div class="sk"><div class="sk-val" style="color:#dc2626">'+hata+'</div><div class="sk-lbl">Hatalı</div></div>':'')
+    +(ipt?'<div class="sk"><div class="sk-val" style="color:#991b1b">'+ipt+'</div><div class="sk-lbl">İptal</div></div>':'');
 }
 
 function faturaListeYukle(){
@@ -56,10 +65,14 @@ function faturaListeYukle(){
   var arama=((document.getElementById('fat-arama')||{}).value||'').toLowerCase().trim();
   var tip=(document.getElementById('fat-tip')||{}).value||'';
   var durum=(document.getElementById('fat-durum')||{}).value||'';
+  var tarihBas=(document.getElementById('fat-tarih-bas')||{}).value||'';
+  var tarihBit=(document.getElementById('fat-tarih-bit')||{}).value||'';
   var liste=FATURALAR.filter(function(f){
     if(arama&&(f.musteri||'').toLowerCase().indexOf(arama)<0)return false;
     if(tip&&f.faturaTipi!==tip)return false;
     if(durum&&f.durum!==durum)return false;
+    if(tarihBas&&f.tarih&&f.tarih<tarihBas)return false;
+    if(tarihBit&&f.tarih&&f.tarih>tarihBit)return false;
     return true;
   });
   if(!liste.length){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:#999">Fatura bulunamadı</td></tr>';return;}
@@ -104,10 +117,13 @@ function faturaListeYukle(){
       +'<td class="tbl-fiyat" style="font-weight:700">₺'+(f.toplamTutar||0).toLocaleString('tr-TR')+'</td>'
       +'<td><span style="font-size:10px;background:'+durBg+';color:'+durRenk+';padding:3px 8px;border-radius:10px;font-weight:700">'+durEtiket+'</span>'+edmInfo+'</td>'
       +'<td style="display:flex;gap:4px;flex-wrap:wrap">'
-        +'<button class="ab ab-n" style="font-size:10px" onclick="faturaOnizlemeGoster('+i+')">👁 Önizle</button>'
-        +(gonderilebilir?'<button class="ab ab-n" style="font-size:10px;border-color:#1a6b3c;color:#1a6b3c;background:rgba(26,107,60,.06)" onclick="faturaEDMGonder('+i+')">📤 EDM\'e Gönder</button>':'')
-        +(f.durum==='KESILDI'?'<button class="ab ab-n" style="font-size:10px" onclick="faturaDuzenle('+i+')">✎ Düzenle</button>':'')
-        +(f.durum==='GONDERILDI' || f.durum==='ONAYLANDI'?'<button class="ab ab-r" style="font-size:10px" onclick="faturaIptal('+i+')">✕ İptal</button>':'')
+        +'<button class="ab ab-n" style="font-size:10px" onclick="faturaDetayGoster('+i+')">\ud83d\udccb Detay</button>'
+        +'<button class="ab ab-n" style="font-size:10px" onclick="faturaOnizlemeGoster('+i+')">\ud83d\udc41 \u00d6nizle</button>'
+        +(gonderilebilir?'<button class="ab ab-n" style="font-size:10px;border-color:#1a6b3c;color:#1a6b3c;background:rgba(26,107,60,.06)" onclick="faturaEDMGonder('+i+')">\ud83d\udce4 G\u00f6nder</button>':'')
+        +(f.durum==='KESILDI'?'<button class="ab ab-n" style="font-size:10px" onclick="faturaDuzenle('+i+')">\u270e D\u00fczenle</button>':'')
+        +(f.edmUUID&&(f.durum==='GONDERILDI'||f.durum==='KESILIYOR')?'<button class="ab ab-n" style="font-size:10px;border-color:#2563EB;color:#2563EB" onclick="faturaDurumSorgula('+i+')">\ud83d\udd04 Durum</button>':'')
+        +(f.durum==='GONDERILDI'||f.durum==='ONAYLANDI'||f.durum==='KESILDI'?'<button class="ab ab-r" style="font-size:10px" onclick="faturaIptal('+i+')">\u2715 \u0130ptal</button>':'')
+        +(f.durum==='HATA'?'<button class="ab ab-n" style="font-size:10px;border-color:#d97706;color:#d97706" onclick="faturaYenidenGonder('+i+')">\u21bb Tekrar</button>':'')
       +'</td></tr>';
   }).join('');
 
@@ -178,7 +194,7 @@ function faturaMobilKartlariRender(liste){
   }).join('');
 }
 
-function faturaFiltreTemizle(){['fat-arama','fat-tip','fat-durum'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});faturaListeYukle();}
+function faturaFiltreTemizle(){['fat-arama','fat-tip','fat-durum','fat-tarih-bas','fat-tarih-bit'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});faturaListeYukle();}
 
 function faturaYeniAc(onceden){
   // Onceki oturumdan kalan state temizle
@@ -2026,5 +2042,156 @@ function rdvFaturaKes(idx){
       randevuId: r.id
     });
   },200);
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   FATURA DURUM SORGULAMA - EDM'den fatura durumunu cek
+   ═══════════════════════════════════════════════════════════ */
+
+/** Tek fatura durum sorgula */
+function faturaDurumSorgula(idx){
+  var f=FATURALAR[idx];
+  if(!f||!f.edmUUID){toast('Bu fatura EDM\'ye g\u00f6nderilmemi\u015f','red');return;}
+  if(!EDM_AYAR||!EDM_AYAR.kullaniciAdi){toast('EDM ayarlar\u0131 eksik','red');return;}
+  toast('Durum sorgulan\u0131yor...','blue');
+  fetch('/api/edm/durum',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      kullaniciAdi:EDM_AYAR.kullaniciAdi,
+      sifre:EDM_AYAR.sifre,
+      uuid:f.edmUUID
+    })
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.success && d.data){
+      var s=d.data;
+      f.edmDurum=s.durum||f.edmDurum;
+      f.edmGibDurum=s.gibDurum||null;
+      f.edmGibAciklama=s.gibAciklama||null;
+      f.edmCevapKodu=s.cevapKodu||null;
+      f.edmCevapAciklama=s.cevapAciklama||null;
+      f.edmSonSorgu=new Date().toISOString();
+      // Durum eslemesi
+      if(s.durum==='SUCCEED'||s.durum==='APPROVED') f.durum='ONAYLANDI';
+      else if(s.durum==='REJECTED'||s.durum==='DECLINED') f.durum='IPTAL';
+      else if(s.durum==='WAITING') f.durum='GONDERILDI';
+      faturaKaydet();faturaSayfasiYukle();
+      var mesaj='Durum: '+(s.durum||'-');
+      if(s.gibAciklama) mesaj+=' | G\u0130B: '+s.gibAciklama;
+      if(s.cevapAciklama) mesaj+=' | '+s.cevapAciklama;
+      toast(mesaj, s.durum==='SUCCEED'?'green':'blue');
+    } else {
+      toast('Durum sorgu hatas\u0131: '+(d.error||'Bilinmeyen'),'red');
+    }
+  }).catch(function(e){toast('Ba\u011flant\u0131 hatas\u0131','red');});
+}
+
+/** Toplu durum guncelleme - tum gonderilmis faturalarin durumunu sorgula */
+function faturaTopluDurumGuncelle(){
+  if(!EDM_AYAR||!EDM_AYAR.kullaniciAdi){toast('EDM ayarlar\u0131 eksik','red');return;}
+  var gonderilmisler=[];
+  FATURALAR.forEach(function(f,i){
+    if((f.durum==='GONDERILDI'||f.durum==='KESILIYOR') && f.edmUUID) gonderilmisler.push(i);
+  });
+  if(!gonderilmisler.length){toast('Durumu sorgulanacak fatura yok','blue');return;}
+  toast(gonderilmisler.length+' faturan\u0131n durumu sorgulan\u0131yor...','blue');
+  var tamamlanan=0,hataCount=0;
+  gonderilmisler.forEach(function(idx){
+    var f=FATURALAR[idx];
+    fetch('/api/edm/durum',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        kullaniciAdi:EDM_AYAR.kullaniciAdi,
+        sifre:EDM_AYAR.sifre,
+        uuid:f.edmUUID
+      })
+    }).then(function(r){return r.json();}).then(function(d){
+      tamamlanan++;
+      if(d.success && d.data){
+        var s=d.data;
+        f.edmDurum=s.durum||f.edmDurum;
+        f.edmGibDurum=s.gibDurum||null;
+        f.edmSonSorgu=new Date().toISOString();
+        if(s.durum==='SUCCEED'||s.durum==='APPROVED') f.durum='ONAYLANDI';
+        else if(s.durum==='REJECTED'||s.durum==='DECLINED') f.durum='IPTAL';
+      } else { hataCount++; }
+      if(tamamlanan>=gonderilmisler.length){
+        faturaKaydet();faturaSayfasiYukle();
+        toast('\u2705 '+tamamlanan+' fatura g\u00fcncellendi'+(hataCount?' ('+hataCount+' hata)':''),'green');
+      }
+    }).catch(function(){tamamlanan++;hataCount++;
+      if(tamamlanan>=gonderilmisler.length){faturaKaydet();faturaSayfasiYukle();toast(tamamlanan+' fatura kontrol edildi ('+hataCount+' hata)','red');}
+    });
+  });
+}
+
+/** Fatura detay modali - tum bilgileri goster */
+function faturaDetayGoster(idx){
+  var f=FATURALAR[idx];if(!f)return;
+  var ovl=document.createElement('div');
+  ovl.id='fat-detay-ovl';
+  ovl.style.cssText='position:fixed;inset:0;z-index:990;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto';
+  ovl.onclick=function(e){if(e.target===ovl)ovl.remove();};
+  var tipRenk=f.faturaTipi==='EFATURA'?'#2563EB':'#16a34a';
+  var tipLabel=f.faturaTipi==='EFATURA'?'e-Fatura':'e-Ar\u015fiv';
+  var durRenk='#999',durLabel=f.durum||'-';
+  if(f.durum==='GONDERILDI'){durRenk='#16a34a';durLabel='\u2705 G\u00f6nderildi';}
+  else if(f.durum==='ONAYLANDI'){durRenk='#16a34a';durLabel='\u2713 Onayland\u0131';}
+  else if(f.durum==='IPTAL'){durRenk='#991b1b';durLabel='\u2715 \u0130ptal';}
+  else if(f.durum==='HATA'){durRenk='#dc2626';durLabel='\u26a0\ufe0f Hata';}
+  else if(f.durum==='KESILDI'){durRenk='#d97706';durLabel='\ud83d\udcdd Bekliyor';}
+  var h='<div style="background:#fff;border-radius:16px;max-width:600px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.25);max-height:90vh;overflow-y:auto">';
+  h+='<div style="background:linear-gradient(135deg,var(--ink),#1e293b);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-radius:16px 16px 0 0">';
+  h+='<div style="color:#fff;font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px">FATURA DETAY</div>';
+  h+='<div onclick="document.getElementById(\'fat-detay-ovl\').remove()" style="cursor:pointer;color:#888;font-size:26px">&times;</div></div>';
+  h+='<div style="padding:16px">';
+  // Fatura bilgileri
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
+  h+='<div><div style="font-weight:700;font-size:16px;font-family:monospace">'+f.faturaNo+'</div><div style="font-size:11px;color:var(--ink4)">'+f.tarih+'</div></div>';
+  h+='<div style="display:flex;gap:6px"><span style="padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;background:'+tipRenk+'15;color:'+tipRenk+'">'+tipLabel+'</span>';
+  h+='<span style="padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;color:'+durRenk+'">'+durLabel+'</span></div></div>';
+  // Musteri
+  h+='<div style="padding:12px;background:var(--bg);border-radius:10px;margin-bottom:12px">';
+  h+='<div style="font-size:10px;color:var(--ink4);text-transform:uppercase;font-weight:700;margin-bottom:4px">M\u00dc\u015eTER\u0130</div>';
+  h+='<div style="font-weight:700">'+(f.musteriTip==='kurumsal'?'\ud83c\udfe2':'\ud83d\udc64')+' '+f.musteri+'</div>';
+  if(f.vknTckn) h+='<div style="font-size:11px;color:var(--ink4);font-family:monospace">'+f.vknTckn+'</div>';
+  if(f.vergiDairesi) h+='<div style="font-size:11px;color:var(--ink4)">VD: '+f.vergiDairesi+'</div>';
+  h+='</div>';
+  // Tutar
+  h+='<div style="padding:12px;background:linear-gradient(135deg,#fef7f2,#fff7ed);border:1.5px solid #f5d5b8;border-radius:10px;margin-bottom:12px">';
+  h+='<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px"><span>KDV Hari\u00e7</span><b>\u20ba'+(f.kdvsizTutar||0).toLocaleString('tr-TR')+'</b></div>';
+  h+='<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px"><span>KDV</span><b style="color:#d97706">\u20ba'+(f.kdvTutar||0).toLocaleString('tr-TR')+'</b></div>';
+  h+='<div style="display:flex;justify-content:space-between;padding:6px 0 2px;border-top:2px solid #eab28e;margin-top:4px"><span style="font-weight:700;font-size:14px">TOPLAM</span><b style="color:var(--r);font-size:18px">\u20ba'+(f.toplamTutar||0).toLocaleString('tr-TR')+'</b></div></div>';
+  // EDM Bilgileri
+  if(f.edmUUID||f.edmEttn){
+    h+='<div style="padding:12px;background:rgba(37,99,235,.04);border:1px solid rgba(37,99,235,.15);border-radius:10px;margin-bottom:12px">';
+    h+='<div style="font-size:10px;color:var(--ink4);text-transform:uppercase;font-weight:700;margin-bottom:6px">EDM B\u0130LG\u0130LER\u0130</div>';
+    if(f.edmUUID) h+='<div style="font-size:11px;margin-bottom:4px"><b>UUID:</b> <span style="font-family:monospace;font-size:10px">'+f.edmUUID+'</span></div>';
+    if(f.edmEttn) h+='<div style="font-size:11px;margin-bottom:4px"><b>ETTN:</b> <span style="font-family:monospace;font-size:10px">'+f.edmEttn+'</span></div>';
+    if(f.edmDurum) h+='<div style="font-size:11px;margin-bottom:4px"><b>EDM Durum:</b> '+f.edmDurum+'</div>';
+    if(f.edmGibAciklama) h+='<div style="font-size:11px;margin-bottom:4px"><b>G\u0130B:</b> '+f.edmGibAciklama+'</div>';
+    if(f.edmSonSorgu) h+='<div style="font-size:10px;color:var(--ink4)">Son sorgu: '+new Date(f.edmSonSorgu).toLocaleString('tr-TR')+'</div>';
+    if(f.edmMesaj&&f.durum==='HATA') h+='<div style="font-size:11px;color:#dc2626;margin-top:4px">\u26a0\ufe0f '+f.edmMesaj+'</div>';
+    h+='</div>';
+  }
+  // Aksiyonlar
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">';
+  h+='<button class="ab ab-n" onclick="faturaOnizlemeGoster('+idx+');document.getElementById(\'fat-detay-ovl\').remove()" style="flex:1;padding:10px;font-size:12px">\ud83d\udc41 \u00d6nizle</button>';
+  if(f.edmUUID) h+='<button class="ab ab-n" onclick="faturaDurumSorgula('+idx+')" style="flex:1;padding:10px;font-size:12px;border-color:#2563EB;color:#2563EB">\ud83d\udd04 Durum Sorgula</button>';
+  if(f.durum==='KESILDI'||f.durum==='HATA') h+='<button class="ab ab-n" onclick="faturaEDMGonder('+idx+');document.getElementById(\'fat-detay-ovl\').remove()" style="flex:1;padding:10px;font-size:12px;border-color:#1a6b3c;color:#1a6b3c">\ud83d\udce4 G\u00f6nder</button>';
+  if(f.durum==='GONDERILDI'||f.durum==='ONAYLANDI'||f.durum==='KESILDI') h+='<button class="ab ab-r" onclick="faturaIptal('+idx+');document.getElementById(\'fat-detay-ovl\').remove()" style="flex:1;padding:10px;font-size:12px">\u2715 \u0130ptal</button>';
+  h+='</div>';
+  h+='</div></div>';
+  ovl.innerHTML=h;
+  document.body.appendChild(ovl);
+}
+
+/** Tarih araligina gore fatura filtrele */
+function faturaListeTarihFiltre(){
+  var baslangic=(document.getElementById('fat-tarih-bas')||{}).value||'';
+  var bitis=(document.getElementById('fat-tarih-bit')||{}).value||'';
+  faturaListeYukle(baslangic,bitis);
 }
 

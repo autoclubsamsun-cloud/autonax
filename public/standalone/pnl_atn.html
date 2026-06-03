@@ -1895,13 +1895,16 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
             <div class="kt" style="flex:0 0 auto;white-space:nowrap">Fatura Listesi</div>
             <div style="flex:1"></div>
             <button id="fat-toplu-gonder-btn" class="ab ab-n" style="font-size:11px;background:#1a6b3c;color:#fff;border-color:#1a6b3c;display:none" onclick="faturaTopluEDMGonder()">📤 Seçilenleri EDM'e Gönder</button>
-            <button class="ab ab-g" style="font-size:11px" onclick="faturaYeniAc()">+ Yeni Fatura</button>
+            <button class="ab ab-n" style="font-size:11px;border-color:#2563EB;color:#2563EB" onclick="faturaTopluDurumGuncelle()">ð DurumlarÄ± GÃ¼ncelle</button>
+<button class="ab ab-g" style="font-size:11px" onclick="faturaYeniAc()">+ Yeni Fatura</button>
           </div>
           <div style="width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch">
             <div style="display:flex;gap:5px;align-items:center;min-width:max-content">
               <input type="text" id="fat-arama" placeholder="Müşteri ara..." oninput="faturaListeYukle()" style="padding:5px 8px;border:1.5px solid var(--bd);border-radius:7px;font-size:11px;font-family:Outfit,sans-serif;outline:none;width:140px">
               <select id="fat-tip" onchange="faturaListeYukle()" style="border:1.5px solid var(--bd);border-radius:7px;padding:5px 8px;font-size:11px;font-family:Outfit,sans-serif;outline:none"><option value="">Tüm Tipler</option><option value="EARSIV">e-Arşiv</option><option value="EFATURA">e-Fatura</option></select>
               <select id="fat-durum" onchange="faturaListeYukle()" style="border:1.5px solid var(--bd);border-radius:7px;padding:5px 8px;font-size:11px;font-family:Outfit,sans-serif;outline:none"><option value="">Tüm Durumlar</option><option value="KESILDI">Kesildi (Bekliyor)</option><option value="KESILIYOR">Gönderiliyor</option><option value="GONDERILDI">Gönderildi</option><option value="ONAYLANDI">Onaylandı</option><option value="HATA">Hata</option><option value="IPTAL">İptal</option></select>
+              <input type="date" id="fat-tarih-bas" onchange="faturaListeYukle()" style="border:1.5px solid var(--bd);border-radius:7px;padding:4px 6px;font-size:10px;font-family:Outfit,sans-serif;outline:none" title="Başlangıç tarihi">
+              <input type="date" id="fat-tarih-bit" onchange="faturaListeYukle()" style="border:1.5px solid var(--bd);border-radius:7px;padding:4px 6px;font-size:10px;font-family:Outfit,sans-serif;outline:none" title="Bitiş tarihi">
               <button class="ab ab-n" style="font-size:10px" onclick="faturaFiltreTemizle()">✕ Sıfırla</button>
             </div>
           </div>
