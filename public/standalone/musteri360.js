@@ -118,9 +118,12 @@ function m360Ara(){
     return;
   }
 
+  // Global musteri cache (onclick icin)
+  window._m360Cache=[];
+
   // Sonuclari render
   var html='<div style="font-size:11px;color:var(--ink4);margin-bottom:12px">'+keys.length+' m\u00fc\u015fteri bulundu</div>';
-  keys.forEach(function(k){
+  keys.forEach(function(k,ki){
     var m=musteriMap[k];
     var ziyaretSayisi=m.randevular.length;
     var faturaSayisi=m.faturalar.length;
@@ -187,12 +190,16 @@ function m360Ara(){
       html+='</div>';
     }
 
-    // Aksiyon butonlari
+    // Aksiyon butonlari - index ile global cache'den oku
+    window._m360Cache.push({
+      isim:m.isim, tel:m.tel,
+      plaka:m.plakalar[0]||'', arac:m.araclar[0]||'',
+      sonHizmet:m.randevular.length?m.randevular[0].hizmet:''
+    });
+    var ci=window._m360Cache.length-1;
     html+='<div style="padding:10px 16px;background:var(--bg);display:flex;gap:6px;flex-wrap:wrap">';
-    var preData=JSON.stringify({musteri:m.isim,tel:m.tel,plaka:m.plakalar[0]||''}).replace(/'/g,"\\'");
-    var rdvData=JSON.stringify({isim:m.isim,tel:m.tel,plaka:m.plakalar[0]||'',arac:m.araclar[0]||'',sonHizmet:m.randevular.length?m.randevular[0].hizmet:''}).replace(/'/g,"\\'");
-    html+='<button class="ab ab-n" style="font-size:10px;border-color:#6366f1;color:#6366f1;background:rgba(99,102,241,.06)" onclick="m360YeniRandevu('+rdvData+')">+ Yeni Randevu</button>';
-    html+='<button class="ab ab-n" style="font-size:10px;border-color:#1a6b3c;color:#1a6b3c" onclick="document.getElementById(\'m360-ovl\').remove();faturaYeniAc('+preData+')">+ Yeni Fatura</button>';
+    html+='<button class="ab ab-n" style="font-size:10px;border-color:#6366f1;color:#6366f1;background:rgba(99,102,241,.06)" onclick="m360YeniRandevu(window._m360Cache['+ci+'])">+ Yeni Randevu</button>';
+    html+='<button class="ab ab-n" style="font-size:10px;border-color:#1a6b3c;color:#1a6b3c" onclick="m360YeniFatura('+ci+')">+ Yeni Fatura</button>';
     if(m.tel) html+='<a href="https://wa.me/90'+m.tel.replace(/\D/g,'').slice(-10)+'" target="_blank" class="ab ab-n" style="font-size:10px;border-color:#25D366;color:#25D366;text-decoration:none">\ud83d\udcac WhatsApp</a>';
     if(m.tel) html+='<a href="tel:'+m.tel+'" class="ab ab-n" style="font-size:10px;text-decoration:none">\ud83d\udcde Ara</a>';
     html+='</div>';
@@ -266,5 +273,16 @@ function m360YeniRandevu(musteriData){
 
     if(typeof toast==='function') toast('M\u00fc\u015fteri bilgileri dolduruldu - tarihi ve hizmeti se\u00e7in','blue');
   },300);
+}
+
+
+/** 360'dan yeni fatura olustur */
+function m360YeniFatura(cacheIdx){
+  var d=window._m360Cache[cacheIdx];if(!d)return;
+  var ovl=document.getElementById('m360-ovl');
+  if(ovl) ovl.remove();
+  if(typeof faturaYeniAc==='function'){
+    faturaYeniAc({musteri:d.isim,tel:d.tel,plaka:d.plaka});
+  }
 }
 
