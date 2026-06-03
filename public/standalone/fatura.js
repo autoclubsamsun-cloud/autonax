@@ -12,6 +12,9 @@
 /* global saFaturaListenerBagla, edmTbodyHTML, CURRENT_USER, _escapeHtml */
 
 /* ══ FATURA YÖNETİMİ ══ */
+// === FATURA.JS DEBUG ===
+console.log('[FATURA.JS] Dosya yukleniyor...');
+try {
 var FATURALAR=[];
 try{FATURALAR=JSON.parse(localStorage.getItem('autonax_faturalar')||'[]');}catch(e){console.error('Autonax fatura yükleme:',e)}
 
@@ -2028,3 +2031,9 @@ function rdvFaturaKes(idx){
   },200);
 }
 
+
+console.log('[FATURA.JS] Dosya basariyla yuklendi. faturaYeniAc:', typeof faturaYeniAc);
+} catch(fatura_js_err) {
+  console.error('[FATURA.JS] HATA:', fatura_js_err);
+  alert('FATURA.JS HATA: ' + fatura_js_err.message);
+}
