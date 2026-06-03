@@ -294,3 +294,62 @@ export async function getSupplier(
 
   return soapCagri('GetSuppliersRequest', body, auth);
 }
+
+/**
+ * CancelInvoice - Fatura iptal
+ */
+export async function cancelInvoice(
+  sessionId: string,
+  uuid: string,
+  auth: EdmAuth
+): Promise<SoapSonuc> {
+  const actionDate = new Date().toISOString();
+  const body = `<CancelInvoiceRequest xmlns="${EDM_NAMESPACE}">
+      <REQUEST_HEADER xmlns="">
+        <SESSION_ID>${xmlEsc(sessionId)}</SESSION_ID>
+        <ACTION_DATE>${actionDate}</ACTION_DATE>
+        <REASON>Fatura iptal</REASON>
+        <APPLICATION_NAME>TEKNOTURK</APPLICATION_NAME>
+        <HOSTNAME>teknoturk.com.tr</HOSTNAME>
+        <CHANNEL_NAME>WEB</CHANNEL_NAME>
+        <COMPRESSED>N</COMPRESSED>
+      </REQUEST_HEADER>
+      <INVOICE xmlns="">
+        <HEADER>
+          <INVOICE_ID>${xmlEsc(uuid)}</INVOICE_ID>
+        </HEADER>
+      </INVOICE>
+    </CancelInvoiceRequest>`;
+
+  return soapCagri('CancelInvoiceRequest', body, auth);
+}
+
+/**
+ * GetInvoiceStatus - Fatura durum sorgulama
+ */
+export async function getInvoiceStatus(
+  sessionId: string,
+  uuid: string,
+  auth: EdmAuth
+): Promise<SoapSonuc> {
+  const actionDate = new Date().toISOString();
+  const body = `<GetInvoiceStatusRequest xmlns="${EDM_NAMESPACE}">
+      <REQUEST_HEADER xmlns="">
+        <SESSION_ID>${xmlEsc(sessionId)}</SESSION_ID>
+        <ACTION_DATE>${actionDate}</ACTION_DATE>
+        <REASON>Durum sorgulama</REASON>
+        <APPLICATION_NAME>TEKNOTURK</APPLICATION_NAME>
+        <HOSTNAME>teknoturk.com.tr</HOSTNAME>
+        <CHANNEL_NAME>WEB</CHANNEL_NAME>
+        <COMPRESSED>N</COMPRESSED>
+      </REQUEST_HEADER>
+      <INVOICE xmlns="">
+        <HEADER>
+          <INVOICE_ID>${xmlEsc(uuid)}</INVOICE_ID>
+        </HEADER>
+      </INVOICE>
+    </GetInvoiceStatusRequest>`;
+
+  return soapCagri('GetInvoiceStatusRequest', body, auth);
+}
+
