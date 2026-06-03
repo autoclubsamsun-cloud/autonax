@@ -267,3 +267,30 @@ export async function checkGIBUser(
 
   return soapCagri('CheckUserRequest', body, auth);
 }
+
+/**
+ * GetSuppliers - VKN ile tedarikci/musteri detay bilgilerini cek
+ * Adres, telefon, il, ilce, email, vergi dairesi vb.
+ */
+export async function getSupplier(
+  sessionId: string,
+  vknTckn: string,
+  auth: EdmAuth
+): Promise<SoapSonuc> {
+  const actionDate = new Date().toISOString();
+  const body = `<GetSuppliersRequest xmlns="${EDM_NAMESPACE}">
+      <REQUEST_HEADER xmlns="">
+        <SESSION_ID>${xmlEsc(sessionId)}</SESSION_ID>
+        <ACTION_DATE>${actionDate}</ACTION_DATE>
+        <REASON>Teknoturk EDM entegrasyonu</REASON>
+        <APPLICATION_NAME>TEKNOTURK</APPLICATION_NAME>
+        <HOSTNAME>teknoturk.com.tr</HOSTNAME>
+        <CHANNEL_NAME>WEB</CHANNEL_NAME>
+        <COMPRESSED>N</COMPRESSED>
+      </REQUEST_HEADER>
+      <SUPPLIER_ID xmlns="">0</SUPPLIER_ID>
+      <VERGI_NO xmlns="">${xmlEsc(vknTckn)}</VERGI_NO>
+    </GetSuppliersRequest>`;
+
+  return soapCagri('GetSuppliersRequest', body, auth);
+}

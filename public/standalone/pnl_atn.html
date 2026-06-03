@@ -6954,12 +6954,23 @@ function faturaEDMSorgu(){
 
     if(r.bulundu){
       // e-Fatura mükellefi
-      if(sonucEl) sonucEl.innerHTML='<span style="color:#16a34a">✅ e-Fatura mükellefi bulundu: <b>'+r.unvan+'</b>'+(r.etiket?' · '+r.etiket:'')+'</span>';
+      if(sonucEl) sonucEl.innerHTML='<span style="color:#16a34a">✅ e-Fatura mükellefi bulundu: <b>'+r.unvan+'</b>'+(r.etiket?' · '+r.etiket:'')+'<br><small style="color:#666">+(r.adres?"Adres: "+r.adres+" | ":"")+(r.il?(r.ilce?r.ilce+"/":"")+r.il+" | ":"")+(r.telefon?"Tel: "+r.telefon+" | ":"")+(r.email?r.email:"")+"</small></span>';
       var mEl=document.getElementById('fat-musteri-adi');
       if(mEl) mEl.value=r.unvan||mEl.value||'';
       if(aliasEl) aliasEl.value=r.etiket||'';
       var vdEl=document.getElementById('fat-vergi-dairesi');
       if(vdEl && r.vergiDairesi) vdEl.value=r.vergiDairesi;
+    // EDM'den gelen detay bilgilerini otomatik doldur
+    var telEl=document.getElementById('fat-tel');
+    var emailEl=document.getElementById('fat-email');
+    var adresEl=document.getElementById('fat-adres');
+    var ilEl=document.getElementById('fat-il');
+    var ilceEl=document.getElementById('fat-ilce');
+    if(telEl && (r.telefon||r.cepTelefon)) telEl.value=r.cepTelefon||r.telefon;
+    if(emailEl && (r.email||r.kepEmail)) emailEl.value=r.email||r.kepEmail;
+    if(adresEl && r.adres) adresEl.value=r.adres;
+    if(ilEl && r.il) ilEl.value=r.il;
+    if(ilceEl && r.ilce) ilceEl.value=r.ilce;
       if(tipBilgi) tipBilgi.innerHTML='✅ <b>e-Fatura</b> olarak kesilecek (müşteri GİB mükellefi)';
       if(tipBilgi) tipBilgi.style.color='#16a34a';
       if(tipHidden) tipHidden.value='EFATURA';
