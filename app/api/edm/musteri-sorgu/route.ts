@@ -10,7 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiResponse } from '@/lib/types';
 import { requireAuth } from '@/lib/utils/auth-check';
-import { login, checkGIBUser, tagCek, xmlEsc } from '@/lib/edm/soap-client';
+import { login, checkGIBUser, getSupplier, tagCek, xmlEsc } from '@/lib/edm/soap-client';
 
 interface MusteriSorguIstegi {
   kullaniciAdi: string;
@@ -21,12 +21,39 @@ interface MusteriSorguIstegi {
 }
 
 interface MusteriSorguYaniti {
+
   bulundu: boolean;
+
   unvan?: string | null;
+
   etiket?: string | null;
+
   vergiDairesi?: string | null;
+
+  adres?: string | null;
+
+  il?: string | null;
+
+  ilce?: string | null;
+
+  ulke?: string | null;
+
+  telefon?: string | null;
+
+  cepTelefon?: string | null;
+
+  email?: string | null;
+
+  kepEmail?: string | null;
+
+  mersisNo?: string | null;
+
+  webAdresi?: string | null;
+
   mesaj: string;
+
 }
+
 
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req);
@@ -155,16 +182,57 @@ export async function POST(req: NextRequest) {
           mesaj: body.tip === 'bireysel'
             ? 'Bu TC GIB e-fatura mukellef listesinde bulunamadi - e-Arsiv olarak kesilecek.'
             : 'Bu VKN GIB e-fatura mukellef listesinde bulunamadi - e-Arsiv olarak kesilecek.',
-        },
-      });
+    // Mukellef bulundu - GetSuppliers ile detay bilgilerini cek
+    let adres = null, il = null, ilce = null, ulke = null;
+    let telefon = null, cepTelefon = null, email = null, kepEmail = null;
+    let vergiDairesi = null, mersisNo = null, webAdresi = null;
+
+    try {
+      const supplierSonuc = await getSupplier(loginSonuc.sessionId!, body.no, edmAuth);
+      if (supplierSonuc.basarili && supplierSonuc.xml) {
+        const sx = supplierSonuc.xml;
+        adres = tagCek(sx, 'ADRES') || null;
+        il = tagCek(sx, 'CITY') || null;
+        ilce = tagCek(sx, 'COUNTY') || null;
+        ulke = tagCek(sx, 'COUNTRY') || null;
+        telefon = tagCek(sx, 'PHONE') || null;
+        cepTelefon = tagCek(sx, 'MOBILE') || null;
+        email = tagCek(sx, 'RESPONSIBLE_EMAIL') || null;
+        kepEmail = tagCek(sx, 'KEP_EMAIL') || null;
+        vergiDairesi = tagCek(sx, 'VERGI_DAIRESI') || null;
+        mersisNo = tagCek(sx, 'MERSISNO') || null;
+        webAdresi = tagCek(sx, 'WEBURI') || null;
+        // Unvan GetSuppliers'dan daha detayli gelebilir
+        const supplierName = tagCek(sx, 'NAME');
+        if (supplierName && supplierName.length > (unvan || '').length) {
+          // Daha uzun/detayli unvan varsa onu kullan
+        }
+      }
+    } catch (e) {
+      // GetSuppliers hatasi - kritik degil, sadece detay eksik kalir
+      console.warn('GetSuppliers detay cekilemedi:', e);
     }
 
-    // Bos CheckUserResponse - mukellef yok
-    if (!identifier && !unvan && !etiket) {
-      return NextResponse.json<ApiResponse<MusteriSorguYaniti>>({
-        success: true,
-        data: {
-          bulundu: false,
+    return NextResponse.json<ApiResponse<MusteriSorguYaniti>>({
+      success: true,
+      data: {
+        bulundu: true,
+        unvan: unvan || identifier,
+        etiket,
+        vergiDairesi,
+        adres,
+        il,
+        ilce,
+        ulke,
+        telefon,
+        cepTelefon,
+        email,
+        kepEmail,
+        mersisNo,
+        webAdresi,
+        mesaj: 'Musteri e-fatura mukellefi olarak bulundu.',
+      },
+    });
           mesaj: body.tip === 'bireysel'
             ? 'Bu TC GIB e-fatura mukellef listesinde bulunamadi - e-Arsiv olarak kesilecek.'
             : 'Bu VKN GIB e-fatura mukellef listesinde bulunamadi - e-Arsiv olarak kesilecek.',
