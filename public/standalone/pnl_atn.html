@@ -1415,6 +1415,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
         <button id="btn-ho" onclick="odemeAlBagimsiz()" style="padding:7px 14px;border:1.5px solid #d97706;border-radius:7px;background:rgba(217,119,6,.06);color:#d97706;font-size:11px;font-weight:700;cursor:pointer">💵 Ödeme Al</button>
         <button id="btn-ht" style="padding:7px 14px;border:1.5px solid var(--r);border-radius:7px;background:rgba(176,28,46,.06);color:var(--r);font-size:11px;font-weight:700;cursor:pointer;opacity:.4;pointer-events:none" title="Önce randevu seçin">💳 Taksit</button>
         <button id="btn-hd" style="padding:7px 14px;border:1.5px solid #2563EB;border-radius:7px;background:rgba(37,99,235,.06);color:#2563EB;font-size:11px;font-weight:700;cursor:pointer;opacity:.4;pointer-events:none" title="Önce randevu seçin">📋 Detay</button>
+<button class="ab ab-n" style="padding:7px 14px;border:1.5px solid #6366f1;border-radius:7px;background:rgba(99,102,241,.06);font-size:11px;font-weight:700;color:#6366f1;cursor:pointer" onclick="musteri360Ac()">&#x1F50D; 360&#xB0;</button>
       </div>
 <div class="g2">
         <!-- Takvim -->
@@ -1913,6 +1914,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
             <button class="ab ab-n" style="font-size:11px;border-color:#991b1b;color:#991b1b" onclick="faturaTumunuSilOnay()">&#x1F5D1; Tümünü Sil</button>
 <button class="ab ab-n" style="font-size:11px;border-color:#2563EB;color:#2563EB" onclick="faturaTopluDurumGuncelle()">&#x1F504; Durumlar&#x131; G&#xFC;ncelle</button>
 <button class="ab ab-g" style="font-size:11px" onclick="faturaYeniAc()">+ Yeni Fatura</button>
+<button class="ab ab-n" style="font-size:11px;border-color:#6366f1;color:#6366f1;background:rgba(99,102,241,.05)" onclick="musteri360Ac()">&#x1F50D; M&#xFC;&#x15F;teri 360&#xB0;</button>
           </div>
           <div style="width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch">
             <div style="display:flex;gap:5px;align-items:center;min-width:max-content">
@@ -14286,6 +14288,7 @@ function markaSSSSil(idx){
 }
 
 </script>
+<script src="/standalone/musteri360.js"></script>
 <script src="/standalone/fatura.js?v=1780501889"></script>
 </body>
 </html>
