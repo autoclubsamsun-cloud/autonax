@@ -190,6 +190,8 @@ function m360Ara(){
     // Aksiyon butonlari
     html+='<div style="padding:10px 16px;background:var(--bg);display:flex;gap:6px;flex-wrap:wrap">';
     var preData=JSON.stringify({musteri:m.isim,tel:m.tel,plaka:m.plakalar[0]||''}).replace(/'/g,"\\'");
+    var rdvData=JSON.stringify({isim:m.isim,tel:m.tel,plaka:m.plakalar[0]||'',arac:m.araclar[0]||'',sonHizmet:m.randevular.length?m.randevular[0].hizmet:''}).replace(/'/g,"\\'");
+    html+='<button class="ab ab-n" style="font-size:10px;border-color:#6366f1;color:#6366f1;background:rgba(99,102,241,.06)" onclick="m360YeniRandevu('+rdvData+')">+ Yeni Randevu</button>';
     html+='<button class="ab ab-n" style="font-size:10px;border-color:#1a6b3c;color:#1a6b3c" onclick="document.getElementById(\'m360-ovl\').remove();faturaYeniAc('+preData+')">+ Yeni Fatura</button>';
     if(m.tel) html+='<a href="https://wa.me/90'+m.tel.replace(/\D/g,'').slice(-10)+'" target="_blank" class="ab ab-n" style="font-size:10px;border-color:#25D366;color:#25D366;text-decoration:none">\ud83d\udcac WhatsApp</a>';
     if(m.tel) html+='<a href="tel:'+m.tel+'" class="ab ab-n" style="font-size:10px;text-decoration:none">\ud83d\udcde Ara</a>';
@@ -199,3 +201,70 @@ function m360Ara(){
 
   el.innerHTML=html;
 }
+
+
+/** 360'dan yeni randevu olustur - formu doldur ve randevu sayfasina yonlendir */
+function m360YeniRandevu(musteriData){
+  // 360 modalini kapat
+  var ovl=document.getElementById('m360-ovl');
+  if(ovl) ovl.remove();
+
+  // Randevu sayfasina git
+  if(typeof doPg==='function') doPg('randevular');
+
+  // Biraz bekle - sayfa render olduktan sonra formu doldur
+  setTimeout(function(){
+    var d=musteriData||{};
+    // Form alanlarini doldur
+    var fMusteri=document.getElementById('rdv-musteri');
+    var fTel=document.getElementById('rdv-tel');
+    var fPlaka=document.getElementById('rdv-plaka');
+    var fArac=document.getElementById('rdv-arac');
+    var fTarih=document.getElementById('rdv-tarih');
+    var fNot=document.getElementById('rdv-not');
+
+    if(fMusteri&&d.isim) fMusteri.value=d.isim;
+    if(fTel&&d.tel) fTel.value=d.tel;
+    if(fPlaka&&d.plaka) fPlaka.value=d.plaka;
+    if(fArac&&d.arac) fArac.value=d.arac;
+    if(fNot&&d.not) fNot.value=d.not;
+
+    // Bugunku tarih
+    if(fTarih&&!fTarih.value){
+      var bugun=new Date();
+      fTarih.value=bugun.toISOString().split('T')[0];
+    }
+
+    // Son hizmet bilgisi varsa not'a yaz
+    if(fNot&&d.sonHizmet&&!d.not){
+      fNot.value='Onceki hizmet: '+d.sonHizmet;
+    }
+
+    // Form alanini vurgula
+    if(fMusteri){
+      fMusteri.style.transition='background .3s';
+      fMusteri.style.background='rgba(99,102,241,.1)';
+      setTimeout(function(){fMusteri.style.background='';},2000);
+    }
+
+    // Mobilde form gorunmuyorsa modal ac
+    if(window.innerWidth<768&&typeof yeniRandevuModalMobil==='function'){
+      var tarihStr=new Date().toLocaleDateString('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric'});
+      yeniRandevuModalMobil(new Date().toISOString().split('T')[0], tarihStr);
+      // Modal actiktan sonra tekrar doldur
+      setTimeout(function(){
+        var fM2=document.getElementById('rdv-musteri');
+        var fT2=document.getElementById('rdv-tel');
+        var fP2=document.getElementById('rdv-plaka');
+        var fA2=document.getElementById('rdv-arac');
+        if(fM2&&d.isim) fM2.value=d.isim;
+        if(fT2&&d.tel) fT2.value=d.tel;
+        if(fP2&&d.plaka) fP2.value=d.plaka;
+        if(fA2&&d.arac) fA2.value=d.arac;
+      },300);
+    }
+
+    if(typeof toast==='function') toast('M\u00fc\u015fteri bilgileri dolduruldu - tarihi ve hizmeti se\u00e7in','blue');
+  },300);
+}
+
