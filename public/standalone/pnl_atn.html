@@ -1895,7 +1895,9 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
             <div class="kt" style="flex:0 0 auto;white-space:nowrap">Fatura Listesi</div>
             <div style="flex:1"></div>
             <button id="fat-toplu-gonder-btn" class="ab ab-n" style="font-size:11px;background:#1a6b3c;color:#fff;border-color:#1a6b3c;display:none" onclick="faturaTopluEDMGonder()">📤 Seçilenleri EDM'e Gönder</button>
-            <button class="ab ab-n" style="font-size:11px;border-color:#2563EB;color:#2563EB" onclick="faturaTopluDurumGuncelle()">&#x1F504; Durumlar&#x131; G&#xFC;ncelle</button>
+<button id="fat-toplu-sil-btn" class="ab ab-n" style="font-size:11px;border-color:#991b1b;color:#991b1b;display:none" onclick="faturaSeciliSil()">&#x1F5D1; Seçilileri Sil</button>
+            <button class="ab ab-n" style="font-size:11px;border-color:#991b1b;color:#991b1b" onclick="faturaTumunuSilOnay()">&#x1F5D1; Tümünü Sil</button>
+<button class="ab ab-n" style="font-size:11px;border-color:#2563EB;color:#2563EB" onclick="faturaTopluDurumGuncelle()">&#x1F504; Durumlar&#x131; G&#xFC;ncelle</button>
 <button class="ab ab-g" style="font-size:11px" onclick="faturaYeniAc()">+ Yeni Fatura</button>
           </div>
           <div style="width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch">
