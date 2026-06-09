@@ -21,48 +21,86 @@
     'tum_arac': { isim: 'Komple Seramik / PPF', fiyat: 45000 }
   };
 
-  /** SVG Arac Cizimi (Wireframe tarzı) */
-  function getAracSVG() {
+  /** Gercek 3D Arac (Model-Viewer) */
+  function get3DModelHTML() {
+    // Kutuphaneyi dinamik yukle
+    if (!document.getElementById('model-viewer-script')) {
+      var s = document.createElement('script');
+      s.id = 'model-viewer-script';
+      s.type = 'module';
+      s.src = 'https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js';
+      document.head.appendChild(s);
+    }
+    
+    // Model-viewer HTML ciktisi
+    // CDN'den acik kaynakli bir araba modeli cekilir (Ornek: bir konsept araba)
+    // data-position x,y,z koordinatlaridir.
     return `
-    <svg viewBox="0 0 400 800" width="100%" height="100%" style="filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.2));">
-      <defs>
-        <linearGradient id="neon" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#00f2fe" />
-          <stop offset="100%" stop-color="#4facfe" />
-        </linearGradient>
-        <style>
-          .car-part { fill: rgba(15, 23, 42, 0.6); stroke: #4facfe; stroke-width: 2; transition: all 0.3s ease; cursor: pointer; }
-          .car-part:hover { fill: rgba(79, 172, 254, 0.3); stroke: #fff; filter: drop-shadow(0 0 10px #4facfe); }
-          .car-part.active { fill: rgba(220, 38, 38, 0.4); stroke: #ef4444; filter: drop-shadow(0 0 15px #ef4444); }
-          .car-line { stroke: #1e293b; stroke-width: 1; fill: none; pointer-events: none; }
-        </style>
-      </defs>
+    <style>
+      model-viewer {
+        width: 100%;
+        height: 100%;
+        min-height: 500px;
+        --poster-color: transparent;
+      }
+      .hotspot-btn {
+        display: block;
+        width: max-content;
+        padding: 6px 12px;
+        background: rgba(15, 23, 42, 0.8);
+        border: 2px solid #4facfe;
+        border-radius: 8px;
+        color: #fff;
+        font-family: Outfit, sans-serif;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 0 10px rgba(79, 172, 254, 0.5);
+      }
+      .hotspot-btn:hover {
+        background: rgba(79, 172, 254, 0.5);
+      }
+      .hotspot-btn.active {
+        background: rgba(220, 38, 38, 0.8);
+        border-color: #ef4444;
+        box-shadow: 0 0 15px rgba(239, 68, 68, 0.8);
+      }
+      /* Cizgi detayi (Gorsel) */
+      .hotspot-btn::before {
+        content: '';
+        display: block;
+        position: absolute;
+        top: 50%; left: 50%;
+        width: 4px; height: 4px;
+        background: #fff;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        opacity: 0;
+      }
+    </style>
+    <model-viewer 
+      src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@master/examples/models/gltf/ferrari.glb" 
+      camera-controls 
+      auto-rotate 
+      rotation-per-second="10deg"
+      environment-image="neutral" 
+      exposure="0.8" 
+      shadow-intensity="1">
       
-      <!-- Dis Hatlar (Gorsel) -->
-      <path class="car-line" d="M 100 100 Q 200 50 300 100 L 320 200 L 330 600 Q 200 650 70 600 L 80 200 Z" />
-
-      <!-- On Tampon -->
-      <path id="part-on_tampon" class="car-part" d="M 100 100 Q 200 50 300 100 L 310 140 Q 200 130 90 140 Z" onclick="aiParcaSec('on_tampon')" />
+      <!-- Hotspotlar (Uzamsal Noktalar) -->
+      <!-- Ferrari modelinde genel koordinatlar tahminidir -->
+      <button slot="hotspot-kaput" class="hotspot-btn" data-position="0 0.6 1.2" data-normal="0 1 0.2" id="part-kaput" onclick="aiParcaSec('kaput')">Kaput</button>
+      <button slot="hotspot-tavan" class="hotspot-btn" data-position="0 1.1 0" data-normal="0 1 0" id="part-tavan" onclick="aiParcaSec('tavan')">Tavan</button>
+      <button slot="hotspot-bagaj" class="hotspot-btn" data-position="0 0.8 -1.5" data-normal="0 1 -0.2" id="part-bagaj" onclick="aiParcaSec('bagaj')">Bagaj</button>
       
-      <!-- Kaput -->
-      <path id="part-kaput" class="car-part" d="M 90 140 Q 200 130 310 140 L 290 280 Q 200 290 110 280 Z" onclick="aiParcaSec('kaput')" />
+      <button slot="hotspot-solkapi" class="hotspot-btn" data-position="0.9 0.5 0" data-normal="1 0 0" id="part-sol_kapi" onclick="aiParcaSec('sol_kapi')">Sol Kapı</button>
+      <button slot="hotspot-sagkapi" class="hotspot-btn" data-position="-0.9 0.5 0" data-normal="-1 0 0" id="part-sag_kapi" onclick="aiParcaSec('sag_kapi')">Sağ Kapı</button>
       
-      <!-- Tavan (Cam + Tavan) -->
-      <path id="part-tavan" class="car-part" d="M 120 320 Q 200 300 280 320 L 270 480 Q 200 500 130 480 Z" onclick="aiParcaSec('tavan')" />
+      <button slot="hotspot-ontampon" class="hotspot-btn" data-position="0 0.3 2.1" data-normal="0 0 1" id="part-on_tampon" onclick="aiParcaSec('on_tampon')">Ön Tampon</button>
+      <button slot="hotspot-arkatampon" class="hotspot-btn" data-position="0 0.4 -2.1" data-normal="0 0 -1" id="part-arka_tampon" onclick="aiParcaSec('arka_tampon')">Arka Tampon</button>
       
-      <!-- Bagaj -->
-      <path id="part-bagaj" class="car-part" d="M 110 520 Q 200 500 290 520 L 310 600 Q 200 620 90 600 Z" onclick="aiParcaSec('bagaj')" />
-      
-      <!-- Arka Tampon -->
-      <path id="part-arka_tampon" class="car-part" d="M 90 600 Q 200 620 310 600 L 300 640 Q 200 650 100 640 Z" onclick="aiParcaSec('arka_tampon')" />
-      
-      <!-- Sol Kapi -->
-      <path id="part-sol_kapi" class="car-part" d="M 80 280 L 110 280 L 120 320 L 130 480 L 110 520 L 70 520 Z" onclick="aiParcaSec('sol_kapi')" />
-      
-      <!-- Sag Kapi -->
-      <path id="part-sag_kapi" class="car-part" d="M 320 280 L 290 280 L 280 320 L 270 480 L 290 520 L 330 520 Z" onclick="aiParcaSec('sag_kapi')" />
-      
-    </svg>
+    </model-viewer>
     `;
   }
 
@@ -173,7 +211,7 @@
       <div style="flex:2;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;">
         <div style="position:absolute;top:0;font-family:'Bebas Neue',sans-serif;font-size:20px;color:#4facfe;letter-spacing:1px;text-align:center;">İNTERAKTİF ARAÇ TARAMASI<br><span style="font-family:Outfit,sans-serif;font-size:12px;color:#64748b;letter-spacing:0;">İşlem yapılacak bölgelere tıklayın</span></div>
         <div style="width:100%;max-width:500px;height:100%;display:flex;align-items:center;justify-content:center;">
-          ${getAracSVG()}
+          ${get3DModelHTML()}
         </div>
       </div>
       
