@@ -8783,17 +8783,26 @@ function dbSyncYukle(){
       // SONRA: DB Özel ürünlerini yakala (seramik+diger artık tanınıyor, gerçek özel ürünler kalır)
       _dbOzelUrunleriYakala(d.data);
       d.data.forEach(function(u){
-        if(u.id&&URUNLER[u.id]){
-          // Mevcut PPF ürününü güncelle
-          var t=URUNLER[u.id];
-          if(u.full_fiyat!=null) t.full=u.full_fiyat;
-          if(u.on3_fiyat!=null) t.on3=u.on3_fiyat;
-          if(u.kaput_fiyat!=null) t.kaput=u.kaput_fiyat;
-          if(u.garanti) t.garanti=u.garanti;
-          if(u.rozet) t.rozet=u.rozet;
-          if(u.aciklama) t.aciklama=u.aciklama;
-          if(u.resim) t.resim=u.resim;
-          if(u.bayi_indirim!=null) t.bayiIndirim=u.bayi_indirim;
+        if(!u.id) return;
+        // seramik_ veya diger_ formatindaki urunleri atla (yukarda islendi)
+        if(/^(seramik_|diger_)\d+$/.test(u.id)) return;
+        // PPF urunu: mevcut ise guncelle, yoksa yeni olarak ekle
+        if(u.kat==='ppf' || URUNLER[u.id]){
+          if(!URUNLER[u.id]){
+            // DB'den gelen yeni PPF urunu — URUNLER'e ekle
+            URUNLER[u.id]={isim:u.isim||'',kat:'ppf',altKat:u.alt_kat||u.altKat||'',mikron:u.mikron||'',mensei:u.mensei||'',garanti:u.garanti||5,full:u.full_fiyat||0,on3:u.on3_fiyat||0,kaput:u.kaput_fiyat||0,bayiIndirim:u.bayi_indirim||0,rozet:u.rozet||'',aciklama:u.aciklama||'',resim:u.resim||null};
+          } else {
+            // Mevcut PPF urunu — guncelle
+            var t=URUNLER[u.id];
+            if(u.full_fiyat!=null) t.full=u.full_fiyat;
+            if(u.on3_fiyat!=null) t.on3=u.on3_fiyat;
+            if(u.kaput_fiyat!=null) t.kaput=u.kaput_fiyat;
+            if(u.garanti) t.garanti=u.garanti;
+            if(u.rozet) t.rozet=u.rozet;
+            if(u.aciklama) t.aciklama=u.aciklama;
+            if(u.resim) t.resim=u.resim;
+            if(u.bayi_indirim!=null) t.bayiIndirim=u.bayi_indirim;
+          }
         }
       });
       // Fiyat sayfasını yenile
