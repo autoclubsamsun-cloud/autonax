@@ -4058,6 +4058,12 @@ function rdvDuzenle(idx){
           +'</div>'
         +'</div>'
 
+        // ─── Not alanı ───
+        +'<div style="margin-bottom:16px">'
+          +'<div style="'+LB+'">NOT</div>'
+          +'<textarea id="dz-notlar" rows="2" placeholder="Araç veya hizmet hakkında not..." style="'+IS+';resize:vertical;min-height:48px">'+(r.notlar||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</textarea>'
+        +'</div>'
+
         // ─── Ödeme Geçmişi ───
         +'<div style="margin-bottom:16px">'
           +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
@@ -4280,6 +4286,7 @@ function rdvKaydet(idx){
   r.hizmet=hizmetIsim;
   r.tutar=netTutar;   // Net tutar kaydedilir
   r.indirim=indirim;  // İndirim ayrıca saklanır
+  r.notlar=(g('dz-notlar')||{value:r.notlar||''}).value.trim();
   r.durum=(g('dz-durum')||{value:r.durum}).value||r.durum;
   // Tam ödenmiş mi?
   // Fiyat 0 ise (hediye) otomatik odendi say, yoksa normal kontrol
