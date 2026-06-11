@@ -8631,6 +8631,10 @@ function urunleriApiSenkronEt(){
   SERAMIK.forEach(function(u,i){
     urunDizisi.push({id:'seramik_'+i,isim:u.isim,kat:'seramik',altKat:u.altKat||'',garanti:u.garanti||0,full:u.full||0,on3:u.on3||0,kaput:u.kaput||0,tutar:u.tutar||0,bayiIndirim:u.bayiIndirim||0,rozet:u.rozet||'',aciklama:u.aciklama||'',resim:u.resim||null});
   });
+  // Temizlik & Bakim (DIGER_HIZMETLER)
+  DIGER_HIZMETLER.forEach(function(u,i){
+    urunDizisi.push({id:'diger_'+i,isim:u.isim,kat:u.kat||'bakim',altKat:u.altKat||'',garanti:u.garanti||0,full:u.full||u.tutar||0,on3:u.on3||0,kaput:u.kaput||0,tutar:u.tutar||0,bayiIndirim:u.bayiIndirim||0,rozet:u.rozet||'',aciklama:u.aciklama||'',resim:u.resim||null});
+  });
   fetch('/api/urunler',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(urunDizisi),credentials:'same-origin'})
   .then(function(r){return r.json();})
   .then(function(d){})
@@ -8653,13 +8657,18 @@ function _dbUrunOzelMi(u){
     var sIdx=parseInt((u.id||'').replace('seramik_',''));
     if(!isNaN(sIdx) && SERAMIK[sIdx]) return false;
   }
-  // Diğer hizmetler dizisinde mi? (id format: "s0", "s1"...)
+  // Diğer hizmetler dizisinde mi? (id format: "s0", "s1"... veya "diger_0", "diger_1"...)
   if((u.id||'').match(/^s\d+$/)){
     var dIdx=parseInt((u.id||'').replace('s',''));
     if(!isNaN(dIdx)){
       if(dIdx < SERAMIK.length) return false;
       if((dIdx - SERAMIK.length) < DIGER_HIZMETLER.length) return false;
     }
+  }
+  // diger_ formatında mı?
+  if((u.id||'').indexOf('diger_')===0){
+    var dgIdx=parseInt((u.id||'').replace('diger_',''));
+    if(!isNaN(dgIdx) && dgIdx < DIGER_HIZMETLER.length) return false;
   }
   return true;
 }
@@ -8744,9 +8753,34 @@ function dbSyncYukle(){
           aktif:u.aktif!==false
         });
       });
+      // DB'den Temizlik & Bakım (diger_) ürünlerini senkronize et
+      var dbDiger=d.data.filter(function(u){return u && (u.kat==='bakim'||u.kat==='diger') && u.id && /^diger_\d+$/.test(u.id);});
+      dbDiger.sort(function(a,b){
+        var ai=parseInt((a.id||'').replace('diger_',''),10);
+        var bi=parseInt((b.id||'').replace('diger_',''),10);
+        return ai-bi;
+      });
+      if(dbDiger.length>0){
+        DIGER_HIZMETLER.length=0;
+        dbDiger.forEach(function(u){
+          DIGER_HIZMETLER.push({
+            isim:u.isim||'',
+            kat:u.kat||'bakim',
+            altKat:u.alt_kat||u.altKat||'',
+            garanti:u.garanti||0,
+            tutar:u.tutar||u.full_fiyat||0,
+            full:u.full_fiyat||u.tutar||0,
+            bayiIndirim:u.bayi_indirim||u.bayiIndirim||0,
+            rozet:u.rozet||'',
+            aciklama:u.aciklama||'',
+            resim:u.resim||null,
+            aktif:u.aktif!==false
+          });
+        });
+      }
       // localStorage'ı da güncelle (tutarlılık için)
       if(typeof storageKaydet==='function') storageKaydet();
-      // SONRA: DB Özel ürünlerini yakala (seramik artık tanınıyor, gerçek özel ürünler kalır)
+      // SONRA: DB Özel ürünlerini yakala (seramik+diger artık tanınıyor, gerçek özel ürünler kalır)
       _dbOzelUrunleriYakala(d.data);
       d.data.forEach(function(u){
         if(u.id&&URUNLER[u.id]){
