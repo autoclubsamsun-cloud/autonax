@@ -3029,7 +3029,7 @@ function doRdvListele(){
       +'<td><b>'+r.tarih+'</b><br><small>'+r.saat+'</small></td>'
       +'<td><b>'+r.musteri+'</b>'+onlineRow+'<br><small style="color:var(--ink4)">'+r.tel+'</small></td>'
       +'<td><span class="tbl-plaka">'+r.plaka+'</span>'+(r.arac&&r.arac!=='—'?'<br><small>'+r.arac+'</small>':'')+((r.aracBuyuk||r.aracSinif==='pickup'||r.aracSinif==='minivan')?'<br><span title="Pickup/Minivan — fiyat doğrulama gerekli" style="display:inline-block;background:#fef3c7;border:1px solid #d97706;color:#92400e;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700;margin-top:2px">🛻 BÜYÜK ARAÇ</span>':'')+'</td>'
-      +'<td>'+r.hizmet+'</td>'
+      +'<td>'+r.hizmet+(r.notlar?'<div style="font-size:10px;color:#64748b;margin-top:2px;font-style:italic;line-height:1.3">\ud83d\udcdd '+r.notlar+'</div>':'')+'</td>'
       +'<td class="tbl-fiyat" data-col="tutar">'+tutarStr+'</td>'
       +'<td><span class="tag '+s.tag+'">'+s.txt+'</span></td>'
       +'<td data-col="odeme">'+odemeTag+'</td>'
@@ -3414,6 +3414,7 @@ function dashboardGuncelle(){ dashboardYukle(); return; /* Artık dashboardYukle
               +'</div>'
               +'<div class="mcard-musteri">'+(r.musteri||r.isim||'-')+'</div>'
               +'<div class="mcard-meta">🕐 <b>'+(r.saat||'-')+'</b> · 🔧 '+(r.hizmet||'-')+'</div>'
+              +(r.notlar?'<div style="font-size:10px;color:#64748b;padding:2px 0 4px;font-style:italic">📝 '+r.notlar+'</div>':'')
               +'<div class="mcard-foot"><div class="mcard-tutar">₺'+tutar+'</div></div>'
             +'</div>';
           }).join('')
@@ -5130,7 +5131,8 @@ function rdvEkle(){
     tutar:netTutar,
     durum:'bekl', islem:false, odendi:false, onlineOdeme:false,
     odenenToplam:0, odemeGecmisi:[],
-    indirim:ind
+    indirim:ind,
+    notlar:(document.getElementById('rdv-not')?document.getElementById('rdv-not').value.trim():'')
   };
   RANDEVULAR.unshift(yeniRdv);
   if(typeof dbRandevuKaydet==='function') dbRandevuKaydet(yeniRdv);
