@@ -4033,9 +4033,9 @@ function rdvDuzenle(idx){
           +'<div><div style="'+LB+'">Tarih</div><input id="dz-tarih" type="date" value="'+tInp+'" style="'+IS+'"></div>'
           +'<div><div style="'+LB+'">Saat</div><select id="dz-saat" style="'+IS+'">'+saatOpts+'</select></div>'
           +'<div style="grid-column:1/-1"><div style="'+LB+'">Hizmet</div><select id="dz-hizmet" onchange="dzHizmetDegisti()" style="'+IS+'">'+hOpts+'</select>'
-            +'<div style="margin-top:6px"><a href="#" id="dz-manuel-link" onclick="event.preventDefault();dzManuelToggle()" style="font-size:11px;color:#6366f1;text-decoration:none;font-weight:600">\u{1F4DD} Listede yok mu? Manuel hizmet/\u00FCr\u00FCn ekle</a></div>'
+            +'<div style="margin-top:6px"><a href="#" id="dz-manuel-link" onclick="event.preventDefault();dzManuelToggle()" style="font-size:11px;color:#6366f1;text-decoration:none;font-weight:600">\u2795 Ek hizmet / \u00FCr\u00FCn ekle</a></div>'
             +'<div id="dz-manuel-alan" style="display:none;margin-top:8px;padding:12px;background:#f0f0ff;border:1.5px solid #c7d2fe;border-radius:10px">'
-              +'<div style="font-size:10px;font-weight:700;color:#6366f1;letter-spacing:.5px;margin-bottom:8px">\u{1F4DD} MANUEL H\u0130ZMET / \u00DCR\u00DCN</div>'
+              +'<div style="font-size:10px;font-weight:700;color:#6366f1;letter-spacing:.5px;margin-bottom:8px">\u2795 EK H\u0130ZMET / \u00DCR\u00DCN (\u00FCstteki \u00FCr\u00FCnle toplan\u0131r)</div>'
               +'<div style="display:grid;grid-template-columns:2fr 1fr;gap:8px">'
                 +'<div><div style="'+LB+'">Hizmet / \u00DCr\u00FCn Ad\u0131</div><input id="dz-manuel-isim" type="text" placeholder="\u00D6rn: \u00D6zel Detay Temizlik" style="'+IS+'"></div>'
                 +'<div><div style="'+LB+'">Fiyat (\u20BA)</div><input id="dz-manuel-fiyat" type="number" min="0" placeholder="0" value="0" oninput="dzManuelFiyatDegisti()" style="'+IS+'"></div>'
@@ -4186,46 +4186,58 @@ function odemeTumunuIadeEt(rdvIdx){
 function dzHizmetDegisti(){
   var sel=document.getElementById('dz-hizmet'); if(!sel) return;
   var opt=sel.options[sel.selectedIndex];
-  var tutar=parseInt(opt.value)||0;
+  var dropdownTutar=parseInt(opt.value)||0;
   var fEl=document.getElementById('dz-fiyat');
-  if(fEl&&tutar>0) fEl.value=tutar;
-  // Manuel alan aciksa kapat (listeden secim yapildi)
+  // Manuel alan aciksa: dropdown + manuel toplami yaz
   var manuelAlan=document.getElementById('dz-manuel-alan');
-  if(manuelAlan) manuelAlan.style.display='none';
-  var manuelLink=document.getElementById('dz-manuel-link');
-  if(manuelLink){ manuelLink.style.display=''; manuelLink.innerHTML='\u{1F4DD} Listede yok mu? Manuel hizmet/\u00FCr\u00FCn ekle'; }
-  var selH=document.getElementById('dz-hizmet');
-  if(selH) selH.style.opacity='1';
+  var manuelAktif=manuelAlan&&manuelAlan.style.display!=='none';
+  if(manuelAktif){
+    var mfEl=document.getElementById('dz-manuel-fiyat');
+    var manuelTutar=parseFloat((mfEl||{value:0}).value)||0;
+    if(fEl) fEl.value=dropdownTutar+manuelTutar;
+  } else {
+    if(fEl&&dropdownTutar>0) fEl.value=dropdownTutar;
+  }
   dzNetHesapla();
 }
 
-/** Manuel hizmet alanini ac/kapat */
+/** Manuel ek hizmet alanini ac/kapat (dropdown ile TOPLAMLI calisir) */
 function dzManuelToggle(){
   var alan=document.getElementById('dz-manuel-alan');
   var link=document.getElementById('dz-manuel-link');
   if(!alan) return;
   if(alan.style.display==='none'){
     alan.style.display='block';
-    if(link) link.innerHTML='\u274C Manuel giri\u015Fi iptal et';
-    var sel=document.getElementById('dz-hizmet');
-    if(sel) sel.style.opacity='0.4';
+    if(link) link.innerHTML='\u274C Ek hizmeti kald\u0131r';
     var isimEl=document.getElementById('dz-manuel-isim');
     if(isimEl) isimEl.focus();
   } else {
     alan.style.display='none';
-    if(link) link.innerHTML='\u{1F4DD} Listede yok mu? Manuel hizmet/\u00FCr\u00FCn ekle';
+    if(link) link.innerHTML='\u2795 Ek hizmet / \u00FCr\u00FCn ekle';
+    // Manuel fiyati cikar, sadece dropdown fiyatini yaz
     var sel=document.getElementById('dz-hizmet');
-    if(sel) sel.style.opacity='1';
+    var fEl=document.getElementById('dz-fiyat');
+    if(sel&&fEl){
+      var dropTutar=parseInt(sel.options[sel.selectedIndex].value)||0;
+      if(dropTutar>0) fEl.value=dropTutar;
+    }
+    // Manuel alanlari temizle
+    var mi=document.getElementById('dz-manuel-isim'); if(mi) mi.value='';
+    var mf=document.getElementById('dz-manuel-fiyat'); if(mf) mf.value='0';
+    dzNetHesapla();
   }
 }
 
-/** Manuel fiyat degistiginde ana fiyat alanini guncelle */
+/** Manuel fiyat degistiginde: dropdown fiyati + manuel fiyat = toplam */
 function dzManuelFiyatDegisti(){
   var fEl=document.getElementById('dz-fiyat');
   var mfEl=document.getElementById('dz-manuel-fiyat');
-  if(fEl&&mfEl){
-    var val=parseFloat(mfEl.value);
-    fEl.value=(isNaN(val)?0:val);
+  var sel=document.getElementById('dz-hizmet');
+  if(fEl&&mfEl&&sel){
+    var dropdownTutar=parseInt(sel.options[sel.selectedIndex].value)||0;
+    var manuelTutar=parseFloat(mfEl.value);
+    if(isNaN(manuelTutar)) manuelTutar=0;
+    fEl.value=dropdownTutar+manuelTutar;
     dzNetHesapla();
   }
 }
@@ -4240,15 +4252,18 @@ function rdvKaydet(idx){
   if(tarihRaw){var t=tarihRaw.split('-');if(t.length===3)tarihStr=t[2]+'.'+t[1]+'.'+t[0];}
   var hizmetSel=g('dz-hizmet');
   var hizmetIsim=r.hizmet;
-  // Manuel hizmet alani acik mi kontrol et
+  // Dropdown hizmet ismini al
+  if(hizmetSel){
+    var opt=hizmetSel.options[hizmetSel.selectedIndex];hizmetIsim=opt.getAttribute('data-isim')||opt.textContent.split(' \u2014 ')[0];
+  }
+  // Manuel ek hizmet acik mi? Aciksa dropdown + manuel birlestir
   var manuelAlan=g('dz-manuel-alan');
   var manuelAktif=manuelAlan&&manuelAlan.style.display!=='none';
   if(manuelAktif){
     var manuelIsim=(g('dz-manuel-isim')||{value:''}).value.trim();
-    if(!manuelIsim){alert('Manuel hizmet ad\u0131 bo\u015F olamaz!');return;}
-    hizmetIsim=manuelIsim;
-  } else if(hizmetSel){
-    var opt=hizmetSel.options[hizmetSel.selectedIndex];hizmetIsim=opt.getAttribute('data-isim')||opt.textContent.split(' \u2014 ')[0];
+    if(manuelIsim){
+      hizmetIsim=hizmetIsim+' + '+manuelIsim;
+    }
   }
   // Fiyat: 0 dahil kabul edilir (hediye/ucretsiz)
   var fiyatRaw=(g('dz-fiyat')||{value:r.tutar}).value;
