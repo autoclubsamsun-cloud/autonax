@@ -2986,7 +2986,7 @@ window.escapeHTML = function(s){
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
           </div>
           <div class="hero-taksit-text">
-            <span class="hero-taksit-baslik">Vade Farksız 3 Taksit</span>
+            <span class="hero-taksit-baslik" id="hero-taksit-baslik">Vade Farksız 3 Taksit</span>
             <span class="hero-taksit-alt">Tüm kredi kartlarına · Komple PPF</span>
           </div>
         </div>
@@ -3078,7 +3078,7 @@ window.escapeHTML = function(s){
             <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
           </div>
           <div class="taksit-bandi-text">
-            <span class="taksit-bandi-baslik">Vade Farksız 3 Taksit</span>
+            <span class="taksit-bandi-baslik" id="bandi-taksit-baslik">Vade Farksız 3 Taksit</span>
             <span class="taksit-bandi-alt">Tüm kredi kartlarına · Komple PPF kaplamada geçerli</span>
           </div>
           <div class="taksit-bandi-rozet">FIRSAT</div>
@@ -6461,7 +6461,7 @@ function fiyatKartlariniYenile(){
           if(priceEl && !priceEl.parentNode.querySelector('.svc-taksit')){
             var taksitEl=document.createElement('div');
             taksitEl.className='svc-taksit';
-            taksitEl.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg><span>Vade farksız 3 taksit</span>';
+            taksitEl.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg><span class="taksit-kart-text">Vade farks\u0131z 3 taksit</span>';
             priceEl.insertAdjacentElement('afterend',taksitEl);
           }
         }
@@ -10352,5 +10352,32 @@ igBackendCek(function(){ igTumRender(); });
 })();
 </script>
 
+
+<!-- Taksit ayarlarini API'den cek -->
+<script>
+(function(){
+  fetch('/api/ayarlar',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
+    var oa=(d&&(d.data&&d.data.odeme_ayar||d.odeme_ayar))||null;
+    if(!oa) return;
+    var aktif=oa.taksitAktif!==false;
+    var n=oa.taksitSayisi||3;
+    var etiket=oa.taksitEtiketi||'Vade farks\u0131z {n} taksit';
+    var metin=etiket.replace('{n}',n);
+    // Hero taksit
+    var hb=document.getElementById('hero-taksit-baslik');
+    if(hb){ if(!aktif){hb.closest('.hero-taksit').style.display='none';}else{hb.textContent=metin;} }
+    // Bandi taksit
+    var bb=document.getElementById('bandi-taksit-baslik');
+    if(bb){ if(!aktif){bb.closest('.taksit-bandi').style.display='none';}else{bb.textContent=metin;} }
+    // Urun karti taksit etiketleri
+    document.querySelectorAll('.taksit-kart-text,.svc-taksit span').forEach(function(el){
+      if(!aktif){ el.closest('.svc-taksit').style.display='none'; }
+      else{ el.textContent=metin; }
+    });
+    // window'a kaydet (sonradan eklenen kartlar icin)
+    window._taksitAyar={aktif:aktif,sayi:n,metin:metin};
+  }).catch(function(){});
+})();
+</script>
 </body>
 </html>
