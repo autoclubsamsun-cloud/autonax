@@ -2969,7 +2969,9 @@ function doRdvListele(){
     var durumOk=_rdvDurumEslesme(r, _rdvDurum);
     var aramaOk=!arama||(r.musteri.toLowerCase().indexOf(arama)>-1)||(r.plaka.toLowerCase().indexOf(arama)>-1);
     var borcOk=!_borcluFiltre||((r.odenenToplam||0)<(r.tutar||0)&&(r.tutar||0)>0);
-    return ayOk&&gunOk&&durumOk&&aramaOk&&borcOk;
+    // Bagimsiz odeme kayitlari randevu listesinde GORUNMEZ (sadece Odemeler sayfasinda gorunur)
+    var bagimsizDegil=!r.bagimsiz;
+    return ayOk&&gunOk&&durumOk&&aramaOk&&borcOk&&bagimsizDegil;
   });
 
   // Kullanıcının seçtiği sıralama — tüm filtrelerde aktif (default: en yeni üstte)
@@ -6968,7 +6970,25 @@ function odemeAlBagimsiz(){
       +'</div>'
     +'</div>';
   document.body.appendChild(ovl);
-  setTimeout(function(){var el=document.getElementById('bo-ad');if(el)el.focus();},100);
+  // Toolbar'da secili randevu varsa bilgilerini otomatik doldur
+  setTimeout(function(){
+    if(typeof _rdvSeciliIdx!=='undefined' && _rdvSeciliIdx>=0 && RANDEVULAR[_rdvSeciliIdx]){
+      var sr=RANDEVULAR[_rdvSeciliIdx];
+      var elAd=document.getElementById('bo-ad');
+      var elTel=document.getElementById('bo-tel');
+      var elPlaka=document.getElementById('bo-plaka');
+      var elAciklama=document.getElementById('bo-aciklama');
+      var elTutar=document.getElementById('bo-tutar');
+      if(elAd && sr.musteri) elAd.value=sr.musteri;
+      if(elTel && sr.tel) elTel.value=sr.tel;
+      if(elPlaka && sr.plaka) elPlaka.value=sr.plaka;
+      if(elAciklama && sr.hizmet) elAciklama.value=sr.hizmet;
+      // Kalan tutari yaz (varsa)
+      var kalan=Math.max(0, (sr.tutar||0)-(sr.odenenToplam||0));
+      if(elTutar && kalan>0) elTutar.value=kalan;
+    }
+    var el=document.getElementById('bo-ad');if(el)el.focus();
+  },100);
 }
 
 /** Ödeme yöntemi değişince - PayTR seçiliyse buton "Direkt Ödeme Al" olur */
@@ -7015,42 +7035,8 @@ function bagimsizPayTRDirektOde(){
   }
   yeniSekme.document.write('<html><head><title>Odeme Hazirlaniyor...</title></head><body style="font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#fff5f3"><div style="text-align:center"><div style="width:40px;height:40px;border:3px solid #f9d2c8;border-top-color:#a13128;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px"></div><div style="color:#a13128;font-weight:600">Odeme ekrani hazirlaniyor...</div><style>@keyframes spin{to{transform:rotate(360deg)}}</style></div></body></html>');
 
-  // Once sanal randevu olustur (callback guncelleme icin)
+  // Bagimsiz PayTR - randevu OLUSTURMAZ, sadece odeme linki uretir
   var sanalRdvId='BAGIMSIZ-PAYTR-'+Date.now().toString(36);
-  var sanalRdv={
-    id: sanalRdvId,
-    tarih: new Date().toLocaleDateString('tr-TR'),
-    saat: new Date().toTimeString().slice(0,5),
-    musteri: ad,
-    musteriAdi: ad,
-    tel: telTemiz,
-    musteriTel: telTemiz,
-    plaka: plaka,
-    arac: '',
-    hizmet: aciklama,
-    tutar: tutar,
-    odenenToplam: 0, // Henuz odenmedi, callback odeyecek
-    durum: 'onay',
-    odendi: false,
-    islem: true,
-    onlineOdeme: false,
-    faturaNo: '',
-    faturaDurum: 'Bekliyor',
-    bagimsiz: true,
-    notlar: 'Bagimsiz PayTR odeme bekleniyor',
-    odemeGecmisi: []
-  };
-
-  RANDEVULAR.push(sanalRdv);
-  try{ storageKaydet(); }catch(e){}
-
-  // DB'ye kaydet + link olustur + sekmeye yonlendir
-  fetch('/api/randevular',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    credentials:'same-origin',
-    body:JSON.stringify(sanalRdv)
-  }).catch(function(){});
 
   toast('Odeme ekrani aciliyor...','green');
 
@@ -7064,7 +7050,8 @@ function bagimsizPayTRDirektOde(){
       musteriEmail: 'musteri@autonax.com.tr',
       tutar: tutar,
       aciklama: aciklama + ' - ' + (plaka||''),
-      randevuId: sanalRdvId
+      randevuId: sanalRdvId,
+      returnUrl: window.location.pathname
     })
   }).then(function(r){return r.json();}).then(function(d){
     if(!d.success){
@@ -7081,6 +7068,15 @@ function bagimsizPayTRDirektOde(){
     if(ovl) ovl.remove();
     toast('Odeme ekrani yeni sekmede acildi','green');
     doRdvListele();
+    if(typeof odemeListeYukle==='function') odemeListeYukle();
+    // Sekme kapandiginda otomatik sayfayi yenile (odeme tamamlandi olabilir)
+    var _paytrSekmeKontrol=setInterval(function(){
+      if(yeniSekme && yeniSekme.closed){
+        clearInterval(_paytrSekmeKontrol);
+        toast('Odeme sekmesi kapandi - veriler yenileniyor...','blue');
+        setTimeout(function(){ location.reload(); }, 1000);
+      }
+    }, 2000);
   }).catch(function(err){
     toast('Baglanti hatasi: '+err.message,'red');
     if(yeniSekme && !yeniSekme.closed) yeniSekme.close();
