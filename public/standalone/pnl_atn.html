@@ -3027,7 +3027,7 @@ function doRdvListele(){
     }
     return '<tr style="background:'+s.bg+';border-left:'+s.border+';transition:.2s;cursor:pointer" data-rdv-idx="'+i+'" onclick="rdvSatirSec('+i+')">'
       +'<td><b>'+r.tarih+'</b><br><small>'+r.saat+'</small></td>'
-      +'<td><b>'+r.musteri+'</b>'+onlineRow+'<br><small style="color:var(--ink4)">'+r.tel+'</small></td>'
+      +'<td><b>'+r.musteri+'</b>'+onlineRow+'<br><a href="tel:'+r.tel+'" onclick="event.stopPropagation()" style="color:#2563eb;text-decoration:none;font-size:11px;font-weight:600">\ud83d\udcde '+r.tel+'</a></td>'
       +'<td><span class="tbl-plaka">'+r.plaka+'</span>'+(r.arac&&r.arac!=='—'?'<br><small>'+r.arac+'</small>':'')+((r.aracBuyuk||r.aracSinif==='pickup'||r.aracSinif==='minivan')?'<br><span title="Pickup/Minivan — fiyat doğrulama gerekli" style="display:inline-block;background:#fef3c7;border:1px solid #d97706;color:#92400e;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700;margin-top:2px">🛻 BÜYÜK ARAÇ</span>':'')+'</td>'
       +'<td>'+r.hizmet+(r.notlar?'<div style="font-size:10px;color:#64748b;margin-top:2px;font-style:italic;line-height:1.3">\ud83d\udcdd '+r.notlar+'</div>':'')+'</td>'
       +'<td class="tbl-fiyat" data-col="tutar">'+tutarStr+'</td>'
@@ -3337,7 +3337,7 @@ function rdvMobilKartlariRender(liste){
         +'<div class="mcard-musteri">'+r.musteri+(r.musteriId?' <span style="font-size:8px;background:rgba(22,163,74,.1);color:#16a34a;border-radius:3px;padding:1px 4px;font-weight:700">KAYITLI</span>':'')+'</div>'
         +'<div class="mcard-meta">'
           +'📅 <b>'+r.tarih+'</b> · '+r.saat
-          +(r.tel?' · 📞 '+r.tel:'')
+          +(r.tel?' · <a href="tel:'+r.tel+'" onclick="event.stopPropagation()" style="color:#2563eb;text-decoration:none;font-weight:600">📞 '+r.tel+'</a>':'')
           +'<br>🔧 '+r.hizmet
           +(r.arac&&r.arac!=='—'?' · 🚗 '+r.arac:'')
         +'</div>'
