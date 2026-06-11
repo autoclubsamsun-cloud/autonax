@@ -1719,26 +1719,26 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
       <!-- Taksit Ayarlari -->
       <div id="taksit-ayar-kutu" style="margin-top:20px;padding:16px 20px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:12px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:#166534">\uD83D\uDCB3 TAKSiT AYARLARI</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:#166534">💳 TAKSİT AYARLARI</div>
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:700;color:#166534">
             <span id="taksit-ayar-durum">Aktif</span>
             <input type="checkbox" id="taksit-aktif-cb" onchange="taksitAyarDegisti()" style="width:18px;height:18px;accent-color:#16a34a;cursor:pointer">
           </label>
         </div>
         <div style="display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:center">
-          <div style="font-size:12px;font-weight:700;color:#166534">Taksit Say\u0131s\u0131</div>
+          <div style="font-size:12px;font-weight:700;color:#166534">Taksit Sayısı</div>
           <div style="display:flex;gap:6px;align-items:center">
             <input type="number" id="taksit-sayi-inp" min="1" max="12" value="3" onchange="taksitAyarDegisti()" style="width:70px;padding:8px 10px;border:1.5px solid #bbf7d0;border-radius:8px;font-size:15px;font-weight:700;font-family:Outfit,sans-serif;text-align:center;outline:none">
-            <span style="font-size:11px;color:#64748b">1-12 aras\u0131</span>
+            <span style="font-size:11px;color:#64748b">1-12 arası</span>
           </div>
           <div style="font-size:12px;font-weight:700;color:#166534">Etiket Metni</div>
           <div style="display:flex;gap:6px;align-items:center">
-            <input type="text" id="taksit-etiket-inp" value="Vade farks\u0131z {n} taksit" onchange="taksitAyarDegisti()" style="flex:1;padding:8px 10px;border:1.5px solid #bbf7d0;border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none" placeholder="{n} = taksit say\u0131s\u0131">
-            <span style="font-size:10px;color:#64748b;white-space:nowrap">{n} = say\u0131</span>
+            <input type="text" id="taksit-etiket-inp" value="Vade farksız {n} taksit" onchange="taksitAyarDegisti()" style="flex:1;padding:8px 10px;border:1.5px solid #bbf7d0;border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none" placeholder="{n} = taksit say\u0131s\u0131">
+            <span style="font-size:10px;color:#64748b;white-space:nowrap">{n} = sayı</span>
           </div>
         </div>
         <div id="taksit-onizleme" style="margin-top:12px;padding:10px 14px;background:#fff;border-radius:8px;border:1.5px solid #d1fae5;display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:#64748b;font-weight:600">\u00d6nizleme:</span>
+          <span style="font-size:11px;color:#64748b;font-weight:600">Önizleme:</span>
           <span id="taksit-onizleme-text" style="font-size:13px;font-weight:700;color:#0d6e51"></span>
         </div>
       </div>
@@ -5463,7 +5463,7 @@ var ODEME_AYAR={
   aktifGateway:'her-ikisi',
   taksitAktif:true,
   taksitSayisi:3,
-  taksitEtiketi:'Vade farks\u0131z {n} taksit'
+  taksitEtiketi:'Vade farksız {n} taksit'
 };
 
 // Kaydedilmis odeme ayarlarini yukle (EDM ile ayni mantik)
@@ -5531,7 +5531,7 @@ function taksitAyarYukle(){
   var dr=document.getElementById('taksit-ayar-durum');
   if(cb) cb.checked=ODEME_AYAR.taksitAktif!==false;
   if(si) si.value=ODEME_AYAR.taksitSayisi||3;
-  if(ei) ei.value=ODEME_AYAR.taksitEtiketi||'Vade farks\u0131z {n} taksit';
+  if(ei) ei.value=ODEME_AYAR.taksitEtiketi||'Vade farksız {n} taksit';
   if(dr) dr.textContent=ODEME_AYAR.taksitAktif!==false?'Aktif':'Pasif';
   taksitOnizlemeGuncelle();
 }
@@ -5541,9 +5541,9 @@ function taksitOnizlemeGuncelle(){
   var ot=document.getElementById('taksit-onizleme-text');
   var cb=document.getElementById('taksit-aktif-cb');
   if(!ot) return;
-  if(cb&&!cb.checked){ ot.textContent='Taksit etiketi g\u00f6sterilmiyor (pasif)'; ot.style.color='#94a3b8'; return; }
+  if(cb&&!cb.checked){ ot.textContent='Taksit etiketi gösterilmiyor (pasif)'; ot.style.color='#94a3b8'; return; }
   var n=parseInt(si?si.value:'3')||3;
-  var e=ei?ei.value:'Vade farks\u0131z {n} taksit';
+  var e=ei?ei.value:'Vade farksız {n} taksit';
   ot.textContent='\ud83d\udcb3 '+e.replace('{n}',n);
   ot.style.color='#0d6e51';
 }
@@ -5554,7 +5554,7 @@ function taksitAyarDegisti(){
   var dr=document.getElementById('taksit-ayar-durum');
   ODEME_AYAR.taksitAktif=cb?cb.checked:true;
   ODEME_AYAR.taksitSayisi=parseInt(si?si.value:'3')||3;
-  ODEME_AYAR.taksitEtiketi=ei?ei.value:'Vade farks\u0131z {n} taksit';
+  ODEME_AYAR.taksitEtiketi=ei?ei.value:'Vade farksız {n} taksit';
   if(dr) dr.textContent=ODEME_AYAR.taksitAktif?'Aktif':'Pasif';
   taksitOnizlemeGuncelle();
   // localStorage + DB kaydet
@@ -5567,7 +5567,7 @@ function taksitAyarDegisti(){
       body:JSON.stringify({odeme_ayar:ODEME_AYAR})
     }).catch(function(){});
   }catch(e){}
-  if(typeof toast==='function') toast('\u2705 Taksit ayar\u0131 kaydedildi','green');
+  if(typeof toast==='function') toast('✅ Taksit ayarı kaydedildi','green');
 }
 
 function taksitOranlariniKaydet(){
