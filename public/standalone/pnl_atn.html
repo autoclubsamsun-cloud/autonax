@@ -1197,7 +1197,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
       <div class="sn" data-yetki="randevu" onclick="doPg('randevular')">
         <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         Randevular
-        <span class="sn-badge" id="rdv-badge" style="display:none;background:#16a34a" title="Bekleyen online talep"></span>
+        <span class="sn-badge" id="rdv-badge">3</span>
       </div>
       <div class="sn" data-yetki="randevu" data-saha-gizli="1" onclick="doPg('musteriler')">
         <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -1295,18 +1295,6 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
           <div class="sk-trend dn" id="dash-bekleyen-trend"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>Yükleniyor...</div>
         </div>
       </div>
-
-      <!-- ══ BEKLEYEN ONLİNE TALEP (siteden gelen, onay bekleyen randevular) ══ -->
-      <div id="dash-online-card" onclick="doPg('randevular');setTimeout(function(){if(typeof doOnlineFiltre==='function'){if(typeof _onlineFiltre!=='undefined'&&_onlineFiltre){}else doOnlineFiltre();}},150)"
-        style="display:none;align-items:center;gap:12px;background:rgba(22,163,74,.08);border:1.5px solid rgba(22,163,74,.3);border-radius:12px;padding:14px 16px;margin-bottom:16px;cursor:pointer">
-        <div style="font-size:24px">🟢</div>
-        <div style="flex:1">
-          <div style="font-weight:700;color:#16a34a;font-size:15px"><span id="dash-online-talep">0</span> bekleyen online talep</div>
-          <div style="font-size:11px;color:var(--ink4)">Müşterilerin siteden kendi oluşturduğu, onay bekleyen randevular — tıklayıp inceleyin</div>
-        </div>
-        <div style="font-size:18px;color:#16a34a;font-weight:700">→</div>
-      </div>
-
 
       <!-- ══ ÜYE & GÜVENLİK İSTATİSTİKLERİ ══ -->
       <div class="g4">
@@ -1529,7 +1517,6 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
               <button class="ab ab-g" style="font-size:10px;white-space:nowrap" onclick="doDurumFiltre('onay')">Onaylı</button>
               <button class="ab ab-g" id="btn-bugun" style="font-size:10px;white-space:nowrap" onclick="bugununRandevulariGoster()">📅 Bugün</button>
               <button class="ab ab-r" id="btn-borc" style="font-size:10px;white-space:nowrap" onclick="doBorcluFiltre()">💰 Borcu Kalanlar</button>
-              <button class="ab ab-n" id="btn-online" style="font-size:10px;white-space:nowrap;border:1.5px solid #16a34a;color:#16a34a" onclick="doOnlineFiltre()">🟢 Online Talepler</button>
               <button class="ab ab-n" id="btn-filtre-sabitle" style="font-size:10px;white-space:nowrap;border:1.5px solid #2563EB;color:#2563EB" onclick="filtreSabitleToggle()">📌 Sabitle</button>
               <button class="ab ab-n" style="font-size:10px;white-space:nowrap" onclick="doSifirla()">✕ Sıfırla</button>
             </div>
@@ -1607,7 +1594,6 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
             <button class="ab ab-n" style="font-size:10px" onclick="mstSirala('rdv')">Randevuya Göre</button>
             <button class="ab ab-n" style="font-size:10px" onclick="mstSirala('tutar')">Tutara Göre</button>
             <button class="ab ab-n" style="font-size:10px" onclick="mstSirala('isim')">A→Z</button>
-            <button class="ab ab-n" id="btn-mst-online" style="font-size:10px;border:1.5px solid #16a34a;color:#16a34a" onclick="mstOnlineToggle()">🟢 Sadece Online Üyeler</button>
           </div>
         </div>
         <div class="kb" style="padding:0">
@@ -2594,9 +2580,6 @@ async function dashboardYukle() {
       return rdvDate >= haftaBaslangic ? t+(r.odenenToplam||r.tutar||0) : t;
     }, 0);
     var bekleyenOnay = randevular.filter(function(r){ return _rdvGercekDurum(r)==='bekl'; }).length;
-    var onlineBekleyen = randevular.filter(function(r){ return r.kaynak==='online' && _rdvGercekDurum(r)==='bekl'; }).length;
-    var onlEl=document.getElementById('dash-online-talep'); if(onlEl) onlEl.textContent=onlineBekleyen;
-    var onlCard=document.getElementById('dash-online-card'); if(onlCard) onlCard.style.display=onlineBekleyen>0?'flex':'none';
 
     var skVals = document.querySelectorAll('#pg-dashboard .sk-val');
     skVals.forEach(function(el){el.style.opacity='1';});
@@ -2663,7 +2646,7 @@ async function dashboardYukle() {
           var s=typeof rdvRenkStyle==='function'?rdvRenkStyle(r):{txt:'Bekliyor'};
           var renk=r.durum==='onay'||r.islem?'#16a34a':'#d97706';
           return '<tr class="dash-rdv-row" style="cursor:pointer">'
-            +'<td><div style="font-weight:600;font-size:12px">'+(r.musteri||'—')+'</div><div style="font-size:10px;color:var(--ink4)">'+(r.tel||'')+'</div></td>'
+            +'<td><div style="font-weight:600;font-size:12px">'+(r.musteri||'—')+'</div><div style="font-size:10px;color:var(--ink4)">'+(r.tel||'')+(r.musteriId?'<span style="font-size:8px;background:rgba(22,163,74,.1);color:#16a34a;border-radius:3px;padding:1px 4px;font-weight:700">KAYITLI</span>':'')+'</div></td>'
             +'<td style="font-size:11px">'+(r.arac||r.plaka||'—')+'</td>'
             +'<td style="font-size:11px">'+(r.hizmet||'—').slice(0,25)+'</td>'
             +'<td style="font-size:11px">'+(r.tarih||'')+' '+(r.saat||'')+'</td>'
@@ -2696,7 +2679,7 @@ async function dashboardYukle() {
               +'<span class="mcard-status" style="background:'+renk+'22;color:'+renk+'">'+(s.txt||'Bekliyor')+'</span>'
             +'</div>'
             +buyukRozet
-            +'<div class="mcard-musteri">'+(r.musteri||'—')+'</div>'
+            +'<div class="mcard-musteri">'+(r.musteri||'—')+(r.musteriId?' <span style="font-size:8px;background:rgba(22,163,74,.1);color:#16a34a;border-radius:3px;padding:1px 4px;font-weight:700">KAYITLI</span>':'')+'</div>'
             +'<div class="mcard-meta">'
               +'📅 <b>'+(r.tarih||'—')+'</b>'+(r.saat?' · '+r.saat:'')
               +(r.hizmet?'<br>🔧 '+r.hizmet.slice(0,40):'')
@@ -2899,7 +2882,7 @@ function rdvRenkStyle(r){
   if(r.onlineOdeme&&r.odendi)return{bg:'rgba(22,163,74,.07)',border:'3px solid #16A34A',tag:'onay',txt:'✓ Tamamlandı',ekBtn:false,online:true};
   if(gecmis&&r.islem)return{bg:'rgba(22,163,74,.07)',border:'3px solid #16A34A',tag:'onay',txt:'✓ Tamamlandı',ekBtn:false,online:false};
   if(gecmis&&!r.islem)return{bg:'rgba(176,28,46,.07)',border:'3px solid #B01C2E',tag:'iptal',txt:'✗ İşlem Yapılmadı',ekBtn:true,online:false};
-  return{bg:'',border:'',tag:r.durum==='onay'?'onay':'bekl',txt:r.durum==='onay'?'Onaylı':(r.kaynak==='online'?'🟢 Onay Bekliyor':'Bekliyor'),ekBtn:false,online:false};
+  return{bg:'',border:'',tag:r.durum==='onay'?'onay':'bekl',txt:r.durum==='onay'?'Onaylı':'Bekliyor',ekBtn:false,online:false};
 }
 
 /**
@@ -2950,7 +2933,6 @@ function _rdvDurumEslesme(r, filtre){
 /* ══ RANDEVU LİSTELE ══ */
 var _rdvDurum='hepsi';
 var _borcluFiltre=false;
-var _onlineFiltre=false;
 var _rdvSirala='yeni'; // 'yeni' = en yeni üstte (default), 'eski' = en eski üstte
 var AUTONAX_SIRALAMA_KEY='autonax_rdv_sirala';
 
@@ -2987,10 +2969,10 @@ function doRdvListele(){
     var durumOk=_rdvDurumEslesme(r, _rdvDurum);
     var aramaOk=!arama||(r.musteri.toLowerCase().indexOf(arama)>-1)||(r.plaka.toLowerCase().indexOf(arama)>-1);
     var borcOk=!_borcluFiltre||((r.odenenToplam||0)<(r.tutar||0)&&(r.tutar||0)>0);
-    var onlineOk=!_onlineFiltre||(r.kaynak==='online');
-    return ayOk&&gunOk&&durumOk&&aramaOk&&borcOk&&onlineOk;
+    // Bagimsiz odeme kayitlari randevu listesinde GORUNMEZ (sadece Odemeler sayfasinda gorunur)
+    var bagimsizDegil=!r.bagimsiz;
+    return ayOk&&gunOk&&durumOk&&aramaOk&&borcOk&&bagimsizDegil;
   });
-  if(typeof rdvOnlineBadgeGuncelle==='function') rdvOnlineBadgeGuncelle();
 
   // Kullanıcının seçtiği sıralama — tüm filtrelerde aktif (default: en yeni üstte)
   // Tercih localStorage'dan okunup _rdvSirala değişkenine yüklenir (bkz. _rdvSiralamaYukle).
@@ -3011,8 +2993,10 @@ function doRdvListele(){
     var i=RANDEVULAR.indexOf(r);  // BUG FIX: filtre sonrasi yanlis indeks degil, orijinal RANDEVULAR indeksi kullan
     var s=rdvRenkStyle(r);
     var tutarStr='₺'+r.tutar.toLocaleString('tr-TR');
-    var onlineRow=r.onlineOdeme?'<span style="font-size:9px;background:rgba(37,99,235,.1);color:#2563EB;border:1px solid rgba(37,99,235,.2);border-radius:4px;padding:1px 5px;font-weight:700;margin-left:4px">ONLINE</span>':'';
-    var kaynakRow=(r.kaynak==='online')?'<span title="Müşteri siteden kendi oluşturdu" style="font-size:9px;background:rgba(22,163,74,.12);color:#16a34a;border:1px solid rgba(22,163,74,.28);border-radius:4px;padding:1px 5px;font-weight:700;margin-left:4px">🟢 ONLİNE TALEP</span>':'';
+    var kaynakBadge='';
+    if(r.musteriId){kaynakBadge='<span style="font-size:9px;background:rgba(22,163,74,.1);color:#16a34a;border:1px solid rgba(22,163,74,.2);border-radius:4px;padding:1px 5px;font-weight:700;margin-left:4px" title="Musteri panelinden kayitli kullanici">KAYITLI</span>';}
+    if(r.onlineOdeme){kaynakBadge+='<span style="font-size:9px;background:rgba(37,99,235,.1);color:#2563EB;border:1px solid rgba(37,99,235,.2);border-radius:4px;padding:1px 5px;font-weight:700;margin-left:4px">ONLINE</span>';}
+    var onlineRow=kaynakBadge;
     var kalan=(r.tutar||0)-(r.odenenToplam||0);
     var odemeTag;
     if(r.onlineOdeme&&kalan<=0){
@@ -3027,7 +3011,7 @@ function doRdvListele(){
     }
     return '<tr style="background:'+s.bg+';border-left:'+s.border+';transition:.2s;cursor:pointer" data-rdv-idx="'+i+'" onclick="rdvSatirSec('+i+')">'
       +'<td><b>'+r.tarih+'</b><br><small>'+r.saat+'</small></td>'
-      +'<td><b>'+r.musteri+'</b>'+kaynakRow+onlineRow+'<br><small style="color:var(--ink4)">'+r.tel+'</small></td>'
+      +'<td><b>'+r.musteri+'</b>'+onlineRow+'<br><small style="color:var(--ink4)">'+r.tel+'</small></td>'
       +'<td><span class="tbl-plaka">'+r.plaka+'</span>'+(r.arac&&r.arac!=='—'?'<br><small>'+r.arac+'</small>':'')+((r.aracBuyuk||r.aracSinif==='pickup'||r.aracSinif==='minivan')?'<br><span title="Pickup/Minivan — fiyat doğrulama gerekli" style="display:inline-block;background:#fef3c7;border:1px solid #d97706;color:#92400e;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700;margin-top:2px">🛻 BÜYÜK ARAÇ</span>':'')+'</td>'
       +'<td>'+r.hizmet+'</td>'
       +'<td class="tbl-fiyat" data-col="tutar">'+tutarStr+'</td>'
@@ -3334,7 +3318,7 @@ function rdvMobilKartlariRender(liste){
           +'<span class="mcard-plaka">'+r.plaka+'</span>'
           +'<span class="mcard-status" style="background:'+s.bg+';color:'+(s.tag==='onay'?'#16a34a':s.tag==='bekl'?'#d97706':s.tag==='iptal'?'#dc2626':'#666')+'">'+s.txt+'</span>'
         +'</div>'
-        +'<div class="mcard-musteri">'+r.musteri+(r.kaynak==='online'?' <span style="display:inline-block;background:#dcfce7;color:#16a34a;font-size:9px;padding:1px 5px;border-radius:6px;font-weight:700">🟢 ONLİNE TALEP</span>':'')+'</div>'
+        +'<div class="mcard-musteri">'+r.musteri+(r.musteriId?' <span style="font-size:8px;background:rgba(22,163,74,.1);color:#16a34a;border-radius:3px;padding:1px 4px;font-weight:700">KAYITLI</span>':'')+'</div>'
         +'<div class="mcard-meta">'
           +'📅 <b>'+r.tarih+'</b> · '+r.saat
           +(r.tel?' · 📞 '+r.tel:'')
@@ -3562,7 +3546,7 @@ function doTakvim(){
     var t=(bugunAyMi && d===now.getDate());
     var tarihStr=d.toString().padStart(2,'0')+'.'+(ay+1).toString().padStart(2,'0')+'.'+yil;
     var oz=gunKapasiteOzet(tarihStr);
-    var n=oz.A+oz.B+oz.C+oz.E+(oz.X||0); // toplam randevu (özel/elle eklenen ürünler dahil)
+    var n=oz.A+oz.B+oz.C+oz.E; // toplam randevu
     // Renk: kırmızı=tam dolu, turuncu=dolmak üzere, yeşil=müsait
     var renk=oz.tamDolu?'rdv-kirmizi':n>0?'rdv-turuncu':'';
     var badge=n>0?'<span style="position:absolute;top:1px;right:1px;font-size:8px;background:'+(oz.tamDolu?'#dc2626':'#d97706')+';color:#fff;border-radius:3px;padding:0 3px;line-height:13px;font-weight:700">'+n+'</span>':'';
@@ -3797,42 +3781,9 @@ function yrdvModalKapat(){
   }
   ovl.remove();
 }
-/** "Online Talepler" filtre butonunun aktif/pasif görünümü */
-function _onlineBtnStil(aktif){
-  var b=document.getElementById('btn-online');
-  if(!b) return;
-  if(aktif){ b.style.background='#16a34a'; b.style.color='#fff'; }
-  else { b.style.background=''; b.style.color='#16a34a'; }
-}
-
-/** Sadece online talepleri göster/gizle (toggle) */
-function doOnlineFiltre(){
-  _onlineFiltre=!_onlineFiltre;
-  if(_onlineFiltre){
-    _borcluFiltre=false;
-    var bb=document.getElementById('btn-borc'); if(bb){bb.style.background='';bb.style.color='';}
-  }
-  _onlineBtnStil(_onlineFiltre);
-  doRdvListele();
-}
-
-/** Sol menüdeki Randevular rozetini bekleyen online talep sayısıyla günceller */
-function rdvOnlineBadgeGuncelle(){
-  var b=document.getElementById('rdv-badge');
-  if(!b) return;
-  var n=0;
-  try{
-    n=RANDEVULAR.filter(function(r){ return r && r.kaynak==='online' && _rdvGercekDurum(r)==='bekl'; }).length;
-  }catch(e){ n=0; }
-  if(n>0){ b.textContent=n; b.style.display=''; }
-  else { b.textContent=''; b.style.display='none'; }
-}
-
 function doDurumFiltre(d){
   _rdvDurum=d;
   _borcluFiltre=false;
-  _onlineFiltre=false;
-  _onlineBtnStil(false);
   // Tümü seçildiğinde ay/gün filtrelerini sıfırla
   if(d==='hepsi'){
     var ayEl=document.getElementById('filtre-ay');
@@ -3859,8 +3810,6 @@ function bugununRandevulariGoster(){
   if(gunEl) gunEl.value=gun;
   _rdvDurum='hepsi';
   _borcluFiltre=false;
-  _onlineFiltre=false;
-  _onlineBtnStil(false);
   doRdvListele();
   // Bugün butonunu aktif göster
   var btn=document.getElementById('btn-bugun');
@@ -3869,8 +3818,6 @@ function bugununRandevulariGoster(){
 function doBorcluFiltre(){
   _borcluFiltre=true;
   _rdvDurum='hepsi';
-  _onlineFiltre=false;
-  _onlineBtnStil(false);
   // Buton aktif görünümü
   var btn=document.getElementById('btn-borc');
   if(btn){btn.style.background='var(--r)';btn.style.color='#fff';}
@@ -3880,8 +3827,6 @@ function doSifirla(){
   ['filtre-ay','filtre-gun','filtre-arama'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   _rdvDurum='hepsi';
   _borcluFiltre=false;
-  _onlineFiltre=false;
-  _onlineBtnStil(false);
   // Buton aktif görünümü sıfırla
   var btn=document.getElementById('btn-borc');
   if(btn){btn.style.background='';btn.style.color='';}
@@ -5138,7 +5083,6 @@ function rdvEkle(){
   if(typeof dbRandevuKaydet==='function') dbRandevuKaydet(yeniRdv);
 
   doRdvListele();
-  if(typeof doTakvim==='function') doTakvim();
   rdvFormTemizle();
 
   var toast=document.createElement('div');
@@ -7026,7 +6970,25 @@ function odemeAlBagimsiz(){
       +'</div>'
     +'</div>';
   document.body.appendChild(ovl);
-  setTimeout(function(){var el=document.getElementById('bo-ad');if(el)el.focus();},100);
+  // Toolbar'da secili randevu varsa bilgilerini otomatik doldur
+  setTimeout(function(){
+    if(typeof _rdvSeciliIdx!=='undefined' && _rdvSeciliIdx>=0 && RANDEVULAR[_rdvSeciliIdx]){
+      var sr=RANDEVULAR[_rdvSeciliIdx];
+      var elAd=document.getElementById('bo-ad');
+      var elTel=document.getElementById('bo-tel');
+      var elPlaka=document.getElementById('bo-plaka');
+      var elAciklama=document.getElementById('bo-aciklama');
+      var elTutar=document.getElementById('bo-tutar');
+      if(elAd && sr.musteri) elAd.value=sr.musteri;
+      if(elTel && sr.tel) elTel.value=sr.tel;
+      if(elPlaka && sr.plaka) elPlaka.value=sr.plaka;
+      if(elAciklama && sr.hizmet) elAciklama.value=sr.hizmet;
+      // Kalan tutari yaz (varsa)
+      var kalan=Math.max(0, (sr.tutar||0)-(sr.odenenToplam||0));
+      if(elTutar && kalan>0) elTutar.value=kalan;
+    }
+    var el=document.getElementById('bo-ad');if(el)el.focus();
+  },100);
 }
 
 /** Ödeme yöntemi değişince - PayTR seçiliyse buton "Direkt Ödeme Al" olur */
@@ -7073,42 +7035,8 @@ function bagimsizPayTRDirektOde(){
   }
   yeniSekme.document.write('<html><head><title>Odeme Hazirlaniyor...</title></head><body style="font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#fff5f3"><div style="text-align:center"><div style="width:40px;height:40px;border:3px solid #f9d2c8;border-top-color:#a13128;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px"></div><div style="color:#a13128;font-weight:600">Odeme ekrani hazirlaniyor...</div><style>@keyframes spin{to{transform:rotate(360deg)}}</style></div></body></html>');
 
-  // Once sanal randevu olustur (callback guncelleme icin)
+  // Bagimsiz PayTR - randevu OLUSTURMAZ, sadece odeme linki uretir
   var sanalRdvId='BAGIMSIZ-PAYTR-'+Date.now().toString(36);
-  var sanalRdv={
-    id: sanalRdvId,
-    tarih: new Date().toLocaleDateString('tr-TR'),
-    saat: new Date().toTimeString().slice(0,5),
-    musteri: ad,
-    musteriAdi: ad,
-    tel: telTemiz,
-    musteriTel: telTemiz,
-    plaka: plaka,
-    arac: '',
-    hizmet: aciklama,
-    tutar: tutar,
-    odenenToplam: 0, // Henuz odenmedi, callback odeyecek
-    durum: 'onay',
-    odendi: false,
-    islem: true,
-    onlineOdeme: false,
-    faturaNo: '',
-    faturaDurum: 'Bekliyor',
-    bagimsiz: true,
-    notlar: 'Bagimsiz PayTR odeme bekleniyor',
-    odemeGecmisi: []
-  };
-
-  RANDEVULAR.push(sanalRdv);
-  try{ storageKaydet(); }catch(e){}
-
-  // DB'ye kaydet + link olustur + sekmeye yonlendir
-  fetch('/api/randevular',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    credentials:'same-origin',
-    body:JSON.stringify(sanalRdv)
-  }).catch(function(){});
 
   toast('Odeme ekrani aciliyor...','green');
 
@@ -7122,7 +7050,8 @@ function bagimsizPayTRDirektOde(){
       musteriEmail: 'musteri@autonax.com.tr',
       tutar: tutar,
       aciklama: aciklama + ' - ' + (plaka||''),
-      randevuId: sanalRdvId
+      randevuId: sanalRdvId,
+      returnUrl: window.location.pathname
     })
   }).then(function(r){return r.json();}).then(function(d){
     if(!d.success){
@@ -7139,6 +7068,15 @@ function bagimsizPayTRDirektOde(){
     if(ovl) ovl.remove();
     toast('Odeme ekrani yeni sekmede acildi','green');
     doRdvListele();
+    if(typeof odemeListeYukle==='function') odemeListeYukle();
+    // Sekme kapandiginda otomatik sayfayi yenile (odeme tamamlandi olabilir)
+    var _paytrSekmeKontrol=setInterval(function(){
+      if(yeniSekme && yeniSekme.closed){
+        clearInterval(_paytrSekmeKontrol);
+        toast('Odeme sekmesi kapandi - veriler yenileniyor...','blue');
+        setTimeout(function(){ location.reload(); }, 1000);
+      }
+    }, 2000);
   }).catch(function(err){
     toast('Baglanti hatasi: '+err.message,'red');
     if(yeniSekme && !yeniSekme.closed) yeniSekme.close();
@@ -7699,7 +7637,7 @@ function kapasiteKontrol(tarihStr, yeniHizmet){
 /* Günün tüm kapasite durumunu özetle */
 function gunKapasiteOzet(tarihStr){
   var k=gunKapasite(tarihStr);
-  var A=k.A,B=k.B,C=k.C,E=k.E,X=k.X||0;
+  var A=k.A,B=k.B,C=k.C,E=k.E;
   var satir=[];
   // Renk: yeşil=uygun, turuncu=dikkat, kırmızı=dolu
   var aRenk=A>=2?'#dc2626':A===1?'#d97706':'#16a34a';
@@ -7707,7 +7645,7 @@ function gunKapasiteOzet(tarihStr){
   var maxE=(A>=1||B>=1)?5:15;
   var eRenk=A>=2?'#dc2626':E>=maxE?'#dc2626':E>0?'#d97706':'#16a34a';
   var cRenk=A>=2?'#dc2626':C>=(A>=1?1:2)?'#dc2626':'#16a34a';
-  return {A:A,B:B,C:C,E:E,X:X,maxE:maxE,aRenk:aRenk,bRenk:bRenk,cRenk:cRenk,eRenk:eRenk,
+  return {A:A,B:B,C:C,E:E,maxE:maxE,aRenk:aRenk,bRenk:bRenk,cRenk:cRenk,eRenk:eRenk,
     tamDolu:(A>=2)};
 }
 
@@ -7912,20 +7850,11 @@ function musteriListesiOlustur(){
   return Object.values(map);
 }
 var _mstSort='rdv';
-var _mstOnlineSadece=false;
 function mstSirala(k){_mstSort=k;mstListele();}
-/** Müşteriler sekmesinde sadece online üyeleri göster/gizle (toggle) */
-function mstOnlineToggle(){
-  _mstOnlineSadece=!_mstOnlineSadece;
-  var b=document.getElementById('btn-mst-online');
-  if(b){ if(_mstOnlineSadece){b.style.background='#16a34a';b.style.color='#fff';} else {b.style.background='';b.style.color='#16a34a';} }
-  mstListele();
-}
 function mstListele(){
   var all=musteriListesiOlustur();
   var q=(document.getElementById('mst-arama')||{value:''}).value.toLowerCase().trim();
   var liste=q?all.filter(function(m){return m.isim.toLowerCase().indexOf(q)>-1||m.tel.indexOf(q)>-1||m.plakalar.join(' ').toLowerCase().indexOf(q)>-1;}):all.slice();
-  if(_mstOnlineSadece) liste=liste.filter(function(m){return m.onlineUye===true;});
   if(_mstSort==='isim') liste.sort(function(a,b){return a.isim.localeCompare(b.isim,'tr');});
   else if(_mstSort==='tutar') liste.sort(function(a,b){return b.toplamTutar-a.toplamTutar;});
   else liste.sort(function(a,b){return b.rdvSayisi-a.rdvSayisi;});
