@@ -3587,11 +3587,13 @@ function doTakvim(){
     // Badge rengi kategoriye gore
     var badgeRenk=oz.tamDolu?'#dc2626':nPpf>0?'#d97706':nSer>0?'#7c3aed':nTem>0?'#2563eb':'#0d9488';
     var badge=n>0?'<span style="position:absolute;top:1px;right:1px;font-size:8px;background:'+badgeRenk+';color:#fff;border-radius:3px;padding:0 3px;line-height:13px;font-weight:700">'+n+'</span>':'';
-    // Kategori noktaciklari (PPF=turuncu, Seramik=mor, Temizlik=mavi, Diger=teal)
+    // Kategori noktaciklari
+    // Komple PPF(A) = dolu turuncu ●, Kismi PPF(B) = bos halka ○
     var dots='';
     if(n>0){
       dots='<div class="cal-kat-dots">';
-      if(nPpf>0) dots+='<div class="cal-kat-dot" style="background:#d97706" title="PPF: '+nPpf+'"></div>';
+      if(oz.A>0) dots+='<div class="cal-kat-dot" style="background:#d97706" title="Komple PPF: '+oz.A+'"></div>';
+      if(oz.B>0) dots+='<div class="cal-kat-dot" style="background:transparent;border:2px solid #d97706;width:6px;height:6px;box-sizing:border-box" title="K\u0131smi PPF: '+oz.B+'"></div>';
       if(nSer>0) dots+='<div class="cal-kat-dot" style="background:#7c3aed" title="Seramik: '+nSer+'"></div>';
       if(nTem>0) dots+='<div class="cal-kat-dot" style="background:#2563eb" title="Temizlik: '+nTem+'"></div>';
       if(nDig>0) dots+='<div class="cal-kat-dot" style="background:#0d9488" title="Di\u011Fer: '+nDig+'"></div>';
@@ -3599,7 +3601,8 @@ function doTakvim(){
     }
     // Detayli tooltip
     var ttParts=[tarihStr];
-    if(nPpf>0) ttParts.push('\ud83d\udee1 PPF: '+nPpf);
+    if(oz.A>0) ttParts.push('\ud83d\udee1 Komple PPF: '+oz.A);
+    if(oz.B>0) ttParts.push('\u25cb K\u0131smi PPF: '+oz.B);
     if(nSer>0) ttParts.push('\u2728 Seramik: '+nSer);
     if(nTem>0) ttParts.push('\ud83d\udebf Temizlik: '+nTem);
     if(nDig>0) ttParts.push('\ud83d\udcdd Di\u011Fer: '+nDig);
