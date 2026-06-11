@@ -870,13 +870,25 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 #rdv-duzenle-ovl select:focus{border-color:var(--r)!important;outline:none}
 #rdv-duzenle-ovl input[type=number]::-webkit-outer-spin-button,
 #rdv-duzenle-ovl input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+/* Kategori renkleri: PPF=turuncu/kirmizi, Seramik=mor, Temizlik=mavi */
 .cal-day.rdv-kirmizi{background:rgba(176,28,46,.12);color:var(--r);font-weight:700}
 .cal-day.rdv-turuncu{background:rgba(217,119,6,.1);color:#d97706;font-weight:600}
+.cal-day.rdv-seramik{background:rgba(124,58,237,.1);color:#7c3aed;font-weight:600}
+.cal-day.rdv-temizlik{background:rgba(37,99,235,.08);color:#2563eb;font-weight:600}
+.cal-day.rdv-karma{background:linear-gradient(135deg,rgba(217,119,6,.12) 40%,rgba(124,58,237,.12) 60%);font-weight:700}
 .cal-day.rdv-turuncu:hover{background:rgba(217,119,6,.2)!important}
+.cal-day.rdv-seramik:hover{background:rgba(124,58,237,.18)!important}
+.cal-day.rdv-temizlik:hover{background:rgba(37,99,235,.15)!important}
+.cal-day.rdv-karma:hover{background:linear-gradient(135deg,rgba(217,119,6,.2) 40%,rgba(124,58,237,.2) 60%)!important}
 .cal-day.today.rdv-kirmizi{background:var(--r)!important;color:#fff!important}
 .cal-day.today.rdv-turuncu{background:#d97706!important;color:#fff!important}
+.cal-day.today.rdv-seramik{background:#7c3aed!important;color:#fff!important}
+.cal-day.today.rdv-temizlik{background:#2563eb!important;color:#fff!important}
+.cal-day.today.rdv-karma{background:linear-gradient(135deg,#d97706 40%,#7c3aed 60%)!important;color:#fff!important}
 .cal-day.rdv-kirmizi:hover{background:rgba(176,28,46,.2)!important}
-.cal-day.today.rdv-kirmizi{background:var(--r)!important;color:#fff!important}
+/* Kategori noktaciklari */
+.cal-kat-dots{display:flex;gap:2px;justify-content:center;margin-top:1px;min-height:6px}
+.cal-kat-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .cal-day.has-rdv::after{display:none}
 
 #rdv-kh{display:flex;flex-direction:column;gap:8px;padding:12px 16px}
@@ -3546,11 +3558,43 @@ function doTakvim(){
     var t=(bugunAyMi && d===now.getDate());
     var tarihStr=d.toString().padStart(2,'0')+'.'+(ay+1).toString().padStart(2,'0')+'.'+yil;
     var oz=gunKapasiteOzet(tarihStr);
-    var n=oz.A+oz.B+oz.C+oz.E; // toplam randevu
-    // Renk: kırmızı=tam dolu, turuncu=dolmak üzere, yeşil=müsait
-    var renk=oz.tamDolu?'rdv-kirmizi':n>0?'rdv-turuncu':'';
-    var badge=n>0?'<span style="position:absolute;top:1px;right:1px;font-size:8px;background:'+(oz.tamDolu?'#dc2626':'#d97706')+';color:#fff;border-radius:3px;padding:0 3px;line-height:13px;font-weight:700">'+n+'</span>':'';
-    html+='<div class="cal-day'+(t?' today':'')+' '+renk+'" style="position:relative;cursor:pointer" onclick="takvimGunTikla('+d+')" title="'+tarihStr+(n>0?' · '+n+' randevu':' · Yeni randevu ekle')+'">'+d+badge+'</div>';
+    var nPpf=oz.A+oz.B; // PPF kaplama
+    var nSer=oz.C; // Seramik & Kimyasal
+    var nTem=oz.E; // Temizlik & Bakim
+    var n=nPpf+nSer+nTem; // toplam randevu
+    // Kategori analizi
+    var katSay=0;
+    if(nPpf>0) katSay++;
+    if(nSer>0) katSay++;
+    if(nTem>0) katSay++;
+    // Renk belirleme: tam dolu=kirmizi, karma=gradient, tek kat=o kat rengi
+    var renk='';
+    if(oz.tamDolu){ renk='rdv-kirmizi'; }
+    else if(n>0){
+      if(katSay>=2){ renk='rdv-karma'; }
+      else if(nSer>0){ renk='rdv-seramik'; }
+      else if(nTem>0){ renk='rdv-temizlik'; }
+      else { renk='rdv-turuncu'; } // PPF only
+    }
+    // Badge rengi kategoriye gore
+    var badgeRenk=oz.tamDolu?'#dc2626':nPpf>0?'#d97706':nSer>0?'#7c3aed':'#2563eb';
+    var badge=n>0?'<span style="position:absolute;top:1px;right:1px;font-size:8px;background:'+badgeRenk+';color:#fff;border-radius:3px;padding:0 3px;line-height:13px;font-weight:700">'+n+'</span>':'';
+    // Kategori noktaciklari (PPF=turuncu, Seramik=mor, Temizlik=mavi)
+    var dots='';
+    if(n>0){
+      dots='<div class="cal-kat-dots">';
+      if(nPpf>0) dots+='<div class="cal-kat-dot" style="background:#d97706" title="PPF: '+nPpf+'"></div>';
+      if(nSer>0) dots+='<div class="cal-kat-dot" style="background:#7c3aed" title="Seramik: '+nSer+'"></div>';
+      if(nTem>0) dots+='<div class="cal-kat-dot" style="background:#2563eb" title="Temizlik: '+nTem+'"></div>';
+      dots+='</div>';
+    }
+    // Detayli tooltip
+    var ttParts=[tarihStr];
+    if(nPpf>0) ttParts.push('\ud83d\udee1 PPF: '+nPpf);
+    if(nSer>0) ttParts.push('\u2728 Seramik: '+nSer);
+    if(nTem>0) ttParts.push('\ud83d\udebf Temizlik: '+nTem);
+    if(n===0) ttParts.push('Yeni randevu ekle');
+    html+='<div class="cal-day'+(t?' today':'')+' '+renk+'" style="position:relative;cursor:pointer" onclick="takvimGunTikla('+d+')" title="'+ttParts.join(' \u00b7 ')+'">'+d+badge+dots+'</div>';
   }
   el.innerHTML=html;
 }
@@ -7508,11 +7552,14 @@ function sidebarKapat(){
 
 function hizmetKategori(h){
   h=(h||'').toLowerCase();
-  // KAT_A: Full araç PPF — ürün adı + "tam araç" veya sadece ürün (ön3/kaput değilse)
+  // KAT_A: Full araç PPF/TPU kaplama
+  // KAT_B: Kismi kaplama (ön3, kaput)
+  // KAT_C: Seramik & Kimyasal (pasta, seramik, nano, cila, polish, detayli)
+  // KAT_E: Temizlik & Bakim (yikama, temizlik, bakim, kuafor)
   if(/(ön|on)\s*(3|üç)|kaput/i.test(h)) return 'B';
-  if(/yıkama|yikama|wash/i.test(h)) return 'E';
-  if(/pasta|seramik|nano|cila|ceramic|polish|detayl/i.test(h)) return 'C';
-  if(/ppf|kaplama|mikron/i.test(h)) return 'A';
+  if(/yıkama|yikama|wash|temizlik|bakim|bakım|kuaför|kuafor|oto\s*y[ıi]k/i.test(h)) return 'E';
+  if(/pasta|seramik|nano|cila|ceramic|polish|detayl|kimyasal|boya\s*koruma/i.test(h)) return 'C';
+  if(/ppf|tpu|kaplama|mikron|film|folyo|koruma\s*film/i.test(h)) return 'A';
   return 'X';
 }
 
