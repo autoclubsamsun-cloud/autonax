@@ -6454,9 +6454,9 @@ function fiyatKartlariniYenile(){
           console.error('[Autonax] Resim ekleme hatasi:',id,err);
         }
       }
-      // Taksit etiketi (SADECE PPF kategorisi + komple kaplama fiyati)
+      // Taksit etiketi (PPF kategorisi - tum fiyat tipleri)
       try {
-        if(u.kat==='ppf' && tip==='full'){
+        if(u.kat==='ppf'){
           var priceEl=svc.querySelector('.svc-price');
           if(priceEl && !priceEl.parentNode.querySelector('.svc-taksit')){
             var taksitEl=document.createElement('div');
