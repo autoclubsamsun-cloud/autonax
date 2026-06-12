@@ -2070,6 +2070,38 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
               <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0"><span style="font-size:13px;color:var(--ink3)">Bayi aktivite bildirimi</span><button class="tgl" onclick="this.classList.toggle('on')"></button></div>
             </div>
           </div>
+
+          <!-- WATI WhatsApp Ayarlari -->
+          <div class="k" style="margin-top:14px">
+            <div class="kh"><div class="kt">📱 WhatsApp (WATI) Ayarları</div><span id="wati-durum-badge" style="font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700;background:#fee2e2;color:#991b1b">🔴 Bağlı Değil</span></div>
+            <div class="kb">
+              <div style="display:grid;gap:12px">
+                <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center">
+                  <label style="font-size:12px;font-weight:600;color:var(--ink3)">WATI API URL</label>
+                  <input type="text" id="wati-api-url" placeholder="https://live-mt-server-xx.wati.io" style="padding:10px 12px;border:1.5px solid var(--bg);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none">
+                </div>
+                <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center">
+                  <label style="font-size:12px;font-weight:600;color:var(--ink3)">WATI API Token</label>
+                  <input type="password" id="wati-api-token" placeholder="Bearer token giriniz" style="padding:10px 12px;border:1.5px solid var(--bg);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none">
+                </div>
+                <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center">
+                  <label style="font-size:12px;font-weight:600;color:var(--ink3)">Google Maps URL</label>
+                  <input type="text" id="wati-maps-url" placeholder="https://maps.google.com/?q=..." value="https://maps.google.com/?q=41.2867,36.3370" style="padding:10px 12px;border:1.5px solid var(--bg);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none">
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <label style="font-size:12px;font-weight:600;color:var(--ink3)">Otomatik Bildirim</label>
+                  <input type="checkbox" id="wati-oto-bildirim" checked style="width:18px;height:18px;accent-color:#16a34a;cursor:pointer">
+                  <span style="font-size:11px;color:var(--ink4)">Randevu oluşturma/onay/iptal’da otomatik mesaj gönder</span>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:4px">
+                  <button onclick="watiAyarKaydet()" class="btn-p" style="flex:1">💾 Kaydet</button>
+                  <button onclick="watiTestBaglanti()" style="flex:1;padding:10px;border:1.5px solid #16a34a;background:#f0fdf4;color:#166534;border-radius:8px;font-family:Bebas Neue,sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer">🔌 Bağlantı Test</button>
+                  <button onclick="watiTestMesaj()" style="flex:1;padding:10px;border:1.5px solid #2563eb;background:#eff6ff;color:#1e40af;border-radius:8px;font-family:Bebas Neue,sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer">📨 Test Mesaj</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         <div style="margin-top:14px">
@@ -4117,6 +4149,7 @@ function rdvDuzenle(idx){
       +'<div style="padding:14px 20px;border-top:1.5px solid var(--bd);display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap">'
         +(typeof kullaniciAdmin==='function' && kullaniciAdmin()
           ? '<button onclick="rdvIptalEt('+idx+')" style="flex:1;min-width:130px;min-height:44px;padding:11px 10px;border:1.5px solid #d97706;border-radius:8px;background:#fff;color:#d97706;font-family:Bebas Neue,sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;font-weight:700">🚫 İPTAL ET</button>'
+            +'<button onclick="waGonderRandevuModal('+idx+')" style="flex:1;min-width:110px;min-height:44px;padding:11px 10px;border:1.5px solid #25D366;border-radius:8px;background:#fff;color:#128C7E;font-family:Bebas Neue,sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;font-weight:700">📱 WHATSAPP</button>'
             +'<button onclick="rdvSil('+idx+')" style="flex:1;min-width:110px;min-height:44px;padding:11px 10px;border:1.5px solid #dc2626;border-radius:8px;background:#fff;color:#dc2626;font-family:Bebas Neue,sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;font-weight:700">🗑 SİL</button>'
           : '')
         +'<button onclick="document.getElementById(&quot;rdv-duzenle-ovl&quot;).remove()" style="flex:1;min-width:90px;min-height:44px;padding:11px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer">KAPAT</button>'
@@ -4331,7 +4364,13 @@ function rdvKaydet(idx){
 
   var t=document.createElement('div');
   t.style.cssText='position:fixed;bottom:24px;right:24px;background:var(--r);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.2);animation:fadeIn .3s';
-  t.textContent='✅ '+r.musteri+' randevusu güncellendi'+(indirim>0?' (₺'+indirim.toLocaleString('tr-TR')+' indirim)':'');
+  t.textContent='✅ '+r.musteri+' randevusu güncellendi';
+  // WhatsApp durum bildirimi (fire-and-forget)
+  if(WATI_AYAR && WATI_AYAR.otoBildirim && WATI_AYAR.apiUrl && WATI_AYAR.apiToken && r.tel && r.tel!=='—'){
+    try{
+      if(r.durum==='onay') waGonderRandevu(r.id, 'appointment_confirmed');
+    }catch(e){}
+  }+(indirim>0?' (₺'+indirim.toLocaleString('tr-TR')+' indirim)':'');
   document.body.appendChild(t);setTimeout(function(){t.remove();},3000);
 }
 
@@ -4409,6 +4448,11 @@ function rdvIptalEt(idx){
     var msg='🚫 Randevu iptal edildi';
     if(odenen>0) msg+=' (₺'+odenen.toLocaleString('tr-TR')+' iade edildi)';
     toast(msg,'orange');
+  }
+
+  // WhatsApp iptal bildirimi (fire-and-forget)
+  if(WATI_AYAR && WATI_AYAR.otoBildirim && WATI_AYAR.apiUrl && WATI_AYAR.apiToken && r.tel && r.tel!=='—'){
+    try{ waGonderRandevu(r.id, 'appointment_cancelled'); }catch(e){}
   }
 }
 
@@ -5182,6 +5226,11 @@ function rdvEkle(){
   toast.textContent='✓ Randevu eklendi — '+musteri+' · '+tarihStr;
   document.body.appendChild(toast);
   setTimeout(function(){toast.remove();},3000);
+
+  // WhatsApp otomatik bildirim (fire-and-forget)
+  if(WATI_AYAR && WATI_AYAR.otoBildirim && WATI_AYAR.apiUrl && WATI_AYAR.apiToken && tel && tel!=='—'){
+    try{ waGonderRandevu(yeniRdv.id, 'appointment_created'); }catch(e){}
+  }
 }
 
 
@@ -5522,6 +5571,105 @@ var TAKSIT_ORANLARI = (function(){
   } catch(e){console.error('Autonax:',e)}
   return JSON.parse(JSON.stringify(TAKSIT_ORANLARI_DEFAULT));
 })();
+
+// ─── WATI WhatsApp Ayarları ───
+var WATI_AYAR = { apiUrl:'', apiToken:'', googleMapsUrl:'https://maps.google.com/?q=41.2867,36.3370', aktif:true, otoBildirim:true };
+
+(function(){
+  fetch('/api/ayarlar',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
+    var wa = d && d.data && d.data.whatsapp_ayar;
+    if(wa && typeof wa==='object') Object.assign(WATI_AYAR, wa);
+    watiAyarYukle();
+  }).catch(function(){});
+})();
+
+function watiAyarYukle(){
+  var u=document.getElementById('wati-api-url');
+  var t=document.getElementById('wati-api-token');
+  var m=document.getElementById('wati-maps-url');
+  var o=document.getElementById('wati-oto-bildirim');
+  var b=document.getElementById('wati-durum-badge');
+  if(u) u.value=WATI_AYAR.apiUrl||'';
+  if(t) t.value=WATI_AYAR.apiToken||'';
+  if(m) m.value=WATI_AYAR.googleMapsUrl||'https://maps.google.com/?q=41.2867,36.3370';
+  if(o) o.checked=WATI_AYAR.otoBildirim!==false;
+  if(b){
+    if(WATI_AYAR.apiUrl && WATI_AYAR.apiToken){
+      b.style.background='#dcfce7'; b.style.color='#166534'; b.textContent='🟢 Yapılandırıldı';
+    } else {
+      b.style.background='#fee2e2'; b.style.color='#991b1b'; b.textContent='🔴 Bağlı Değil';
+    }
+  }
+}
+
+function watiAyarKaydet(){
+  var u=document.getElementById('wati-api-url');
+  var t=document.getElementById('wati-api-token');
+  var m=document.getElementById('wati-maps-url');
+  var o=document.getElementById('wati-oto-bildirim');
+  WATI_AYAR.apiUrl=(u?u.value:'').trim().replace(/\/+$/,'');
+  WATI_AYAR.apiToken=(t?t.value:'').trim();
+  WATI_AYAR.googleMapsUrl=(m?m.value:'').trim()||'https://maps.google.com/?q=41.2867,36.3370';
+  WATI_AYAR.aktif=true;
+  WATI_AYAR.otoBildirim=o?o.checked:true;
+  fetch('/api/ayarlar',{
+    method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
+    body:JSON.stringify({whatsapp_ayar:WATI_AYAR})
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.success){ toast('✅ WATI ayarları kaydedildi','green'); watiAyarYukle(); }
+    else toast('❌ Hata: '+(d.error||''),'red');
+  }).catch(function(e){ toast('❌ Bağlantı hatası','red'); });
+}
+
+function watiTestBaglanti(){
+  var u=document.getElementById('wati-api-url');
+  var t=document.getElementById('wati-api-token');
+  if(!u||!u.value||!t||!t.value){ toast('API URL ve Token giriniz','orange'); return; }
+  toast('🔌 Test ediliyor...','blue');
+  fetch('/api/whatsapp/gonder',{
+    method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
+    body:JSON.stringify({test:true,apiUrl:u.value.trim(),apiToken:t.value.trim()})
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.success) toast('✅ WATI bağlantısı başarılı!','green');
+    else toast('❌ Bağlantı başarısız: '+(d.error||''),'red');
+  }).catch(function(){ toast('❌ Sunucu hatası','red'); });
+}
+
+function watiTestMesaj(){
+  var tel=prompt('Test mesajı gönderilecek telefon numarası (05XX):');
+  if(!tel) return;
+  toast('📨 Mesaj gönderiliyor...','blue');
+  fetch('/api/whatsapp/gonder',{
+    method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
+    body:JSON.stringify({testMesaj:'Autonax-AutoClub Samsun Merkez WATI test mesajı. Bağlantı başarılı! ✅', telefon:tel})
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.success) toast('✅ Test mesajı gönderildi!','green');
+    else toast('❌ Gönderilemedi: '+(d.error||''),'red');
+  }).catch(function(){ toast('❌ Sunucu hatası','red'); });
+}
+
+function waGonderRandevuModal(idx){
+  var r=RANDEVULAR[idx]; if(!r) return;
+  if(!WATI_AYAR.apiUrl || !WATI_AYAR.apiToken){ toast('WATI yapılandırılmamış. Ayarlar > WhatsApp','orange'); return; }
+  if(!r.tel || r.tel==='—'){ toast('Telefon bilgisi yok','red'); return; }
+  var s=prompt('Mesaj türü seçin:\n1: Randevu Oluşturma\n2: Randevu Onay\n3: Hatırlatma\n4: İptal\n5: Güncelleme','1');
+  var sablonlar={1:'appointment_created',2:'appointment_confirmed',3:'appointment_reminder',4:'appointment_cancelled',5:'appointment_updated'};
+  var sab=sablonlar[s]; if(!sab){ toast('Geçersiz seçim','orange'); return; }
+  waGonderRandevu(r.id, sab);
+}
+
+function waGonderRandevu(randevuId, sablon){
+  if(!WATI_AYAR.apiUrl || !WATI_AYAR.apiToken){ toast('WATI yapılandırılmamış. Ayarlar > WhatsApp bölümünden ayarlayın.','orange'); return; }
+  sablon = sablon || 'appointment_created';
+  toast('📱 WhatsApp gönderiliyor...','blue');
+  fetch('/api/whatsapp/gonder',{
+    method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
+    body:JSON.stringify({randevuId:randevuId, sablon:sablon})
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.success) toast('✅ WhatsApp bildirimi gönderildi','green');
+    else toast('❌ Gönderilemedi: '+(d.error||''),'red');
+  }).catch(function(){ toast('❌ Sunucu hatası','red'); });
+}
 
 // ─── Taksit Gorsel Ayar ───
 function taksitAyarYukle(){

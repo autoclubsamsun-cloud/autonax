@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql, initDB } from '@/lib/db';
 import { requireAuth, requireAnyAuth, requireMusteriAuth } from '@/lib/utils/auth-check';
+import { notifyAppointment } from '@/lib/whatsapp/notify';
 
 // ═══════════════════════════════════════════════════════════════════
 // RANDEVULAR API
@@ -366,6 +367,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // WhatsApp bildirim (fire-and-forget, hata randevuyu etkilemez)
+    try { notifyAppointment(id, 'appointment_created').catch(() => {}); } catch(e) {}
+
     return NextResponse.json({
       success: true,
       data: { ...b, id, musteriId },
@@ -583,6 +587,10 @@ export async function PUT(req: NextRequest) {
         console.warn('[RANDEVULAR PUT admin iptal] Kupon iade uyarısı:', kupErr.message);
       }
     }
+
+    // WhatsApp bildirim (fire-and-forget)
+    if (b.durum === 'onay') try { notifyAppointment(b.id, 'appointment_confirmed').catch(() => {}); } catch(e) {}
+    if (b.durum === 'iptal') try { notifyAppointment(b.id, 'appointment_cancelled').catch(() => {}); } catch(e) {}
 
     await sql`
       UPDATE randevular SET
