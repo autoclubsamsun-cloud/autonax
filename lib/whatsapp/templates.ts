@@ -51,6 +51,33 @@ export interface RandevuBilgi {
   saat: string;
 }
 
+/**
+ * Google Calendar takvime ekle linki olusturur
+ * DD.MM.YYYY + HH:MM -> Google Calendar URL
+ */
+function buildCalendarUrl(tarih: string, saat: string, hizmet: string): string {
+  try {
+    const parts = tarih.split('.');
+    if (parts.length !== 3) return '';
+    const [gun, ay, yil] = parts;
+    const saatParts = (saat || '09:00').split(':');
+    const startH = saatParts[0]?.padStart(2, '0') || '09';
+    const startM = saatParts[1]?.padStart(2, '0') || '00';
+    const endH = String(Math.min(23, parseInt(startH) + 3)).padStart(2, '0');
+    const dateStart = yil + ay.padStart(2, '0') + gun.padStart(2, '0') + 'T' + startH + startM + '00';
+    const dateEnd = yil + ay.padStart(2, '0') + gun.padStart(2, '0') + 'T' + endH + startM + '00';
+    const title = encodeURIComponent('Autonax Randevu - ' + (hizmet || 'PPF Kaplama'));
+    const location = encodeURIComponent('Autonax-AutoClub Samsun Merkez');
+    const details = encodeURIComponent('Autonax-AutoClub Samsun Merkez randevunuz.');
+    return 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+      + '&text=' + title
+      + '&dates=' + dateStart + '/' + dateEnd
+      + '&details=' + details
+      + '&location=' + location
+      + '&ctz=Europe/Istanbul';
+  } catch (e) { return ''; }
+}
+
 export async function buildTemplateParams(
   templateName: TemplateName,
   bilgi: RandevuBilgi
@@ -66,5 +93,6 @@ export async function buildTemplateParams(
     { name: '5', value: bilgi.tarih || '-' },
     { name: '6', value: bilgi.saat || '-' },
     { name: '7', value: konum },
+    { name: '8', value: buildCalendarUrl(bilgi.tarih, bilgi.saat, bilgi.hizmet) || konum },
   ];
 }
