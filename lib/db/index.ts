@@ -15,4 +15,6 @@ export async function initDB() {
   await sql`ALTER TABLE urunler ADD COLUMN IF NOT EXISTS fiyat_34 INTEGER DEFAULT 0`;
   await sql`CREATE INDEX IF NOT EXISTS idx_rdv_tarih ON randevular(tarih)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_rdv_plaka ON randevular(plaka)`;
+  await sql`CREATE TABLE IF NOT EXISTS whatsapp_log (id SERIAL PRIMARY KEY, randevu_id TEXT, telefon TEXT, sablon TEXT, durum TEXT DEFAULT 'beklemede', hata TEXT, wati_message_id TEXT, tarih TIMESTAMPTZ DEFAULT NOW())`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_wa_log_rdv ON whatsapp_log(randevu_id)`;
 }

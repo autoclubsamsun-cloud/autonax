@@ -112,5 +112,11 @@
       "source": "/standalone/:file",
       "destination": "/standalone/:file"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/whatsapp/hatirlatma",
+      "schedule": "0 6 * * *"
+    }
   ]
 }
