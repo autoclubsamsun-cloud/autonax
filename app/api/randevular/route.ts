@@ -29,6 +29,8 @@ function mapRandevu(r: any) {
     islem: r.islem, onlineOdeme: r.online_odeme, faturaNo: r.fatura_no,
     faturaDurum: r.fatura_durum, odemeGecmisi: r.odeme_gecmisi || [],
     musteriId: r.musteri_id || null,
+    notlar: r.notlar || '',
+    indirim: r.indirim || 0,
   };
 }
 
@@ -322,14 +324,14 @@ export async function POST(req: NextRequest) {
       INSERT INTO randevular (
         id, tarih, saat, musteri, tel, plaka, arac, hizmet, tutar,
         odenen_toplam, durum, odendi, islem, online_odeme, fatura_no,
-        fatura_durum, odeme_gecmisi, musteri_id
+        fatura_durum, odeme_gecmisi, musteri_id, notlar, indirim
       ) VALUES (
         ${id}, ${b.tarih}, ${b.saat || '09:00'}, ${b.musteri}, ${b.tel || ''},
         ${b.plaka || ''}, ${b.arac || ''}, ${b.hizmet || ''}, ${b.tutar || 0},
         ${b.odenenToplam || 0}, ${b.durum || 'bekl'}, ${b.odendi || false},
         ${b.islem || false}, ${b.onlineOdeme || false}, ${b.faturaNo || null},
         ${b.faturaDurum || null}, ${JSON.stringify(b.odemeGecmisi || [])}::jsonb,
-        ${musteriId}
+        ${musteriId}, ${b.notlar || ''}, ${b.indirim || 0}
       )
       ON CONFLICT (id) DO UPDATE SET
         tarih = ${b.tarih}, saat = ${b.saat || '09:00'}, musteri = ${b.musteri},
@@ -339,6 +341,8 @@ export async function POST(req: NextRequest) {
         odendi = ${b.odendi || false}, islem = ${b.islem || false},
         fatura_no = ${b.faturaNo || null}, fatura_durum = ${b.faturaDurum || null},
         odeme_gecmisi = ${JSON.stringify(b.odemeGecmisi || [])}::jsonb,
+        notlar = ${b.notlar || ''},
+        indirim = ${b.indirim || 0},
         guncelleme = NOW()
     `;
 
@@ -601,6 +605,8 @@ export async function PUT(req: NextRequest) {
         odendi = ${b.odendi || false}, islem = ${b.islem || false},
         fatura_no = ${b.faturaNo || null}, fatura_durum = ${b.faturaDurum || null},
         odeme_gecmisi = ${JSON.stringify(b.odemeGecmisi || [])}::jsonb,
+        notlar = ${b.notlar || ''},
+        indirim = ${b.indirim || 0},
         guncelleme = NOW()
       WHERE id = ${b.id}
     `;
