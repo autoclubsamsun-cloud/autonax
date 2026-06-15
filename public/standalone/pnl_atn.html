@@ -5573,7 +5573,7 @@ var TAKSIT_ORANLARI = (function(){
 })();
 
 // ─── CANLI SENK ─ Coklu kullanici gercek zamanli senkronizasyon ───
-var SYNC_INTERVAL = 20000; // 20 saniye
+var SYNC_INTERVAL = 15000; // 15 saniye
 var _lastSyncTime = new Date().toISOString();
 var _syncTimer = null;
 var _syncPaused = false;
@@ -5627,22 +5627,19 @@ function syncRandevular(){
     RANDEVULAR = d.data;
     localStorage.setItem('autonax_randevular_v1',JSON.stringify(RANDEVULAR));
 
-    // Aktif sayfayi yenile
+    // Tum randevuya bagli sayfalari yenile
+    if(typeof doRdvListele==='function') doRdvListele();
+    if(typeof doTakvim==='function') doTakvim();
+    if(typeof bugununRandevulariGoster==='function') bugununRandevulariGoster();
+    // Aktif sayfaya ozel
     var aktifPg = document.querySelector('.pg.on');
     var aktifId = aktifPg ? aktifPg.id.replace('pg-','') : '';
-
-    if(aktifId==='randevular' && typeof doRdvListele==='function') doRdvListele();
-    if(aktifId==='takvim' && typeof doTakvim==='function') doTakvim();
     if(aktifId==='odemeler' && typeof odemeSayfasiYukle==='function') odemeSayfasiYukle();
     if(aktifId==='faturalar' && typeof faturaSayfasiYukle==='function') faturaSayfasiYukle();
     if(aktifId==='raporlar' && typeof raporYukle==='function') raporYukle();
-    if(aktifId==='anasayfa' || aktifId==='dashboard'){
-      if(typeof bugununRandevulariGoster==='function') bugununRandevulariGoster();
-      if(typeof dashboardYukle==='function') dashboardYukle();
-    }
-
-    // Kucuk bildirim goster
-    syncBildirim('Veriler guncellendi');
+    if(typeof dashboardYukle==='function') dashboardYukle();
+    // Bildirim
+    syncBildirim('Veriler güncellendi');
   }).catch(function(){});
 }
 
@@ -9222,7 +9219,9 @@ function dbSyncYukle(){
 
 function dbRandevuKaydet(r){
   // Her zaman POST gönder — backend UPSERT yapacak
-  dbSync('/api/randevular','POST',r);
+  dbSync('/api/randevular','POST',r).then(function(res){
+    if(res && res.ok){ _lastSyncTime = new Date().toISOString(); }
+  }).catch(function(){});
 }
 
 function dbRandevuSil(id){
