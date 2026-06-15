@@ -17,6 +17,12 @@ export async function initDB() {
   await sql`CREATE INDEX IF NOT EXISTS idx_rdv_plaka ON randevular(plaka)`;
   await sql`ALTER TABLE randevular ADD COLUMN IF NOT EXISTS notlar TEXT DEFAULT ''`;
   await sql`ALTER TABLE randevular ADD COLUMN IF NOT EXISTS indirim INTEGER DEFAULT 0`;
+  // ─── Referans & Sadakat Puan Sistemi ───
+  await sql`CREATE TABLE IF NOT EXISTS referanslar (id TEXT PRIMARY KEY, referans_musteri TEXT NOT NULL, referans_tel TEXT, hedef_randevu_id TEXT, hedef_musteri TEXT, hedef_hizmet TEXT, hedef_tutar INTEGER DEFAULT 0, kazanilan_puan INTEGER DEFAULT 0, durum TEXT DEFAULT 'beklemede', notlar TEXT DEFAULT '', olusturma TIMESTAMPTZ DEFAULT NOW())`;
+  await sql`CREATE TABLE IF NOT EXISTS puan_hareketleri (id SERIAL PRIMARY KEY, musteri_tel TEXT NOT NULL, islem_tipi TEXT NOT NULL, miktar INTEGER NOT NULL, bakiye INTEGER DEFAULT 0, aciklama TEXT, referans_id TEXT, randevu_id TEXT, olusturma TIMESTAMPTZ DEFAULT NOW())`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_ref_tel ON referanslar(referans_tel)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_puan_tel ON puan_hareketleri(musteri_tel)`;
+  await sql`ALTER TABLE randevular ADD COLUMN IF NOT EXISTS referans_tel TEXT DEFAULT ''`;
   await sql`CREATE TABLE IF NOT EXISTS whatsapp_log (id SERIAL PRIMARY KEY, randevu_id TEXT, telefon TEXT, sablon TEXT, durum TEXT DEFAULT 'beklemede', hata TEXT, wati_message_id TEXT, tarih TIMESTAMPTZ DEFAULT NOW())`;
   await sql`CREATE INDEX IF NOT EXISTS idx_wa_log_rdv ON whatsapp_log(randevu_id)`;
 }
