@@ -39,9 +39,24 @@ export async function GET(req: NextRequest) {
 
     // since parametresi varsa, degisiklik olup olmadigini kontrol et
     let changed = false;
-    if (since) {
-      const sinceDate = new Date(since).getTime();
-      changed = Object.values(timestamps).some(t => t && new Date(t).getTime() > sinceDate);
+    if (!since) {
+      // Ilk baglanti — her zaman veri cek
+      changed = true;
+    } else {
+      try {
+        const sinceDate = new Date(since).getTime();
+        if (isNaN(sinceDate)) {
+          changed = true; // Gecersiz tarih — guvenli tarafta kal
+        } else {
+          changed = Object.values(timestamps).some(t => {
+            if (!t) return false;
+            const tTime = new Date(t).getTime();
+            return !isNaN(tTime) && tTime > sinceDate;
+          });
+        }
+      } catch (e) {
+        changed = true; // Hata durumunda guvenli tarafta kal
+      }
     }
 
     return NextResponse.json({

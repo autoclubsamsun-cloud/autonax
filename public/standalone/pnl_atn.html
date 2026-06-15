@@ -5573,8 +5573,8 @@ var TAKSIT_ORANLARI = (function(){
 })();
 
 // ─── CANLI SENK ─ Coklu kullanici gercek zamanli senkronizasyon ───
-var SYNC_INTERVAL = 15000; // 15 saniye
-var _lastSyncTime = new Date().toISOString();
+var SYNC_INTERVAL = 10000; // 10 saniye
+var _lastSyncTime = ''; // Ilk poll her zaman ceker
 var _syncTimer = null;
 var _syncPaused = false;
 
@@ -5593,14 +5593,15 @@ function syncKontrol(){
   // Sayfa gorunmuyorsa polling yapma (pil tasarrufu)
   if(document.hidden) return;
 
-  fetch('/api/sync?since='+encodeURIComponent(_lastSyncTime),{credentials:'same-origin'})
+  var syncUrl='/api/sync?since='+encodeURIComponent(_lastSyncTime);
+  fetch(syncUrl,{credentials:'same-origin'})
   .then(function(r){return r.json();})
   .then(function(d){
     if(!d.success) return;
+    _lastSyncTime = d.serverTime || _lastSyncTime; // Her zaman server zamanini kullan
     if(!d.changed) return; // Degisiklik yok, atla
 
     console.log('[SYNC] Degisiklik tespit edildi, veriler yenileniyor...');
-    _lastSyncTime = d.serverTime || new Date().toISOString();
 
     // Randevulari yeniden cek
     syncRandevular();
@@ -9220,7 +9221,8 @@ function dbSyncYukle(){
 function dbRandevuKaydet(r){
   // Her zaman POST gönder — backend UPSERT yapacak
   dbSync('/api/randevular','POST',r).then(function(res){
-    if(res && res.ok){ _lastSyncTime = new Date().toISOString(); }
+    // Kendi degisikligimizi 2sn sonra atla (DB'ye yazilma gecikmesi)
+    if(res && res.ok){ setTimeout(function(){ _syncPaused=true; setTimeout(function(){ _syncPaused=false; },3000); },500); }
   }).catch(function(){});
 }
 
