@@ -35,3 +35,9 @@ next-env.d.ts
  
 # Sprint yedekleri 
 YEDEK_SPRINT1/ 
+
+# Yedek dosyalar
+*.BOZUK
+*.yedek
+*.bak
+pnl_atn_YEDEK*
