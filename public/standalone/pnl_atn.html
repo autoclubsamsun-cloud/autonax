@@ -4724,9 +4724,9 @@ var aciklama=(document.getElementById('gar-aciklama-'+idx)||{}).value||'';
 if(!urun){el.innerHTML='<span style="color:var(--r)">Urun seciniz</span>';return;}
 var alanlar=[];
 document.querySelectorAll('.gar-alan-'+idx+':checked').forEach(function(cb){alanlar.push(parseInt(cb.value));});
-fetch(API+'/nidojp-garanti',{
+fetch('/api/nidojp-garanti',{
   method:'POST',
-  headers:{'Content-Type':'application/json','Authorization':'Bearer '+(USR&&USR.token?USR.token:'')},
+  headers:{'Content-Type':'application/json'},credentials:'same-origin',
   body:JSON.stringify({
     action:'garanti_olustur',
     randevu_id:r.id,
@@ -6062,7 +6062,7 @@ function syncKontrol(){
 // === Garanti verilerini randevulara bagla ===
 function garantiVerileriniYukle(){
   if(!USR||!USR.token)return;
-  fetch(API+'/nidojp-garanti',{headers:{'Authorization':'Bearer '+USR.token}})
+  fetch('/api/nidojp-garanti',{credentials:'same-origin'})
   .then(function(r){return r.json();})
   .then(function(d){
     if(!d.success||!d.data)return;
@@ -6166,7 +6166,27 @@ function nidojpAyarKaydet(){
 }
 function nidojpTestBaglanti(){
   toast('NiDOJP B2B test ediliyor...','blue');
-  fetch(API+'/nidojp-garanti',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(USR&&USR.token?USR.token:'')},body:JSON.stringify({action:'login'})}).then(function(r){return r.json();}).then(function(d){if(d.success)toast('NiDOJP baglantisi basarili!','green');else toast('Baglanti basarisiz: '+(d.error||''),'red');}).catch(function(){toast('Sunucu hatasi','red');});
+  var url='/api/nidojp-garanti';
+  var token=(USR&&USR.token?USR.token:'');
+  console.log('[NiDOJP Test] URL:',url,'Token:',token?'var':'YOK');
+  fetch(url,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},credentials:'same-origin',
+    body:JSON.stringify({action:'login'})
+  }).then(function(r){
+    console.log('[NiDOJP Test] HTTP Status:',r.status);
+    return r.json();
+  }).then(function(d){
+    console.log('[NiDOJP Test] Response:',JSON.stringify(d));
+    if(d.success){
+      toast('NiDOJP B2B baglantisi BASARILI!','green');
+    }else{
+      toast('B2B Hata: '+(d.error||JSON.stringify(d)),'red');
+    }
+  }).catch(function(e){
+    console.error('[NiDOJP Test] Error:',e);
+    toast('Sunucu hatasi: '+e.message,'red');
+  });
 }
 var WATI_AYAR = { apiUrl:'', apiToken:'', googleMapsUrl:'https://maps.google.com/?q=41.2867,36.3370', aktif:true, otoBildirim:true };
 
