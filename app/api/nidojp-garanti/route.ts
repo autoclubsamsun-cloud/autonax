@@ -7,6 +7,11 @@ async function ensureDB() { if (!dbReady) { await initDB(); dbReady = true; } }
 
 const B2B_URL = 'https://b2b.nidojpfilm.com';
 
+// ====== SESSION CACHE ======
+// Her login B2B rate limit'e takilir. Session'i bellekte cache'le.
+let cachedSession: { cookies: Record<string, string>; expiresAt: number } | null = null;
+let rateLimitUntil = 0;
+
 // Urun -> garanti yili eslesmesi
 const GARANTI_YILLARI: Record<string, number> = {
   CS190: 4, S75: 6, S85: 8, N7: 8, N8: 10, N9: 12, S_Matte: 8, H7_Black: 5,
@@ -40,6 +45,15 @@ async function getNidojpConfig() {
 // B2B Login - session cookie al
 async function b2bLogin(): Promise<{ success: boolean; cookies?: Record<string, string>; error?: string }> {
   try {
+    // Rate limit cooldown
+    if (Date.now() < rateLimitUntil) {
+      const bekle = Math.ceil((rateLimitUntil - Date.now()) / 60000);
+      return { success: false, error: 'B2B rate limit aktif. ' + bekle + ' dk sonra tekrar deneyin.' };
+    }
+    // Cache kontrolu
+    if (cachedSession && Date.now() < cachedSession.expiresAt) {
+      return { success: true, cookies: cachedSession.cookies };
+    }
     const cfg = await getNidojpConfig();
     if (!cfg) return { success: false, error: 'NiDOJP ayarlari yapilandirilmamis' };
 
@@ -89,9 +103,16 @@ async function b2bLogin(): Promise<{ success: boolean; cookies?: Record<string, 
 
     const loginData = await loginRes.json().catch(() => null);
     if (loginData && loginData.status === true) {
+      cachedSession = { cookies, expiresAt: Date.now() + 25 * 60 * 1000 };
+      rateLimitUntil = 0;
       return { success: true, cookies };
     }
-    return { success: false, error: loginData?.error || 'Login basarisiz' };
+    const errMsg = loginData?.error || 'Login basarisiz';
+    if (errMsg.includes('Fazla Deneme') || errMsg.includes('fazla deneme')) {
+      rateLimitUntil = Date.now() + 15 * 60 * 1000;
+      return { success: false, error: 'B2B cok fazla deneme hatasi. 15 dk bekleyip tekrar deneyin.' };
+    }
+    return { success: false, error: errMsg };
   } catch (e: any) {
     return { success: false, error: e.message || 'Login hatasi' };
   }
