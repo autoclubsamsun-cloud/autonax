@@ -25,4 +25,27 @@ export async function initDB() {
   await sql`ALTER TABLE randevular ADD COLUMN IF NOT EXISTS referans_tel TEXT DEFAULT ''`;
   await sql`CREATE TABLE IF NOT EXISTS whatsapp_log (id SERIAL PRIMARY KEY, randevu_id TEXT, telefon TEXT, sablon TEXT, durum TEXT DEFAULT 'beklemede', hata TEXT, wati_message_id TEXT, tarih TIMESTAMPTZ DEFAULT NOW())`;
   await sql`CREATE INDEX IF NOT EXISTS idx_wa_log_rdv ON whatsapp_log(randevu_id)`;
+  // --- NiDOJP Garanti Belgesi Sistemi ---
+  await sql`CREATE TABLE IF NOT EXISTS garanti_belgeleri (
+    id SERIAL PRIMARY KEY,
+    randevu_id TEXT REFERENCES randevular(id) ON DELETE SET NULL,
+    nidojp_stok_id INTEGER,
+    nidojp_seri_no TEXT,
+    urun TEXT,
+    plaka TEXT,
+    arac_km TEXT,
+    uygulama_tarihi TEXT,
+    garanti_yil INTEGER,
+    garanti_bitis TEXT,
+    garanti_aciklama TEXT,
+    musteri_ad TEXT,
+    musteri_tel TEXT,
+    musteri_sehir TEXT,
+    musteri_ilce TEXT,
+    uygulanan_alanlar JSONB DEFAULT '[]',
+    durum TEXT DEFAULT 'aktif',
+    olusturma TIMESTAMPTZ DEFAULT NOW()
+  )`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_garanti_plaka ON garanti_belgeleri(plaka)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_garanti_rdv ON garanti_belgeleri(randevu_id)`;
 }
