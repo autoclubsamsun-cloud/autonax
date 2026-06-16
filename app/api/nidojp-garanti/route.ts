@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
 
       // 2. B2B'ye garanti ekle
       const formData = new URLSearchParams();
-      formData.append('stock_warranty_id', String(b.stock_warranty_id || ''));
+      formData.append('stock_warranty_id', String(b.stock_warranty_id || '0'));
       formData.append('product_id', String(b.product_id || ''));
       formData.append('license_plate', b.license_plate || '');
       formData.append('vehicle_km', b.vehicle_km || '');
@@ -169,7 +169,7 @@ export async function POST(req: NextRequest) {
           'Content-Type': 'application/x-www-form-urlencoded',
           'X-Requested-With': 'XMLHttpRequest',
           'Origin': B2B_URL,
-          'Referer': B2B_URL + '/stok-garanti-ekle/' + (b.stock_warranty_id || ''),
+          'Referer': B2B_URL + '/stok-garanti-ekle/',
           'Cookie': cookieString(login.cookies),
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         },
@@ -191,13 +191,13 @@ export async function POST(req: NextRequest) {
 
       // 4. DB'ye kaydet (B2B basarisiz olsa bile lokal kayit tut)
       const b2bBasarili = garantiData && garantiData.status === true;
-      const seriNo = garantiData?.serial_number || garantiData?.seri_no || null;
+      const seriNo = garantiData?.serial_number || garantiData?.seri_no || garantiData?.warranty_no || garantiData?.data?.serial_number || garantiData?.data?.seri_no || null;
 
       const dbRows = await sql`
         INSERT INTO garanti_belgeleri (randevu_id, nidojp_stok_id, nidojp_seri_no, urun, plaka, arac_km,
           uygulama_tarihi, garanti_yil, garanti_bitis, garanti_aciklama,
           musteri_ad, musteri_tel, musteri_sehir, musteri_ilce, uygulanan_alanlar, durum)
-        VALUES (${b.randevu_id || null}, ${b.stock_warranty_id || null}, ${seriNo},
+        VALUES (${b.randevu_id || null}, ${b.stock_warranty_id || 0}, ${seriNo},
           ${urunKod}, ${b.license_plate || ''}, ${b.vehicle_km || ''},
           ${ugTarih}, ${garantiYil}, ${garantiBitis}, ${b.warranty_desc || ''},
           ${b.customer_name || ''}, ${b.customer_phone || ''}, 
@@ -206,6 +206,8 @@ export async function POST(req: NextRequest) {
           ${b2bBasarili ? 'aktif' : 'lokal'})
         RETURNING *
       `;
+
+      console.log('[NIDOJP] B2B response:', JSON.stringify(garantiData));
 
       return NextResponse.json({
         success: true,

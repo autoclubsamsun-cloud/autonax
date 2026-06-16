@@ -4679,32 +4679,80 @@ function garantiBelgesiHtml(r,idx){
 try{
 if(!r)return '';
 if(typeof USR!=='undefined'&&USR&&USR.rol==='saha')return '';
+var hizmet=(r.hizmet||'').toLowerCase();
+var tamArac=hizmet.indexOf('tam')>=0||hizmet.indexOf('komple')>=0||hizmet.indexOf('full')>=0;
 var h='<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">NIDOJP GARANTI BELGESI</div>';
-if(r._garanti){var g=r._garanti;h+='<div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:12px;padding:14px;color:#fff;margin-bottom:8px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px">GARANTI BELGESI</div><div style="background:rgba(22,163,74,.3);color:#4ade80;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700">'+(g.durum||'aktif').toUpperCase()+'</div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px"><div><span style="color:#94a3b8">Urun:</span> <b>'+(g.urun||'-')+'</b></div><div><span style="color:#94a3b8">Seri No:</span> <b>'+(g.nidojp_seri_no||'Bekliyor')+'</b></div><div><span style="color:#94a3b8">Garanti:</span> <b>'+(g.garanti_yil||'-')+' Yil</b></div><div><span style="color:#94a3b8">Bitis:</span> <b>'+(g.garanti_bitis||'-')+'</b></div></div></div>';return h+'</div>';}
+if(r._garanti){var g=r._garanti;
+h+='<div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:12px;padding:14px;color:#fff;margin-bottom:8px">';
+h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px">GARANTI BELGESI</div><div style="background:rgba(22,163,74,.3);color:#4ade80;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700">'+(g.durum||'aktif').toUpperCase()+'</div></div>';
+h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">';
+h+='<div><span style="color:#94a3b8">Urun:</span> <b>'+(g.urun||'-')+'</b></div>';
+h+='<div><span style="color:#94a3b8">Seri No:</span> <b>'+(g.nidojp_seri_no||'Bekliyor')+'</b></div>';
+h+='<div><span style="color:#94a3b8">Garanti:</span> <b>'+(g.garanti_yil||'-')+' Yil</b></div>';
+h+='<div><span style="color:#94a3b8">Bitis:</span> <b>'+(g.garanti_bitis||'-')+'</b></div>';
+h+='</div>';
+if(g.nidojp_seri_no){h+='<a href="https://b2b.nidojpfilm.com/stok-garanti-islemleri" target="_blank" style="display:block;margin-top:10px;text-align:center;color:#60a5fa;font-size:11px;text-decoration:underline">NiDOJP Panelde Goruntule</a>';}
+h+='</div>';
+return h+'</div>';}
 h+='<div id="garanti-form-'+idx+'" style="background:var(--bg);border-radius:10px;padding:14px">';
 h+='<div style="margin-bottom:8px"><div style="font-size:10px;color:var(--ink4);margin-bottom:3px">Urun</div><select id="gar-urun-'+idx+'" style="width:100%;padding:8px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;font-family:Outfit,sans-serif"><option value="">Seciniz</option>';
-if(typeof URUNLER==='object'&&URUNLER!==null){try{Object.keys(URUNLER).forEach(function(k){var u=URUNLER[k];if(u&&u.isim)h+='<option value="'+k+'">'+u.isim+'</option>';});}catch(ue){}}
+if(typeof URUNLER==='object'&&URUNLER!==null){try{Object.keys(URUNLER).forEach(function(k){var u=URUNLER[k];if(u&&u.isim)h+='<option value="'+k+'"'+(r.hizmet&&r.hizmet.indexOf(u.isim)>=0?' selected':'')+'>'+u.isim+'</option>';});}catch(ue){}}
 h+='</select></div>';
-h+='<div style="margin-bottom:8px"><div style="font-size:10px;color:var(--ink4);margin-bottom:3px">Arac KM</div><input type="text" id="gar-km-'+idx+'" placeholder="12653" style="width:100%;padding:8px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;font-family:Outfit,sans-serif;box-sizing:border-box"></div>';
-h+='<div style="margin-bottom:8px"><div style="font-size:10px;color:var(--ink4);margin-bottom:3px">Garanti Aciklama</div><input type="text" id="gar-aciklama-'+idx+'" placeholder="KOMPLE KORUMA" value="'+(r.hizmet||'')+'" style="width:100%;padding:8px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;font-family:Outfit,sans-serif;box-sizing:border-box"></div>';
-h+='<div style="margin-bottom:8px"><div style="font-size:10px;color:var(--ink4);margin-bottom:3px">NiDOJP Stok ID (B2B panelden)</div><input type="number" id="gar-stokid-'+idx+'" placeholder="41" style="width:100%;padding:8px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;font-family:Outfit,sans-serif;box-sizing:border-box"></div>';
-h+='<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:700;color:var(--ink4);margin-bottom:6px">Kaporta</div><div id="gar-kaporta-'+idx+'" style="display:grid;grid-template-columns:1fr 1fr;gap:4px">';
-var kaportaAlanlar=[8,9,10,11,12,13,14,15,16,17,18,19,20];
-var kaportaIsimler={8:'Kaput',9:'On Tampon',10:'Arka Tampon',11:'On Sag Camurluk',12:'On Sol Camurluk',13:'Arka Sag Camurluk',14:'Arka Sol Camurluk',15:'On Sag Kapi',16:'On Sol Kapi',17:'Arka Sag Kapi',18:'Arka Sol Kapi',19:'Tavan',20:'Bagaj'};
-for(var ki=0;ki<kaportaAlanlar.length;ki++){var kv=kaportaAlanlar[ki];h+='<label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;padding:4px 6px;background:#fff;border-radius:6px;border:1px solid var(--bd)"><input type="checkbox" class="gar-alan-'+idx+'" value="'+kv+'"> '+(kaportaIsimler[kv]||kv)+'</label>';}
+h+='<div style="margin-bottom:8px"><div style="font-size:10px;color:var(--ink4);margin-bottom:3px">Arac KM</div><input type="text" id="gar-km-'+idx+'" placeholder="Arac KM" style="width:100%;padding:8px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;font-family:Outfit,sans-serif;box-sizing:border-box"></div>';
+h+='<div style="margin-bottom:8px"><div style="font-size:10px;color:var(--ink4);margin-bottom:3px">Garanti Aciklama</div><input type="text" id="gar-aciklama-'+idx+'" value="'+(r.hizmet||'')+'" style="width:100%;padding:8px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;font-family:Outfit,sans-serif;box-sizing:border-box"></div>';
+h+='<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:700;color:var(--ink4);margin-bottom:6px">Kaporta Aksami'+(tamArac?' <span style="color:#16a34a;font-weight:400;font-size:9px">(Tam Arac - otomatik secildi)</span>':'')+'</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">';
+var kaportaItems=[{v:8,n:'Kaput'},{v:9,n:'On Tampon'},{v:10,n:'Arka Tampon'},{v:11,n:'On Sag Camurluk'},{v:12,n:'On Sol Camurluk'},{v:13,n:'Arka Sag Camurluk'},{v:14,n:'Arka Sol Camurluk'},{v:15,n:'On Sag Kapi'},{v:16,n:'On Sol Kapi'},{v:17,n:'Arka Sag Kapi'},{v:18,n:'Arka Sol Kapi'},{v:19,n:'Tavan'},{v:20,n:'Bagaj'}];
+for(var ki=0;ki<kaportaItems.length;ki++){h+='<label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;padding:4px 6px;background:#fff;border-radius:6px;border:1px solid var(--bd)"><input type="checkbox" class="gar-alan-'+idx+'" value="'+kaportaItems[ki].v+'"'+(tamArac?' checked':'')+'>'+kaportaItems[ki].n+'</label>';}
 h+='</div></div>';
-h+='<div style="margin-bottom:10px"><div style="font-size:10px;font-weight:700;color:var(--ink4);margin-bottom:6px">Cam</div><div id="gar-cam-'+idx+'" style="display:grid;grid-template-columns:1fr 1fr;gap:4px">';
-var camAlanlar=[1,2,3,4,5,6,7];
-var camIsimler={1:'On Cam',2:'Arka Cam',3:'Sag On Kapi Cami',4:'Sol On Kapi Cami',5:'Sag Arka Kapi Cami',6:'Sol Arka Kapi Cami',7:'Tavan Cami'};
-for(var ci=0;ci<camAlanlar.length;ci++){var cv=camAlanlar[ci];h+='<label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;padding:4px 6px;background:#fff;border-radius:6px;border:1px solid var(--bd)"><input type="checkbox" class="gar-alan-'+idx+'" value="'+cv+'"> '+(camIsimler[cv]||cv)+'</label>';}
+h+='<div style="margin-bottom:10px"><div style="font-size:10px;font-weight:700;color:var(--ink4);margin-bottom:6px">Cam Filmi <span style="color:#94a3b8;font-weight:400;font-size:9px">(elle seciniz)</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">';
+var camItems=[{v:1,n:'On Cam'},{v:2,n:'Arka Cam'},{v:3,n:'Sag On Kapi Cami'},{v:4,n:'Sol On Kapi Cami'},{v:5,n:'Sag Arka Kapi Cami'},{v:6,n:'Sol Arka Kapi Cami'},{v:7,n:'Tavan Cami'}];
+for(var ci=0;ci<camItems.length;ci++){h+='<label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;padding:4px 6px;background:#fff;border-radius:6px;border:1px solid var(--bd)"><input type="checkbox" class="gar-alan-'+idx+'" value="'+camItems[ci].v+'">'+camItems[ci].n+'</label>';}
 h+='</div></div>';
-h+='<button onclick="garantiOlustur('+idx+')" style="width:100%;padding:10px;border:none;border-radius:8px;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif">NiDOJP Garanti Olustur</button>';
+h+='<button onclick="garantiOlustur('+idx+')" style="width:100%;padding:12px;border:none;border-radius:8px;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;letter-spacing:.5px">NiDOJP Garanti Olustur</button>';
 h+='<div id="gar-sonuc-'+idx+'" style="margin-top:6px;font-size:11px;text-align:center"></div></div>';
 return h+'</div>';
-}catch(garErr){console.error('garantiBelgesiHtml hata:',garErr);return '';}
+}catch(garErr){console.error('garantiBelgesiHtml:',garErr);return '';}
 }
 function garantiTumunuSec(tip,idx){document.querySelectorAll('.gar-alan-'+idx+'[data-tip="'+tip+'"]').forEach(function(cb){cb.checked=true;});}
-function garantiOlustur(idx){var r=RANDEVULAR[idx];var el=document.getElementById('gar-sonuc-'+idx);el.innerHTML='<span style="color:#2563eb">NiDOJP B2B gonderiliyor...</span>';var urun=document.getElementById('gar-urun-'+idx).value;var km=document.getElementById('gar-km-'+idx).value;var aciklama=document.getElementById('gar-aciklama-'+idx).value;var stokId=document.getElementById('gar-stokid-'+idx).value;if(!urun||!stokId){el.innerHTML='<span style="color:var(--r)">Urun ve Stok ID zorunlu</span>';return;}var alanlar=[];document.querySelectorAll('.gar-alan-'+idx+':checked').forEach(function(cb){alanlar.push(parseInt(cb.value));});fetch(API+'/nidojp-garanti',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(USR&&USR.token?USR.token:'')},body:JSON.stringify({action:'garanti_olustur',randevu_id:r.id,stock_warranty_id:parseInt(stokId),product_id:urun,license_plate:r.plaka||'',vehicle_km:km,installation_date:r.tarih||new Date().toISOString().split('T')[0],warranty_desc:aciklama,customer_name:r.musteri||'',customer_phone:r.tel||'',customer_city:'67',field_application:alanlar})}).then(function(res){return res.json();}).then(function(data){if(data.success){r._garanti=data.data;el.innerHTML='<span style="color:var(--green)">Garanti olusturuldu! Seri: '+(data.data.nidojp_seri_no||'')+'</span>';setTimeout(function(){if(window._rdvDetayRender)window._rdvDetayRender();},2000);}else{el.innerHTML='<span style="color:var(--r)">'+(data.error||'Hata')+'</span>';}}).catch(function(e){el.innerHTML='<span style="color:var(--r)">Baglanti hatasi</span>';});}
+function garantiOlustur(idx){
+var r=RANDEVULAR[idx];if(!r)return;
+var el=document.getElementById('gar-sonuc-'+idx);
+el.innerHTML='<span style="color:#2563eb">NiDOJP B2B garanti olusturuluyor...</span>';
+var urun=(document.getElementById('gar-urun-'+idx)||{}).value||'';
+var km=(document.getElementById('gar-km-'+idx)||{}).value||'';
+var aciklama=(document.getElementById('gar-aciklama-'+idx)||{}).value||'';
+if(!urun){el.innerHTML='<span style="color:var(--r)">Urun seciniz</span>';return;}
+var alanlar=[];
+document.querySelectorAll('.gar-alan-'+idx+':checked').forEach(function(cb){alanlar.push(parseInt(cb.value));});
+fetch(API+'/nidojp-garanti',{
+  method:'POST',
+  headers:{'Content-Type':'application/json','Authorization':'Bearer '+(USR&&USR.token?USR.token:'')},
+  body:JSON.stringify({
+    action:'garanti_olustur',
+    randevu_id:r.id,
+    product_id:urun,
+    license_plate:r.plaka||'',
+    vehicle_km:km,
+    installation_date:r.tarih||new Date().toISOString().split('T')[0],
+    warranty_desc:aciklama,
+    customer_name:r.musteri||'',
+    customer_phone:r.tel||'',
+    customer_city:'67',
+    field_application:alanlar
+  })
+}).then(function(res){return res.json();}).then(function(data){
+  if(data.success){
+    r._garanti=data.data;
+    var seriNo=data.data&&data.data.nidojp_seri_no?data.data.nidojp_seri_no:'';
+    el.innerHTML='<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px;margin-top:6px"><div style="color:#166534;font-weight:700;font-size:12px">Garanti Olusturuldu!</div>'+(seriNo?'<div style="color:#166534;font-size:11px;margin-top:4px">Seri No: <b>'+seriNo+'</b></div>':'')+'<a href="https://b2b.nidojpfilm.com/stok-garanti-islemleri" target="_blank" style="display:inline-block;margin-top:6px;color:#2563eb;font-size:11px;text-decoration:underline">NiDOJP Panelde Goruntule</a></div>';
+    setTimeout(function(){if(typeof rdvDetay==='function')rdvDetay(idx);},3000);
+  }else{
+    el.innerHTML='<span style="color:var(--r)">'+(data.error||'Hata olustu')+'</span>';
+  }
+}).catch(function(e){
+  el.innerHTML='<span style="color:var(--r)">Baglanti hatasi: '+e.message+'</span>';
+});
+}
 
 function rdvDetay(idx){
   var r=RANDEVULAR[idx];if(!r)return;
