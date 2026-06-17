@@ -240,7 +240,7 @@ export async function POST(req: NextRequest) {
     // --- GORSEL YUKLE ---
     if (action === 'gorsel_yukle') {
       try {
-        const login = getLogin();
+        const login = await b2bLogin();
         if (!login.cookies?.ci_session) {
           return NextResponse.json({ success: false, error: 'B2B oturumu yok' });
         }
@@ -281,7 +281,7 @@ export async function POST(req: NextRequest) {
           const m = sc.match(/^([^=]+)=([^;]*)/);
           if (m) login.cookies[m[1]] = m[2];
         });
-        saveLogin(login);
+        // session cookies updated
 
         const uploadText = await uploadRes.text();
         console.log('[NIDOJP] Gorsel upload:', uploadRes.status, uploadText.substring(0, 200));
