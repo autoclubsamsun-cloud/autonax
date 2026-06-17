@@ -6,6 +6,23 @@ let dbReady = false;
 async function ensureDB() { if (!dbReady) { await initDB(); dbReady = true; } }
 
 const B2B_URL = 'https://b2b.nidojpfilm.com';
+// Tarih parse helper - TR format (dd.mm.yyyy), ISO (yyyy-mm-dd) ve diger formatlari destekler
+function parseDate(dateStr: string): Date {
+  if (!dateStr) return new Date();
+  // dd.mm.yyyy veya dd/mm/yyyy
+  const trMatch = dateStr.match(/^(\d{1,2})[./](\d{1,2})[./](\d{4})$/);
+  if (trMatch) return new Date(parseInt(trMatch[3]), parseInt(trMatch[2]) - 1, parseInt(trMatch[1]));
+  // yyyy-mm-dd (ISO)
+  const isoMatch = dateStr.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (isoMatch) return new Date(parseInt(isoMatch[1]), parseInt(isoMatch[2]) - 1, parseInt(isoMatch[3]));
+  // Fallback
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? new Date() : d;
+}
+function toISODate(d: Date): string {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
 const GARANTI_YILLARI: Record<string, number> = {
@@ -238,8 +255,10 @@ export async function POST(req: NextRequest) {
         Object.keys(GARANTI_YILLARI).forEach(k => {
           if (urunKod.toLowerCase().includes(k.toLowerCase())) garantiYil = GARANTI_YILLARI[k];
         });
-        const ugTarih = b.installation_date || new Date().toISOString().split('T')[0];
-        const bitisTarih = new Date(ugTarih);
+        const rawDate = b.installation_date || '';
+      const ugParsed = parseDate(rawDate);
+      const ugTarih = toISODate(ugParsed);
+        const bitisTarih = new Date(ugParsed.getTime());
         bitisTarih.setFullYear(bitisTarih.getFullYear() + garantiYil);
 
         const dbRows = await sql`
@@ -248,7 +267,7 @@ export async function POST(req: NextRequest) {
             musteri_ad, musteri_tel, musteri_sehir, musteri_ilce, uygulanan_alanlar, durum)
           VALUES (${b.randevu_id || null}, ${b.stock_warranty_id || 0}, ${null},
             ${urunKod}, ${b.license_plate || ''}, ${b.vehicle_km || ''},
-            ${ugTarih}, ${garantiYil}, ${bitisTarih.toISOString().split('T')[0]}, ${b.warranty_desc || ''},
+            ${ugTarih}, ${garantiYil}, ${toISODate(bitisTarih)}, ${b.warranty_desc || ''},
             ${b.customer_name || ''}, ${b.customer_phone || ''},
             ${b.customer_city || '55'}, ${b.customer_counties || ''},
             ${JSON.stringify(b.field_application || [])}::jsonb, ${'beklemede'})
@@ -328,10 +347,12 @@ export async function POST(req: NextRequest) {
       Object.keys(GARANTI_YILLARI).forEach(k => {
         if (urunKod.toLowerCase().includes(k.toLowerCase())) garantiYil = GARANTI_YILLARI[k];
       });
-      const ugTarih = b.installation_date || new Date().toISOString().split('T')[0];
-      const bitisTarih = new Date(ugTarih);
+      const rawDate = b.installation_date || '';
+      const ugParsed = parseDate(rawDate);
+      const ugTarih = toISODate(ugParsed);
+      const bitisTarih = new Date(ugParsed.getTime());
       bitisTarih.setFullYear(bitisTarih.getFullYear() + garantiYil);
-      const garantiBitis = bitisTarih.toISOString().split('T')[0];
+      const garantiBitis = toISODate(bitisTarih);
 
       const b2bBasarili = garantiData && garantiData.status === true;
       const seriNo = garantiData?.serial_number || garantiData?.seri_no || garantiData?.warranty_no || garantiData?.data?.serial_number || garantiData?.data?.seri_no || null;
