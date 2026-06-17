@@ -1,4 +1,4 @@
-ï»¿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { sql, initDB } from '@/lib/db';
 import { requireAuth } from '@/lib/utils/auth-check';
 
@@ -240,7 +240,7 @@ export async function POST(req: NextRequest) {
     // --- SESSION TEST ---
     if (action === 'test_session') {
       const stored = await getStoredSession();
-      if (!stored) return NextResponse.json({ success: false, valid: false, error: 'Kayitli session yok. Cookie yapiÅŸtirin.' });
+      if (!stored) return NextResponse.json({ success: false, valid: false, error: 'Kayitli session yok. Cookie yapiþtirin.' });
       const valid = await testSession(stored);
       return NextResponse.json({ success: true, valid, error: valid ? null : 'Session gecersiz veya suresi dolmus' });
     }
@@ -282,7 +282,7 @@ export async function POST(req: NextRequest) {
       }
 
       // B2B'ye garanti ekle
-      // ONEMLI: Ã–nce garanti sayfasÄ±nÄ± GET et - taze CSRF token al
+      // ONEMLI: Önce garanti sayfasýný GET et - taze CSRF token al
       const stockId = String(b.stock_warranty_id || '0');
       const garantiPageRes = await fetch(B2B_URL + '/stok-garanti-ekle/' + stockId, {
         redirect: 'manual',
@@ -317,16 +317,12 @@ export async function POST(req: NextRequest) {
 
       const formData = new URLSearchParams();
       formData.append('stock_warranty_id', stockId);
-      // product_id 0 veya bos ise stok-garanti-ekle sayfasindan cek
+      // product_id: B2B numeric ID gerekli
       let productId = String(b.product_id || '');
-      if (!productId || productId === '0') {
-        try {
-          const prodPageHtml = await garantiPageRes.clone().text().catch(() => '');
-          // Fallback: garanti sayfasindaki product_id select'inden al
-          const prodMatch = garantiPageHtml.match(/<option[^>]*selected[^>]*value=['"](\d+)['"]/i);
-          if (prodMatch) productId = prodMatch[1];
-          console.log('[NIDOJP] Auto product_id from page:', productId);
-        } catch {}
+      if (!productId || productId === '0' || isNaN(Number(productId))) {
+        const prodMatch = garantiPageHtml.match(/<option[^>]*selected[^>]*value=['"](\\d+)['"]/i);
+        if (prodMatch) productId = prodMatch[1];
+        console.log('[NIDOJP] Auto product_id from page:', productId);
       }
       formData.append('product_id', productId);
       formData.append('license_plate', b.license_plate || '');
@@ -335,7 +331,7 @@ export async function POST(req: NextRequest) {
       formData.append('warranty_desc', b.warranty_desc || '');
       formData.append('customer_name', b.customer_name || '');
       formData.append('customer_phone', b.customer_phone || '');
-      formData.append('customer_city', b.customer_city || '55');
+      formData.append('customer_city', b.customer_city || '');
       formData.append('customer_counties', b.customer_counties || '');
       // warranty_year zorunlu alan - urun bazli garanti suresi
       const warrantyYearMap: Record<string, number> = {
