@@ -192,6 +192,42 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, message: 'Session temizlendi' });
     }
 
+    // --- TARAYICI COOKIE KAYDET ---
+    if (action === 'save_browser_cookie') {
+      const ciSession = b.ci_session;
+      if (!ciSession) return NextResponse.json({ success: false, error: 'ci_session bos' });
+      // Cookie'yi CSRF token ile birlikte DB'ye kaydet
+      const cookies: Record<string, string> = { ci_session: ciSession };
+      // CSRF token'i da almaya calis
+      try {
+        const testRes = await fetch(B2B_URL + '/stok-garanti-islemleri', {
+          redirect: 'manual',
+          headers: { 'Cookie': 'ci_session=' + ciSession, 'User-Agent': UA },
+        });
+        if (testRes.status === 200) {
+          // CSRF cookie'yi al
+          const testCookies = testRes.headers.getSetCookie ? testRes.headers.getSetCookie() :
+            (testRes.headers.get('set-cookie') || '').split(',').filter(Boolean);
+          const parsed = parseCookies(testCookies);
+          if (parsed.csrf_token) cookies.csrf_token = parsed.csrf_token;
+          // HTML'den de CSRF token ara
+          const html = await testRes.text();
+          const csrfMatch = html.match(/csrf_token['"]\s*(?:value|content)\s*=\s*['"]([^'"]+)/);
+          if (csrfMatch) cookies.csrf_token = csrfMatch[1];
+        }
+      } catch {}
+      await saveSessionToDB(cookies);
+      return NextResponse.json({ success: true, message: 'Cookie kaydedildi' });
+    }
+
+    // --- SESSION TEST ---
+    if (action === 'test_session') {
+      const stored = await getStoredSession();
+      if (!stored) return NextResponse.json({ success: false, valid: false, error: 'Kayitli session yok. Cookie yapiştirin.' });
+      const valid = await testSession(stored);
+      return NextResponse.json({ success: true, valid, error: valid ? null : 'Session gecersiz veya suresi dolmus' });
+    }
+
     // --- GARANTI OLUSTUR ---
     if (action === 'garanti_olustur') {
       const login = await b2bLogin(); // cached session kullan

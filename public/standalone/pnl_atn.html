@@ -2142,6 +2142,18 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
                 <div style="display:flex;gap:8px;margin-top:4px">
                   <button onclick="nidojpAyarKaydet()" class="btn-p" style="flex:1">Kaydet</button>
                   <button onclick="nidojpTestBaglanti()" style="flex:1;padding:10px;border:1.5px solid #16a34a;background:#f0fdf4;color:#166534;border-radius:8px;font-family:Bebas Neue,sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer">B2B Test</button>
+                </div>
+                <div style="margin-top:12px;padding:12px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px">
+                  <div style="font-size:11px;font-weight:700;color:#1e40af;margin-bottom:6px">TARAYICI SESSION (Rate Limit Bypass)</div>
+                  <div style="font-size:10px;color:#3b82f6;margin-bottom:8px">B2B'ye tarayicinizdan giris yapin, sonra:<br>F12 > Application > Cookies > b2b.nidojpfilm.com > <b>ci_session</b> degerini kopyalayin</div>
+                  <input type="text" id="nidojp-cookie" placeholder="ci_session degerini yapiştirin..." style="width:100%;padding:9px 12px;border:1.5px solid #bfdbfe;border-radius:8px;font-size:11px;font-family:monospace;outline:none;box-sizing:border-box;margin-bottom:6px">
+                  <div style="display:flex;gap:6px">
+                    <button onclick="nidojpCookieKaydet()" style="flex:1;padding:8px;border:none;border-radius:6px;background:#2563eb;color:#fff;font-size:11px;font-weight:700;cursor:pointer">Cookie Kaydet</button>
+                    <button onclick="nidojpCookieTest()" style="flex:1;padding:8px;border:1.5px solid #2563eb;background:#fff;color:#2563eb;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">Cookie Test</button>
+                  </div>
+                  <div id="nidojp-cookie-sonuc" style="margin-top:6px;font-size:10px;text-align:center"></div>
+                </div>
+                <div style="display:none
                   <button onclick="nidojpSessionTemizle()" style="flex:1;padding:10px;border:1.5px solid #f59e0b;background:#fffbeb;color:#92400e;border-radius:8px;font-family:Bebas Neue,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer">Session Temizle</button>
                 </div>
               </div>
@@ -6202,6 +6214,35 @@ function nidojpAyarKaydet(){
   var e=document.getElementById('nidojp-email');var s=document.getElementById('nidojp-sifre');var c=document.getElementById('nidojp-sehir');
   NIDOJP_AYAR.email=(e?e.value:'').trim();NIDOJP_AYAR.sifre=(s?s.value:'').trim();NIDOJP_AYAR.varsayilan_sehir=(c?c.value:'').trim()||'67';NIDOJP_AYAR.aktif=true;
   fetch('/api/ayarlar',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({nidojp_ayar:NIDOJP_AYAR})}).then(function(r){return r.json();}).then(function(d){if(d.success){toast('NiDOJP ayarlari kaydedildi','green');nidojpAyarYukle();}else toast('Hata: '+(d.error||''),'red');}).catch(function(){toast('Baglanti hatasi','red');});
+}
+function nidojpCookieKaydet(){
+  var cookie=(document.getElementById('nidojp-cookie')||{}).value||'';
+  var el=document.getElementById('nidojp-cookie-sonuc');
+  if(!cookie.trim()){el.innerHTML='<span style="color:#dc2626">Cookie bos olamaz</span>';return;}
+  el.innerHTML='<span style="color:#2563eb">Kaydediliyor...</span>';
+  fetch('/api/nidojp-garanti',{
+    method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
+    body:JSON.stringify({action:'save_browser_cookie',ci_session:cookie.trim()})
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.success){el.innerHTML='<span style="color:#16a34a">Cookie kaydedildi! Simdi Cookie Test ile dogrulayin.</span>';
+    }else{el.innerHTML='<span style="color:#dc2626">'+(d.error||'Hata')+'</span>';}
+  }).catch(function(e){el.innerHTML='<span style="color:#dc2626">'+e.message+'</span>';});
+}
+function nidojpCookieTest(){
+  var el=document.getElementById('nidojp-cookie-sonuc');
+  el.innerHTML='<span style="color:#2563eb">Session test ediliyor...</span>';
+  fetch('/api/nidojp-garanti',{
+    method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
+    body:JSON.stringify({action:'test_session'})
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.success&&d.valid){
+      el.innerHTML='<span style="color:#16a34a">Session GECERLI! B2B baglantisi hazir.</span>';
+      var b=document.getElementById('nidojp-durum-badge');
+      if(b){b.style.background='#dcfce7';b.style.color='#166534';b.textContent='Baglanti OK';}
+    }else{
+      el.innerHTML='<span style="color:#dc2626">Session gecersiz: '+(d.error||'B2B erisim saglanamadi')+'</span>';
+    }
+  }).catch(function(e){el.innerHTML='<span style="color:#dc2626">'+e.message+'</span>';});
 }
 function nidojpTestBaglanti(){
   toast('NiDOJP B2B test ediliyor...','blue');
