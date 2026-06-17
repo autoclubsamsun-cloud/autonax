@@ -2142,7 +2142,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
                 <div style="display:flex;gap:8px;margin-top:4px">
                   <button onclick="nidojpAyarKaydet()" class="btn-p" style="flex:1">Kaydet</button>
                   <button onclick="nidojpTestBaglanti()" style="flex:1;padding:10px;border:1.5px solid #16a34a;background:#f0fdf4;color:#166534;border-radius:8px;font-family:Bebas Neue,sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer">B2B Test</button>
-                  <button onclick="nidojpRateLimitSifirla()" style="flex:1;padding:10px;border:1.5px solid #f59e0b;background:#fffbeb;color:#92400e;border-radius:8px;font-family:Bebas Neue,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer">Limit Sifirla</button>
+                  <button onclick="nidojpSessionTemizle()" style="flex:1;padding:10px;border:1.5px solid #f59e0b;background:#fffbeb;color:#92400e;border-radius:8px;font-family:Bebas Neue,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer">Session Temizle</button>
                 </div>
               </div>
             </div>
@@ -6224,14 +6224,14 @@ function nidojpTestBaglanti(){
     toast('Sunucu hatasi: '+e.message,'red');
   });
 }
-function nidojpRateLimitSifirla(){
+function nidojpSessionTemizle(){
   fetch('/api/nidojp-garanti',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     credentials:'same-origin',
-    body:JSON.stringify({action:'reset_rate_limit'})
+    body:JSON.stringify({action:'clear_session'})
   }).then(function(r){return r.json();}).then(function(d){
-    if(d.success) toast('Rate limit sifirlandi! Simdi B2B Test butonuna basin.','green');
+    if(d.success) toast('Session temizlendi! Simdi B2B Test butonuna basin.','green');
     else toast('Hata: '+(d.error||''),'red');
   }).catch(function(e){toast('Hata: '+e.message,'red');});
 }

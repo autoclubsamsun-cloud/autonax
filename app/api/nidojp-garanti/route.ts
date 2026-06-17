@@ -8,12 +8,10 @@ async function ensureDB() { if (!dbReady) { await initDB(); dbReady = true; } }
 const B2B_URL = 'https://b2b.nidojpfilm.com';
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
-// Urun -> garanti yili eslesmesi
 const GARANTI_YILLARI: Record<string, number> = {
   CS190: 4, S75: 6, S85: 8, N7: 8, N8: 10, N9: 12, S_Matte: 8, H7_Black: 5,
 };
 
-// Cookie parse helper
 function parseCookies(setCookieHeaders: string[]): Record<string, string> {
   const cookies: Record<string, string> = {};
   for (const h of setCookieHeaders) {
@@ -27,7 +25,6 @@ function cookieString(cookies: Record<string, string>): string {
   return Object.entries(cookies).map(([k, v]) => `${k}=${v}`).join('; ');
 }
 
-// NiDOJP B2B credentials
 async function getNidojpConfig() {
   await ensureDB();
   const rows = await sql`SELECT deger FROM site_ayarlar WHERE anahtar = 'nidojp_ayar' LIMIT 1`;
@@ -37,80 +34,65 @@ async function getNidojpConfig() {
   return cfg;
 }
 
-// ====== DB SESSION MANAGEMENT ======
-// Session'i site_ayarlar'da sakla (anahtar: 'nidojp_session')
-// Vercel serverless hafizasi cold start'ta sifirlanir, DB kalici.
-async function getStoredSession(): Promise<{ cookies: Record<string, string>; expiresAt: number; rateLimitUntil: number } | null> {
+// ====== DB SESSION ======
+async function getStoredSession(): Promise<Record<string, string> | null> {
   try {
     const rows = await sql`SELECT deger FROM site_ayarlar WHERE anahtar = 'nidojp_session' LIMIT 1`;
     if (rows.length === 0) return null;
     const data = typeof rows[0].deger === 'string' ? JSON.parse(rows[0].deger) : rows[0].deger;
-    return data || null;
+    if (!data || !data.cookies || !data.expiresAt) return null;
+    if (Date.now() > data.expiresAt) return null; // suresi dolmus
+    return data.cookies;
   } catch { return null; }
 }
 
-async function saveSession(cookies: Record<string, string>, expiresAt: number, rateLimitUntil = 0) {
-  const val = JSON.stringify({ cookies, expiresAt, rateLimitUntil });
+async function saveSessionToDB(cookies: Record<string, string>) {
+  const val = JSON.stringify({ cookies, expiresAt: Date.now() + 2 * 60 * 60 * 1000 });
   await sql`
     INSERT INTO site_ayarlar (anahtar, deger) VALUES ('nidojp_session', ${val}::jsonb)
     ON CONFLICT (anahtar) DO UPDATE SET deger = ${val}::jsonb
-  `;
+  `.catch(() => {});
 }
 
-async function saveRateLimit(until: number) {
-  const stored = await getStoredSession();
-  const val = JSON.stringify({
-    cookies: stored?.cookies || {},
-    expiresAt: stored?.expiresAt || 0,
-    rateLimitUntil: until
-  });
-  await sql`
-    INSERT INTO site_ayarlar (anahtar, deger) VALUES ('nidojp_session', ${val}::jsonb)
-    ON CONFLICT (anahtar) DO UPDATE SET deger = ${val}::jsonb
-  `;
+async function clearSessionFromDB() {
+  await sql`DELETE FROM site_ayarlar WHERE anahtar = 'nidojp_session'`.catch(() => {});
 }
 
-// Session gecerli mi? B2B'de korunmus sayfaya erismeyi dene
+// Session hala gecerli mi test et
 async function testSession(cookies: Record<string, string>): Promise<boolean> {
   try {
     const res = await fetch(B2B_URL + '/stok-garanti-islemleri', {
       redirect: 'manual',
       headers: { 'Cookie': cookieString(cookies), 'User-Agent': UA },
     });
-    // 200 = giris yapilmis, 302 = login'e yonlendirme (session gecersiz)
     return res.status === 200;
   } catch { return false; }
 }
 
-// ====== B2B LOGIN (DB session destekli) ======
-async function b2bLogin(): Promise<{ success: boolean; cookies?: Record<string, string>; error?: string }> {
+// ====== B2B LOGIN ======
+// Rate limit CACHE'LEMEZ. Her zaman B2B'nin gercek cevabini doner.
+// Sadece basarili session'i DB'de saklar ve tekrar kullanir.
+async function b2bLogin(forceNewLogin = false): Promise<{ success: boolean; cookies?: Record<string, string>; error?: string }> {
   try {
     await ensureDB();
 
-    // 1. DB'den mevcut session'i yukle
-    const stored = await getStoredSession();
-
-    // Rate limit kontrolu (DB'den)
-    if (stored && stored.rateLimitUntil && Date.now() < stored.rateLimitUntil) {
-      const bekle = Math.ceil((stored.rateLimitUntil - Date.now()) / 60000);
-      return { success: false, error: `B2B rate limit aktif. ${bekle} dk sonra tekrar deneyin.` };
-    }
-
-    // 2. Kayitli session varsa ve suresi dolmamissa, once test et
-    if (stored && stored.cookies && stored.expiresAt && Date.now() < stored.expiresAt) {
-      const valid = await testSession(stored.cookies);
-      if (valid) {
-        console.log('[NIDOJP] DB session gecerli, yeniden login gerekmiyor');
-        return { success: true, cookies: stored.cookies };
+    // 1. Kayitli session varsa kullan (force degilse)
+    if (!forceNewLogin) {
+      const stored = await getStoredSession();
+      if (stored) {
+        const valid = await testSession(stored);
+        if (valid) {
+          console.log('[NIDOJP] DB session gecerli');
+          return { success: true, cookies: stored };
+        }
+        console.log('[NIDOJP] DB session gecersiz, login gerekli');
       }
-      console.log('[NIDOJP] DB session gecersiz, yeni login yapilacak');
     }
 
-    // 3. Yeni login gerekli
+    // 2. Yeni login
     const cfg = await getNidojpConfig();
     if (!cfg) return { success: false, error: 'NiDOJP ayarlari yapilandirilmamis. Ayarlar > NiDOJP bolumunden email/sifre girin.' };
 
-    // Step 1: Ana sayfaya GET - cookie al
     const initRes = await fetch(B2B_URL + '/', {
       redirect: 'manual',
       headers: { 'User-Agent': UA },
@@ -126,7 +108,6 @@ async function b2bLogin(): Promise<{ success: boolean; cookies?: Record<string, 
       if (m) { csrfToken = m[1]; cookies['csrf_token'] = csrfToken; }
     }
 
-    // Step 2: Login POST
     const formData = new URLSearchParams();
     formData.append('login_info', cfg.email);
     formData.append('password', cfg.sifre);
@@ -155,28 +136,19 @@ async function b2bLogin(): Promise<{ success: boolean; cookies?: Record<string, 
     const loginData = await loginRes.json().catch(() => null);
 
     if (loginData && loginData.status === true) {
-      // BASARILI - session'i DB'ye kaydet (2 saat gecerli)
-      await saveSession(cookies, Date.now() + 2 * 60 * 60 * 1000, 0);
-      console.log('[NIDOJP] Login basarili, session DB ye kaydedildi (2 saat)');
+      await saveSessionToDB(cookies);
+      console.log('[NIDOJP] Login basarili, session kaydedildi');
       return { success: true, cookies };
     }
 
-    // HATA - rate limit mi?
-    const errMsg = loginData?.error || 'Login basarisiz';
-    if (errMsg.toLowerCase().includes('fazla deneme')) {
-      // 15 dk cooldown DB'ye kaydet
-      await saveRateLimit(Date.now() + 15 * 60 * 1000);
-      console.log('[NIDOJP] Rate limit! 15 dk cooldown DB ye kaydedildi');
-      return { success: false, error: 'B2B cok fazla deneme. 15 dk bekleyip tekrar deneyin.' };
-    }
-
-    return { success: false, error: errMsg };
+    // Basarisiz - gercek hatayi dondur (rate limit dahil)
+    return { success: false, error: loginData?.error || 'Login basarisiz' };
   } catch (e: any) {
     return { success: false, error: e.message || 'Login hatasi' };
   }
 }
 
-// ====== GET: Garanti belgelerini listele ======
+// ====== GET ======
 export async function GET(req: NextRequest) {
   const auth = requireAuth(req);
   if (auth instanceof NextResponse) return auth;
@@ -185,7 +157,6 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const randevuId = searchParams.get('randevu_id');
     const plaka = searchParams.get('plaka');
-
     let rows;
     if (randevuId) {
       rows = await sql`SELECT * FROM garanti_belgeleri WHERE randevu_id = ${randevuId} ORDER BY olusturma DESC`;
@@ -200,7 +171,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// ====== POST: Action-based ======
+// ====== POST ======
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req);
   if (auth instanceof NextResponse) return auth;
@@ -211,25 +182,51 @@ export async function POST(req: NextRequest) {
 
     // --- LOGIN TEST ---
     if (action === 'login') {
-      const result = await b2bLogin();
+      const result = await b2bLogin(true); // force new login
       return NextResponse.json({ success: result.success, error: result.error });
     }
 
-    // --- RATE LIMIT SIFIRLA (admin kullanimi) ---
-    if (action === 'reset_rate_limit') {
-      await saveRateLimit(0);
-      return NextResponse.json({ success: true, message: 'Rate limit sifirlandi' });
+    // --- SESSION TEMIZLE ---
+    if (action === 'clear_session') {
+      await clearSessionFromDB();
+      return NextResponse.json({ success: true, message: 'Session temizlendi' });
     }
 
     // --- GARANTI OLUSTUR ---
     if (action === 'garanti_olustur') {
-      // 1. Login
-      const login = await b2bLogin();
+      const login = await b2bLogin(); // cached session kullan
       if (!login.success || !login.cookies) {
-        return NextResponse.json({ success: false, error: 'B2B login basarisiz: ' + (login.error || '') });
+        // B2B login basarisiz ama lokal kayit yap
+        const urunKod = b.product_id || '';
+        let garantiYil = 8;
+        Object.keys(GARANTI_YILLARI).forEach(k => {
+          if (urunKod.toLowerCase().includes(k.toLowerCase())) garantiYil = GARANTI_YILLARI[k];
+        });
+        const ugTarih = b.installation_date || new Date().toISOString().split('T')[0];
+        const bitisTarih = new Date(ugTarih);
+        bitisTarih.setFullYear(bitisTarih.getFullYear() + garantiYil);
+
+        const dbRows = await sql`
+          INSERT INTO garanti_belgeleri (randevu_id, nidojp_stok_id, nidojp_seri_no, urun, plaka, arac_km,
+            uygulama_tarihi, garanti_yil, garanti_bitis, garanti_aciklama,
+            musteri_ad, musteri_tel, musteri_sehir, musteri_ilce, uygulanan_alanlar, durum)
+          VALUES (${b.randevu_id || null}, ${b.stock_warranty_id || 0}, ${null},
+            ${urunKod}, ${b.license_plate || ''}, ${b.vehicle_km || ''},
+            ${ugTarih}, ${garantiYil}, ${bitisTarih.toISOString().split('T')[0]}, ${b.warranty_desc || ''},
+            ${b.customer_name || ''}, ${b.customer_phone || ''},
+            ${b.customer_city || '55'}, ${b.customer_counties || ''},
+            ${JSON.stringify(b.field_application || [])}::jsonb, ${'beklemede'})
+          RETURNING *
+        `;
+        return NextResponse.json({
+          success: true,
+          b2b_success: false,
+          b2b_error: login.error,
+          data: dbRows[0] || null,
+        });
       }
 
-      // 2. B2B'ye garanti ekle
+      // B2B'ye garanti ekle
       const formData = new URLSearchParams();
       formData.append('stock_warranty_id', String(b.stock_warranty_id || '0'));
       formData.append('product_id', String(b.product_id || ''));
@@ -242,7 +239,6 @@ export async function POST(req: NextRequest) {
       formData.append('customer_city', b.customer_city || '55');
       formData.append('customer_counties', b.customer_counties || '');
       formData.append('csrf', login.cookies['csrf_token'] || '');
-
       if (Array.isArray(b.field_application)) {
         b.field_application.forEach((v: number) => formData.append('field_application[]', String(v)));
       }
@@ -263,7 +259,6 @@ export async function POST(req: NextRequest) {
       const garantiData = await garantiRes.json().catch(() => null);
       console.log('[NIDOJP] B2B garanti response:', JSON.stringify(garantiData));
 
-      // 3. Garanti yilini hesapla
       const urunKod = b.product_id || '';
       let garantiYil = 8;
       Object.keys(GARANTI_YILLARI).forEach(k => {
@@ -274,7 +269,6 @@ export async function POST(req: NextRequest) {
       bitisTarih.setFullYear(bitisTarih.getFullYear() + garantiYil);
       const garantiBitis = bitisTarih.toISOString().split('T')[0];
 
-      // 4. DB'ye kaydet
       const b2bBasarili = garantiData && garantiData.status === true;
       const seriNo = garantiData?.serial_number || garantiData?.seri_no || garantiData?.warranty_no || garantiData?.data?.serial_number || garantiData?.data?.seri_no || null;
 
@@ -288,7 +282,7 @@ export async function POST(req: NextRequest) {
           ${b.customer_name || ''}, ${b.customer_phone || ''},
           ${b.customer_city || '55'}, ${b.customer_counties || ''},
           ${JSON.stringify(b.field_application || [])}::jsonb,
-          ${b2bBasarili ? 'aktif' : 'lokal'})
+          ${b2bBasarili ? 'aktif' : 'beklemede'})
         RETURNING *
       `;
 
@@ -304,7 +298,7 @@ export async function POST(req: NextRequest) {
     if (action === 'garanti_sorgula') {
       const login = await b2bLogin();
       if (!login.success || !login.cookies) {
-        return NextResponse.json({ success: false, error: 'B2B login basarisiz' });
+        return NextResponse.json({ success: false, error: 'B2B login basarisiz: ' + (login.error || '') });
       }
       const formData = new URLSearchParams();
       formData.append('license_plate', b.license_plate || b.plaka || '');
