@@ -317,7 +317,18 @@ export async function POST(req: NextRequest) {
 
       const formData = new URLSearchParams();
       formData.append('stock_warranty_id', stockId);
-      formData.append('product_id', String(b.product_id || ''));
+      // product_id 0 veya bos ise stok-garanti-ekle sayfasindan cek
+      let productId = String(b.product_id || '');
+      if (!productId || productId === '0') {
+        try {
+          const prodPageHtml = await garantiPageRes.clone().text().catch(() => '');
+          // Fallback: garanti sayfasindaki product_id select'inden al
+          const prodMatch = garantiPageHtml.match(/<option[^>]*selected[^>]*value=['"](\d+)['"]/i);
+          if (prodMatch) productId = prodMatch[1];
+          console.log('[NIDOJP] Auto product_id from page:', productId);
+        } catch {}
+      }
+      formData.append('product_id', productId);
       formData.append('license_plate', b.license_plate || '');
       formData.append('vehicle_km', b.vehicle_km || '');
       formData.append('installation_date', b.installation_date || '');
