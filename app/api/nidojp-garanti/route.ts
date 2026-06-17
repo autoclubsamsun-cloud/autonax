@@ -263,8 +263,34 @@ export async function POST(req: NextRequest) {
       }
 
       // B2B'ye garanti ekle
+      // ONEMLI: Önce garanti sayfasını GET et - taze CSRF token al
+      const stockId = String(b.stock_warranty_id || '0');
+      const garantiPageRes = await fetch(B2B_URL + '/stok-garanti-ekle/' + stockId, {
+        redirect: 'manual',
+        headers: { 'Cookie': cookieString(login.cookies), 'User-Agent': UA },
+      });
+      // Yeni CSRF cookie'yi al
+      const garantiPageCookies = garantiPageRes.headers.getSetCookie ? garantiPageRes.headers.getSetCookie() :
+        (garantiPageRes.headers.get('set-cookie') || '').split(',').filter(Boolean);
+      const freshCookies = parseCookies(garantiPageCookies);
+      if (freshCookies.csrf_token) {
+        login.cookies['csrf_token'] = freshCookies.csrf_token;
+      }
+      // HTML'den de CSRF kontrol
+      const garantiPageHtml = await garantiPageRes.text();
+      const csrfFromPage = garantiPageHtml.match(/csrf_token['"]\s*(?:value|content)\s*=\s*['"]([^'"]+)/);
+      if (csrfFromPage) login.cookies['csrf_token'] = csrfFromPage[1];
+      
+      // Sayfadaki form field name'lerini logla (debug)
+      const pageFields: string[] = [];
+      const nameRegex = /name=['"]([^'"]+)['"]/g;
+      let fieldMatch;
+      while ((fieldMatch = nameRegex.exec(garantiPageHtml)) !== null) { pageFields.push(fieldMatch[1]); }
+      console.log('[NIDOJP] Garanti page fields:', JSON.stringify([...new Set(pageFields)]));
+      console.log('[NIDOJP] Page status:', garantiPageRes.status, 'CSRF:', login.cookies['csrf_token']?.substring(0,10) + '...');
+
       const formData = new URLSearchParams();
-      formData.append('stock_warranty_id', String(b.stock_warranty_id || '0'));
+      formData.append('stock_warranty_id', stockId);
       formData.append('product_id', String(b.product_id || ''));
       formData.append('license_plate', b.license_plate || '');
       formData.append('vehicle_km', b.vehicle_km || '');
@@ -293,7 +319,9 @@ export async function POST(req: NextRequest) {
       });
 
       const garantiData = await garantiRes.json().catch(() => null);
-      console.log('[NIDOJP] B2B garanti response:', JSON.stringify(garantiData));
+      console.log('[NIDOJP] B2B garanti response status:', garantiRes.status);
+      console.log('[NIDOJP] B2B garanti response body:', JSON.stringify(garantiData));
+      console.log('[NIDOJP] Sent fields:', formData.toString().substring(0, 500));
 
       const urunKod = b.product_id || '';
       let garantiYil = 8;

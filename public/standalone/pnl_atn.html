@@ -4791,11 +4791,18 @@ fetch('/api/nidojp-garanti',{
     field_application:alanlar
   })
 }).then(function(res){return res.json();}).then(function(data){
-  console.log('[NiDOJP Garanti]',JSON.stringify(data));
+  console.log('[NiDOJP Garanti] Full:',JSON.stringify(data));
   if(data.success){
     r._garanti=data.data;
     var seriNo=data.data&&data.data.nidojp_seri_no?data.data.nidojp_seri_no:'';
-    el.innerHTML='<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px"><div style="color:#166534;font-weight:700;font-size:12px">Garanti Olusturuldu!</div>'+(seriNo?'<div style="color:#166534;font-size:11px;margin-top:4px">Seri No: <b>'+seriNo+'</b></div>':'')+(data.b2b_success===false?'<div style="color:#f59e0b;font-size:10px;margin-top:4px">B2B kaydi beklemede (lokal kaydedildi)</div>':'')+'<a href="https://b2b.nidojpfilm.com/stok-garanti-islemleri" target="_blank" style="display:inline-block;margin-top:6px;color:#2563eb;font-size:11px;text-decoration:underline">NiDOJP Panelde Goruntule</a></div>';
+    var b2bOk=data.b2b_success===true;var b2bResp=data.b2b_response?JSON.stringify(data.b2b_response):'';var b2bErr=data.b2b_error||'';
+        var bg=b2bOk?'#f0fdf4':'#fffbeb';var bc=b2bOk?'#bbf7d0':'#fde68a';var tc=b2bOk?'#166534':'#92400e';
+    var html='<div style="background:'+bg+';border:1px solid '+bc+';border-radius:8px;padding:10px">';
+    html+='<div style="color:'+tc+';font-weight:700;font-size:12px">'+(b2bOk?'B2B Garanti Olusturuldu!':'Lokal Kaydedildi (B2B kontrol edin)')+'</div>';
+    if(seriNo)html+='<div style="color:#166534;font-size:11px;margin-top:4px">Seri No: <b>'+seriNo+'</b></div>';
+    if(!b2bOk)html+='<div style="color:#92400e;font-size:10px;margin-top:4px">B2B: '+(b2bErr||b2bResp||'Konsolu kontrol edin (F12)')+'</div>';
+    html+='<a href="https://b2b.nidojpfilm.com/garanti-sorgula" target="_blank" style="display:inline-block;margin-top:6px;color:#2563eb;font-size:11px;text-decoration:underline">NiDOJP Garanti Sorgula</a></div>';
+    el.innerHTML=html;
   }else{
     el.innerHTML='<span style="color:#dc2626">'+(data.error||'Hata olustu')+'</span>';
   }
