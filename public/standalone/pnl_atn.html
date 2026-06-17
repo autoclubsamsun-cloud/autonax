@@ -4750,27 +4750,14 @@ function garIlceYukle(idx){
     method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
     body:JSON.stringify({action:'ilce_getir',city_id:cityId})
   }).then(function(r){return r.json();}).then(function(d){
-    console.log('[NiDOJP] Ilce response:',JSON.stringify(d).substring(0,500));
-    var opts='<option value="">Seciniz</option>';
-    if(d.success&&d.data){
-      var items=d.data;
-      if(typeof items==='string'){try{items=JSON.parse(items);}catch(e){}}
-      if(items.data&&Array.isArray(items.data))items=items.data;
-      if(Array.isArray(items)){
-        items.forEach(function(i){
-          var id=i.id||i.value||i.county_id||'';
-          var nm=i.name||i.text||i.ilce||i.county_name||'';
-          if(id&&nm)opts+='<option value="'+id+'">'+nm+'</option>';
-        });
-      }else if(typeof items==='object'){
-        Object.keys(items).forEach(function(k){
-          var v=items[k];
-          if(typeof v==='string')opts+='<option value="'+k+'">'+v+'</option>';
-        });
-      }
+    var opts='<option value="">Ilce Seciniz</option>';
+    if(d.success&&Array.isArray(d.data)){
+      d.data.forEach(function(i){
+        opts+='<option value="'+i.id+'">'+i.name+'</option>';
+      });
     }
     ilceEl.innerHTML=opts;
-  }).catch(function(e){ilceEl.innerHTML='<option value="">Hata: '+e.message+'</option>';});
+  }).catch(function(e){ilceEl.innerHTML='<option value="">Hata</option>';});
 }
 
 function garantiBelgesiHtml(r,idx){

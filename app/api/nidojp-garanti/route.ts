@@ -416,7 +416,7 @@ export async function POST(req: NextRequest) {
       if (!login.success || !login.cookies) {
         return NextResponse.json({ success: false, error: 'B2B session gecersiz' });
       }
-      // Oncelikle B2B'den taze CSRF al
+      // Taze CSRF al
       const pageRes = await fetch(B2B_URL + '/stok-garanti-islemleri', {
         redirect: 'manual',
         headers: { 'Cookie': cookieString(login.cookies), 'User-Agent': UA },
@@ -425,6 +425,10 @@ export async function POST(req: NextRequest) {
         (pageRes.headers.get('set-cookie') || '').split(',').filter(Boolean);
       const freshParsed = parseCookies(pageCookies);
       if (freshParsed.csrf_token) login.cookies['csrf_token'] = freshParsed.csrf_token;
+      if (freshParsed.ci_session) {
+        login.cookies.ci_session = freshParsed.ci_session;
+        await saveSessionToDB(login.cookies).catch(() => {});
+      }
 
       const formData = new URLSearchParams();
       formData.append('id', String(b.city_id || ''));
@@ -441,8 +445,20 @@ export async function POST(req: NextRequest) {
         body: formData.toString(),
       });
 
-      const data = await res.json().catch(() => null);
-      // Ilce response cookies guncelle
+      const respData = await res.json().catch(() => null);
+      
+      // B2B response: { status: true, counties: "<option value='id'>name</option>..." }
+      // HTML options'i parse edip JSON array'e cevir
+      const counties: Array<{id: string; name: string}> = [];
+      if (respData && respData.status === true && respData.counties) {
+        const optionRegex = /<option[^>]*value=['"](\d+)['"][^>]*>([^<]+)<\/option>/gi;
+        let optMatch;
+        while ((optMatch = optionRegex.exec(respData.counties)) !== null) {
+          counties.push({ id: optMatch[1], name: optMatch[2].trim() });
+        }
+      }
+
+      // Cookie guncelle
       const ilceRespCookies = res.headers.getSetCookie ? res.headers.getSetCookie() :
         (res.headers.get('set-cookie') || '').split(',').filter(Boolean);
       const freshIlceCookies = parseCookies(ilceRespCookies);
@@ -450,9 +466,11 @@ export async function POST(req: NextRequest) {
         login.cookies.ci_session = freshIlceCookies.ci_session;
         await saveSessionToDB(login.cookies).catch(() => {});
       }
-      console.log('[NIDOJP] Ilce response for city', b.city_id, ':', JSON.stringify(data)?.substring(0, 300));
-      return NextResponse.json({ success: true, data });
+
+      console.log('[NIDOJP] Ilce response for city', b.city_id, '- found', counties.length, 'districts');
+      return NextResponse.json({ success: true, data: counties });
     }
+
 
     // --- DEBUG: B2B SAYFA FETCH ---
     if (action === 'fetch_b2b_page') {
