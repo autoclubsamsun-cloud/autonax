@@ -4784,6 +4784,15 @@ var tamArac=hizmet.toLowerCase().indexOf('tam')>=0||hizmet.toLowerCase().indexOf
 
 var h='<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:#1a1a2e;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style="font-size:14px">&#128196;</span> NiDOJP Garanti Belgesi</div>';
 
+// Garanti zaten olusturulmus mu? API'den kontrol et
+if(!r._garanti && r.id){
+  // Senkron olarak localStorage'den kontrol et
+  try{
+    var cachedG = window._garantiCache && window._garantiCache[r.id];
+    if(cachedG) r._garanti = cachedG;
+  }catch(e){}
+}
+
 if(r._garanti){var g=r._garanti;
 h+='<div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:12px;padding:16px;color:#fff;margin-bottom:8px">';
 h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px">GARANTI BELGESI</div><div style="background:rgba(22,163,74,.3);color:#4ade80;padding:4px 12px;border-radius:20px;font-size:10px;font-weight:700">'+(g.durum||'aktif').toUpperCase()+'</div></div>';
@@ -5062,6 +5071,20 @@ function rdvDetay(idx){
   }
   render();
   window._rdvDetayRender=render;
+  // Garanti durumunu API'den kontrol et - form yerine sertifika goster
+  if(!r._garanti && r.id){
+    fetch("/api/nidojp-garanti?randevu_id="+r.id,{credentials:"same-origin"})
+    .then(function(res){return res.json();})
+    .then(function(gd){
+      if(gd.success && gd.data && gd.data.length>0){
+        r._garanti=gd.data[0];
+        if(!window._garantiCache)window._garantiCache={};
+        window._garantiCache[r.id]=gd.data[0];
+        // Modali yeniden render et
+        if(typeof render==="function")render();
+      }
+    }).catch(function(){});
+  }
 }
 
 
@@ -6238,6 +6261,8 @@ function garantiVerileriniYukle(){
     if(!d.success||!d.data)return;
     d.data.forEach(function(g){
       for(var i=0;i<RANDEVULAR.length;i++){
+          if(!window._garantiCache)window._garantiCache={};
+          window._garantiCache[g.randevu_id]=g;
         if(RANDEVULAR[i].id===g.randevu_id){RANDEVULAR[i]._garanti=g;break;}
       }
     });
