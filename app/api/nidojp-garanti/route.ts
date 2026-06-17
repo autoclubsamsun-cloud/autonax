@@ -240,7 +240,7 @@ export async function POST(req: NextRequest) {
     // --- SESSION TEST ---
     if (action === 'test_session') {
       const stored = await getStoredSession();
-      if (!stored) return NextResponse.json({ success: false, valid: false, error: 'Kayitli session yok. Cookie yapiþtirin.' });
+      if (!stored) return NextResponse.json({ success: false, valid: false, error: 'Kayitli session yok. Cookie yapiï¿½tirin.' });
       const valid = await testSession(stored);
       return NextResponse.json({ success: true, valid, error: valid ? null : 'Session gecersiz veya suresi dolmus' });
     }
@@ -282,7 +282,7 @@ export async function POST(req: NextRequest) {
       }
 
       // B2B'ye garanti ekle
-      // ONEMLI: Önce garanti sayfasýný GET et - taze CSRF token al
+      // ONEMLI: ï¿½nce garanti sayfasï¿½nï¿½ GET et - taze CSRF token al
       const stockId = String(b.stock_warranty_id || '0');
       const garantiPageRes = await fetch(B2B_URL + '/stok-garanti-ekle/' + stockId, {
         redirect: 'manual',
