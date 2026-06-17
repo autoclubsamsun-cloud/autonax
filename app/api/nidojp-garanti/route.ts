@@ -375,28 +375,15 @@ export async function POST(req: NextRequest) {
 
       const formData = new URLSearchParams();
       formData.append('stock_warranty_id', stockId);
-      // product_id: stock_warranty_id -> B2B product_id sabit eslesme
-      const stockToProduct: Record<string, string> = {
-        '41': '4',  // N7
-        '42': '5',  // N8
-        '43': '2',  // CS190
-        '44': '3',  // S75 / S85
-        '31': '7',  // S Matte
-        '45': '3',  // S85
-        '46': '6',  // N9
-        '47': '8',  // H7 Black
-      };
+      // product_id: ONCE stok sayfasindan oku (en dogru)
       let productId = String(b.product_id || '');
       if (!productId || productId === '0' || isNaN(Number(productId))) {
-        productId = stockToProduct[String(stockId)] || '';
-      }
-      // Hala bos ise stok sayfasindan dene
-      if (!productId) {
         try {
-          const prodMatch = garantiPageHtml.match(/<option[^>]*selected[^>]*value=["'](\d+)["']/i);
-          if (prodMatch) productId = prodMatch[1];
-        } catch(e) {}
+          const prodMatch = garantiPageHtml.match(/<option[^>]*selected[^>]*value=["\']([0-9]+)["\'][^>]*>/i);
+          if (prodMatch) { productId = prodMatch[1]; console.log('[NIDOJP] product_id from page:', productId); }
+        } catch(e) { console.log('[NIDOJP] product_id regex err:', e); }
       }
+      if (!productId) { productId = '1'; }
       console.log('[NIDOJP] product_id:', productId, 'stock:', stockId);
       formData.append('product_id', productId);
       formData.append('license_plate', b.license_plate || '');
