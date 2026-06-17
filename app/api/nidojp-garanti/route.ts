@@ -353,7 +353,36 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, data });
     }
 
-    return NextResponse.json({ success: false, error: 'Gecersiz action' }, { status: 400 });
+    // --- DEBUG: B2B SAYFA FETCH ---
+    if (action === 'fetch_b2b_page') {
+      const stored = await getStoredSession();
+      if (!stored) return NextResponse.json({ success: false, error: 'Session yok' });
+      const url = b.url || '/stok-garanti-ekle/41';
+      const res = await fetch(B2B_URL + url, {
+        redirect: 'manual',
+        headers: { 'Cookie': cookieString(stored), 'User-Agent': UA },
+      });
+      const html = await res.text();
+      // Form inputs bul
+      const inputRegex = /<(?:input|select|textarea)[^>]*name=['"]([^'"]+)['"][^>]*>/gi;
+      const fields: string[] = [];
+      let match;
+      const tempHtml = html;
+      const regex = /name=['"]([^'"]+)['"]/gi;
+      let m;
+      while ((m = regex.exec(tempHtml)) !== null) { fields.push(m[1]); }
+      // Form action bul
+      const formAction = html.match(/id=['"]infoStockWarrantyAdd['"][^>]*action=['"]([^'"]+)['"]/);
+      return NextResponse.json({ 
+        success: true, 
+        status: res.status,
+        fields: [...new Set(fields)],
+        formAction: formAction ? formAction[1] : null,
+        htmlLength: html.length,
+        hasForm: html.includes('infoStockWarrantyAdd'),
+      });
+    }
+        return NextResponse.json({ success: false, error: 'Gecersiz action' }, { status: 400 });
   } catch (e: any) {
     console.error('[NIDOJP] Hata:', e);
     return NextResponse.json({ success: false, error: e.message }, { status: 500 });
