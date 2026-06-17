@@ -279,7 +279,7 @@ export async function POST(req: NextRequest) {
         const upCookies = uploadRes.headers.getSetCookie?.() || [];
         upCookies.forEach((sc: string) => {
           const m = sc.match(/^([^=]+)=([^;]*)/);
-          if (m) login.cookies[m[1]] = m[2];
+          if (m && login.cookies) login.cookies[m[1]] = m[2];
         });
         // session cookies updated
 
