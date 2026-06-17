@@ -4767,7 +4767,6 @@ if(typeof USR!=='undefined'&&USR&&USR.rol==='saha')return '';
 var hizmet=r.hizmet||'';
 var stok=nidojpStokBul(hizmet);
 var tamArac=hizmet.toLowerCase().indexOf('tam')>=0||hizmet.toLowerCase().indexOf('komple')>=0||hizmet.toLowerCase().indexOf('full')>=0;
-var h='<div id="b2b-session-bar-'+idx+'" style="margin-bottom:10px;padding:10px 14px;background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1.5px solid #93c5fd;border-radius:10px;display:flex;align-items:center;gap:10px"><div id="b2b-status-'+idx+'" style="flex:1;font-size:11px;color:#1e40af">B2B oturum kontrol ediliyor...</div><button onclick="b2bOturumYenile('+idx+')" style="padding:7px 16px;border:none;border-radius:8px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 4px rgba(37,99,235,.3)">\u26A1 Oturum Yenile</button></div>';
 
 var h='<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:#1a1a2e;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style="font-size:14px">&#128196;</span> NiDOJP Garanti Belgesi</div>';
 
@@ -4791,6 +4790,7 @@ var is=function(lbl,id,val,ph,tp){
   return '<div style="display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center;margin-bottom:8px"><label style="font-size:11px;font-weight:600;color:#555">'+lbl+'</label><input type="'+(tp||'text')+'" id="'+id+'" value="'+(val||'')+'" placeholder="'+(ph||'')+'" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;font-family:Outfit,sans-serif;outline:none;width:100%;box-sizing:border-box"></div>';
 };
 
+h+='<div id="b2b-session-bar-'+idx+'" style="margin-bottom:12px;padding:10px 14px;background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1.5px solid #93c5fd;border-radius:10px;display:flex;align-items:center;gap:10px"><div id="b2b-status-'+idx+'" style="flex:1;font-size:11px;color:#1e40af">B2B oturum kontrol ediliyor...</div><button onclick="b2bOturumYenile('+idx+')" style="padding:7px 16px;border:none;border-radius:8px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 4px rgba(37,99,235,.3)">Oturum Yenile</button></div>';
 h+='<div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:16px">';
 h+='<div style="display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center;margin-bottom:8px"><label style="font-size:11px;font-weight:600;color:#555">Urun</label><div style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;background:#fff;font-weight:600;color:#1a1a2e">'+(stok.urun||'Urun bulunamadi')+(stok.id?' <span style="color:#94a3b8;font-weight:400">(Stok #'+stok.id+')</span>':'')+'</div></div>';
 h+=is('Arac Plakasi','gar-plaka-'+idx,r.plaka||'','55 XX 555');
@@ -4811,7 +4811,7 @@ h+='</div></div>';
 if(!stok.id){h+='<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:8px;font-size:11px;color:#92400e;margin-bottom:8px">Randevu hizmetinden NiDOJP urun eslesmesi bulunamadi. Hizmet: <b>'+hizmet+'</b></div>';}
 h+='<button onclick="garantiOlustur('+idx+')" style="width:100%;padding:12px;border:none;border-radius:8px;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;letter-spacing:.5px">NiDOJP Garanti Olustur</button>';
 h+='<div id="gar-sonuc-'+idx+'" style="margin-top:6px;font-size:11px;text-align:center"></div></div>';
-setTimeout(function(){garIlceYukle(idx);},500);
+setTimeout(function(){b2bOturumKontrol(idx);garIlceYukle(idx);},500);
 return h+'</div>';
 }catch(garErr){console.error('garantiBelgesiHtml:',garErr);return '';}
 }
