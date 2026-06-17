@@ -4816,6 +4816,7 @@ h+=is('Musteri Telefon','gar-tel-'+idx,r.tel||'','05XX XXX XX XX','tel');
 h+='<div style="display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center;margin-bottom:8px"><label style="font-size:11px;font-weight:600;color:#555">Musteri Sehir</label><select id="gar-sehir-'+idx+'" onchange="garIlceYukle('+idx+')" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;font-family:Outfit,sans-serif;outline:none;width:100%"><option value="">Seciniz</option><option value="1">ADANA</option><option value="2">ADIYAMAN</option><option value="3">AFYONKARAHİSAR</option><option value="4">AĞRI</option><option value="5">AKSARAY</option><option value="6">AMASYA</option><option value="7">ANKARA</option><option value="8">ANTALYA</option><option value="9">ARDAHAN</option><option value="10">ARTVİN</option><option value="11">AYDIN</option><option value="12">BALIKESİR</option><option value="13">BARTIN</option><option value="14">BATMAN</option><option value="15">BAYBURT</option><option value="16">BİLECİK</option><option value="17">BİNGÖL</option><option value="18">BİTLİS</option><option value="19">BOLU</option><option value="20">BURDUR</option><option value="21">BURSA</option><option value="22">ÇANAKKALE</option><option value="23">ÇANKIRI</option><option value="24">ÇORUM</option><option value="25">DENİZLİ</option><option value="26">DİYARBAKIR</option><option value="27">DÜZCE</option><option value="28">EDİRNE</option><option value="29">ELAZIĞ</option><option value="30">ERZİNCAN</option><option value="31">ERZURUM</option><option value="32">ESKİŞEHİR</option><option value="33">GAZİANTEP</option><option value="34">GİRESUN</option><option value="35">GÜMÜŞHANE</option><option value="36">HAKKARİ</option><option value="37">HATAY</option><option value="38">IĞDIR</option><option value="39">ISPARTA</option><option value="40">İSTANBUL</option><option value="41">İZMİR</option><option value="42">KAHRAMANMARAŞ</option><option value="43">KARABÜK</option><option value="44">KARAMAN</option><option value="45">KARS</option><option value="46">KASTAMONU</option><option value="47">KAYSERİ</option><option value="48">KIRIKKALE</option><option value="49">KIRKLARELİ</option><option value="50">KIRŞEHİR</option><option value="51">KİLİS</option><option value="52">KOCAELİ</option><option value="53">KONYA</option><option value="54">KÜTAHYA</option><option value="55">MALATYA</option><option value="56">MANİSA</option><option value="57">MARDİN</option><option value="58">MERSİN</option><option value="59">MUĞLA</option><option value="60">MUŞ</option><option value="61">NEVŞEHİR</option><option value="62">NİĞDE</option><option value="63">ORDU</option><option value="64">OSMANİYE</option><option value="65">RİZE</option><option value="66">SAKARYA</option><option value="67">SAMSUN</option><option value="68">SİİRT</option><option value="69">SİNOP</option><option value="70">SİVAS</option><option value="71">ŞANLIURFA</option><option value="72">ŞIRNAK</option><option value="73">TEKİRDAĞ</option><option value="74">TOKAT</option><option value="75">TRABZON</option><option value="76">TUNCELİ</option><option value="77">UŞAK</option><option value="78">VAN</option><option value="79">YALOVA</option><option value="80">YOZGAT</option><option value="81">ZONGULDAK</option></select></div>';
 
 h+='<div style="display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center;margin-bottom:8px"><label style="font-size:11px;font-weight:600;color:#555">Musteri Ilce</label><select id="gar-ilce-'+idx+'" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;font-family:Outfit,sans-serif;outline:none;width:100%"><option value="">Yukleniyor...</option></select></div>';
+h+='<div style="display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center;margin-bottom:8px"><label style="font-size:11px;font-weight:600;color:#555">Arac Gorseli</label><div style="display:flex;gap:6px;align-items:center"><input type="file" id="gar-gorsel-'+idx+'" accept="image/*" capture="environment" style="font-size:10px;width:100%" onchange="garGorselOnizle(this,'+idx+')"><span id="gar-gorsel-durum-'+idx+'" style="font-size:9px;color:#888"></span></div></div>';
 h+='<div style="margin:12px 0 8px"><div style="font-size:10px;font-weight:700;color:#555;margin-bottom:6px">UYGULAMA ALANLARI'+(tamArac?' <span style="color:#16a34a;font-size:9px">(Tam Arac - kaporta otomatik)</span>':'')+'</div>';
 h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:10px">';
 var alanlar=[{v:8,n:"Kaput",t:"k"},{v:9,n:"On Tampon",t:"k"},{v:10,n:"Arka Tampon",t:"k"},{v:11,n:"On Sag Camurluk",t:"k"},{v:12,n:"On Sol Camurluk",t:"k"},{v:13,n:"Arka Sag Camurluk",t:"k"},{v:14,n:"Arka Sol Camurluk",t:"k"},{v:15,n:"On Sag Kapi",t:"k"},{v:16,n:"On Sol Kapi",t:"k"},{v:17,n:"Arka Sag Kapi",t:"k"},{v:18,n:"Arka Sol Kapi",t:"k"},{v:19,n:"Tavan",t:"k"},{v:20,n:"Bagaj",t:"k"},{v:1,n:"On Cam",t:"c"},{v:2,n:"Arka Cam",t:"c"},{v:3,n:"Sag On Kapi Cami",t:"c"},{v:4,n:"Sol On Kapi Cami",t:"c"},{v:5,n:"Sag Arka Kapi Cami",t:"c"},{v:6,n:"Sol Arka Kapi Cami",t:"c"},{v:7,n:"Tavan Cami",t:"c"}];
@@ -4830,11 +4831,45 @@ return h+'</div>';
 }catch(garErr){console.error('garantiBelgesiHtml:',garErr);return '';}
 }
 function garantiTumunuSec(tip,idx){document.querySelectorAll('.gar-alan-'+idx+'[data-tip="'+tip+'"]').forEach(function(cb){cb.checked=true;});}
+function garGorselOnizle(input,idx){
+  var durumEl=document.getElementById("gar-gorsel-durum-"+idx);
+  if(input.files&&input.files[0]){
+    var f=input.files[0];
+    if(f.size>10*1024*1024){durumEl.textContent="Max 10MB!";durumEl.style.color="#dc2626";input.value="";return;}
+    durumEl.textContent=f.name+" ("+Math.round(f.size/1024)+"KB)";durumEl.style.color="#16a34a";
+  }else{durumEl.textContent="";}
+}
+function garGorselYukle(idx){
+  return new Promise(function(resolve,reject){
+    var input=document.getElementById("gar-gorsel-"+idx);
+    if(!input||!input.files||!input.files[0]){reject(new Error("Lutfen arac gorseli seciniz"));return;}
+    var f=input.files[0];
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var base64=e.target.result.split(",")[1];
+      fetch("/api/nidojp-garanti",{
+        method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",
+        body:JSON.stringify({action:"gorsel_yukle",image_base64:base64,filename:f.name,content_type:f.type||"image/jpeg"})
+      }).then(function(r){return r.json();}).then(function(d){
+        if(d.success)resolve(d);
+        else reject(new Error(d.error||"Gorsel yuklenemedi"));
+      }).catch(reject);
+    };
+    reader.onerror=function(){reject(new Error("Dosya okunamadi"));};
+    reader.readAsDataURL(f);
+  });
+}
+
 function garantiOlustur(idx){
 var r=RANDEVULAR[idx];if(!r)return;
 var el=document.getElementById('gar-sonuc-'+idx);
 var stok=nidojpStokBul(r.hizmet||'');
 if(!stok.id){el.innerHTML='<span style="color:#dc2626">Urun eslesmesi bulunamadi. Hizmet: '+(r.hizmet||'-')+'</span>';return;}
+// Gorsel kontrolu
+var gorselInput=document.getElementById("gar-gorsel-"+idx);
+if(!gorselInput||!gorselInput.files||!gorselInput.files[0]){el.innerHTML='<span style="color:#dc2626">Lutfen arac gorseli seciniz</span>';return;}
+el.innerHTML='<span style="color:#f59e0b">Gorsel yukleniyor...</span>';
+garGorselYukle(idx).then(function(gorselRes){
 el.innerHTML='<span style="color:#2563eb">NiDOJP B2B garanti olusturuluyor...</span>';
 var plaka=(document.getElementById('gar-plaka-'+idx)||{}).value||r.plaka||'';
 var km=(document.getElementById('gar-km-'+idx)||{}).value||'';
@@ -4883,6 +4918,9 @@ fetch('/api/nidojp-garanti',{
 }).catch(function(e){
   console.error('[NiDOJP Garanti] Error:',e);
   el.innerHTML='<span style="color:#dc2626">Baglanti hatasi: '+e.message+'</span>';
+});
+}).catch(function(gorselErr){
+  el.innerHTML='<span style="color:#dc2626">Gorsel: '+gorselErr.message+'</span>';
 });
 }
 

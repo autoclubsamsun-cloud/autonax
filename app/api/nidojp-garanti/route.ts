@@ -237,6 +237,64 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, message: 'Cookie kaydedildi' });
     }
 
+    // --- GORSEL YUKLE ---
+    if (action === 'gorsel_yukle') {
+      try {
+        const login = getLogin();
+        if (!login.cookies?.ci_session) {
+          return NextResponse.json({ success: false, error: 'B2B oturumu yok' });
+        }
+        const imgBase64 = b.image_base64;
+        const filename = b.filename || 'arac.jpg';
+        const contentType = b.content_type || 'image/jpeg';
+        if (!imgBase64) {
+          return NextResponse.json({ success: false, error: 'Gorsel verisi yok' });
+        }
+
+        const imgBuffer = Buffer.from(imgBase64, 'base64');
+        const boundary = '----FormBoundary' + Date.now();
+        
+        const csrfPart = '--' + boundary + '\r\nContent-Disposition: form-data; name="csrf"\r\n\r\n' + (login.cookies['csrf_token'] || '') + '\r\n';
+        const filePart = '--' + boundary + '\r\nContent-Disposition: form-data; name="file"; filename="' + filename + '"\r\nContent-Type: ' + contentType + '\r\n\r\n';
+        const endPart = '\r\n--' + boundary + '--\r\n';
+        
+        const fullBody = Buffer.concat([
+          Buffer.from(csrfPart, 'utf8'),
+          Buffer.from(filePart, 'utf8'),
+          imgBuffer,
+          Buffer.from(endPart, 'utf8')
+        ]);
+
+        const uploadRes = await fetch(B2B_URL + '/Account/add-profile-photo', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'multipart/form-data; boundary=' + boundary,
+            'Cookie': Object.entries(login.cookies).map(([k,v]) => k+'='+v).join('; '),
+            'X-Requested-With': 'XMLHttpRequest',
+            'Referer': B2B_URL + '/stok-garanti-islemleri',
+          },
+          body: fullBody,
+        });
+
+        const upCookies = uploadRes.headers.getSetCookie?.() || [];
+        upCookies.forEach((sc: string) => {
+          const m = sc.match(/^([^=]+)=([^;]*)/);
+          if (m) login.cookies[m[1]] = m[2];
+        });
+        saveLogin(login);
+
+        const uploadText = await uploadRes.text();
+        console.log('[NIDOJP] Gorsel upload:', uploadRes.status, uploadText.substring(0, 200));
+        
+        let uploadResult: any;
+        try { uploadResult = JSON.parse(uploadText); } catch { uploadResult = { raw: uploadText }; }
+        
+        return NextResponse.json({ success: uploadRes.ok, upload: uploadResult });
+      } catch (e: any) {
+        return NextResponse.json({ success: false, error: e.message });
+      }
+    }
+
     // --- SESSION TEST ---
     if (action === 'test_session') {
       const stored = await getStoredSession();
