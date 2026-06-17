@@ -2142,6 +2142,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
                 <div style="display:flex;gap:8px;margin-top:4px">
                   <button onclick="nidojpAyarKaydet()" class="btn-p" style="flex:1">Kaydet</button>
                   <button onclick="nidojpTestBaglanti()" style="flex:1;padding:10px;border:1.5px solid #16a34a;background:#f0fdf4;color:#166534;border-radius:8px;font-family:Bebas Neue,sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer">B2B Test</button>
+                  <button onclick="nidojpRateLimitSifirla()" style="flex:1;padding:10px;border:1.5px solid #f59e0b;background:#fffbeb;color:#92400e;border-radius:8px;font-family:Bebas Neue,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer">Limit Sifirla</button>
                 </div>
               </div>
             </div>
@@ -6204,27 +6205,35 @@ function nidojpAyarKaydet(){
 }
 function nidojpTestBaglanti(){
   toast('NiDOJP B2B test ediliyor...','blue');
-  var url='/api/nidojp-garanti';
-  var token=(USR&&USR.token?USR.token:'');
-  console.log('[NiDOJP Test] URL:',url,'Token:',token?'var':'YOK');
-  fetch(url,{
+  fetch('/api/nidojp-garanti',{
     method:'POST',
-    headers:{'Content-Type':'application/json'},credentials:'same-origin',
+    headers:{'Content-Type':'application/json'},
+    credentials:'same-origin',
     body:JSON.stringify({action:'login'})
-  }).then(function(r){
-    console.log('[NiDOJP Test] HTTP Status:',r.status);
-    return r.json();
-  }).then(function(d){
-    console.log('[NiDOJP Test] Response:',JSON.stringify(d));
+  }).then(function(r){return r.json();}).then(function(d){
+    console.log('[NiDOJP Test]',JSON.stringify(d));
     if(d.success){
       toast('NiDOJP B2B baglantisi BASARILI!','green');
+      var b=document.getElementById('nidojp-durum-badge');
+      if(b){b.style.background='#dcfce7';b.style.color='#166534';b.textContent='Baglanti OK';}
     }else{
       toast('B2B Hata: '+(d.error||JSON.stringify(d)),'red');
     }
   }).catch(function(e){
-    console.error('[NiDOJP Test] Error:',e);
+    console.error('[NiDOJP Test]',e);
     toast('Sunucu hatasi: '+e.message,'red');
   });
+}
+function nidojpRateLimitSifirla(){
+  fetch('/api/nidojp-garanti',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    credentials:'same-origin',
+    body:JSON.stringify({action:'reset_rate_limit'})
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.success) toast('Rate limit sifirlandi! Simdi B2B Test butonuna basin.','green');
+    else toast('Hata: '+(d.error||''),'red');
+  }).catch(function(e){toast('Hata: '+e.message,'red');});
 }
 var WATI_AYAR = { apiUrl:'', apiToken:'', googleMapsUrl:'https://maps.google.com/?q=41.2867,36.3370', aktif:true, otoBildirim:true };
 

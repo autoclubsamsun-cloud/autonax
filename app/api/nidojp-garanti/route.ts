@@ -6,11 +6,7 @@ let dbReady = false;
 async function ensureDB() { if (!dbReady) { await initDB(); dbReady = true; } }
 
 const B2B_URL = 'https://b2b.nidojpfilm.com';
-
-// ====== SESSION CACHE ======
-// Her login B2B rate limit'e takilir. Session'i bellekte cache'le.
-let cachedSession: { cookies: Record<string, string>; expiresAt: number } | null = null;
-let rateLimitUntil = 0;
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
 // Urun -> garanti yili eslesmesi
 const GARANTI_YILLARI: Record<string, number> = {
@@ -27,7 +23,6 @@ function parseCookies(setCookieHeaders: string[]): Record<string, string> {
   }
   return cookies;
 }
-
 function cookieString(cookies: Record<string, string>): string {
   return Object.entries(cookies).map(([k, v]) => `${k}=${v}`).join('; ');
 }
@@ -42,36 +37,93 @@ async function getNidojpConfig() {
   return cfg;
 }
 
-// B2B Login - session cookie al
+// ====== DB SESSION MANAGEMENT ======
+// Session'i site_ayarlar'da sakla (anahtar: 'nidojp_session')
+// Vercel serverless hafizasi cold start'ta sifirlanir, DB kalici.
+async function getStoredSession(): Promise<{ cookies: Record<string, string>; expiresAt: number; rateLimitUntil: number } | null> {
+  try {
+    const rows = await sql`SELECT deger FROM site_ayarlar WHERE anahtar = 'nidojp_session' LIMIT 1`;
+    if (rows.length === 0) return null;
+    const data = typeof rows[0].deger === 'string' ? JSON.parse(rows[0].deger) : rows[0].deger;
+    return data || null;
+  } catch { return null; }
+}
+
+async function saveSession(cookies: Record<string, string>, expiresAt: number, rateLimitUntil = 0) {
+  const val = JSON.stringify({ cookies, expiresAt, rateLimitUntil });
+  await sql`
+    INSERT INTO site_ayarlar (anahtar, deger) VALUES ('nidojp_session', ${val}::jsonb)
+    ON CONFLICT (anahtar) DO UPDATE SET deger = ${val}::jsonb
+  `;
+}
+
+async function saveRateLimit(until: number) {
+  const stored = await getStoredSession();
+  const val = JSON.stringify({
+    cookies: stored?.cookies || {},
+    expiresAt: stored?.expiresAt || 0,
+    rateLimitUntil: until
+  });
+  await sql`
+    INSERT INTO site_ayarlar (anahtar, deger) VALUES ('nidojp_session', ${val}::jsonb)
+    ON CONFLICT (anahtar) DO UPDATE SET deger = ${val}::jsonb
+  `;
+}
+
+// Session gecerli mi? B2B'de korunmus sayfaya erismeyi dene
+async function testSession(cookies: Record<string, string>): Promise<boolean> {
+  try {
+    const res = await fetch(B2B_URL + '/stok-garanti-islemleri', {
+      redirect: 'manual',
+      headers: { 'Cookie': cookieString(cookies), 'User-Agent': UA },
+    });
+    // 200 = giris yapilmis, 302 = login'e yonlendirme (session gecersiz)
+    return res.status === 200;
+  } catch { return false; }
+}
+
+// ====== B2B LOGIN (DB session destekli) ======
 async function b2bLogin(): Promise<{ success: boolean; cookies?: Record<string, string>; error?: string }> {
   try {
-    // Rate limit cooldown
-    if (Date.now() < rateLimitUntil) {
-      const bekle = Math.ceil((rateLimitUntil - Date.now()) / 60000);
-      return { success: false, error: 'B2B rate limit aktif. ' + bekle + ' dk sonra tekrar deneyin.' };
+    await ensureDB();
+
+    // 1. DB'den mevcut session'i yukle
+    const stored = await getStoredSession();
+
+    // Rate limit kontrolu (DB'den)
+    if (stored && stored.rateLimitUntil && Date.now() < stored.rateLimitUntil) {
+      const bekle = Math.ceil((stored.rateLimitUntil - Date.now()) / 60000);
+      return { success: false, error: `B2B rate limit aktif. ${bekle} dk sonra tekrar deneyin.` };
     }
-    // Cache kontrolu
-    if (cachedSession && Date.now() < cachedSession.expiresAt) {
-      return { success: true, cookies: cachedSession.cookies };
+
+    // 2. Kayitli session varsa ve suresi dolmamissa, once test et
+    if (stored && stored.cookies && stored.expiresAt && Date.now() < stored.expiresAt) {
+      const valid = await testSession(stored.cookies);
+      if (valid) {
+        console.log('[NIDOJP] DB session gecerli, yeniden login gerekmiyor');
+        return { success: true, cookies: stored.cookies };
+      }
+      console.log('[NIDOJP] DB session gecersiz, yeni login yapilacak');
     }
+
+    // 3. Yeni login gerekli
     const cfg = await getNidojpConfig();
-    if (!cfg) return { success: false, error: 'NiDOJP ayarlari yapilandirilmamis' };
+    if (!cfg) return { success: false, error: 'NiDOJP ayarlari yapilandirilmamis. Ayarlar > NiDOJP bolumunden email/sifre girin.' };
 
     // Step 1: Ana sayfaya GET - cookie al
     const initRes = await fetch(B2B_URL + '/', {
       redirect: 'manual',
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+      headers: { 'User-Agent': UA },
     });
-    const initCookieHeaders = initRes.headers.getSetCookie ? initRes.headers.getSetCookie() : 
+    const initCookieHeaders = initRes.headers.getSetCookie ? initRes.headers.getSetCookie() :
       (initRes.headers.get('set-cookie') || '').split(',').filter(Boolean);
     const cookies = parseCookies(initCookieHeaders);
-    
-    const csrfToken = cookies['csrf_token'] || '';
+
+    let csrfToken = cookies['csrf_token'] || '';
     if (!csrfToken) {
-      // Sayfa iceriginden csrf okumaya calis
       const html = await initRes.text();
-      const m = html.match(/csrf_token['"]\s*(?:value|content)\s*=\s*['"]([^'"]+)/);
-      if (m) cookies['csrf_token'] = m[1];
+      const m = html.match(/csrf_token['\"]\s*(?:value|content)\s*=\s*['"]([^'"]+)/);
+      if (m) { csrfToken = m[1]; cookies['csrf_token'] = csrfToken; }
     }
 
     // Step 2: Login POST
@@ -79,7 +131,7 @@ async function b2bLogin(): Promise<{ success: boolean; cookies?: Record<string, 
     formData.append('login_info', cfg.email);
     formData.append('password', cfg.sifre);
     formData.append('g_recaptcha', '');
-    formData.append('csrf', cookies['csrf_token'] || '');
+    formData.append('csrf', csrfToken);
     formData.append('remember', 'on');
 
     const loginRes = await fetch(B2B_URL + '/Login/login_ajax', {
@@ -91,27 +143,33 @@ async function b2bLogin(): Promise<{ success: boolean; cookies?: Record<string, 
         'Origin': B2B_URL,
         'Referer': B2B_URL + '/',
         'Cookie': cookieString(cookies),
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'User-Agent': UA,
       },
       body: formData.toString(),
     });
 
     const loginCookieHeaders = loginRes.headers.getSetCookie ? loginRes.headers.getSetCookie() :
       (loginRes.headers.get('set-cookie') || '').split(',').filter(Boolean);
-    const loginCookies = parseCookies(loginCookieHeaders);
-    Object.assign(cookies, loginCookies);
+    Object.assign(cookies, parseCookies(loginCookieHeaders));
 
     const loginData = await loginRes.json().catch(() => null);
+
     if (loginData && loginData.status === true) {
-      cachedSession = { cookies, expiresAt: Date.now() + 25 * 60 * 1000 };
-      rateLimitUntil = 0;
+      // BASARILI - session'i DB'ye kaydet (2 saat gecerli)
+      await saveSession(cookies, Date.now() + 2 * 60 * 60 * 1000, 0);
+      console.log('[NIDOJP] Login basarili, session DB ye kaydedildi (2 saat)');
       return { success: true, cookies };
     }
+
+    // HATA - rate limit mi?
     const errMsg = loginData?.error || 'Login basarisiz';
-    if (errMsg.includes('Fazla Deneme') || errMsg.includes('fazla deneme')) {
-      rateLimitUntil = Date.now() + 15 * 60 * 1000;
-      return { success: false, error: 'B2B cok fazla deneme hatasi. 15 dk bekleyip tekrar deneyin.' };
+    if (errMsg.toLowerCase().includes('fazla deneme')) {
+      // 15 dk cooldown DB'ye kaydet
+      await saveRateLimit(Date.now() + 15 * 60 * 1000);
+      console.log('[NIDOJP] Rate limit! 15 dk cooldown DB ye kaydedildi');
+      return { success: false, error: 'B2B cok fazla deneme. 15 dk bekleyip tekrar deneyin.' };
     }
+
     return { success: false, error: errMsg };
   } catch (e: any) {
     return { success: false, error: e.message || 'Login hatasi' };
@@ -151,10 +209,16 @@ export async function POST(req: NextRequest) {
     const b = await req.json();
     const action = b.action;
 
-    // --- LOGIN ---
+    // --- LOGIN TEST ---
     if (action === 'login') {
       const result = await b2bLogin();
-      return NextResponse.json({ success: result.success, cookies: result.cookies, error: result.error });
+      return NextResponse.json({ success: result.success, error: result.error });
+    }
+
+    // --- RATE LIMIT SIFIRLA (admin kullanimi) ---
+    if (action === 'reset_rate_limit') {
+      await saveRateLimit(0);
+      return NextResponse.json({ success: true, message: 'Rate limit sifirlandi' });
     }
 
     // --- GARANTI OLUSTUR ---
@@ -175,11 +239,10 @@ export async function POST(req: NextRequest) {
       formData.append('warranty_desc', b.warranty_desc || '');
       formData.append('customer_name', b.customer_name || '');
       formData.append('customer_phone', b.customer_phone || '');
-      formData.append('customer_city', b.customer_city || '67');
+      formData.append('customer_city', b.customer_city || '55');
       formData.append('customer_counties', b.customer_counties || '');
       formData.append('csrf', login.cookies['csrf_token'] || '');
-      
-      // field_application array
+
       if (Array.isArray(b.field_application)) {
         b.field_application.forEach((v: number) => formData.append('field_application[]', String(v)));
       }
@@ -190,18 +253,19 @@ export async function POST(req: NextRequest) {
           'Content-Type': 'application/x-www-form-urlencoded',
           'X-Requested-With': 'XMLHttpRequest',
           'Origin': B2B_URL,
-          'Referer': B2B_URL + '/stok-garanti-ekle/',
+          'Referer': B2B_URL + '/stok-garanti-ekle/' + (b.stock_warranty_id || ''),
           'Cookie': cookieString(login.cookies),
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'User-Agent': UA,
         },
         body: formData.toString(),
       });
 
       const garantiData = await garantiRes.json().catch(() => null);
+      console.log('[NIDOJP] B2B garanti response:', JSON.stringify(garantiData));
 
       // 3. Garanti yilini hesapla
       const urunKod = b.product_id || '';
-      let garantiYil = 8; // varsayilan
+      let garantiYil = 8;
       Object.keys(GARANTI_YILLARI).forEach(k => {
         if (urunKod.toLowerCase().includes(k.toLowerCase())) garantiYil = GARANTI_YILLARI[k];
       });
@@ -210,7 +274,7 @@ export async function POST(req: NextRequest) {
       bitisTarih.setFullYear(bitisTarih.getFullYear() + garantiYil);
       const garantiBitis = bitisTarih.toISOString().split('T')[0];
 
-      // 4. DB'ye kaydet (B2B basarisiz olsa bile lokal kayit tut)
+      // 4. DB'ye kaydet
       const b2bBasarili = garantiData && garantiData.status === true;
       const seriNo = garantiData?.serial_number || garantiData?.seri_no || garantiData?.warranty_no || garantiData?.data?.serial_number || garantiData?.data?.seri_no || null;
 
@@ -221,14 +285,12 @@ export async function POST(req: NextRequest) {
         VALUES (${b.randevu_id || null}, ${b.stock_warranty_id || 0}, ${seriNo},
           ${urunKod}, ${b.license_plate || ''}, ${b.vehicle_km || ''},
           ${ugTarih}, ${garantiYil}, ${garantiBitis}, ${b.warranty_desc || ''},
-          ${b.customer_name || ''}, ${b.customer_phone || ''}, 
-          ${b.customer_city || '67'}, ${b.customer_counties || ''},
+          ${b.customer_name || ''}, ${b.customer_phone || ''},
+          ${b.customer_city || '55'}, ${b.customer_counties || ''},
           ${JSON.stringify(b.field_application || [])}::jsonb,
           ${b2bBasarili ? 'aktif' : 'lokal'})
         RETURNING *
       `;
-
-      console.log('[NIDOJP] B2B response:', JSON.stringify(garantiData));
 
       return NextResponse.json({
         success: true,
@@ -244,46 +306,19 @@ export async function POST(req: NextRequest) {
       if (!login.success || !login.cookies) {
         return NextResponse.json({ success: false, error: 'B2B login basarisiz' });
       }
-
       const formData = new URLSearchParams();
       formData.append('license_plate', b.license_plate || b.plaka || '');
       formData.append('csrf', login.cookies['csrf_token'] || '');
-
       const res = await fetch(B2B_URL + '/Account/check_warranty_ajax', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
           'X-Requested-With': 'XMLHttpRequest',
           'Cookie': cookieString(login.cookies),
+          'User-Agent': UA,
         },
         body: formData.toString(),
       });
-
-      const data = await res.json().catch(() => null);
-      return NextResponse.json({ success: true, data });
-    }
-
-    // --- ILCE GETIR ---
-    if (action === 'ilce_getir') {
-      const login = await b2bLogin();
-      if (!login.success || !login.cookies) {
-        return NextResponse.json({ success: false, error: 'B2B login basarisiz' });
-      }
-
-      const formData = new URLSearchParams();
-      formData.append('id', String(b.city_id || ''));
-      formData.append('csrf', login.cookies['csrf_token'] || '');
-
-      const res = await fetch(B2B_URL + '/Account/get_cities', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'X-Requested-With': 'XMLHttpRequest',
-          'Cookie': cookieString(login.cookies),
-        },
-        body: formData.toString(),
-      });
-
       const data = await res.json().catch(() => null);
       return NextResponse.json({ success: true, data });
     }
