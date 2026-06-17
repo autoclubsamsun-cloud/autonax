@@ -4707,17 +4707,36 @@ function nidojpStokBul(hizmet){
 
 function b2bOturumYenile(idx){
   var el=document.getElementById('b2b-status-'+idx);
-  if(el)el.innerHTML='<span style="color:#f59e0b">Oturum aciliyor...</span>';
+  // Oncelikle mevcut session'i test et
+  if(el)el.innerHTML='<span style="color:#f59e0b">Session test ediliyor...</span>';
   fetch('/api/nidojp-garanti',{
     method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
-    body:JSON.stringify({action:'login'})
+    body:JSON.stringify({action:'test_session'})
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.success&&d.valid){
+      if(el)el.innerHTML='<span style="color:#16a34a;font-weight:700">\u2713 B2B oturumu aktif</span>';
+    }else{
+      // Session gecersiz - cookie yapistirma formu goster
+      if(el)el.innerHTML='<div style="font-size:10px"><div style="color:#dc2626;font-weight:700;margin-bottom:6px">Oturum gecersiz</div><div style="color:#555;margin-bottom:4px">1. <a href="https://b2b.nidojpfilm.com" target="_blank" style="color:#2563eb">B2B paneli</a> acin ve giris yapin</div><div style="color:#555;margin-bottom:4px">2. F12 > Application > Cookies > ci_session degerini kopyalayin</div><input id="b2b-cookie-'+idx+'" placeholder="ci_session degerini yapistin" style="width:100%;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:10px;margin:4px 0;box-sizing:border-box"><button onclick="b2bCookieKaydet('+idx+')" style="padding:5px 12px;border:none;border-radius:6px;background:#16a34a;color:#fff;font-size:10px;font-weight:700;cursor:pointer;margin-top:2px">Kaydet</button></div>';
+    }
+  }).catch(function(e){
+    if(el)el.innerHTML='<span style="color:#dc2626">Hata: '+e.message+'</span>';
+  });
+}
+function b2bCookieKaydet(idx){
+  var cookieVal=(document.getElementById('b2b-cookie-'+idx)||{}).value||'';
+  if(!cookieVal||cookieVal.length<10){alert('Gecerli bir ci_session degeri yapistin');return;}
+  var el=document.getElementById('b2b-status-'+idx);
+  if(el)el.innerHTML='<span style="color:#f59e0b">Kaydediliyor...</span>';
+  fetch('/api/nidojp-garanti',{
+    method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
+    body:JSON.stringify({action:'save_browser_cookie',ci_session:cookieVal})
   }).then(function(r){return r.json();}).then(function(d){
     if(d.success){
       if(el)el.innerHTML='<span style="color:#16a34a;font-weight:700">\u2713 B2B oturumu aktif</span>';
-      // Ilceleri de yukle
       setTimeout(function(){garIlceYukle(idx);},300);
     }else{
-      if(el)el.innerHTML='<span style="color:#dc2626">'+( d.error||'Oturum acilamadi')+'</span>';
+      if(el)el.innerHTML='<span style="color:#dc2626">'+(d.error||'Kaydedilemedi')+'</span>';
     }
   }).catch(function(e){
     if(el)el.innerHTML='<span style="color:#dc2626">Hata: '+e.message+'</span>';
@@ -4732,12 +4751,13 @@ function b2bOturumKontrol(idx){
     if(d.success&&d.valid){
       if(el)el.innerHTML='<span style="color:#16a34a;font-weight:700">\u2713 B2B oturumu aktif</span>';
     }else{
-      if(el)el.innerHTML='<span style="color:#f59e0b">Oturum gecersiz - Yenile butonuna basin</span>';
+      if(el)el.innerHTML='<span style="color:#f59e0b">Oturum gecersiz - <b>Oturum Yenile</b> butonuna basin</span>';
     }
   }).catch(function(){
-    if(el)el.innerHTML='<span style="color:#f59e0b">Oturum kontrol edilemedi</span>';
+    if(el)el.innerHTML='<span style="color:#f59e0b">Kontrol edilemedi</span>';
   });
 }
+
 
 function garIlceYukle(idx){
   var sehirEl=document.getElementById('gar-sehir-'+idx);
