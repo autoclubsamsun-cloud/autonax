@@ -326,6 +326,19 @@ export async function POST(req: NextRequest) {
       formData.append('customer_phone', b.customer_phone || '');
       formData.append('customer_city', b.customer_city || '55');
       formData.append('customer_counties', b.customer_counties || '');
+      // warranty_year zorunlu alan - urun bazli garanti suresi
+      const warrantyYearMap: Record<string, number> = {
+        '44': 6,  // S75 - 6 yil
+        '43': 4,  // CS190 - 4 yil
+        '42': 10, // N8 - 10 yil
+        '41': 8,  // N7 - 8 yil
+        '31': 8,  // S Matte - 8 yil
+        '45': 8,  // S85 - 8 yil
+        '46': 12, // N9 - 12 yil
+        '47': 5,  // H7 Black - 5 yil
+      };
+      const wYear = b.warranty_year || warrantyYearMap[String(stockId)] || 6;
+      formData.append('warranty_year', String(wYear));
       formData.append('csrf', login.cookies['csrf_token'] || '');
       if (Array.isArray(b.field_application)) {
         b.field_application.forEach((v: number) => formData.append('field_application[]', String(v)));
