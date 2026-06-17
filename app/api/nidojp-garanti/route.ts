@@ -297,8 +297,15 @@ export async function POST(req: NextRequest) {
       }
       // HTML'den de CSRF kontrol
       const garantiPageHtml = await garantiPageRes.text();
+      // Hidden input'tan CSRF
       const csrfFromPage = garantiPageHtml.match(/csrf_token['"]\s*(?:value|content)\s*=\s*['"]([^'"]+)/);
+      // Meta tag'den CSRF
+      const csrfFromMeta = garantiPageHtml.match(/name=['"]csrf['"]\s*content=['"]([^'"]+)/);
+      // Cookie.get simule - HTML icindeki cookie degerini al
+      const csrfFromCookieJs = garantiPageHtml.match(/csrf_token=([a-f0-9]{32,})/i);
       if (csrfFromPage) login.cookies['csrf_token'] = csrfFromPage[1];
+      else if (csrfFromMeta) login.cookies['csrf_token'] = csrfFromMeta[1];
+      else if (csrfFromCookieJs) login.cookies['csrf_token'] = csrfFromCookieJs[1];
       
       // Sayfadaki form field name'lerini logla (debug)
       const pageFields: string[] = [];
@@ -337,7 +344,12 @@ export async function POST(req: NextRequest) {
         body: formData.toString(),
       });
 
-      const garantiData = await garantiRes.json().catch(() => null);
+      let garantiData = null;
+      const garantiRawText = await garantiRes.text();
+      try { garantiData = JSON.parse(garantiRawText); } catch { garantiData = null; }
+      if (!garantiData) {
+        console.log('[NIDOJP] B2B garanti raw response:', garantiRes.status, garantiRawText.substring(0, 500));
+      }
       // B2B response cookies'ini guncelle ve DB'ye kaydet
       const garantiRespCookies = garantiRes.headers.getSetCookie ? garantiRes.headers.getSetCookie() :
         (garantiRes.headers.get('set-cookie') || '').split(',').filter(Boolean);
@@ -383,6 +395,7 @@ export async function POST(req: NextRequest) {
         success: true,
         b2b_success: b2bBasarili,
         b2b_response: garantiData,
+        b2b_error: !b2bBasarili ? (garantiData?.error || garantiRawText?.substring(0, 200) || 'B2B yanit bos') : null,
         data: dbRows[0] || null,
       });
     }
@@ -445,7 +458,10 @@ export async function POST(req: NextRequest) {
         body: formData.toString(),
       });
 
-      const respData = await res.json().catch(() => null);
+      let respData = null;
+      const ilceRawText = await res.text();
+      try { respData = JSON.parse(ilceRawText); } catch { respData = null; }
+      if (!respData) console.log('[NIDOJP] Ilce raw response:', res.status, ilceRawText.substring(0, 300));
       
       // B2B response: { status: true, counties: "<option value='id'>name</option>..." }
       // HTML options'i parse edip JSON array'e cevir
