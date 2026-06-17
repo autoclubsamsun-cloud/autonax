@@ -402,6 +402,42 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, data });
     }
 
+    // --- ILCE GETIR ---
+    if (action === 'ilce_getir') {
+      const login = await b2bLogin();
+      if (!login.success || !login.cookies) {
+        return NextResponse.json({ success: false, error: 'B2B session gecersiz' });
+      }
+      // Oncelikle B2B'den taze CSRF al
+      const pageRes = await fetch(B2B_URL + '/stok-garanti-islemleri', {
+        redirect: 'manual',
+        headers: { 'Cookie': cookieString(login.cookies), 'User-Agent': UA },
+      });
+      const pageCookies = pageRes.headers.getSetCookie ? pageRes.headers.getSetCookie() :
+        (pageRes.headers.get('set-cookie') || '').split(',').filter(Boolean);
+      const freshParsed = parseCookies(pageCookies);
+      if (freshParsed.csrf_token) login.cookies['csrf_token'] = freshParsed.csrf_token;
+
+      const formData = new URLSearchParams();
+      formData.append('id', String(b.city_id || ''));
+      formData.append('csrf', login.cookies['csrf_token'] || '');
+
+      const res = await fetch(B2B_URL + '/Account/get_cities', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Cookie': cookieString(login.cookies),
+          'User-Agent': UA,
+        },
+        body: formData.toString(),
+      });
+
+      const data = await res.json().catch(() => null);
+      console.log('[NIDOJP] Ilce response for city', b.city_id, ':', JSON.stringify(data)?.substring(0, 300));
+      return NextResponse.json({ success: true, data });
+    }
+
     // --- DEBUG: B2B SAYFA FETCH ---
     if (action === 'fetch_b2b_page') {
       const stored = await getStoredSession();
