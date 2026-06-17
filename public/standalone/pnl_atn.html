@@ -4705,6 +4705,40 @@ function nidojpStokBul(hizmet){
   return{id:0,urun:''};
 }
 
+function b2bOturumYenile(idx){
+  var el=document.getElementById('b2b-status-'+idx);
+  if(el)el.innerHTML='<span style="color:#f59e0b">Oturum aciliyor...</span>';
+  fetch('/api/nidojp-garanti',{
+    method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
+    body:JSON.stringify({action:'login'})
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.success){
+      if(el)el.innerHTML='<span style="color:#16a34a;font-weight:700">\u2713 B2B oturumu aktif</span>';
+      // Ilceleri de yukle
+      setTimeout(function(){garIlceYukle(idx);},300);
+    }else{
+      if(el)el.innerHTML='<span style="color:#dc2626">'+( d.error||'Oturum acilamadi')+'</span>';
+    }
+  }).catch(function(e){
+    if(el)el.innerHTML='<span style="color:#dc2626">Hata: '+e.message+'</span>';
+  });
+}
+function b2bOturumKontrol(idx){
+  var el=document.getElementById('b2b-status-'+idx);
+  fetch('/api/nidojp-garanti',{
+    method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
+    body:JSON.stringify({action:'test_session'})
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.success&&d.valid){
+      if(el)el.innerHTML='<span style="color:#16a34a;font-weight:700">\u2713 B2B oturumu aktif</span>';
+    }else{
+      if(el)el.innerHTML='<span style="color:#f59e0b">Oturum gecersiz - Yenile butonuna basin</span>';
+    }
+  }).catch(function(){
+    if(el)el.innerHTML='<span style="color:#f59e0b">Oturum kontrol edilemedi</span>';
+  });
+}
+
 function garIlceYukle(idx){
   var sehirEl=document.getElementById('gar-sehir-'+idx);
   var ilceEl=document.getElementById('gar-ilce-'+idx);
@@ -4746,6 +4780,8 @@ if(typeof USR!=='undefined'&&USR&&USR.rol==='saha')return '';
 var hizmet=r.hizmet||'';
 var stok=nidojpStokBul(hizmet);
 var tamArac=hizmet.toLowerCase().indexOf('tam')>=0||hizmet.toLowerCase().indexOf('komple')>=0||hizmet.toLowerCase().indexOf('full')>=0;
+var h='<div id="b2b-session-bar-'+idx+'" style="margin-bottom:10px;padding:10px 14px;background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1.5px solid #93c5fd;border-radius:10px;display:flex;align-items:center;gap:10px"><div id="b2b-status-'+idx+'" style="flex:1;font-size:11px;color:#1e40af">B2B oturum kontrol ediliyor...</div><button onclick="b2bOturumYenile('+idx+')" style="padding:7px 16px;border:none;border-radius:8px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 4px rgba(37,99,235,.3)">\u26A1 Oturum Yenile</button></div>';
+
 var h='<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:#1a1a2e;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style="font-size:14px">&#128196;</span> NiDOJP Garanti Belgesi</div>';
 
 if(r._garanti){var g=r._garanti;

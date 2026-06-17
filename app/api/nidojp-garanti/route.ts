@@ -338,6 +338,14 @@ export async function POST(req: NextRequest) {
       });
 
       const garantiData = await garantiRes.json().catch(() => null);
+      // B2B response cookies'ini guncelle ve DB'ye kaydet
+      const garantiRespCookies = garantiRes.headers.getSetCookie ? garantiRes.headers.getSetCookie() :
+        (garantiRes.headers.get('set-cookie') || '').split(',').filter(Boolean);
+      const freshGarantiCookies = parseCookies(garantiRespCookies);
+      if (freshGarantiCookies.ci_session) {
+        login.cookies.ci_session = freshGarantiCookies.ci_session;
+        await saveSessionToDB(login.cookies).catch(() => {});
+      }
       console.log('[NIDOJP] B2B garanti response status:', garantiRes.status);
       console.log('[NIDOJP] B2B garanti response body:', JSON.stringify(garantiData));
       console.log('[NIDOJP] Sent fields:', formData.toString().substring(0, 500));
@@ -434,6 +442,14 @@ export async function POST(req: NextRequest) {
       });
 
       const data = await res.json().catch(() => null);
+      // Ilce response cookies guncelle
+      const ilceRespCookies = res.headers.getSetCookie ? res.headers.getSetCookie() :
+        (res.headers.get('set-cookie') || '').split(',').filter(Boolean);
+      const freshIlceCookies = parseCookies(ilceRespCookies);
+      if (freshIlceCookies.ci_session) {
+        login.cookies.ci_session = freshIlceCookies.ci_session;
+        await saveSessionToDB(login.cookies).catch(() => {});
+      }
       console.log('[NIDOJP] Ilce response for city', b.city_id, ':', JSON.stringify(data)?.substring(0, 300));
       return NextResponse.json({ success: true, data });
     }
