@@ -384,6 +384,20 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // --- OTURUM YENILE (OTOMATIK LOGIN) ---
+    if (action === 'refresh_session') {
+      try {
+        const login = await b2bLogin(true); // force yeni login
+        if (login.success) {
+          return NextResponse.json({ success: true, message: 'B2B oturumu yenilendi' });
+        } else {
+          return NextResponse.json({ success: false, error: login.error || 'Login basarisiz' });
+        }
+      } catch (e: any) {
+        return NextResponse.json({ success: false, error: e.message });
+      }
+    }
+
     // --- SESSION TEST ---
     if (action === 'test_session') {
       const stored = await getStoredSession();

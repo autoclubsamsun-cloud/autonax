@@ -4706,21 +4706,20 @@ function nidojpStokBul(hizmet){
 }
 
 function b2bOturumYenile(idx){
-  var el=document.getElementById('b2b-status-'+idx);
-  // Oncelikle mevcut session'i test et
-  if(el)el.innerHTML='<span style="color:#f59e0b">Session test ediliyor...</span>';
-  fetch('/api/nidojp-garanti',{
-    method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
-    body:JSON.stringify({action:'test_session'})
+  var el=document.getElementById("b2b-session-bar-"+idx);
+  if(el)el.innerHTML='<div style="padding:10px;text-align:center;font-size:11px;color:#f59e0b;font-weight:600">B2B oturumu yenileniyor...</div>';
+  fetch("/api/nidojp-garanti",{
+    method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",
+    body:JSON.stringify({action:"refresh_session"})
   }).then(function(r){return r.json();}).then(function(d){
-    if(d.success&&d.valid){
-      if(el)el.innerHTML='<span style="color:#16a34a;font-weight:700">\u2713 B2B oturumu aktif</span>';
+    if(d.success){
+      if(el)el.innerHTML='<div style="padding:10px;background:#dcfce7;border:1px solid #16a34a;border-radius:8px;text-align:center;font-size:11px;color:#16a34a;font-weight:700">\u2713 B2B oturumu aktif</div>';
+      setTimeout(function(){garIlceYukle(idx);},300);
     }else{
-      // Session gecersiz - cookie yapistirma formu goster
-      if(el)el.innerHTML='<div style="font-size:10px"><div style="color:#dc2626;font-weight:700;margin-bottom:6px">B2B oturumu gerekli</div><div style="color:#555;margin-bottom:6px">Asagidaki butonu B2B sayfasinda tiklayin:</div><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><a href="https://b2b.nidojpfilm.com" target="_blank" style="padding:6px 12px;background:#2563eb;color:#fff;border-radius:6px;font-size:10px;font-weight:700;text-decoration:none">1. B2B Paneli Ac</a><button onclick="b2bCookieOtomatik('+idx+')" style="padding:6px 12px;border:none;border-radius:6px;background:#16a34a;color:#fff;font-size:10px;font-weight:700;cursor:pointer">2. Cookie Kopyala Kodu</button></div></div>';
+      if(el)el.innerHTML='<div style="padding:10px;background:#fef2f2;border:1px solid #dc2626;border-radius:8px;text-align:center;font-size:11px;color:#dc2626">Oturum yenilenemedi: '+(d.error||"Bilinmeyen hata")+'</div>';
     }
   }).catch(function(e){
-    if(el)el.innerHTML='<span style="color:#dc2626">Hata: '+e.message+'</span>';
+    if(el)el.innerHTML='<div style="padding:10px;color:#dc2626;font-size:11px">Hata: '+e.message+'</div>';
   });
 }
 function b2bCookieOtomatik(idx){
