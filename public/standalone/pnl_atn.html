@@ -4794,7 +4794,7 @@ if(!r._garanti && r.id){
 }
 
 if(r._garanti){var g=r._garanti;
-h+='<div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:12px;padding:16px;color:#fff;margin-bottom:8px">';
+h+='<div id="gar-cert-'+idx+'" style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:12px;padding:16px;color:#fff;margin-bottom:8px">';
 h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px">GARANTI BELGESI</div><div style="background:rgba(22,163,74,.3);color:#4ade80;padding:4px 12px;border-radius:20px;font-size:10px;font-weight:700">'+(g.durum||'aktif').toUpperCase()+'</div></div>';
 h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px">';
 h+='<div><span style="color:#94a3b8">Urun:</span> <b>'+(g.urun||'-')+'</b></div>';
@@ -4873,14 +4873,8 @@ function garGorselYukle(idx){
 function garantiDuzenleAc(idx){
 var r=RANDEVULAR[idx];if(!r||!r._garanti)return;
 var g=r._garanti;
-var container=null;
-var allDivs=document.querySelectorAll("#rdv-modal-ovl div");
-for(var i=0;i<allDivs.length;i++){
-if(allDivs[i].style&&allDivs[i].style.background&&allDivs[i].style.background.indexOf("1a1a2e")>=0){
-container=allDivs[i];break;
-}
-}
-if(!container)return;
+var container=document.getElementById("gar-cert-"+idx);
+if(!container){console.log("gar-cert-"+idx+" bulunamadi");return;}
 var f='<div style="background:#f8fafc;border:2px solid #3b82f6;border-radius:12px;padding:16px">';
 f+='<div style="font-size:12px;font-weight:700;color:#1e40af;margin-bottom:12px">GARANTi DUZENLEME</div>';
 function gi(lbl,id,val,tp){
