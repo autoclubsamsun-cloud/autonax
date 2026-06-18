@@ -4723,6 +4723,41 @@ function b2bOturumYenile(idx){
     if(el)el.innerHTML='<span style="color:#dc2626">Hata: '+e.message+'</span>';
   });
 }
+function b2bCookieOtomatik(idx){
+  var siteUrl=window.location.origin;
+  // Konsol kodu: B2B sayfasinda calistirilacak
+  var konsol="var c=document.cookie.split(String.fromCharCode(59)).find(function(x){return x.trim().indexOf(String.fromCharCode(99,105,95,115,101,115,115,105,111,110,61))===0});if(!c){alert(String.fromCharCode(67,111,111,107,105,101,32,98,117,108,117,110,97,109,97,100,105))}else{var v=c.split(String.fromCharCode(61)).slice(1).join(String.fromCharCode(61));fetch(String.fromCharCode(39)+"+JSON.stringify(siteUrl)+"+String.fromCharCode(39,43,39,47,97,112,105,47,110,105,100,111,106,112,45,103,97,114,97,110,116,105,39),{method:String.fromCharCode(80,79,83,84),headers:{"+String.fromCharCode(39,67,111,110,116,101,110,116,45,84,121,112,101,39)+":String.fromCharCode(39,97,112,112,108,105,99,97,116,105,111,110,47,106,115,111,110,39)},body:JSON.stringify({action:String.fromCharCode(115,97,118,101,95,98,114,111,119,115,101,114,95,99,111,111,107,105,101),ci_session:v})}).then(function(r){return r.json()}).then(function(d){alert(d.success?String.fromCharCode(79,116,117,114,117,109,32,107,97,121,100,101,100,105,108,100,105,33):d.error)}).catch(function(e){alert(e.message)})}";
+  // Daha basit kod olustur
+  var basitKod="var c=document.cookie;var m=c.match(/ci_session=([^;]+)/);if(!m){alert('ci_session bulunamadi! B2B ye giris yapin.')}else{fetch('"+siteUrl+"/api/nidojp-garanti',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'save_browser_cookie',ci_session:m[1]})}).then(function(r){return r.json()}).then(function(d){alert(d.success?'Oturum basariyla kaydedildi! Bu sekmeyi kapatabilirsiniz.':'Hata: '+d.error)}).catch(function(e){alert('Hata: '+e.message)})}";
+  // 1. B2B popup ac
+  window.open("https://b2b.nidojpfilm.com","b2b_popup","width=800,height=600");
+  // 2. Kodu panoya kopyala
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(basitKod).then(function(){
+      alert("B2B acildi ve kod panoya kopyalandi!\n\nB2B sayfasinda:\n1. F12 tusuna basin (Gelistirici Araclari)\n2. Console sekmesine gelin\n3. Ctrl+V ile yapistirin\n4. Enter basin\n\nOturum otomatik kaydedilecek.");
+    }).catch(function(){
+      prompt("Asagidaki kodu B2B sayfasinda F12 > Console a yapistirin:",basitKod);
+    });
+  }else{
+    prompt("Asagidaki kodu B2B sayfasinda F12 > Console a yapistirin:",basitKod);
+  }
+  // 3. Polling - oturum kaydedildiyse otomatik guncelle
+  var pollCount=0;
+  var poller=setInterval(function(){
+    pollCount++;
+    if(pollCount>30){clearInterval(poller);return;}
+    fetch("/api/nidojp-garanti",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({action:"test_session"})})
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(d.success&&d.valid){
+        clearInterval(poller);
+        var el=document.getElementById("b2b-session-bar-"+idx);
+        if(el)el.innerHTML='<div style="padding:8px;background:#dcfce7;border:1px solid #16a34a;border-radius:8px;text-align:center;font-size:11px;color:#16a34a;font-weight:700">\u2713 B2B oturumu basariyla baglandi!</div>';
+      }
+    }).catch(function(){});
+  },3000);
+}
+
 function b2bCookieKaydet(idx){
   var cookieVal=(document.getElementById('b2b-cookie-'+idx)||{}).value||'';
   if(!cookieVal||cookieVal.length<10){alert('Gecerli bir ci_session degeri yapistin');return;}
