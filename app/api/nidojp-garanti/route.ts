@@ -275,7 +275,7 @@ export async function POST(req: NextRequest) {
             const editCookies = editPageRes.headers.getSetCookie?.() || [];
             editCookies.forEach((sc: string) => {
               const m = sc.match(/^([^=]+)=([^;]*)/);
-              if (m) login.cookies[m[1]] = m[2];
+              if (m && login.cookies) login.cookies[m[1]] = m[2];
             });
 
             // B2B update form data
