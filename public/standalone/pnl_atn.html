@@ -4805,6 +4805,7 @@ h+='<div><span style="color:#94a3b8">Plaka:</span> <b>'+(g.plaka||'-')+'</b></di
 h+='<div><span style="color:#94a3b8">KM:</span> <b>'+(g.arac_km||'-')+'</b></div>';
 h+='</div>';
 h+='<a href="https://b2b.nidojpfilm.com/stok-garanti-islemleri" target="_blank" style="display:block;margin-top:12px;text-align:center;color:#60a5fa;font-size:11px;text-decoration:underline">NiDOJP Panelde Goruntule &#8599;</a>';
+h+='<button onclick="garantiDuzenleAc('+idx+')" style="display:block;width:100%;margin-top:8px;padding:8px;border:1.5px solid #60a5fa;border-radius:8px;background:transparent;color:#60a5fa;font-size:11px;font-weight:600;cursor:pointer">&#9998; Duzenle</button>';
 h+='</div>';
 return h+'</div>';}
 
@@ -4867,6 +4868,87 @@ function garGorselYukle(idx){
     reader.onerror=function(){reject(new Error("Dosya okunamadi"));};
     reader.readAsDataURL(f);
   });
+}
+
+function garantiDuzenleAc(idx){
+var r=RANDEVULAR[idx];if(!r||!r._garanti)return;
+var g=r._garanti;
+var container=null;
+var allDivs=document.querySelectorAll("#rdv-modal-ovl div");
+for(var i=0;i<allDivs.length;i++){
+if(allDivs[i].style&&allDivs[i].style.background&&allDivs[i].style.background.indexOf("1a1a2e")>=0){
+container=allDivs[i];break;
+}
+}
+if(!container)return;
+var f='<div style="background:#f8fafc;border:2px solid #3b82f6;border-radius:12px;padding:16px">';
+f+='<div style="font-size:12px;font-weight:700;color:#1e40af;margin-bottom:12px">GARANTi DUZENLEME</div>';
+function gi(lbl,id,val,tp){
+var v=(val||'').toString().replace(/"/g,'&quot;');
+return '<div style="display:grid;grid-template-columns:120px 1fr;gap:6px;align-items:center;margin-bottom:6px"><label style="font-size:10px;font-weight:600;color:#555">'+lbl+'</label><input id="'+id+'" value="'+v+'" type="'+(tp||'text')+'" style="padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:11px"></div>';
+}
+f+=gi('Plaka','gar-edit-plaka-'+idx,g.plaka||'');
+f+=gi('KM','gar-edit-km-'+idx,g.arac_km||'','number');
+f+=gi('Musteri','gar-edit-musteri-'+idx,g.musteri_ad||'');
+f+=gi('Telefon','gar-edit-tel-'+idx,g.musteri_tel||'','tel');
+f+=gi('Aciklama','gar-edit-aciklama-'+idx,g.garanti_aciklama||'');
+f+=gi('Uyg. Tarihi','gar-edit-tarih-'+idx,g.uygulama_tarihi||'','date');
+f+='<div style="display:flex;gap:8px;margin-top:10px">';
+f+='<button onclick="garantiGuncelle('+idx+')" style="flex:1;padding:8px;border:none;border-radius:8px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;font-weight:600;font-size:11px;cursor:pointer">Kaydet & B2B Guncelle</button>';
+f+='<button onclick="garantiDuzenleIptal('+idx+')" style="flex:1;padding:8px;border:1.5px solid #d1d5db;border-radius:8px;background:#fff;color:#555;font-weight:600;font-size:11px;cursor:pointer">Vazgec</button>';
+f+='</div>';
+f+='<div id="gar-edit-sonuc-'+idx+'" style="margin-top:6px;font-size:10px;text-align:center"></div>';
+f+='</div>';
+container.outerHTML=f;
+}
+function garantiDuzenleIptal(idx){
+if(typeof window._rdvDetayRender==="function")window._rdvDetayRender();
+}
+function garantiGuncelle(idx){
+var r=RANDEVULAR[idx];if(!r||!r._garanti)return;
+var g=r._garanti;
+var el=document.getElementById("gar-edit-sonuc-"+idx);
+if(!el)return;
+var plaka=(document.getElementById("gar-edit-plaka-"+idx)||{}).value||"";
+var km=(document.getElementById("gar-edit-km-"+idx)||{}).value||"";
+var musteri=(document.getElementById("gar-edit-musteri-"+idx)||{}).value||"";
+var tel=(document.getElementById("gar-edit-tel-"+idx)||{}).value||"";
+var aciklama=(document.getElementById("gar-edit-aciklama-"+idx)||{}).value||"";
+var tarih=(document.getElementById("gar-edit-tarih-"+idx)||{}).value||"";
+el.innerHTML='<span style="color:#f59e0b">Guncelleniyor...</span>';
+fetch("/api/nidojp-garanti",{
+method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",
+body:JSON.stringify({
+action:"garanti_guncelle",
+garanti_id:g.id,
+nidojp_stok_id:g.nidojp_stok_id,
+license_plate:plaka,
+vehicle_km:km,
+customer_name:musteri,
+customer_phone:tel,
+warranty_desc:aciklama,
+installation_date:tarih
+})
+}).then(function(res){return res.json();})
+.then(function(data){
+if(data.success){
+el.innerHTML='<span style="color:#16a34a">Basariyla guncellendi!</span>';
+r._garanti.plaka=plaka;
+r._garanti.arac_km=km;
+r._garanti.musteri_ad=musteri;
+r._garanti.musteri_tel=tel;
+r._garanti.garanti_aciklama=aciklama;
+r._garanti.uygulama_tarihi=tarih;
+if(data.data)r._garanti=data.data;
+setTimeout(function(){
+if(typeof window._rdvDetayRender==="function")window._rdvDetayRender();
+},1500);
+}else{
+el.innerHTML='<span style="color:#dc2626">Hata: '+(data.error||"Bilinmeyen hata")+'</span>';
+}
+}).catch(function(e){
+el.innerHTML='<span style="color:#dc2626">Baglanti hatasi: '+e.message+'</span>';
+});
 }
 
 function garantiOlustur(idx){

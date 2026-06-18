@@ -237,6 +237,95 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, message: 'Cookie kaydedildi' });
     }
 
+    // --- GARANTI GUNCELLE ---
+    if (action === 'garanti_guncelle') {
+      try {
+        await ensureDB();
+        const garantiId = b.garanti_id;
+        if (!garantiId) return NextResponse.json({ success: false, error: 'garanti_id gerekli' });
+
+        // 1. Yerel DB guncelle
+        const updated = await sql`
+          UPDATE garanti_belgeleri SET
+            plaka = ${b.license_plate || ''},
+            arac_km = ${b.vehicle_km || ''},
+            musteri_ad = ${b.customer_name || ''},
+            musteri_tel = ${b.customer_phone || ''},
+            garanti_aciklama = ${b.warranty_desc || ''},
+            uygulama_tarihi = ${b.installation_date || null}
+          WHERE id = ${garantiId}
+          RETURNING *
+        `;
+
+        // 2. B2B guncelle
+        let b2bSuccess = false;
+        let b2bError = '';
+        try {
+          const login = await b2bLogin();
+          if (login.success && login.cookies) {
+            const stockId = String(b.nidojp_stok_id || updated[0]?.nidojp_stok_id || '');
+            
+            // Garanti duzenle sayfasini ac (CSRF icin)
+            const editPageRes = await fetch(B2B_URL + '/stok-garanti-islemleri', {
+              headers: {
+                'Cookie': Object.entries(login.cookies).map(([k,v]) => k+'='+v).join('; '),
+                'User-Agent': UA,
+              },
+            });
+            const editCookies = editPageRes.headers.getSetCookie?.() || [];
+            editCookies.forEach((sc: string) => {
+              const m = sc.match(/^([^=]+)=([^;]*)/);
+              if (m) login.cookies[m[1]] = m[2];
+            });
+
+            // B2B update form data
+            const formData = new URLSearchParams();
+            formData.append('stock_warranty_id', stockId);
+            formData.append('license_plate', b.license_plate || '');
+            formData.append('vehicle_km', b.vehicle_km || '');
+            formData.append('installation_date', b.installation_date || '');
+            formData.append('warranty_desc', b.warranty_desc || '');
+            formData.append('customer_name', b.customer_name || '');
+            formData.append('customer_phone', b.customer_phone || '');
+            formData.append('csrf', login.cookies['csrf_token'] || '');
+
+            const updateRes = await fetch(B2B_URL + '/Account/update_warranty_ajax', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Cookie': Object.entries(login.cookies).map(([k,v]) => k+'='+v).join('; '),
+                'X-Requested-With': 'XMLHttpRequest',
+                'User-Agent': UA,
+                'Referer': B2B_URL + '/stok-garanti-islemleri',
+              },
+              body: formData.toString(),
+            });
+
+            const updateText = await updateRes.text();
+            console.log('[NIDOJP] B2B update:', updateRes.status, updateText.substring(0, 200));
+            
+            let updateResult: any;
+            try { updateResult = JSON.parse(updateText); } catch { updateResult = { raw: updateText }; }
+            b2bSuccess = updateResult.status === true;
+            if (!b2bSuccess) b2bError = updateResult.error || 'B2B guncelleme basarisiz';
+          } else {
+            b2bError = 'B2B login basarisiz';
+          }
+        } catch (e: any) {
+          b2bError = e.message;
+        }
+
+        return NextResponse.json({
+          success: true,
+          b2b_success: b2bSuccess,
+          b2b_error: b2bError,
+          data: updated[0] || null,
+        });
+      } catch (e: any) {
+        return NextResponse.json({ success: false, error: e.message });
+      }
+    }
+
     // --- GORSEL YUKLE ---
     if (action === 'gorsel_yukle') {
       try {
