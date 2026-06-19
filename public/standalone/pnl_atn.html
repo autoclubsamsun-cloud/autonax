@@ -1598,17 +1598,53 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 
     <!-- ══ MÜŞTERİLER ══ -->
     <div id="pg-referanslar" class="pg">
-  <div class="ph-title">🤝 REFERANS & SADAKAT PUAN SİSTEMİ</div>
-  <div class="ph-sub">Referans müşteriler · Puan yönetimi · Seviye takibi · İndirim uygulama</div>
-  <div class="g4" id="ref-statlar" style="margin:16px 0"></div>
-  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
-    <button onclick="refYeniEkle()" style="padding:10px 18px;background:var(--r);color:#fff;border:none;border-radius:8px;font-family:Bebas Neue,sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer;box-shadow:0 2px 8px rgba(176,28,46,.3)">➕ Yeni Referans Ekle</button>
-    <button onclick="refTopluEkle()" style="padding:10px 18px;background:#059669;color:#fff;border:none;border-radius:8px;font-family:Bebas Neue,sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer">📦 Toplu Referans Tanımla</button>
-    <button onclick="refPuanAyarlari()" style="padding:10px 18px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-family:Bebas Neue,sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer">⚙️ Puan Ayarları</button>
+  <!-- HERO BANNER -->
+  <div id="ref-hero" style="background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%);border-radius:20px;padding:28px 24px;margin-bottom:20px;position:relative;overflow:hidden">
+    <div style="position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(139,92,246,.25),transparent 70%);pointer-events:none"></div>
+    <div style="position:absolute;bottom:-30px;left:-30px;width:150px;height:150px;background:radial-gradient(circle,rgba(59,130,246,.2),transparent 70%);pointer-events:none"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;position:relative;z-index:1">
+      <div>
+        <div style="font-family:Bebas Neue,sans-serif;font-size:28px;letter-spacing:3px;color:#fff;text-shadow:0 2px 10px rgba(139,92,246,.4)">REFERANS & SADAKAT</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:2px">Puan yonetimi &bull; Seviye takibi &bull; Indirim motoru</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="refYeniEkle()" style="padding:10px 20px;border:none;border-radius:10px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:1px;cursor:pointer;box-shadow:0 4px 15px rgba(139,92,246,.4);transition:all .2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(139,92,246,.5)'" onmouseout="this.style.transform='none';this.style.boxShadow='0 4px 15px rgba(139,92,246,.4)'">+ Yeni Referans</button>
+        <button onclick="refTopluEkle()" style="padding:10px 20px;border:none;border-radius:10px;background:linear-gradient(135deg,#059669,#047857);color:#fff;font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:1px;cursor:pointer;box-shadow:0 4px 15px rgba(5,150,105,.3);transition:all .2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">Toplu Ekle</button>
+        <button onclick="refPuanAyarlari()" style="padding:10px 20px;border:none;border-radius:10px;background:rgba(255,255,255,.1);backdrop-filter:blur(10px);color:#e2e8f0;font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:1px;cursor:pointer;border:1px solid rgba(255,255,255,.15);transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.1)'">&#9881; Ayarlar</button>
+      </div>
+    </div>
+    <!-- STAT KARTLARI -->
+    <div id="ref-statlar" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:20px"></div>
   </div>
-  <div id="ref-kartlar" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-bottom:20px"></div>
-  <div class="ph-title" style="font-size:16px;margin-top:20px">📋 REFERANS GEÇMİŞİ</div>
-  <div id="ref-gecmis" style="overflow-x:auto"></div>
+
+  <!-- ARAMA + FILTRE BAR -->
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+    <div style="position:relative;flex:1;min-width:200px">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#94a3b8" stroke-width="2" style="position:absolute;left:12px;top:50%;transform:translateY(-50%)"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="ref-arama" placeholder="Referans ara (isim, telefon...)" oninput="refAramaFiltre()" style="width:100%;padding:10px 10px 10px 36px;border:1.5px solid var(--bd);border-radius:10px;font-size:12px;font-family:Outfit,sans-serif;outline:none;background:var(--bg);color:var(--ink);transition:border .2s" onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor=''">
+    </div>
+    <div style="display:flex;gap:4px;background:var(--bg2);border-radius:10px;padding:3px" id="ref-filtre-tabs">
+      <button onclick="refFiltre('tumu')" class="ref-tab ref-tab-aktif" style="padding:7px 14px;border:none;border-radius:8px;font-size:10px;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;transition:all .2s">Tumu</button>
+      <button onclick="refFiltre('altin')" class="ref-tab" style="padding:7px 14px;border:none;border-radius:8px;font-size:10px;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;background:transparent;color:var(--ink3);transition:all .2s">Altin+</button>
+      <button onclick="refFiltre('puanli')" class="ref-tab" style="padding:7px 14px;border:none;border-radius:8px;font-size:10px;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;background:transparent;color:var(--ink3);transition:all .2s">Puanli</button>
+    </div>
+  </div>
+
+  <!-- REFERANS KARTLARI -->
+  <div id="ref-kartlar" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:24px"></div>
+
+  <!-- ISLEM GECMISI -->
+  <div style="background:var(--bg);border:1.5px solid var(--bd);border-radius:16px;overflow:hidden">
+    <div style="padding:16px 20px;border-bottom:1.5px solid var(--bd);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;color:var(--ink)">ISLEM GECMISI</div>
+      <div style="display:flex;gap:4px" id="ref-gecmis-tabs">
+        <button onclick="refGecmisFiltre('tumu')" class="ref-gtab ref-gtab-aktif" style="padding:5px 12px;border:none;border-radius:6px;font-size:9px;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;transition:all .2s">Tumu</button>
+        <button onclick="refGecmisFiltre('onaylandi')" class="ref-gtab" style="padding:5px 12px;border:none;border-radius:6px;font-size:9px;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;background:transparent;color:var(--ink3);transition:all .2s">Onaylanan</button>
+        <button onclick="refGecmisFiltre('beklemede')" class="ref-gtab" style="padding:5px 12px;border:none;border-radius:6px;font-size:9px;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;background:transparent;color:var(--ink3);transition:all .2s">Bekleyen</button>
+      </div>
+    </div>
+    <div id="ref-gecmis" style="padding:0"></div>
+  </div>
 </div>
 
 <div id="pg-musteriler" class="pg">
@@ -6015,278 +6051,370 @@ var TAKSIT_ORANLARI = (function(){
 })();
 
 // ─── REFERANS & SADAKAT PUAN SİSTEMİ ───
+// ====== REFERANS & SADAKAT PUAN SISTEMI ======
 var REF_AYAR = { puanTlOrani:10, kazanimYuzde:5, maxIndirimYuzde:50, seviyeler:{gumus:5,altin:15,platin:30}, carpanlar:{bronz:1,gumus:1.25,altin:1.5,platin:2} };
 var REF_DATA = [];
+var REF_GECMIS_DATA = [];
+var REF_GECMIS_FILTRE = "tumu";
+var REF_KART_FILTRE = "tumu";
 
 function refSayfasiYukle(){
-  fetch('/api/referanslar?ozet=1',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
+  fetch("/api/referanslar?ozet=1",{credentials:"same-origin"}).then(function(r){return r.json();}).then(function(d){
     if(!d.success) return;
     if(d.ayar) REF_AYAR = d.ayar;
     REF_DATA = d.data || [];
+    refStatlariGuncelle();
     refKartlariCiz();
     refGecmisiYukle();
-    refStatlariGuncelle();
   }).catch(function(){});
 }
 
 function refStatlariGuncelle(){
-  var el = document.getElementById('ref-statlar');
+  var el = document.getElementById("ref-statlar");
   if(!el) return;
   var topRef = REF_DATA.reduce(function(t,r){return t+r.toplam_referans;},0);
   var topPuan = REF_DATA.reduce(function(t,r){return t+r.toplam_puan;},0);
   var aktifRef = REF_DATA.length;
-  el.innerHTML = '<div class="sk" style="cursor:default"><div class="sv">'+aktifRef+'</div><div class="sl">Referans Müşteri</div></div>'
-    +'<div class="sk" style="cursor:default"><div class="sv">'+topRef+'</div><div class="sl">Toplam Referans</div></div>'
-    +'<div class="sk" style="cursor:default"><div class="sv">'+topPuan.toLocaleString('tr-TR')+'</div><div class="sl">Toplam Puan</div></div>'
-    +'<div class="sk" style="cursor:default"><div class="sv">₺'+(topPuan*REF_AYAR.puanTlOrani).toLocaleString('tr-TR')+'</div><div class="sl">TL Karşılığı</div></div>';
+  var tlDegeri = topPuan * REF_AYAR.puanTlOrani;
+  function statKart(icon,val,lbl,renk){
+    return '<div style="background:rgba(255,255,255,.07);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:16px;text-align:center;transition:transform .2s" onmouseover="this.style.transform=\'translateY(-3px)\'" onmouseout="this.style.transform=\'none\'">'
+      +'<div style="font-size:20px;margin-bottom:4px">'+icon+'</div>'
+      +'<div style="font-family:Bebas Neue,sans-serif;font-size:28px;color:'+renk+';text-shadow:0 2px 8px rgba(0,0,0,.3)" class="ref-counter" data-target="'+val+'">'+val+'</div>'
+      +'<div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px">'+lbl+'</div>'
+    +'</div>';
+  }
+  el.innerHTML = statKart("\ud83d\udc65",aktifRef,"Referans Musteri","#a78bfa")
+    + statKart("\ud83d\udcca",topRef,"Toplam Referans","#60a5fa")
+    + statKart("\u2b50",topPuan.toLocaleString("tr-TR"),"Toplam Puan","#fbbf24")
+    + statKart("\u20ba",tlDegeri.toLocaleString("tr-TR"),"TL Karsiligi","#34d399");
 }
 
 function seviyeRozet(s){
-  if(s==='Platin') return '💎';
-  if(s==='Altin') return '🥇';
-  if(s==='Gumus') return '🥈';
-  return '🥉';
+  if(s==="Platin") return "\ud83d\udc8e";
+  if(s==="Altin") return "\ud83c\udfc6";
+  if(s==="Gumus") return "\ud83e\udd48";
+  return "\ud83e\udd49";
 }
-
 function seviyeRenk(s){
-  if(s==='Platin') return '#818cf8';
-  if(s==='Altin') return '#f59e0b';
-  if(s==='Gumus') return '#94a3b8';
-  return '#d97706';
+  if(s==="Platin") return "#a78bfa";
+  if(s==="Altin") return "#fbbf24";
+  if(s==="Gumus") return "#94a3b8";
+  return "#d97706";
+}
+function seviyeGrad(s){
+  if(s==="Platin") return "linear-gradient(135deg,#7c3aed,#a78bfa)";
+  if(s==="Altin") return "linear-gradient(135deg,#d97706,#fbbf24)";
+  if(s==="Gumus") return "linear-gradient(135deg,#64748b,#94a3b8)";
+  return "linear-gradient(135deg,#92400e,#d97706)";
 }
 
-function refKartlariCiz(){
-  var el = document.getElementById('ref-kartlar');
-  if(!el) return;
-  if(REF_DATA.length===0){ el.innerHTML='<div style="padding:40px;text-align:center;color:var(--ink3);font-family:Outfit">Henüz referans müşteri eklenmemiş.<br>Yukarıdaki "Yeni Referans Ekle" butonunu kullanın.</div>'; return; }
-  el.innerHTML = REF_DATA.map(function(r){
-    var bakiyeTL = (r.toplam_puan||0) * REF_AYAR.puanTlOrani;
-    return '<div style="border:1.5px solid var(--bd);border-radius:14px;padding:16px;background:var(--bg);position:relative;overflow:hidden">'
-      +'<div style="position:absolute;top:0;right:0;padding:6px 12px;border-radius:0 14px 0 12px;background:'+seviyeRenk(r.seviye)+';color:#fff;font-family:Bebas Neue;font-size:12px;letter-spacing:1px">'+seviyeRozet(r.seviye)+' '+r.seviye+'</div>'
-      +'<div style="font-family:Bebas Neue;font-size:18px;color:var(--ink);letter-spacing:1px;margin-bottom:4px">'+(r.referans_musteri||'—')+'</div>'
-      +'<div style="font-size:12px;color:var(--ink3);margin-bottom:10px">📞 '+(r.referans_tel||'—')+'</div>'
-      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
-        +'<div style="text-align:center;padding:8px;background:var(--bg2);border-radius:8px"><div style="font-family:Bebas Neue;font-size:20px;color:var(--r)">'+r.onayli_referans+'</div><div style="font-size:10px;color:var(--ink3)">Onaylı Ref.</div></div>'
-        +'<div style="text-align:center;padding:8px;background:var(--bg2);border-radius:8px"><div style="font-family:Bebas Neue;font-size:20px;color:#059669">'+(r.toplam_puan||0)+'</div><div style="font-size:10px;color:var(--ink3)">Puan (₺'+bakiyeTL.toLocaleString('tr-TR')+')</div></div>'
-      +'</div>'
-      +'<div style="display:flex;gap:6px">'
-        +'<button onclick="refDetay(\''+r.referans_tel+'\')" style="flex:1;padding:8px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);font-size:11px;cursor:pointer;font-family:Outfit">📋 Detay</button>'
-        +'<button onclick="refPuanEkle(\''+r.referans_tel+'\',\''+r.referans_musteri+'\')" style="flex:1;padding:8px;border:1px solid #059669;border-radius:6px;background:#fff;color:#059669;font-size:11px;cursor:pointer;font-family:Outfit;font-weight:600">➕ Puan</button>'
-      +'</div>'
-    +'</div>';
-  }).join('');
-}
-
-function refGecmisiYukle(){
-  fetch('/api/referanslar',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
-    if(!d.success) return;
-    var el = document.getElementById('ref-gecmis');
-    if(!el) return;
-    var rows = d.data || [];
-    if(rows.length===0){ el.innerHTML='<div style="padding:20px;text-align:center;color:var(--ink3)">Kayıt yok</div>'; return; }
-    el.innerHTML='<table class="dt" style="width:100%;font-size:12px"><thead><tr><th>Tarih</th><th>Referans Veren</th><th>Gelen Müşteri</th><th>Hizmet</th><th>Tutar</th><th>Puan</th><th>Durum</th><th>İşlem</th></tr></thead><tbody>'
-      +rows.map(function(r){
-        var durumRenk = r.durum==='onaylandi'?'#059669':r.durum==='iptal'?'#dc2626':'#d97706';
-        var tarih = r.olusturma ? new Date(r.olusturma).toLocaleDateString('tr-TR') : '—';
-        return '<tr>'
-          +'<td>'+tarih+'</td>'
-          +'<td style="font-weight:600">'+(r.referans_musteri||'—')+'</td>'
-          +'<td>'+(r.hedef_musteri||'—')+'</td>'
-          +'<td>'+(r.hedef_hizmet||'—')+'</td>'
-          +'<td>₺'+(r.hedef_tutar||0).toLocaleString('tr-TR')+'</td>'
-          +'<td style="color:#059669;font-weight:600">'+(r.kazanilan_puan||0)+'</td>'
-          +'<td><span style="padding:2px 8px;border-radius:10px;font-size:10px;background:'+durumRenk+'20;color:'+durumRenk+';font-weight:600">'+r.durum+'</span></td>'
-          +'<td>'+(r.durum==='beklemede'?'<button onclick="refOnayla(\''+r.id+'\',\''+r.referans_tel+'\','+r.kazanilan_puan+')" style="padding:4px 10px;border:1px solid #059669;border-radius:6px;background:#fff;color:#059669;font-size:10px;cursor:pointer;font-weight:600">✅ Onayla</button>':'')+'</td>'
-        +'</tr>';
-      }).join('')
-      +'</tbody></table>';
-  }).catch(function(){});
-}
-
-function refYeniEkle(){
-  var ovl = document.createElement('div');
-  ovl.id='ref-ekle-ovl';
-  ovl.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
-  ovl.innerHTML='<div style="background:var(--bg);border-radius:16px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)">'
-    +'<div style="padding:16px 20px;border-bottom:1.5px solid var(--bd);display:flex;align-items:center;gap:10px"><div style="font-family:Bebas Neue;font-size:18px;letter-spacing:2px;color:var(--ink)">🤝 YENİ REFERANS EKLE</div></div>'
-    +'<div style="padding:20px;display:grid;gap:14px">'
-      +'<div><label style="font-size:11px;color:var(--ink3);font-weight:600;display:block;margin-bottom:4px">Referans Veren (Aracı Müşteri)</label><input id="ref-f-musteri" class="dz-inp" placeholder="Ad Soyad"></div>'
-      +'<div><label style="font-size:11px;color:var(--ink3);font-weight:600;display:block;margin-bottom:4px">Telefon</label><input id="ref-f-tel" class="dz-inp" placeholder="05XX XXX XX XX"></div>'
-      +'<hr style="border:none;border-top:1px solid var(--bd)">'
-      +'<div><label style="font-size:11px;color:var(--ink3);font-weight:600;display:block;margin-bottom:4px">Gönderdiği Müşteri</label><input id="ref-f-hedef" class="dz-inp" placeholder="Gelen müşterinin adı"></div>'
-      +'<div><label style="font-size:11px;color:var(--ink3);font-weight:600;display:block;margin-bottom:4px">Hizmet</label><input id="ref-f-hizmet" class="dz-inp" placeholder="Örn: PPF Kaplama"></div>'
-      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
-        +'<div><label style="font-size:11px;color:var(--ink3);font-weight:600;display:block;margin-bottom:4px">Tutar (₺)</label><input id="ref-f-tutar" class="dz-inp" type="number" placeholder="0"></div>'
-        +'<div><label style="font-size:11px;color:var(--ink3);font-weight:600;display:block;margin-bottom:4px">Kazanacak Puan</label><input id="ref-f-puan" class="dz-inp" type="number" placeholder="Otomatik hesaplanır" oninput=""></div>'
-      +'</div>'
-      +'<div><label style="font-size:11px;color:var(--ink3);font-weight:600;display:block;margin-bottom:4px">Durum</label><select id="ref-f-durum" class="dz-inp"><option value="onaylandi">Onaylandı (hemen puan ver)</option><option value="beklemede">Beklemede</option></select></div>'
-      +'<div><label style="font-size:11px;color:var(--ink3);font-weight:600;display:block;margin-bottom:4px">Not</label><input id="ref-f-not" class="dz-inp" placeholder="Opsiyonel"></div>'
-    +'</div>'
-    +'<div style="padding:14px 20px;border-top:1.5px solid var(--bd);display:flex;gap:8px">'
-      +'<button onclick="document.getElementById(\'ref-ekle-ovl\').remove()" style="flex:1;padding:11px;border:1px solid var(--bd);border-radius:8px;background:#fff;font-family:Bebas Neue;font-size:13px;letter-spacing:1px;cursor:pointer">KAPAT</button>'
-      +'<button onclick="refKaydet()" style="flex:2;padding:11px;border:none;border-radius:8px;background:var(--r);color:#fff;font-family:Bebas Neue;font-size:13px;letter-spacing:1px;cursor:pointer;box-shadow:0 3px 10px rgba(176,28,46,.3)">💾 KAYDET</button>'
-    +'</div>'
-  +'</div>';
-  document.body.appendChild(ovl);
-  // Tutar girilince puani otomatik hesapla
-  var tutarInp = document.getElementById('ref-f-tutar');
-  if(tutarInp) tutarInp.addEventListener('input',function(){
-    var tutar = parseInt(this.value)||0;
-    var puan = Math.round(tutar * (REF_AYAR.kazanimYuzde||5) / 100);
-    var puanInp = document.getElementById('ref-f-puan');
-    if(puanInp) puanInp.value = puan;
+function refAramaFiltre(){
+  var q=(document.getElementById("ref-arama")||{}).value||"";
+  q=q.toLowerCase().replace(/\s+/g,"");
+  var kartlar=document.querySelectorAll("[data-ref-kart]");
+  kartlar.forEach(function(k){
+    var txt=(k.getAttribute("data-ref-kart")||"").toLowerCase().replace(/\s+/g,"");
+    k.style.display=(!q||txt.indexOf(q)>=0)?"":"none";
   });
 }
 
-function refKaydet(){
-  var musteri = (document.getElementById('ref-f-musteri')||{}).value||'';
-  var tel = (document.getElementById('ref-f-tel')||{}).value||'';
-  var hedef = (document.getElementById('ref-f-hedef')||{}).value||'';
-  var hizmet = (document.getElementById('ref-f-hizmet')||{}).value||'';
-  var tutar = parseInt((document.getElementById('ref-f-tutar')||{}).value)||0;
-  var puan = parseInt((document.getElementById('ref-f-puan')||{}).value)||0;
-  var durum = (document.getElementById('ref-f-durum')||{}).value||'beklemede';
-  var not_ = (document.getElementById('ref-f-not')||{}).value||'';
-
-  if(!musteri||!tel){ toast('Referans veren adı ve telefonu zorunlu','red'); return; }
-
-  fetch('/api/referanslar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-    referans_musteri:musteri, referans_tel:tel.replace(/\s/g,''), hedef_musteri:hedef, hedef_hizmet:hizmet,
-    hedef_tutar:tutar, kazanilan_puan:puan, durum:durum, notlar:not_
-  }),credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
-    if(d.success){
-      toast('✅ Referans eklendi'+(durum==='onaylandi'?' ve '+puan+' puan verildi':''),'green');
-      var ovl=document.getElementById('ref-ekle-ovl'); if(ovl) ovl.remove();
-      refSayfasiYukle();
-    } else { toast(d.error||'Hata','red'); }
-  }).catch(function(e){ toast('Bağlantı hatası','red'); });
+function refFiltre(tip){
+  REF_KART_FILTRE=tip;
+  var tabs=document.querySelectorAll(".ref-tab");
+  tabs.forEach(function(t){t.className="ref-tab";t.style.background="transparent";t.style.color="var(--ink3)";});
+  event.target.className="ref-tab ref-tab-aktif";event.target.style.background="var(--bg)";event.target.style.color="var(--ink)";event.target.style.boxShadow="0 1px 3px rgba(0,0,0,.1)";
+  refKartlariCiz();
 }
 
+function refKartlariCiz(){
+  var el = document.getElementById("ref-kartlar");
+  if(!el) return;
+  if(REF_DATA.length===0){el.innerHTML='<div style="grid-column:1/-1;padding:60px 20px;text-align:center"><div style="font-size:48px;margin-bottom:12px;opacity:.5">\ud83e\udd1d</div><div style="font-family:Bebas Neue,sans-serif;font-size:18px;color:var(--ink3);letter-spacing:1px">Henuz referans musteri yok</div><div style="font-size:12px;color:var(--ink3);margin-top:6px">Yeni Referans butonuyla baslayabilirsiniz</div></div>';return;}
+  var filtered = REF_DATA;
+  if(REF_KART_FILTRE==="altin") filtered=REF_DATA.filter(function(r){return r.seviye==="Altin"||r.seviye==="Platin";});
+  if(REF_KART_FILTRE==="puanli") filtered=REF_DATA.filter(function(r){return r.toplam_puan>0;});
+  el.innerHTML = filtered.map(function(r){
+    var bakiyeTL = (r.toplam_puan||0) * REF_AYAR.puanTlOrani;
+    var basHarf = (r.referans_musteri||"?")[0].toUpperCase();
+    var sevProg = 0;
+    if(r.seviye==="Gumus") sevProg=33;
+    if(r.seviye==="Altin") sevProg=66;
+    if(r.seviye==="Platin") sevProg=100;
+    if(r.seviye==="Bronz") sevProg=Math.min(25,(r.toplam_referans/(REF_AYAR.seviyeler.gumus||5))*25);
+    return '<div data-ref-kart="'+((r.referans_musteri||"")+" "+(r.referans_tel||""))+'" style="border:1.5px solid var(--bd);border-radius:16px;background:var(--bg);position:relative;overflow:hidden;transition:all .3s;cursor:default" onmouseover="this.style.transform=\'translateY(-4px)\';this.style.boxShadow=\'0 12px 30px rgba(0,0,0,.12)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'none\'">'
+      +'<div style="height:4px;background:'+seviyeGrad(r.seviye)+'"></div>'
+      +'<div style="padding:16px">'
+        +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">'
+          +'<div style="width:44px;height:44px;border-radius:12px;background:'+seviyeGrad(r.seviye)+';display:flex;align-items:center;justify-content:center;font-family:Bebas Neue,sans-serif;font-size:20px;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.15)">'+basHarf+'</div>'
+          +'<div style="flex:1">'
+            +'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:1px;color:var(--ink)">'+((r.referans_musteri||"-"))+'</div>'
+            +'<div style="font-size:11px;color:var(--ink3)">\ud83d\udcf1 '+(r.referans_tel||"-")+'</div>'
+          +'</div>'
+          +'<div style="text-align:right">'
+            +'<div style="font-size:18px">'+seviyeRozet(r.seviye)+'</div>'
+            +'<div style="font-size:9px;font-weight:700;color:'+seviyeRenk(r.seviye)+';text-transform:uppercase;letter-spacing:.5px">'+(r.seviye||"Bronz")+'</div>'
+          +'</div>'
+        +'</div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
+          +'<div style="text-align:center;padding:10px 4px;background:var(--bg2);border-radius:10px"><div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:var(--ink)">'+(r.toplam_referans||0)+'</div><div style="font-size:9px;color:var(--ink3)">Referans</div></div>'
+          +'<div style="text-align:center;padding:10px 4px;background:var(--bg2);border-radius:10px"><div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:#fbbf24">'+(r.toplam_puan||0)+'</div><div style="font-size:9px;color:var(--ink3)">Puan</div></div>'
+          +'<div style="text-align:center;padding:10px 4px;background:var(--bg2);border-radius:10px"><div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:#34d399">\u20ba'+bakiyeTL.toLocaleString("tr-TR")+'</div><div style="font-size:9px;color:var(--ink3)">TL</div></div>'
+        +'</div>'
+        +'<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:9px;color:var(--ink3);margin-bottom:4px"><span>Seviye Ilerlemesi</span><span>'+(r.seviye||"Bronz")+'</span></div><div style="height:5px;background:var(--bg2);border-radius:3px;overflow:hidden"><div style="height:100%;width:'+sevProg+'%;background:'+seviyeGrad(r.seviye)+';border-radius:3px;transition:width .5s"></div></div></div>'
+        +'<div style="display:flex;gap:6px">'
+          +'<button onclick="refDetay(\''+r.referans_tel+'\')" style="flex:1;padding:8px;border:1.5px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--ink);font-size:10px;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;transition:all .2s" onmouseover="this.style.borderColor=\'#8b5cf6\';this.style.color=\'#8b5cf6\'" onmouseout="this.style.borderColor=\'\';this.style.color=\'var(--ink)\'">Detay</button>'
+          +'<button onclick="refPuanEkle(\''+r.referans_tel+'\',\''+r.referans_musteri+'\')" style="flex:1;padding:8px;border:1.5px solid #059669;border-radius:8px;background:transparent;color:#059669;font-size:10px;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;transition:all .2s" onmouseover="this.style.background=\'#059669\';this.style.color=\'#fff\'" onmouseout="this.style.background=\'transparent\';this.style.color=\'#059669\'">+ Puan</button>'
+          +'<button onclick="refPuanKullan(\''+r.referans_tel+'\',\''+r.referans_musteri+'\','+r.toplam_puan+')" style="flex:1;padding:8px;border:1.5px solid #f59e0b;border-radius:8px;background:transparent;color:#f59e0b;font-size:10px;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;transition:all .2s" onmouseover="this.style.background=\'#f59e0b\';this.style.color=\'#fff\'" onmouseout="this.style.background=\'transparent\';this.style.color=\'#f59e0b\'">Kullan</button>'
+        +'</div>'
+      +'</div>'
+    +'</div>';
+  }).join("");
+}
+
+function refGecmisiYukle(){
+  fetch("/api/referanslar",{credentials:"same-origin"}).then(function(r){return r.json();}).then(function(d){
+    if(!d.success) return;
+    REF_GECMIS_DATA = d.data || [];
+    refGecmisiCiz();
+  }).catch(function(){});
+}
+
+function refGecmisFiltre(tip){
+  REF_GECMIS_FILTRE=tip;
+  var tabs=document.querySelectorAll(".ref-gtab");
+  tabs.forEach(function(t){t.className="ref-gtab";t.style.background="transparent";t.style.color="var(--ink3)";});
+  event.target.className="ref-gtab ref-gtab-aktif";event.target.style.background="var(--bg)";event.target.style.color="var(--ink)";event.target.style.boxShadow="0 1px 3px rgba(0,0,0,.1)";
+  refGecmisiCiz();
+}
+
+function refGecmisiCiz(){
+  var el = document.getElementById("ref-gecmis");
+  if(!el) return;
+  var rows = REF_GECMIS_DATA;
+  if(REF_GECMIS_FILTRE!=="tumu") rows=rows.filter(function(r){return r.durum===REF_GECMIS_FILTRE;});
+  if(rows.length===0){el.innerHTML='<div style="padding:40px;text-align:center;color:var(--ink3);font-size:12px">Kayit bulunamadi</div>';return;}
+  el.innerHTML=rows.map(function(r,i){
+    var durumRenk = r.durum==="onaylandi"?"#059669":r.durum==="iptal"?"#dc2626":"#f59e0b";
+    var durumText = r.durum==="onaylandi"?"Onaylandi":r.durum==="iptal"?"Iptal":"Beklemede";
+    var durumIcon = r.durum==="onaylandi"?"\u2713":r.durum==="iptal"?"\u2717":"\u23F3";
+    var tarih = r.olusturma ? new Date(r.olusturma).toLocaleDateString("tr-TR") : "-";
+    return '<div style="display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--bd)">'
+      +'<div style="width:36px;height:36px;border-radius:10px;background:'+durumRenk+'15;display:flex;align-items:center;justify-content:center;font-size:14px;color:'+durumRenk+';flex-shrink:0">'+durumIcon+'</div>'
+      +'<div style="flex:1;min-width:0">'
+        +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><span style="font-size:12px;font-weight:600;color:var(--ink)">'+((r.referans_musteri||"-"))+'</span><span style="font-size:10px;color:var(--ink3)">\u2192</span><span style="font-size:12px;color:var(--ink3)">'+((r.hedef_musteri||"-"))+'</span></div>'
+        +'<div style="font-size:10px;color:var(--ink3)">'+((r.hedef_hizmet||"-"))+" \u2022 "+tarih+'</div>'
+      +'</div>'
+      +'<div style="text-align:right;flex-shrink:0">'
+        +'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;color:'+durumRenk+'">'+((r.kazanilan_puan||0)>0?"+"+(r.kazanilan_puan||0):(r.kazanilan_puan||0))+' P</div>'
+        +'<div style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:9px;font-weight:700;background:'+durumRenk+'15;color:'+durumRenk+'">'+durumText+'</div>'
+      +'</div>'
+      +(r.durum==="beklemede"?'<button onclick="refOnayla(\''+r.id+'\',\''+r.referans_tel+'\','+r.kazanilan_puan+')" style="padding:6px 12px;border:none;border-radius:6px;background:#059669;color:#fff;font-size:9px;font-weight:700;cursor:pointer;flex-shrink:0">Onayla</button>':"")  
+    +'</div>';
+  }).join("");
+}
+
+// Puan Kullanma Motoru (YENI)
+function refPuanKullan(tel, ad, bakiye){
+  if(!bakiye || bakiye<=0){ toast("Bu musterinin kullanilacak puani yok","red"); return; }
+  var tlDegeri = bakiye * REF_AYAR.puanTlOrani;
+  var ovl = document.createElement("div");
+  ovl.id="ref-kullan-ovl";
+  ovl.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)";
+  ovl.innerHTML='<div style="background:var(--bg);border-radius:20px;max-width:440px;width:100%;box-shadow:0 25px 60px rgba(0,0,0,.3)">'
+    +'<div style="padding:24px;text-align:center;background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:20px 20px 0 0">'
+      +'<div style="font-size:32px;margin-bottom:4px">\u2b50</div>'
+      +'<div style="font-family:Bebas Neue,sans-serif;font-size:28px;color:#92400e">PUAN KULLAN</div>'
+      +'<div style="font-size:12px;color:#92400e;margin-top:4px">'+ad+' \u2022 Bakiye: <b>'+bakiye+' Puan</b> (\u20ba'+tlDegeri.toLocaleString("tr-TR")+')</div>'
+    +'</div>'
+    +'<div style="padding:20px">'
+      +'<div style="margin-bottom:14px"><label style="font-size:11px;font-weight:600;color:var(--ink3);display:block;margin-bottom:4px">Kullanilacak Puan</label><input id="ref-kullan-miktar" type="number" value="'+bakiye+'" max="'+bakiye+'" style="width:100%;padding:10px;border:1.5px solid var(--bd);border-radius:8px;font-size:14px;font-family:Outfit,sans-serif;outline:none" oninput="var v=parseInt(this.value)||0;var tl=v*'+REF_AYAR.puanTlOrani+';document.getElementById(\'ref-kullan-tl\').textContent=\'\u20ba\'+tl.toLocaleString(\'tr-TR\')"></div>'
+      +'<div style="text-align:center;padding:14px;background:var(--bg2);border-radius:10px;margin-bottom:14px"><div style="font-size:11px;color:var(--ink3)">Indirim Tutari</div><div id="ref-kullan-tl" style="font-family:Bebas Neue,sans-serif;font-size:28px;color:#059669">\u20ba'+tlDegeri.toLocaleString("tr-TR")+'</div></div>'
+      +'<div style="margin-bottom:14px"><label style="font-size:11px;font-weight:600;color:var(--ink3);display:block;margin-bottom:4px">Aciklama</label><input id="ref-kullan-aciklama" value="Puan indirimi" style="width:100%;padding:10px;border:1.5px solid var(--bd);border-radius:8px;font-size:12px;font-family:Outfit,sans-serif;outline:none"></div>'
+    +'</div>'
+    +'<div style="padding:14px 20px;border-top:1.5px solid var(--bd);display:flex;gap:8px">'
+      +'<button onclick="document.getElementById(\'ref-kullan-ovl\').remove()" style="flex:1;padding:11px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--ink3);font-family:Bebas Neue,sans-serif;font-size:14px;cursor:pointer">Vazgec</button>'
+      +'<button onclick="refPuanKullanKaydet(\''+tel+'\','+bakiye+')" style="flex:2;padding:11px;border:none;border-radius:10px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-family:Bebas Neue,sans-serif;font-size:14px;cursor:pointer;box-shadow:0 4px 12px rgba(245,158,11,.3)">Indirimi Uygula</button>'
+    +'</div>'
+  +'</div>';
+  document.body.appendChild(ovl);
+}
+
+function refPuanKullanKaydet(tel, maxPuan){
+  var miktar = parseInt((document.getElementById("ref-kullan-miktar")||{}).value)||0;
+  if(miktar<=0||miktar>maxPuan){ toast("Gecersiz puan miktari","red"); return; }
+  var aciklama = (document.getElementById("ref-kullan-aciklama")||{}).value||"Puan indirimi";
+  fetch("/api/puanlar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+    musteri_tel:tel, miktar:-miktar, islem_tipi:"kullanim", aciklama:aciklama
+  }),credentials:"same-origin"}).then(function(r){return r.json();}).then(function(d){
+    if(d.success){ toast("\u2713 "+miktar+" puan kullanildi (\u20ba"+(miktar*REF_AYAR.puanTlOrani).toLocaleString("tr-TR")+" indirim)","green"); var ovl=document.getElementById("ref-kullan-ovl"); if(ovl) ovl.remove(); refSayfasiYukle(); }
+    else toast(d.error||"Hata","red");
+  });
+}
+
+// === MEVCUT FONKSIYONLAR (korundu) ===
 function refOnayla(id, tel, puan){
-  if(!confirm('Bu referansı onaylıyorsunuz. '+puan+' puan verilecek. Emin misiniz?')) return;
-  fetch('/api/referanslar',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-    id:id, durum:'onaylandi', kazanilan_puan:puan, referans_tel:tel
-  }),credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
-    if(d.success){ toast('✅ Referans onaylandı, '+puan+' puan verildi','green'); refSayfasiYukle(); }
-    else toast(d.error||'Hata','red');
+  if(!confirm("Bu referansi onayliyorsunuz. "+puan+" puan verilecek. Emin misiniz?")) return;
+  fetch("/api/referanslar",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+    id:id, durum:"onaylandi", kazanilan_puan:puan, referans_tel:tel
+  }),credentials:"same-origin"}).then(function(r){return r.json();}).then(function(d){
+    if(d.success){ toast("\u2713 Referans onaylandi, "+puan+" puan verildi","green"); refSayfasiYukle(); }
+    else toast(d.error||"Hata","red");
   });
 }
 
 function refPuanEkle(tel, ad){
-  var miktar = prompt(ad+' için eklenecek puan miktarı:','50');
+  var miktar = prompt(ad+" icin eklenecek puan miktari:","50");
   if(!miktar) return;
-  var aciklama = prompt('Açıklama:','Manuel puan ekleme');
-  fetch('/api/puanlar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-    musteri_tel:tel, miktar:parseInt(miktar), islem_tipi:'bonus', aciklama:aciklama
-  }),credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
-    if(d.success){ toast('✅ '+miktar+' puan eklendi. Yeni bakiye: '+d.bakiye,'green'); refSayfasiYukle(); }
-    else toast(d.error||'Hata','red');
+  var aciklama = prompt("Aciklama:","Manuel puan ekleme");
+  fetch("/api/puanlar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+    musteri_tel:tel, miktar:parseInt(miktar), islem_tipi:"bonus", aciklama:aciklama
+  }),credentials:"same-origin"}).then(function(r){return r.json();}).then(function(d){
+    if(d.success){ toast("\u2713 "+miktar+" puan eklendi. Yeni bakiye: "+d.bakiye,"green"); refSayfasiYukle(); }
+    else toast(d.error||"Hata","red");
   });
 }
 
 function refDetay(tel){
-  fetch('/api/puanlar?tel='+encodeURIComponent(tel),{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
+  fetch("/api/puanlar?tel="+encodeURIComponent(tel),{credentials:"same-origin"}).then(function(r){return r.json();}).then(function(d){
     if(!d.success) return;
-    var ovl = document.createElement('div');
-    ovl.id='ref-detay-ovl';
-    ovl.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+    var ovl = document.createElement("div");
+    ovl.id="ref-detay-ovl";
+    ovl.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)";
     var gecmisHTML = (d.gecmis||[]).map(function(g){
-      var renk = g.miktar>0?'#059669':'#dc2626';
-      var tarih = g.olusturma ? new Date(g.olusturma).toLocaleDateString('tr-TR') : '';
-      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd)">'
-        +'<div><div style="font-size:12px;font-weight:600">'+(g.aciklama||g.islem_tipi)+'</div><div style="font-size:10px;color:var(--ink3)">'+tarih+' · '+g.islem_tipi+'</div></div>'
-        +'<div style="font-family:Bebas Neue;font-size:16px;color:'+renk+'">'+(g.miktar>0?'+':'')+g.miktar+'</div>'
+      var renk = g.miktar>0?"#059669":"#dc2626";
+      var icon = g.miktar>0?"\u2795":"\u2796";
+      var tarih = g.olusturma ? new Date(g.olusturma).toLocaleDateString("tr-TR") : "";
+      return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd)">'
+        +'<div style="width:28px;height:28px;border-radius:8px;background:'+renk+'15;display:flex;align-items:center;justify-content:center;font-size:10px">'+icon+'</div>'
+        +'<div style="flex:1"><div style="font-size:12px;font-weight:600">'+((g.aciklama||g.islem_tipi))+'</div><div style="font-size:10px;color:var(--ink3)">'+tarih+'</div></div>'
+        +'<div style="font-family:Bebas Neue,sans-serif;font-size:18px;color:'+renk+'">'+((g.miktar>0?"+":"")+g.miktar)+'</div>'
       +'</div>';
-    }).join('');
-    ovl.innerHTML='<div style="background:var(--bg);border-radius:16px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)">'
-      +'<div style="padding:20px;text-align:center;border-bottom:1.5px solid var(--bd)">'
-        +'<div style="font-family:Bebas Neue;font-size:36px;color:#059669">'+d.bakiye+'</div>'
-        +'<div style="font-size:12px;color:var(--ink3)">Puan Bakiyesi (₺'+(d.tlKarsiligi||0).toLocaleString('tr-TR')+')</div>'
+    }).join("");
+    ovl.innerHTML='<div style="background:var(--bg);border-radius:20px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,.3)">'
+      +'<div style="padding:24px;text-align:center;background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-radius:20px 20px 0 0">'
+        +'<div style="font-family:Bebas Neue,sans-serif;font-size:48px;color:#059669">'+d.bakiye+'</div>'
+        +'<div style="font-size:12px;color:#065f46">Puan Bakiyesi (\u20ba'+((d.tlKarsiligi||0).toLocaleString("tr-TR"))+')</div>'
       +'</div>'
-      +'<div style="padding:16px 20px">'
-        +'<div style="font-family:Bebas Neue;font-size:14px;letter-spacing:1px;margin-bottom:10px">PUAN GEÇMİŞİ</div>'
-        +(gecmisHTML||'<div style="color:var(--ink3);font-size:12px">Henüz hareket yok</div>')
+      +'<div style="padding:20px">'
+        +'<div style="font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:1px;margin-bottom:10px">PUAN GECMISI</div>'
+        +(gecmisHTML||'<div style="color:var(--ink3);font-size:12px">Henuz hareket yok</div>')  
       +'</div>'
       +'<div style="padding:14px 20px;border-top:1.5px solid var(--bd)">'
-        +'<button onclick="document.getElementById(\'ref-detay-ovl\').remove()" style="width:100%;padding:11px;border:1px solid var(--bd);border-radius:8px;background:#fff;font-family:Bebas Neue;font-size:13px;letter-spacing:1px;cursor:pointer">KAPAT</button>'
+        +'<button onclick="document.getElementById(\'ref-detay-ovl\').remove()" style="width:100%;padding:11px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--ink);font-family:Bebas Neue,sans-serif;font-size:14px;cursor:pointer">Kapat</button>'
       +'</div>'
     +'</div>';
     document.body.appendChild(ovl);
   });
 }
 
-function refTopluEkle(){
-  var ovl = document.createElement('div');
-  ovl.id='ref-toplu-ovl';
-  ovl.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
-  ovl.innerHTML='<div style="background:var(--bg);border-radius:16px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)">'
-    +'<div style="padding:16px 20px;border-bottom:1.5px solid var(--bd)"><div style="font-family:Bebas Neue;font-size:18px;letter-spacing:2px;color:var(--ink)">📦 TOPLU REFERANS TANIMLA</div><div style="font-size:11px;color:var(--ink3)">Geçmişe dönük referansları topluca ekleyin</div></div>'
-    +'<div style="padding:20px">'
-      +'<div style="font-size:11px;color:var(--ink3);margin-bottom:8px">Her satır: <b>Referans Adı | Telefon | Kaç kişi gönderdi | Toplam puan</b></div>'
-      +'<textarea id="ref-toplu-veri" style="width:100%;height:200px;border:1.5px solid var(--bd);border-radius:8px;padding:10px;font-family:monospace;font-size:12px;resize:vertical" placeholder="Ahmet Yılmaz | 05321234567 | 10 | 500\nMehmet Kara | 05339876543 | 5 | 200"></textarea>'
+function refYeniEkle(){
+  var ovl = document.createElement("div");
+  ovl.id="ref-ekle-ovl";
+  ovl.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)";
+  ovl.innerHTML='<div style="background:var(--bg);border-radius:20px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,.3)">'
+    +'<div style="padding:20px;border-bottom:1.5px solid var(--bd);display:flex;align-items:center;gap:10px"><div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;flex:1">YENI REFERANS</div><button onclick="document.getElementById(\'ref-ekle-ovl\').remove()" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--ink3)">\u2715</button></div>'
+    +'<div style="padding:20px;display:grid;gap:12px">'
+      +'<div><label style="font-size:11px;font-weight:600;color:var(--ink3);display:block;margin-bottom:4px">Referans Veren Musteri</label><input id="ref-ad" placeholder="Ad Soyad" style="width:100%;padding:10px;border:1.5px solid var(--bd);border-radius:8px;font-size:12px;font-family:Outfit,sans-serif;outline:none"></div>'
+      +'<div><label style="font-size:11px;font-weight:600;color:var(--ink3);display:block;margin-bottom:4px">Referans Veren Telefon</label><input id="ref-tel" placeholder="05XX XXX XX XX" style="width:100%;padding:10px;border:1.5px solid var(--bd);border-radius:8px;font-size:12px;font-family:Outfit,sans-serif;outline:none"></div>'
+      +'<hr style="border:none;border-top:1px solid var(--bd)">'
+      +'<div><label style="font-size:11px;font-weight:600;color:var(--ink3);display:block;margin-bottom:4px">Gelen Musteri</label><input id="ref-hedef-ad" placeholder="Yeni musteri ad soyad" style="width:100%;padding:10px;border:1.5px solid var(--bd);border-radius:8px;font-size:12px;font-family:Outfit,sans-serif;outline:none"></div>'
+      +'<div><label style="font-size:11px;font-weight:600;color:var(--ink3);display:block;margin-bottom:4px">Hizmet</label><input id="ref-hizmet" placeholder="Yapilan hizmet" style="width:100%;padding:10px;border:1.5px solid var(--bd);border-radius:8px;font-size:12px;font-family:Outfit,sans-serif;outline:none"></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label style="font-size:11px;font-weight:600;color:var(--ink3);display:block;margin-bottom:4px">Tutar (\u20ba)</label><input id="ref-tutar" type="number" placeholder="0" style="width:100%;padding:10px;border:1.5px solid var(--bd);border-radius:8px;font-size:12px;font-family:Outfit,sans-serif;outline:none"></div><div><label style="font-size:11px;font-weight:600;color:var(--ink3);display:block;margin-bottom:4px">Kazanilacak Puan</label><input id="ref-puan" type="number" placeholder="Otomatik" style="width:100%;padding:10px;border:1.5px solid var(--bd);border-radius:8px;font-size:12px;font-family:Outfit,sans-serif;outline:none"></div></div>'
     +'</div>'
     +'<div style="padding:14px 20px;border-top:1.5px solid var(--bd);display:flex;gap:8px">'
-      +'<button onclick="document.getElementById(\'ref-toplu-ovl\').remove()" style="flex:1;padding:11px;border:1px solid var(--bd);border-radius:8px;background:#fff;font-family:Bebas Neue;cursor:pointer">KAPAT</button>'
-      +'<button onclick="refTopluKaydet()" style="flex:2;padding:11px;border:none;border-radius:8px;background:#059669;color:#fff;font-family:Bebas Neue;cursor:pointer">💾 TOPLU KAYDET</button>'
+      +'<button onclick="document.getElementById(\'ref-ekle-ovl\').remove()" style="flex:1;padding:11px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--ink3);font-family:Bebas Neue,sans-serif;font-size:14px;cursor:pointer">Vazgec</button>'
+      +'<button onclick="refYeniKaydet()" style="flex:2;padding:11px;border:none;border-radius:10px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;font-family:Bebas Neue,sans-serif;font-size:14px;cursor:pointer;box-shadow:0 4px 12px rgba(139,92,246,.3)">Referans Kaydet</button>'
+    +'</div>'
+  +'</div>';
+  document.body.appendChild(ovl);
+}
+
+function refYeniKaydet(){
+  var ad=(document.getElementById("ref-ad")||{}).value||"";
+  var tel=(document.getElementById("ref-tel")||{}).value||"";
+  var hedefAd=(document.getElementById("ref-hedef-ad")||{}).value||"";
+  var hizmet=(document.getElementById("ref-hizmet")||{}).value||"";
+  var tutar=parseInt((document.getElementById("ref-tutar")||{}).value)||0;
+  var puan=parseInt((document.getElementById("ref-puan")||{}).value)||Math.round(tutar*REF_AYAR.kazanimYuzde/100);
+  if(!ad||!tel){toast("Referans veren bilgileri zorunlu","red");return;}
+  fetch("/api/referanslar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+    referans_musteri:ad,referans_tel:tel,hedef_musteri:hedefAd,hedef_hizmet:hizmet,hedef_tutar:tutar,kazanilan_puan:puan,durum:"beklemede"
+  }),credentials:"same-origin"}).then(function(r){return r.json();}).then(function(d){
+    if(d.success){toast("\u2713 Referans kaydedildi","green");var ovl=document.getElementById("ref-ekle-ovl");if(ovl)ovl.remove();refSayfasiYukle();}
+    else toast(d.error||"Hata","red");
+  });
+}
+
+function refTopluEkle(){
+  var ovl = document.createElement("div");
+  ovl.id="ref-toplu-ovl";
+  ovl.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)";
+  ovl.innerHTML='<div style="background:var(--bg);border-radius:20px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,.3)">'
+    +'<div style="padding:16px 20px;border-bottom:1.5px solid var(--bd)"><div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px">TOPLU REFERANS TANIMLA</div></div>'
+    +'<div style="padding:20px">'
+      +'<div style="font-size:11px;color:var(--ink3);margin-bottom:8px">Her satir: <b>Referans Adi | Telefon | Kac kisi gonderdi | Toplam puan</b></div>'
+      +'<textarea id="ref-toplu-veri" style="width:100%;height:200px;border:1.5px solid var(--bd);border-radius:8px;padding:10px;font-family:monospace;font-size:12px;outline:none;resize:vertical" placeholder="Ahmet Yilmaz | 05301234567 | 3 | 150"></textarea>'
+    +'</div>'
+    +'<div style="padding:14px 20px;border-top:1.5px solid var(--bd);display:flex;gap:8px">'
+      +'<button onclick="document.getElementById(\'ref-toplu-ovl\').remove()" style="flex:1;padding:11px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--ink3);font-family:Bebas Neue,sans-serif;font-size:14px;cursor:pointer">Vazgec</button>'
+      +'<button onclick="refTopluKaydet()" style="flex:2;padding:11px;border:none;border-radius:10px;background:linear-gradient(135deg,#059669,#047857);color:#fff;font-family:Bebas Neue,sans-serif;font-size:14px;cursor:pointer;box-shadow:0 4px 12px rgba(5,150,105,.3)">Toplu Kaydet</button>'
     +'</div>'
   +'</div>';
   document.body.appendChild(ovl);
 }
 
 async function refTopluKaydet(){
-  var veri = (document.getElementById('ref-toplu-veri')||{}).value||'';
-  var satirlar = veri.trim().split('\n').filter(function(s){return s.trim();});
-  if(satirlar.length===0){ toast('Veri giriniz','red'); return; }
+  var veri = (document.getElementById("ref-toplu-veri")||{}).value||"";
+  var satirlar = veri.trim().split("\n").filter(function(s){return s.trim();});
+  if(satirlar.length===0){ toast("Veri giriniz","red"); return; }
   var basarili=0, hatali=0;
   for(var i=0;i<satirlar.length;i++){
-    var parcalar = satirlar[i].split('|').map(function(p){return p.trim();});
+    var parcalar = satirlar[i].split("|").map(function(p){return p.trim();});
     if(parcalar.length<2){ hatali++; continue; }
-    var ad = parcalar[0], tel = parcalar[1].replace(/\s/g,'');
+    var ad = parcalar[0], tel = parcalar[1].replace(/\s/g,"");
     var refSayisi = parseInt(parcalar[2])||1;
     var puan = parseInt(parcalar[3])||0;
     try {
-      // Referans kaydi ekle
-      var res = await fetch('/api/referanslar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-        referans_musteri:ad, referans_tel:tel, hedef_musteri:'Geçmiş referanslar ('+refSayisi+' kişi)',
-        hedef_hizmet:'Toplu tanım', hedef_tutar:0, kazanilan_puan:0, durum:'onaylandi',
-        notlar:'Toplu tanım: '+refSayisi+' referans'
-      }),credentials:'same-origin'});
-      // Puan ekle
+      await fetch("/api/referanslar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+        referans_musteri:ad, referans_tel:tel, hedef_musteri:"Gecmis referanslar ("+refSayisi+" kisi)",
+        hedef_hizmet:"Toplu tanim", hedef_tutar:0, kazanilan_puan:0, durum:"onaylandi",
+        notlar:"Toplu tanim: "+refSayisi+" referans"
+      }),credentials:"same-origin"});
       if(puan>0){
-        await fetch('/api/puanlar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-          musteri_tel:tel, miktar:puan, islem_tipi:'bonus', aciklama:'Geçmişe dönük '+refSayisi+' referans için toplu puan'
-        }),credentials:'same-origin'});
+        await fetch("/api/puanlar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+          musteri_tel:tel, miktar:puan, islem_tipi:"bonus", aciklama:"Gecmise donuk "+refSayisi+" referans icin toplu puan"
+        }),credentials:"same-origin"});
       }
       basarili++;
     } catch(e){ hatali++; }
   }
-  toast('✅ '+basarili+' referans eklendi'+(hatali>0?', '+hatali+' hatalı':''),'green');
-  var ovl=document.getElementById('ref-toplu-ovl'); if(ovl) ovl.remove();
+  toast("\u2713 "+basarili+" referans eklendi"+(hatali>0?", "+hatali+" hatali":""),"green");
+  var ovl=document.getElementById("ref-toplu-ovl"); if(ovl) ovl.remove();
   refSayfasiYukle();
 }
 
 function refPuanAyarlari(){
-  var ovl = document.createElement('div');
-  ovl.id='ref-ayar-ovl';
-  ovl.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
-  ovl.innerHTML='<div style="background:var(--bg);border-radius:16px;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4)">'
-    +'<div style="padding:16px 20px;border-bottom:1.5px solid var(--bd)"><div style="font-family:Bebas Neue;font-size:18px;letter-spacing:2px;color:var(--ink)">⚙️ PUAN AYARLARI</div></div>'
+  var ovl = document.createElement("div");
+  ovl.id="ref-ayar-ovl";
+  ovl.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)";
+  ovl.innerHTML='<div style="background:var(--bg);border-radius:20px;max-width:440px;width:100%;box-shadow:0 25px 60px rgba(0,0,0,.3)">'
+    +'<div style="padding:16px 20px;border-bottom:1.5px solid var(--bd)"><div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px">PUAN AYARLARI</div></div>'
     +'<div style="padding:20px;display:grid;gap:14px">'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
-        +'<div><label style="font-size:11px;color:var(--ink3);font-weight:600;display:block;margin-bottom:4px">1 Puan = ? TL</label><input id="pa-tl" class="dz-inp" type="number" value="'+REF_AYAR.puanTlOrani+'"></div>'
-        +'<div><label style="font-size:11px;color:var(--ink3);font-weight:600;display:block;margin-bottom:4px">Kazanım %</label><input id="pa-yuzde" class="dz-inp" type="number" value="'+REF_AYAR.kazanimYuzde+'"></div>'
+        +'<div><label style="font-size:11px;color:var(--ink3);font-weight:600;display:block;margin-bottom:4px">1 Puan = \u20ba TL</label><input id="pa-tl" class="di" value="'+(REF_AYAR.puanTlOrani||10)+'" type="number"></div>'
+        +'<div><label style="font-size:11px;color:var(--ink3);font-weight:600;display:block;margin-bottom:4px">Kazanim %</label><input id="pa-yuzde" class="di" value="'+(REF_AYAR.kazanimYuzde||5)+'" type="number"></div>'
       +'</div>'
-      +'<div><label style="font-size:11px;color:var(--ink3);font-weight:600;display:block;margin-bottom:4px">Maks İndirim % (hizmet tutarının)</label><input id="pa-max" class="dz-inp" type="number" value="'+REF_AYAR.maxIndirimYuzde+'"></div>'
-      +'<div style="font-size:11px;color:var(--ink3);font-weight:600;margin-top:4px">Seviye Eşikleri (referans sayısı)</div>'
+      +'<div><label style="font-size:11px;color:var(--ink3);font-weight:600;display:block;margin-bottom:4px">Maks Indirim % (hizmet tutarinin)</label><input id="pa-max" class="di" value="'+(REF_AYAR.maxIndirimYuzde||50)+'" type="number"></div>'
+      +'<div style="font-size:11px;color:var(--ink3);font-weight:600;margin-top:4px">Seviye Esikleri (referans sayisi)</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'
-        +'<div><label style="font-size:10px;color:var(--ink3);display:block;margin-bottom:2px">🥈 Gümüş</label><input id="pa-gumus" class="dz-inp" type="number" value="'+(REF_AYAR.seviyeler?.gumus||5)+'"></div>'
-        +'<div><label style="font-size:10px;color:var(--ink3);display:block;margin-bottom:2px">🥇 Altın</label><input id="pa-altin" class="dz-inp" type="number" value="'+(REF_AYAR.seviyeler?.altin||15)+'"></div>'
-        +'<div><label style="font-size:10px;color:var(--ink3);display:block;margin-bottom:2px">💎 Platin</label><input id="pa-platin" class="dz-inp" type="number" value="'+(REF_AYAR.seviyeler?.platin||30)+'"></div>'
+        +'<div><label style="font-size:10px;color:var(--ink3);display:block;margin-bottom:2px">\ud83e\udd48 Gumus</label><input id="pa-gumus" class="di" value="'+((REF_AYAR.seviyeler||{}).gumus||5)+'" type="number"></div>'
+        +'<div><label style="font-size:10px;color:var(--ink3);display:block;margin-bottom:2px">\ud83c\udfc6 Altin</label><input id="pa-altin" class="di" value="'+((REF_AYAR.seviyeler||{}).altin||15)+'" type="number"></div>'
+        +'<div><label style="font-size:10px;color:var(--ink3);display:block;margin-bottom:2px">\ud83d\udc8e Platin</label><input id="pa-platin" class="di" value="'+((REF_AYAR.seviyeler||{}).platin||30)+'" type="number"></div>'
       +'</div>'
     +'</div>'
     +'<div style="padding:14px 20px;border-top:1.5px solid var(--bd);display:flex;gap:8px">'
-      +'<button onclick="document.getElementById(\'ref-ayar-ovl\').remove()" style="flex:1;padding:11px;border:1px solid var(--bd);border-radius:8px;background:#fff;font-family:Bebas Neue;cursor:pointer">KAPAT</button>'
-      +'<button onclick="refAyarKaydet()" style="flex:2;padding:11px;border:none;border-radius:8px;background:#7c3aed;color:#fff;font-family:Bebas Neue;cursor:pointer">💾 KAYDET</button>'
+      +'<button onclick="document.getElementById(\'ref-ayar-ovl\').remove()" style="flex:1;padding:11px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--ink3);font-family:Bebas Neue,sans-serif;font-size:14px;cursor:pointer">Vazgec</button>'
+      +'<button onclick="refAyarKaydet()" style="flex:2;padding:11px;border:none;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;font-family:Bebas Neue,sans-serif;font-size:14px;cursor:pointer;box-shadow:0 4px 12px rgba(124,58,237,.3)">Ayarlari Kaydet</button>'
     +'</div>'
   +'</div>';
   document.body.appendChild(ovl);
@@ -6294,29 +6422,28 @@ function refPuanAyarlari(){
 
 function refAyarKaydet(){
   var ayar = {
-    puanTlOrani: parseInt((document.getElementById('pa-tl')||{}).value)||10,
-    kazanimYuzde: parseInt((document.getElementById('pa-yuzde')||{}).value)||5,
-    maxIndirimYuzde: parseInt((document.getElementById('pa-max')||{}).value)||50,
+    puanTlOrani: parseInt((document.getElementById("pa-tl")||{}).value)||10,
+    kazanimYuzde: parseInt((document.getElementById("pa-yuzde")||{}).value)||5,
+    maxIndirimYuzde: parseInt((document.getElementById("pa-max")||{}).value)||50,
     seviyeler: {
-      gumus: parseInt((document.getElementById('pa-gumus')||{}).value)||5,
-      altin: parseInt((document.getElementById('pa-altin')||{}).value)||15,
-      platin: parseInt((document.getElementById('pa-platin')||{}).value)||30
+      gumus: parseInt((document.getElementById("pa-gumus")||{}).value)||5,
+      altin: parseInt((document.getElementById("pa-altin")||{}).value)||15,
+      platin: parseInt((document.getElementById("pa-platin")||{}).value)||30
     },
     carpanlar: { bronz:1, gumus:1.25, altin:1.5, platin:2 }
   };
-  fetch('/api/ayarlar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-    anahtar:'puan_ayar', deger:ayar
-  }),credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
+  fetch("/api/ayarlar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+    anahtar:"puan_ayar", deger:ayar
+  }),credentials:"same-origin"}).then(function(r){return r.json();}).then(function(d){
     if(d.success){
       REF_AYAR = ayar;
-      toast('✅ Puan ayarları kaydedildi','green');
-      var ovl=document.getElementById('ref-ayar-ovl'); if(ovl) ovl.remove();
+      toast("\u2713 Puan ayarlari kaydedildi","green");
+      var ovl=document.getElementById("ref-ayar-ovl"); if(ovl) ovl.remove();
       refSayfasiYukle();
-    } else { toast(d.error||'Hata','red'); }
+    } else { toast(d.error||"Hata","red"); }
   });
 }
 
-// doPg icinde referanslar sayfasini yukle
 var _origDoPg = typeof doPg === 'function' ? doPg : null;
 
 
