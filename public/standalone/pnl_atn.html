@@ -6079,6 +6079,27 @@ var TAKSIT_ORANLARI = (function(){
 })();
 
 // ====== İŞ EMRİ SİSTEMİ ======
+// Randevu detaydan İş Emri oluştur veya mevcut olanı göster
+function isEmriOlusturVeyaGor(rdvIdx){
+  var r=RANDEVULAR[rdvIdx];if(!r)return;
+  // Mevcut iş emri var mı kontrol et
+  fetch('/api/is-emri',{credentials:'same-origin'})
+    .then(function(res){return res.json();})
+    .then(function(d){
+      if(!d.success||!d.data)return;
+      var mevcut=d.data.find(function(ie){return ie.randevu_id===r.id;});
+      if(mevcut){
+        // Mevcut iş emrini göster
+        var eski=document.getElementById('rdv-duzenle-ovl');if(eski)eski.remove();
+        isEmriDetayModal(mevcut.id);
+      } else {
+        // Yeni oluştur
+        if(!confirm('Bu randevu için İş Emri oluşturulsun mu?\n\n'+r.musteri+' — '+r.plaka+'\n'+r.hizmet))return;
+        isEmriOlustur(rdvIdx);
+      }
+    });
+}
+
 var IE_ASAMALAR = [
   {kod:'kabul', ad:'Kabul', ikon:'📋', renk:'#3b82f6'},
   {kod:'yikama', ad:'Yıkama', ikon:'🧽', renk:'#06b6d4'},
