@@ -47,6 +47,7 @@ else if(ak==='not'){e.stopPropagation();isEmriNotEklePrompt(id,kod);}
 else if(ak==='takip'){e.stopPropagation();isEmriTakipGonder(id,tel);}
 else if(ak==='kapat'){var o=document.getElementById('ie-detay-ovl');if(o)o.remove();}
 else if(ak==='yeni-modal')isEmriYeniModal();
+else if(ak==='sil'){e.stopPropagation();isEmriSil(id);}
 else if(ak==='rdv-sec'){e.stopPropagation();isEmriOlusturFromModal(parseInt(t.dataset.ieIdx));}
 });
 
@@ -136,7 +137,7 @@ ovl.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999
 ovl.onclick=function(e){if(e.target===ovl)ovl.remove()};
 var m=document.createElement('div');
 m.style.cssText='width:100%;max-width:480px;max-height:90vh;background:var(--w);border-radius:20px;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,.25)';
-m.innerHTML='<div style="background:linear-gradient(135deg,'+hc+','+hc+'cc);padding:20px;text-align:center"><div style="font-family:Bebas Neue,sans-serif;font-size:28px;letter-spacing:3px;color:#fff">'+(ie.plaka||'\u2014')+'</div><div style="font-size:12px;color:rgba(255,255,255,.8);margin-top:2px">'+(ie.musteri||'\u2014')+'</div><div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px">'+(ie.hizmet||'\u2014')+'</div>'+(ie.durum==='tamamlandi'?'<div style="display:inline-block;margin-top:8px;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.2);font-size:10px;font-weight:700;color:#fff">\u2705 TAMAMLANDI</div>':'')+'<div style="font-size:9px;color:rgba(255,255,255,.5);margin-top:6px">Takip: '+ie.takip_kodu+'</div></div><div style="padding:20px">'+tl+'<div style="border-top:1px solid var(--bd);padding-top:14px;margin-top:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'+(ts?'<div style="font-size:12px;color:var(--ink4)">\u23F1 Toplam: <strong>'+ts+'</strong></div>':'')+'<div style="display:flex;gap:6px;flex-wrap:wrap">'+(ie.tel?'<button data-ie-aksiyon="takip" data-ie-id="'+ie.id+'" data-ie-tel="'+ie.tel+'" style="padding:6px 14px;border:1.5px solid #25D366;border-radius:8px;background:transparent;color:#128C7E;font-size:10px;font-weight:600;cursor:pointer">\u{1F4F1} Takip Link Gonder</button>':'')+'<button data-ie-aksiyon="kapat" style="padding:6px 14px;border:1.5px solid var(--bd);border-radius:8px;background:transparent;color:var(--ink);font-size:10px;font-weight:600;cursor:pointer">Kapat</button></div></div></div>';
+m.innerHTML='<div style="background:linear-gradient(135deg,'+hc+','+hc+'cc);padding:20px;text-align:center"><div style="font-family:Bebas Neue,sans-serif;font-size:28px;letter-spacing:3px;color:#fff">'+(ie.plaka||'\u2014')+'</div><div style="font-size:12px;color:rgba(255,255,255,.8);margin-top:2px">'+(ie.musteri||'\u2014')+'</div><div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px">'+(ie.hizmet||'\u2014')+'</div>'+(ie.durum==='tamamlandi'?'<div style="display:inline-block;margin-top:8px;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.2);font-size:10px;font-weight:700;color:#fff">\u2705 TAMAMLANDI</div>':'')+'<div style="font-size:9px;color:rgba(255,255,255,.5);margin-top:6px">Takip: '+ie.takip_kodu+'</div></div><div style="padding:20px">'+tl+'<div style="border-top:1px solid var(--bd);padding-top:14px;margin-top:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'+(ts?'<div style="font-size:12px;color:var(--ink4)">\u23F1 Toplam: <strong>'+ts+'</strong></div>':'')+'<div style="display:flex;gap:6px;flex-wrap:wrap">'+(ie.tel?'<button data-ie-aksiyon="takip" data-ie-id="'+ie.id+'" data-ie-tel="'+ie.tel+'" style="padding:6px 14px;border:1.5px solid #25D366;border-radius:8px;background:transparent;color:#128C7E;font-size:10px;font-weight:600;cursor:pointer">\u{1F4F1} Takip Link Gonder</button>':'')+'<button data-ie-aksiyon="sil" data-ie-id="'+ie.id+'" style="padding:6px 14px;border:1.5px solid #ef4444;border-radius:8px;background:transparent;color:#ef4444;font-size:10px;font-weight:600;cursor:pointer">\u{1F5D1} Sil</button><button data-ie-aksiyon="kapat" style="padding:6px 14px;border:1.5px solid var(--bd);border-radius:8px;background:transparent;color:var(--ink);font-size:10px;font-weight:600;cursor:pointer">Kapat</button></div></div></div>';
 ovl.appendChild(m);document.body.appendChild(ovl);
 }
 
@@ -231,7 +232,28 @@ fetch('/api/is-emri',{method:'POST',credentials:'same-origin',headers:{'Content-
 .then(function(res){return res.json()}).then(function(d){if(d.success){toast('Is emri olusturuldu! Takip: '+d.takip_kodu,'green');isEmriDetayModal(d.id);}else toast(d.error||'Hata','red')});
 }
 
-function isEmriTakipGonder(id,tel){var ie=IE_DATA.find(function(x){return x.id===id});var t=(tel||'').replace(/\D/g,'');if(t.startsWith('0'))t='90'+t.substring(1);else if(t.startsWith('5')&&t.length===10)t='90'+t;var link='https://autonax.com.tr/is-takip?kod='+(ie?ie.takip_kodu:'');var asama=ie?ie.mevcut_asama:'';var asamaAd='';var asamaIkon='';if(ie){IE_ASAMALAR.forEach(function(a){if(a.kod===asama){asamaAd=a.ad;asamaIkon=a.ikon;}});}var msg='*\u{1F3C1} AUTOCLUB SAMSUN*%0A\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500%0A%0AMerhaba '+(ie?ie.musteri:'')+' \u{1F44B}%0A%0AArac\u0131n\u0131z\u0131n i\u015f emri olu\u015fturuldu ve s\u00fcreci canl\u0131 takip edebilirsiniz.%0A%0A\u{1F697} *Plaka:* '+(ie?ie.plaka:'')+'%0A\u{1F4CB} *Hizmet:* '+(ie?ie.hizmet:'')+'%0A'+(asamaAd?asamaIkon+' *Durum:* '+asamaAd+'%0A':'')+'%0A\u{1F517} *Canl\u0131 Takip Linki:*%0A'+link+'%0A%0A\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500%0A\u{1F4CD} _AutoClub Samsun PPF %26 Detailing_';var isMobile=/Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);window.open((isMobile?'https://api.whatsapp.com/send?phone=':'https://web.whatsapp.com/send?phone=')+t+'&text='+msg,'_blank');}
+function isEmriTakipGonder(id,tel){
+var ie=IE_DATA.find(function(x){return x.id===id});
+var t=(tel||'').replace(/\D/g,'');
+if(t.startsWith('0'))t='90'+t.substring(1);
+else if(t.startsWith('5')&&t.length===10)t='90'+t;
+var link='https://autonax.com.tr/is-takip?kod='+(ie?ie.takip_kodu:'');
+var ay=IE_AYARLAR||ieVarsayilanAyarlar();
+var asama=ie?ie.mevcut_asama:'';var asamaAd='';var asamaIkon='';
+if(ie){IE_ASAMALAR.forEach(function(a){if(a.kod===asama){asamaAd=a.ad;asamaIkon=a.ikon;}});}
+var durumSatiri=asamaAd?asamaIkon+' *Durum:* '+asamaAd:'';
+var msg=ay.wa_sablon
+  .replace(/{{firma_adi}}/g,ay.firma_adi||'AutoClub Samsun')
+  .replace(/{{firma_slogan}}/g,ay.firma_slogan||'PPF & Detailing')
+  .replace(/{{musteri}}/g,ie?ie.musteri:'')
+  .replace(/{{plaka}}/g,ie?ie.plaka:'')
+  .replace(/{{hizmet}}/g,ie?ie.hizmet:'')
+  .replace(/{{durum_satiri}}/g,durumSatiri)
+  .replace(/{{takip_link}}/g,link);
+msg=encodeURIComponent(msg);
+var isMobile=/Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+window.open((isMobile?'https://api.whatsapp.com/send?phone=':'https://web.whatsapp.com/send?phone=')+t+'&text='+msg,'_blank');
+}
 
 function isEmriNotEklePrompt(id,kod){
 var n=prompt('Not giriniz:');if(!n)return;
@@ -247,3 +269,81 @@ if(m){var o=document.getElementById('rdv-duzenle-ovl');if(o)o.remove();isEmriDet
 else{if(!confirm('Bu randevu icin Is Emri olusturulsun mu?\n\n'+r.musteri+' \u2014 '+r.plaka+'\n'+r.hizmet))return;isEmriOlustur(rdvIdx);}
 });
 }
+
+
+async function isEmriSil(id){
+if(!confirm('Bu is emrini kalici olarak silmek istediginize emin misiniz?\n\nSildikten sonra ayni randevuya yeni is emri olusturabilirsiniz.'))return;
+var btn=document.querySelector('[data-ie-aksiyon="sil"][data-ie-id="'+id+'"]');
+if(btn){btn.disabled=true;btn.style.opacity='.5';btn.textContent='\u23F3 Siliniyor...';}
+try{var r=await fetch('/api/is-emri?id='+encodeURIComponent(id),{method:'DELETE',credentials:'same-origin'});
+var d=await r.json();if(d.success){toast('Is emri silindi','green');
+IE_DATA=IE_DATA.filter(function(x){return x.id!==id});
+var o=document.getElementById('ie-detay-ovl');if(o)o.remove();
+isEmriStatlariGuncelle(IE_DATA);isEmriKartlariCiz(IE_DATA);
+}else toast(d.error||'Silinemedi','red');
+}catch(e){toast('Baglanti hatasi','red');}
+}
+
+// ===== IS EMRI AYARLARI =====
+var IE_AYARLAR = null;
+
+async function ieAyarlariYukle(){
+try{var r=await fetch('/api/ayarlar?key=is_emri_ayarlar',{credentials:'same-origin'});var d=await r.json();
+if(d.success && d.value) IE_AYARLAR = d.value;
+else IE_AYARLAR = ieVarsayilanAyarlar();
+}catch(e){IE_AYARLAR = ieVarsayilanAyarlar();}
+return IE_AYARLAR;
+}
+
+function ieVarsayilanAyarlar(){
+return {
+  firma_adi: 'AutoClub Samsun',
+  firma_slogan: 'PPF & Detailing',
+  wa_sablon: '*\u{1F3C1} {{firma_adi}}*\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\nMerhaba {{musteri}} \u{1F44B}\n\nArac\u0131n\u0131z\u0131n i\u015f emri olu\u015fturuldu ve s\u00fcreci canl\u0131 takip edebilirsiniz.\n\n\u{1F697} *Plaka:* {{plaka}}\n\u{1F4CB} *Hizmet:* {{hizmet}}\n{{durum_satiri}}\n\u{1F517} *Canl\u0131 Takip Linki:*\n{{takip_link}}\n\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\u{1F4CD} _{{firma_adi}} {{firma_slogan}}_',
+  takip_renk: '#1e40af',
+  takip_bg: '#0f172a',
+  takip_logo: ''
+};
+}
+
+function ieAyarlariSayfasiCiz(){
+var el=document.getElementById('ie-ayarlar-konteyner');if(!el)return;
+var ay=IE_AYARLAR||ieVarsayilanAyarlar();
+el.innerHTML='<div class="g2"><div class="k"><div class="kh"><div class="kt">\u{1F4AC} WhatsApp Mesaj \u015Eablonu</div></div><div class="kb"><div class="ff"><label>Firma Ad\u0131</label><input id="ie-ay-firma" type="text" value="'+(ay.firma_adi||'')+'"></div><div class="ff"><label>Firma Slogan</label><input id="ie-ay-slogan" type="text" value="'+(ay.firma_slogan||'')+'"></div><div class="ff"><label>Mesaj \u015Eablonu</label><div style="font-size:9px;color:var(--ink4);margin-bottom:4px">De\u011fi\u015fkenler: {{firma_adi}} {{firma_slogan}} {{musteri}} {{plaka}} {{hizmet}} {{durum_satiri}} {{takip_link}}</div><textarea id="ie-ay-sablon" rows="12" style="font-family:monospace;font-size:11px;width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--ink);resize:vertical">'+(ay.wa_sablon||'').replace(/</g,'&lt;')+'</textarea></div><button class="btn-p" style="margin-top:8px" onclick="ieAyarlariOnizle()">\u{1F441} \u00d6nizle</button><div id="ie-ay-onizle" style="margin-top:12px"></div></div></div><div class="k"><div class="kh"><div class="kt">\u{1F3A8} Takip Sayfas\u0131 G\u00f6r\u00fcn\u00fcm</div></div><div class="kb"><div class="ff"><label>Ana Renk (HEX)</label><div style="display:flex;gap:8px;align-items:center"><input id="ie-ay-renk" type="color" value="'+(ay.takip_renk||'#1e40af')+'" style="width:50px;height:36px;border:none;cursor:pointer"><input id="ie-ay-renk-text" type="text" value="'+(ay.takip_renk||'#1e40af')+'" style="flex:1" oninput="document.getElementById(\'ie-ay-renk\').value=this.value"></div></div><div class="ff"><label>Arka Plan Rengi</label><div style="display:flex;gap:8px;align-items:center"><input id="ie-ay-bg" type="color" value="'+(ay.takip_bg||'#0f172a')+'" style="width:50px;height:36px;border:none;cursor:pointer"><input id="ie-ay-bg-text" type="text" value="'+(ay.takip_bg||'#0f172a')+'" style="flex:1" oninput="document.getElementById(\'ie-ay-bg\').value=this.value"></div></div><div class="ff"><label>Logo URL (opsiyonel)</label><input id="ie-ay-logo" type="text" value="'+(ay.takip_logo||'')+'" placeholder="https://..."></div></div></div></div><div style="margin-top:16px;text-align:right"><button class="btn-p" onclick="ieAyarlariKaydet()">\u{1F4BE} Ayarlar\u0131 Kaydet</button></div>';
+}
+
+function ieAyarlariOnizle(){
+var sablon=document.getElementById('ie-ay-sablon').value;
+var firma=document.getElementById('ie-ay-firma').value;
+var slogan=document.getElementById('ie-ay-slogan').value;
+var ornek=sablon.replace(/{{firma_adi}}/g,firma).replace(/{{firma_slogan}}/g,slogan).replace(/{{musteri}}/g,'Mehmet Bey').replace(/{{plaka}}/g,'55ABC123').replace(/{{hizmet}}/g,'PPF Tam Arac').replace(/{{durum_satiri}}/g,'\u{1F4CB} *Durum:* Uygulama').replace(/{{takip_link}}/g,'https://autonax.com.tr/is-takip?kod=ABC123');
+var el=document.getElementById('ie-ay-onizle');
+el.innerHTML='<div style="background:#075e54;border-radius:12px;padding:16px;max-width:360px"><div style="background:#dcf8c6;border-radius:8px;padding:12px;font-size:12px;line-height:1.6;color:#303030;white-space:pre-wrap;word-break:break-word">'+ornek.replace(/\n/g,'<br>').replace(/\*([^*]+)\*/g,'<b>$1</b>').replace(/_([^_]+)_/g,'<i>$1</i>')+'</div></div>';
+}
+
+async function ieAyarlariKaydet(){
+var ay={
+firma_adi:document.getElementById('ie-ay-firma').value,
+firma_slogan:document.getElementById('ie-ay-slogan').value,
+wa_sablon:document.getElementById('ie-ay-sablon').value,
+takip_renk:document.getElementById('ie-ay-renk').value,
+takip_bg:document.getElementById('ie-ay-bg').value,
+takip_logo:document.getElementById('ie-ay-logo').value
+};
+try{var r=await fetch('/api/ayarlar',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:'is_emri_ayarlar',value:ay})});
+var d=await r.json();if(d.success){toast('Is Emri ayarlari kaydedildi','green');IE_AYARLAR=ay;}else toast(d.error||'Hata','red');
+}catch(e){toast('Baglanti hatasi','red');}
+}
+
+// Sayfa yuklendiginde ayarlari getir
+ieAyarlariYukle();
+
+// Ayarlar sekmesi acildiginda ciz
+(function(){
+var origAyarYukle=window.ayarlarSayfasiYukle;
+window.ayarlarSayfasiYukle=function(){
+if(typeof origAyarYukle==='function')origAyarYukle();
+// isemri sekmesi icin icerigi doldur
+setTimeout(function(){ieAyarlariSayfasiCiz();},100);
+};
+})();

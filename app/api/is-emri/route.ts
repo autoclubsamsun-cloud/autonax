@@ -216,7 +216,7 @@ export async function PUT(req: NextRequest) {
   }
 }
 
-// DELETE - İş emri iptal
+// DELETE - İş emri kalıcı silme
 export async function DELETE(req: NextRequest) {
   try {
     await ensureDB();
@@ -224,7 +224,7 @@ export async function DELETE(req: NextRequest) {
     const id = searchParams.get('id');
     if (!id) return NextResponse.json({ success: false, error: 'ID zorunlu' });
 
-    await sql`UPDATE is_emirleri SET durum = 'iptal', guncelleme = NOW() WHERE id = ${id}`;
+    await sql`DELETE FROM is_emirleri WHERE id = ${id}`;
     return NextResponse.json({ success: true });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Bilinmeyen hata';
