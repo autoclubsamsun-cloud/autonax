@@ -39,6 +39,10 @@ const nextConfig = {
         source: '/odeme-basarisiz',
         destination: '/standalone/odeme-basarisiz.html',
       },
+      {
+        source: '/is-takip',
+        destination: '/standalone/is-takip.html',
+      },
     ];
   },
 };

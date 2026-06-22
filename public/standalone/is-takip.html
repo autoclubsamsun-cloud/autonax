@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Araç Takip — AutoClub Samsun</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Outfit,system-ui,sans-serif;background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%);min-height:100vh;color:#e2e8f0}
+.container{max-width:480px;margin:0 auto;padding:20px 16px;min-height:100vh;display:flex;flex-direction:column}
+
+/* Logo */
+.logo{text-align:center;padding:24px 0 20px}
+.logo-text{font-family:Bebas Neue,sans-serif;font-size:28px;letter-spacing:4px;color:#fff;text-shadow:0 2px 10px rgba(59,130,246,.4)}
+.logo-sub{font-size:10px;color:#64748b;letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+
+/* Arama */
+.search-box{background:rgba(255,255,255,.06);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:20px;margin-bottom:20px}
+.search-box h2{font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;margin-bottom:12px;color:#94a3b8}
+.search-row{display:flex;gap:8px}
+.search-row input{flex:1;padding:12px 16px;border:1.5px solid rgba(255,255,255,.12);border-radius:10px;background:rgba(255,255,255,.05);color:#fff;font-size:14px;font-family:Outfit,sans-serif;outline:none;text-transform:uppercase;letter-spacing:2px;transition:border .2s}
+.search-row input:focus{border-color:#3b82f6}
+.search-row input::placeholder{color:#475569;text-transform:none;letter-spacing:0}
+.search-row button{padding:12px 20px;border:none;border-radius:10px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:1px;cursor:pointer;white-space:nowrap}
+
+/* Sonuç kartı */
+.result{flex:1}
+.card{background:rgba(255,255,255,.06);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.1);border-radius:20px;overflow:hidden;margin-bottom:16px}
+.card-header{background:linear-gradient(135deg,#1e40af,#3b82f6);padding:20px;text-align:center}
+.card-plaka{font-family:Bebas Neue,sans-serif;font-size:32px;letter-spacing:3px;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.3)}
+.card-hizmet{font-size:13px;color:#bfdbfe;margin-top:4px}
+.card-durum{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;margin-top:8px}
+.card-durum.aktif{background:rgba(34,197,94,.2);color:#4ade80}
+.card-durum.tamamlandi{background:rgba(34,197,94,.2);color:#4ade80}
+.card-durum.iptal{background:rgba(239,68,68,.2);color:#fca5a5}
+
+/* Progress bar */
+.progress-wrap{padding:16px 20px}
+.progress-bar{display:flex;align-items:center;gap:4px;margin-bottom:8px}
+.progress-dot{width:100%;height:6px;border-radius:3px;background:rgba(255,255,255,.1);position:relative;overflow:hidden;transition:all .3s}
+.progress-dot.done{background:linear-gradient(90deg,#22c55e,#16a34a)}
+.progress-dot.active{background:rgba(59,130,246,.3)}
+.progress-dot.active::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#3b82f6,#60a5fa);border-radius:3px;animation:pulse 1.5s ease-in-out infinite}
+.progress-labels{display:flex;justify-content:space-between}
+.progress-labels span{font-size:7px;color:#475569;text-transform:uppercase;letter-spacing:.5px;text-align:center;flex:1}
+.progress-labels span.done{color:#22c55e}
+.progress-labels span.active{color:#3b82f6;font-weight:700}
+
+/* Timeline */
+.timeline{padding:0 20px 20px}
+.tl-item{display:flex;gap:14px;padding:14px 0;position:relative}
+.tl-item:not(:last-child)::after{content:'';position:absolute;left:17px;top:48px;bottom:0;width:2px;background:rgba(255,255,255,.08)}
+.tl-item.done:not(:last-child)::after{background:#22c55e}
+.tl-item.active:not(:last-child)::after{background:linear-gradient(to bottom,#3b82f6,rgba(255,255,255,.08))}
+.tl-dot{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;z-index:1}
+.tl-item.done .tl-dot{background:rgba(34,197,94,.15);border:1.5px solid #22c55e}
+.tl-item.active .tl-dot{background:rgba(59,130,246,.15);border:1.5px solid #3b82f6;animation:pulseGlow 2s infinite}
+.tl-item.waiting .tl-dot{background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.1)}
+.tl-content{flex:1}
+.tl-name{font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:1px}
+.tl-item.done .tl-name{color:#22c55e}
+.tl-item.active .tl-name{color:#3b82f6}
+.tl-item.waiting .tl-name{color:#475569}
+.tl-time{font-size:11px;color:#64748b;margin-top:2px}
+.tl-item.active .tl-time{color:#93c5fd}
+.tl-badge{font-size:10px;display:inline-block;padding:2px 8px;border-radius:6px;margin-top:4px;font-weight:600}
+.tl-item.active .tl-badge{background:rgba(59,130,246,.15);color:#60a5fa;animation:pulse 2s infinite}
+
+/* Footer */
+.footer{text-align:center;padding:20px 0;border-top:1px solid rgba(255,255,255,.06);margin-top:auto}
+.footer-info{font-size:11px;color:#475569}
+.footer-brand{font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:2px;color:#64748b;margin-top:4px}
+.footer-refresh{font-size:10px;color:#334155;margin-top:8px}
+
+/* Tahmini */
+.estimate{padding:14px 20px;border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between}
+.estimate-label{font-size:11px;color:#64748b}
+.estimate-value{font-family:Bebas Neue,sans-serif;font-size:20px;color:#fbbf24}
+
+/* Loading */
+.loading{text-align:center;padding:60px 20px}
+.loading-spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,.1);border-top-color:#3b82f6;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+.loading-text{font-size:13px;color:#64748b}
+
+/* Empty */
+.empty{text-align:center;padding:60px 20px}
+.empty-icon{font-size:48px;margin-bottom:12px;opacity:.5}
+.empty-text{font-size:13px;color:#64748b}
+
+/* Error */
+.error{text-align:center;padding:40px 20px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:14px}
+.error-icon{font-size:36px;margin-bottom:8px}
+.error-text{font-size:13px;color:#fca5a5}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,.4)}50%{box-shadow:0 0 0 8px rgba(59,130,246,0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">
+    <div class="logo-text">AUTOCLUB SAMSUN</div>
+    <div class="logo-sub">Araç İş Takip Sistemi</div>
+  </div>
+
+  <div class="search-box">
+    <h2>🔍 ARAÇ TAKİP</h2>
+    <div class="search-row">
+      <input type="text" id="takip-input" placeholder="Takip kodunuzu girin..." maxlength="6">
+      <button onclick="sorgula()">SORGULA</button>
+    </div>
+  </div>
+
+  <div class="result" id="sonuc">
+    <div class="empty">
+      <div class="empty-icon">🚗</div>
+      <div class="empty-text">Takip kodunuzu girerek aracınızın durumunu öğrenin</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-brand">AUTOCLUB SAMSUN</div>
+    <div class="footer-info">PPF • Seramik Kaplama • Cam Filmi</div>
+    <div class="footer-refresh" id="refresh-info"></div>
+  </div>
+</div>
+
+<script>
+var ASAMA_IKONLARI = {kabul:'📋',yikama:'🧽',hazirlik:'🔧',uygulama:'🎯',kalite:'✅',teslim:'🚗'};
+var _refreshTimer = null;
+
+// URL'den takip kodu al
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  var kod = params.get('kod');
+  if(kod){
+    document.getElementById('takip-input').value = kod.toUpperCase();
+    sorgula();
+  }
+})();
+
+function sorgula(){
+  var kod = (document.getElementById('takip-input').value||'').trim().toUpperCase();
+  if(kod.length<4){
+    document.getElementById('sonuc').innerHTML='<div class="error"><div class="error-icon">⚠️</div><div class="error-text">En az 4 karakterli takip kodu girin</div></div>';
+    return;
+  }
+  document.getElementById('sonuc').innerHTML='<div class="loading"><div class="loading-spinner"></div><div class="loading-text">Sorgulanıyor...</div></div>';
+  
+  fetch('/api/is-emri?takip='+encodeURIComponent(kod))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(!d.success){
+        document.getElementById('sonuc').innerHTML='<div class="error"><div class="error-icon">❌</div><div class="error-text">'+(d.error||'Takip kodu bulunamadı')+'</div></div>';
+        return;
+      }
+      render(d.data);
+      // Otomatik yenileme başlat
+      if(_refreshTimer) clearInterval(_refreshTimer);
+      _refreshTimer = setInterval(function(){ otomatikYenile(kod); }, 30000);
+      document.getElementById('refresh-info').textContent = '30 saniyede bir otomatik güncellenir';
+    })
+    .catch(function(){
+      document.getElementById('sonuc').innerHTML='<div class="error"><div class="error-icon">⚠️</div><div class="error-text">Bağlantı hatası. Lütfen tekrar deneyin.</div></div>';
+    });
+}
+
+function otomatikYenile(kod){
+  fetch('/api/is-emri?takip='+encodeURIComponent(kod))
+    .then(function(r){return r.json();})
+    .then(function(d){ if(d.success) render(d.data); });
+}
+
+function render(ie){
+  var asamalar = ie.asamalar || [];
+  var durumClass = ie.durum==='tamamlandi'?'tamamlandi':ie.durum==='iptal'?'iptal':'aktif';
+  var durumText = ie.durum==='tamamlandi'?'✅ Tamamlandı':ie.durum==='iptal'?'❌ İptal':'🔄 Devam Ediyor';
+  
+  // Progress bar
+  var progressHTML = '<div class="progress-wrap"><div class="progress-bar">';
+  var labelsHTML = '<div class="progress-labels">';
+  asamalar.forEach(function(a){
+    var cls = a.durum==='tamamlandi'?'done':a.durum==='devam'?'active':'';
+    progressHTML += '<div class="progress-dot '+cls+'"></div>';
+    labelsHTML += '<span class="'+cls+'">'+(a.ad||a.kod)+'</span>';
+  });
+  progressHTML += '</div>' + labelsHTML + '</div></div>';
+
+  // Timeline
+  var timelineHTML = '<div class="timeline">';
+  asamalar.forEach(function(a){
+    var cls = a.durum==='tamamlandi'?'done':a.durum==='devam'?'active':'waiting';
+    var ikon = ASAMA_IKONLARI[a.kod] || '⚪';
+    var timeText = '';
+    if(a.durum==='tamamlandi'){
+      var bs = a.baslama ? new Date(a.baslama).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}) : '';
+      var bt = a.bitis ? new Date(a.bitis).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}) : '';
+      timeText = bs + (bt ? ' — ' + bt : '') + (a.sure_dk ? ' (' + formatSure(a.sure_dk) + ')' : '');
+    } else if(a.durum==='devam'){
+      var bs2 = a.baslama ? new Date(a.baslama).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}) : '';
+      timeText = bs2 + ' — devam ediyor';
+    }
+
+    var badgeHTML = '';
+    if(a.durum==='devam'){
+      badgeHTML = '<div class="tl-badge">Aracınız şu an bu aşamada</div>';
+    }
+
+    timelineHTML += '<div class="tl-item '+cls+'">'
+      +'<div class="tl-dot">'+(a.durum==='tamamlandi'?'✓':ikon)+'</div>'
+      +'<div class="tl-content">'
+        +'<div class="tl-name">'+(a.ad||a.kod)+'</div>'
+        +(timeText?'<div class="tl-time">'+timeText+'</div>':'')
+        +badgeHTML
+      +'</div>'
+    +'</div>';
+  });
+  timelineHTML += '</div>';
+
+  // Tahmini teslim (basit hesap)
+  var estimateHTML = '';
+  if(ie.durum==='aktif'){
+    var tamamlanan = asamalar.filter(function(a){return a.durum==='tamamlandi';}).length;
+    var topSure = asamalar.reduce(function(t,a){return t+(a.sure_dk||0);},0);
+    if(tamamlanan>0 && topSure>0){
+      var ortSure = topSure/tamamlanan;
+      var kalanAsama = asamalar.length - tamamlanan - 1;
+      var kalanDk = Math.round(ortSure * kalanAsama);
+      estimateHTML = '<div class="estimate"><span class="estimate-label">⏱ Tahmini kalan süre</span><span class="estimate-value">~'+formatSure(kalanDk)+'</span></div>';
+    }
+  } else if(ie.durum==='tamamlandi'){
+    var topSure2 = asamalar.reduce(function(t,a){return t+(a.sure_dk||0);},0);
+    estimateHTML = '<div class="estimate"><span class="estimate-label">⏱ Toplam süre</span><span class="estimate-value">'+formatSure(topSure2)+'</span></div>';
+  }
+
+  document.getElementById('sonuc').innerHTML = ''
+    +'<div class="card">'
+      +'<div class="card-header">'
+        +'<div class="card-plaka">'+(ie.plaka||'-')+'</div>'
+        +'<div class="card-hizmet">'+(ie.hizmet||'-')+'</div>'
+        +'<div class="card-durum '+durumClass+'">'+durumText+'</div>'
+      +'</div>'
+      +progressHTML
+      +timelineHTML
+      +estimateHTML
+    +'</div>';
+}
+
+function formatSure(dk){
+  if(dk<60) return dk+'dk';
+  var saat=Math.floor(dk/60);
+  var kalan=dk%60;
+  return saat+'s'+(kalan>0?' '+kalan+'dk':'');
+}
+</script>
+</body>
+</html>

@@ -48,4 +48,25 @@ export async function initDB() {
   )`;
   await sql`CREATE INDEX IF NOT EXISTS idx_garanti_plaka ON garanti_belgeleri(plaka)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_garanti_rdv ON garanti_belgeleri(randevu_id)`;
+  // --- İş Emri & İş Takip Sistemi ---
+  await sql`CREATE TABLE IF NOT EXISTS is_emirleri (
+    id TEXT PRIMARY KEY,
+    takip_kodu TEXT UNIQUE NOT NULL,
+    randevu_id TEXT REFERENCES randevular(id) ON DELETE SET NULL,
+    musteri TEXT,
+    tel TEXT,
+    plaka TEXT,
+    arac TEXT,
+    hizmet TEXT,
+    tutar INTEGER DEFAULT 0,
+    durum TEXT DEFAULT 'aktif',
+    mevcut_asama TEXT DEFAULT 'kabul',
+    asamalar JSONB DEFAULT '[]',
+    toplam_sure INTEGER DEFAULT 0,
+    olusturma TIMESTAMPTZ DEFAULT NOW(),
+    tamamlanma TIMESTAMPTZ
+  )`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_ie_takip ON is_emirleri(takip_kodu)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_ie_durum ON is_emirleri(durum)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_ie_rdv ON is_emirleri(randevu_id)`;
 }
