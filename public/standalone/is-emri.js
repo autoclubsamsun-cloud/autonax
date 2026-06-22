@@ -34,7 +34,7 @@ var IE_ASAMALAR=[
 {kod:'teslim',ad:'Teslim',ikon:'\u{1F697}',renk:'#10b981'}
 ];
 var IE_DATA=[],IE_FILTRE='tumu';
-(function(){if(document.getElementById('ie-pulse-css'))return;var s=document.createElement('style');s.id='ie-pulse-css';s.textContent='@keyframes iePulse{0%,100%{opacity:1}50%{opacity:.4}}';document.head.appendChild(s)})();
+(function(){if(document.getElementById('ie-pulse-css'))return;var s=document.createElement('style');s.id='ie-pulse-css';s.textContent='@keyframes iePulse{0%,100%{opacity:1}50%{opacity:.4}}@keyframes spin{to{transform:rotate(360deg)}}';document.head.appendChild(s)})();
 
 // Global click delegation
 document.addEventListener('click',function(e){
@@ -50,12 +50,7 @@ else if(ak==='yeni-modal')isEmriYeniModal();
 else if(ak==='rdv-sec'){e.stopPropagation();isEmriOlusturFromModal(parseInt(t.dataset.ieIdx));}
 });
 
-async function isEmriSayfasiYukle(){
-try{var r=await fetch('/api/is-emri',{credentials:'same-origin'});var d=await r.json();
-if(!d.success){toast('Is emirleri yuklenemedi','red');return;}
-IE_DATA=d.data||[];isEmriStatlariGuncelle(IE_DATA);isEmriKartlariCiz(IE_DATA);
-}catch(e){console.error('IE:',e);}
-}
+async function isEmriSayfasiYukle(){var el=document.getElementById('ie-kartlar');if(el&&!IE_DATA.length)el.innerHTML='<div style="text-align:center;padding:40px"><div style="width:28px;height:28px;border:3px solid var(--bd);border-top:3px solid #3b82f6;border-radius:50%;animation:spin .6s linear infinite;margin:0 auto 10px"></div><div style="font-size:12px;color:var(--ink4)">Y\u00fckleniyor...</div></div>';try{var r=await fetch('/api/is-emri',{credentials:'same-origin'});var d=await r.json();if(!d.success){toast('Is emirleri yuklenemedi','red');return;}IE_DATA=d.data||[];isEmriStatlariGuncelle(IE_DATA);isEmriKartlariCiz(IE_DATA);}catch(e){console.error('IE:',e);}}
 
 function isEmriStatlariGuncelle(data){
 var el=document.getElementById('ie-statlar');if(!el)return;
@@ -109,11 +104,7 @@ if(event&&event.target){event.target.classList.add('ie-tab-aktif');event.target.
 isEmriKartlariCiz(IE_DATA);
 }
 
-async function isEmriDetayModal(id){
-try{var r=await fetch('/api/is-emri?id='+encodeURIComponent(id),{credentials:'same-origin'});var d=await r.json();
-if(!d.success||!d.data){toast('Detay yuklenemedi','red');return;}isEmriDetayModalGoster(d.data);
-}catch(e){var ie=IE_DATA.find(function(x){return x.id===id});if(ie)isEmriDetayModalGoster(ie);}
-}
+async function isEmriDetayModal(id){var cached=IE_DATA.find(function(x){return x.id===id});if(cached)isEmriDetayModalGoster(cached);try{var r=await fetch('/api/is-emri?id='+encodeURIComponent(id),{credentials:'same-origin'});var d=await r.json();if(d.success&&d.data){var ci=IE_DATA.findIndex(function(x){return x.id===id});if(ci>-1)IE_DATA[ci]=d.data;isEmriDetayModalGoster(d.data);}}catch(e){if(!cached)toast('Detay yuklenemedi','red');}}
 
 function isEmriDetayModalGoster(ie){
 var eski=document.getElementById('ie-detay-ovl');if(eski)eski.remove();
@@ -149,17 +140,9 @@ m.innerHTML='<div style="background:linear-gradient(135deg,'+hc+','+hc+'cc);padd
 ovl.appendChild(m);document.body.appendChild(ovl);
 }
 
-async function isEmriAsamaIlerle(id,kod){
-try{var r=await fetch('/api/is-emri',{method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,aksiyon:'asama_baslat',asama_kod:kod})});
-var d=await r.json();if(d.success){toast(kod+' baslatildi','green');var o=document.getElementById('ie-detay-ovl');if(o)o.remove();isEmriDetayModal(id);}else toast(d.error||'Hata','red');
-}catch(e){toast('Baglanti hatasi','red');}
-}
+async function isEmriAsamaIlerle(id,kod){var btn=document.querySelector('[data-ie-aksiyon="baslat"][data-ie-id="'+id+'"]');if(btn){btn.disabled=true;btn.style.opacity='.5';btn.textContent='\u23F3 Baslatiliyor...';}try{var r=await fetch('/api/is-emri',{method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,aksiyon:'asama_baslat',asama_kod:kod})});var d=await r.json();if(d.success){toast(kod+' baslatildi','green');if(d.data){var ci=IE_DATA.findIndex(function(x){return x.id===id});if(ci>-1)IE_DATA[ci]=d.data;}var o=document.getElementById('ie-detay-ovl');if(o)o.remove();isEmriDetayModal(id);}else{toast(d.error||'Hata','red');if(btn){btn.disabled=false;btn.style.opacity='1';}}}catch(e){toast('Baglanti hatasi','red');if(btn){btn.disabled=false;btn.style.opacity='1';}}}
 
-async function isEmriAsamaTamamla(id,kod){
-try{var r=await fetch('/api/is-emri',{method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,aksiyon:'asama_tamamla',asama_kod:kod})});
-var d=await r.json();if(d.success){toast(kod+' tamamlandi!','green');var o=document.getElementById('ie-detay-ovl');if(o)o.remove();isEmriDetayModal(id);isEmriSayfasiYukle();}else toast(d.error||'Hata','red');
-}catch(e){toast('Baglanti hatasi','red');}
-}
+async function isEmriAsamaTamamla(id,kod){var btn=document.querySelector('[data-ie-aksiyon="tamamla"][data-ie-id="'+id+'"]');if(btn){btn.disabled=true;btn.style.opacity='.5';btn.textContent='\u23F3 Tamamlaniyor...';}try{var r=await fetch('/api/is-emri',{method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,aksiyon:'asama_tamamla',asama_kod:kod})});var d=await r.json();if(d.success){toast(kod+' tamamlandi!','green');if(d.data){var ci=IE_DATA.findIndex(function(x){return x.id===id});if(ci>-1)IE_DATA[ci]=d.data;}var o=document.getElementById('ie-detay-ovl');if(o)o.remove();isEmriDetayModal(id);isEmriStatlariGuncelle(IE_DATA);isEmriKartlariCiz(IE_DATA);}else{toast(d.error||'Hata','red');if(btn){btn.disabled=false;btn.style.opacity='1';}}}catch(e){toast('Baglanti hatasi','red');if(btn){btn.disabled=false;btn.style.opacity='1';}}}
 
 async function isEmriYeniModal(){
 try{var r=await fetch('/api/randevular',{credentials:'same-origin'});var d=await r.json();
@@ -248,27 +231,7 @@ fetch('/api/is-emri',{method:'POST',credentials:'same-origin',headers:{'Content-
 .then(function(res){return res.json()}).then(function(d){if(d.success){toast('Is emri olusturuldu! Takip: '+d.takip_kodu,'green');isEmriDetayModal(d.id);}else toast(d.error||'Hata','red')});
 }
 
-function isEmriTakipGonder(id,tel){
-var ie=IE_DATA.find(function(x){return x.id===id});
-var t=(tel||'').replace(/\D/g,'');
-if(t.startsWith('0'))t='90'+t.substring(1);
-else if(t.startsWith('5')&&t.length===10)t='90'+t;
-var link='https://autonax.com.tr/is-takip?kod='+(ie?ie.takip_kodu:'');
-var asama=ie?ie.mevcut_asama:'';
-var asamaAd='';var asamaIkon='';
-if(ie){IE_ASAMALAR.forEach(function(a){if(a.kod===asama){asamaAd=a.ad;asamaIkon=a.ikon;}});}
-var msg='*\u{1F3C1} AUTOCLUB SAMSUN*%0A'
-+'\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500%0A%0A'
-+'Merhaba '+(ie?ie.musteri:'')+' \u{1F44B}%0A%0A'
-+'Arac\u0131n\u0131z\u0131n is emri olusturuldu ve sureci canli takip edebilirsiniz.%0A%0A'
-+'\u{1F697} *Plaka:* '+(ie?ie.plaka:'')+'%0A'
-+'\u{1F4CB} *Hizmet:* '+(ie?ie.hizmet:'')+'%0A'
-+(asamaAd?asamaIkon+' *Durum:* '+asamaAd+'%0A':'')
-+'%0A\u{1F517} *Canli Takip Linki:*%0A'+link+'%0A%0A'
-+'\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500%0A'
-+'\u{1F4CD} _AutoClub Samsun PPF & Detailing_';
-window.open('https://wa.me/'+t+'?text='+msg,'_blank');
-}
+function isEmriTakipGonder(id,tel){var ie=IE_DATA.find(function(x){return x.id===id});var t=(tel||'').replace(/\D/g,'');if(t.startsWith('0'))t='90'+t.substring(1);else if(t.startsWith('5')&&t.length===10)t='90'+t;var link='https://autonax.com.tr/is-takip?kod='+(ie?ie.takip_kodu:'');var asama=ie?ie.mevcut_asama:'';var asamaAd='';var asamaIkon='';if(ie){IE_ASAMALAR.forEach(function(a){if(a.kod===asama){asamaAd=a.ad;asamaIkon=a.ikon;}});}var msg='*\u{1F3C1} AUTOCLUB SAMSUN*%0A\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500%0A%0AMerhaba '+(ie?ie.musteri:'')+' \u{1F44B}%0A%0AArac\u0131n\u0131z\u0131n i\u015f emri olu\u015fturuldu ve s\u00fcreci canl\u0131 takip edebilirsiniz.%0A%0A\u{1F697} *Plaka:* '+(ie?ie.plaka:'')+'%0A\u{1F4CB} *Hizmet:* '+(ie?ie.hizmet:'')+'%0A'+(asamaAd?asamaIkon+' *Durum:* '+asamaAd+'%0A':'')+'%0A\u{1F517} *Canl\u0131 Takip Linki:*%0A'+link+'%0A%0A\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500%0A\u{1F4CD} _AutoClub Samsun PPF %26 Detailing_';var isMobile=/Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);window.open((isMobile?'https://api.whatsapp.com/send?phone=':'https://web.whatsapp.com/send?phone=')+t+'&text='+msg,'_blank');}
 
 function isEmriNotEklePrompt(id,kod){
 var n=prompt('Not giriniz:');if(!n)return;
