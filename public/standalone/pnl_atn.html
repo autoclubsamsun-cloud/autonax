@@ -1219,6 +1219,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
         <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Müşteriler
       </div>
+            <div class="sn" data-yetki="randevu" onclick="doPg('is-emri')"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></svg> İş Emri</div>
       <div class="sn" data-yetki="randevu" data-saha-gizli="1" onclick="doPg('referanslar')">
         <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
         Referanslar
@@ -1594,6 +1595,32 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
           </div>
         </div>
       </div>
+    </div>
+
+
+    <!-- ══ İŞ EMRİ ══ -->
+    <div id="pg-is-emri" class="pg">
+      <!-- HERO BANNER -->
+      <div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 40%,#1e40af 100%);border-radius:20px;padding:28px 24px;margin-bottom:20px;position:relative;overflow:hidden">
+        <div style="position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(59,130,246,.25),transparent 70%);pointer-events:none"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;position:relative;z-index:1">
+          <div>
+            <div style="font-family:Bebas Neue,sans-serif;font-size:28px;letter-spacing:3px;color:#fff;text-shadow:0 2px 10px rgba(59,130,246,.4)">İŞ EMRİ TAKİP</div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:2px">Aşama takibi &bull; Süre ölçme &bull; Canlı durum</div>
+          </div>
+          <button onclick="isEmriYeniModal()" style="padding:10px 20px;border:none;border-radius:10px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:1px;cursor:pointer;box-shadow:0 4px 15px rgba(59,130,246,.4);transition:all .2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">+ Yeni İş Emri</button>
+        </div>
+        <!-- STAT KARTLARI -->
+        <div id="ie-statlar" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:20px"></div>
+      </div>
+      <!-- FİLTRE BAR -->
+      <div style="display:flex;gap:4px;background:var(--bg2);border-radius:10px;padding:3px;margin-bottom:16px" id="ie-filtre-tabs">
+        <button onclick="isEmriFiltre('tumu')" class="ie-tab ie-tab-aktif" style="padding:7px 14px;border:none;border-radius:8px;font-size:10px;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;transition:all .2s">Tümü</button>
+        <button onclick="isEmriFiltre('aktif')" class="ie-tab" style="padding:7px 14px;border:none;border-radius:8px;font-size:10px;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;background:transparent;color:var(--ink3);transition:all .2s">Aktif</button>
+        <button onclick="isEmriFiltre('tamamlandi')" class="ie-tab" style="padding:7px 14px;border:none;border-radius:8px;font-size:10px;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;background:transparent;color:var(--ink3);transition:all .2s">Tamamlandı</button>
+      </div>
+      <!-- İŞ EMRİ KARTLARI -->
+      <div id="ie-kartlar" style="display:grid;gap:14px"></div>
     </div>
 
     <!-- ══ MÜŞTERİLER ══ -->
@@ -2878,7 +2905,7 @@ function doPg(id){
       return;
     }
     var gerekliYetki={
-      'randevular':'randevu','musteriler':'randevu','hizmetler':'rapor',
+      'randevular':'randevu','musteriler':'randevu','is-emri':'randevu','hizmetler':'rapor',
       'fiyatlar':'fiyat','raporlar':'rapor','odemeler':'odeme',
       'faturalar':'fatura','bayiler':'bayi','ayarlar':'ayarlar'
     }[id];
@@ -2910,6 +2937,7 @@ function doPg(id){
   if(id==='raporlar'){setTimeout(function(){raporYukle();karsilastirmaSelDoldur();karsilastirmaYukle();setTimeout(maliyetSayfasiYukle,100);},50);}
   // Marka sayfaları (togg/byd/chery/toyota/tesla/mg)
   if(id==='marka-sayfalari'){setTimeout(function(){if(typeof markaSayfalariYukle==='function')markaSayfalariYukle();},50);}
+  if(id==='is-emri' && typeof isEmriSayfasiYukle==='function') setTimeout(isEmriSayfasiYukle,50);
   if(id && id.indexOf('marka-d-')===0){
     // marka-d-togg, marka-d-byd vb. — marka düzenleme sayfası
     var markaKod = id.substring(8);
@@ -6049,6 +6077,414 @@ var TAKSIT_ORANLARI = (function(){
   } catch(e){console.error('Autonax:',e)}
   return JSON.parse(JSON.stringify(TAKSIT_ORANLARI_DEFAULT));
 })();
+
+// ====== İŞ EMRİ SİSTEMİ ======
+var IE_ASAMALAR = [
+  {kod:'kabul', ad:'Kabul', ikon:'📋', renk:'#3b82f6'},
+  {kod:'yikama', ad:'Yıkama', ikon:'🧽', renk:'#06b6d4'},
+  {kod:'hazirlik', ad:'Hazırlık', ikon:'🔧', renk:'#f59e0b'},
+  {kod:'uygulama', ad:'Uygulama', ikon:'🎯', renk:'#ef4444'},
+  {kod:'kalite', ad:'Kalite Kontrol', ikon:'✅', renk:'#8b5cf6'},
+  {kod:'teslim', ad:'Teslim', ikon:'🚗', renk:'#10b981'}
+];
+var IE_DATA = [];
+var IE_FILTRE = 'tumu';
+
+// ── 1. Sayfa Yükleme ──
+async function isEmriSayfasiYukle(){
+  try{
+    var r = await fetch('/api/is-emri',{credentials:'same-origin'});
+    var d = await r.json();
+    if(!d.success){toast('İş emirleri yüklenemedi','red');return;}
+    IE_DATA = d.data || [];
+    isEmriStatlariGuncelle(IE_DATA);
+    isEmriKartlariCiz(IE_DATA);
+  }catch(e){
+    console.error('İş emri yükleme hatası:',e);
+    // Offline / API yoksa boş göster
+    IE_DATA = [];
+    isEmriStatlariGuncelle([]);
+    isEmriKartlariCiz([]);
+  }
+}
+
+// ── 2. Stat Kartları ──
+function isEmriStatlariGuncelle(data){
+  var bugun = new Date().toISOString().slice(0,10);
+  var aktif = data.filter(function(d){return d.durum==='aktif';}).length;
+  var bugunTam = data.filter(function(d){return d.durum==='tamamlandi' && d.tamamlanma_zamani && d.tamamlanma_zamani.slice(0,10)===bugun;}).length;
+  // Ort süre: tamamlanmış emirlerin dakika ortalaması
+  var tamList = data.filter(function(d){return d.durum==='tamamlandi' && d.toplam_sure;});
+  var ortSure = tamList.length ? Math.round(tamList.reduce(function(a,b){return a+(b.toplam_sure||0);},0)/tamList.length) : 0;
+  var kuyruk = data.filter(function(d){return d.durum==='bekliyor';}).length;
+
+  var statlar = [
+    {baslik:'Aktif İş',deger:aktif,renk:'#3b82f6',ikon:'🔄'},
+    {baslik:'Bugün Tamamlanan',deger:bugunTam,renk:'#10b981',ikon:'✅'},
+    {baslik:'Ort. Süre',deger:ortSure+' dk',renk:'#f59e0b',ikon:'⏱️'},
+    {baslik:'Kuyrukta',deger:kuyruk,renk:'#8b5cf6',ikon:'📋'}
+  ];
+  var el = document.getElementById('ie-statlar');
+  if(!el)return;
+  el.innerHTML = statlar.map(function(s){
+    return '<div style="background:rgba(255,255,255,.07);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:16px;text-align:center">'
+      +'<div style="font-size:22px;margin-bottom:4px">'+s.ikon+'</div>'
+      +'<div style="font-family:Bebas Neue,sans-serif;font-size:26px;color:'+s.renk+';letter-spacing:1px">'+s.deger+'</div>'
+      +'<div style="font-size:10px;color:#94a3b8;letter-spacing:.5px;margin-top:2px">'+s.baslik+'</div>'
+    +'</div>';
+  }).join('');
+}
+
+// ── 3. Kart Çizme ──
+function isEmriKartlariCiz(data){
+  var el = document.getElementById('ie-kartlar');
+  if(!el)return;
+
+  // Filtre uygula
+  var liste = data;
+  if(IE_FILTRE==='aktif') liste = data.filter(function(d){return d.durum==='aktif' || d.durum==='bekliyor';});
+  else if(IE_FILTRE==='tamamlandi') liste = data.filter(function(d){return d.durum==='tamamlandi';});
+
+  if(!liste.length){
+    el.innerHTML='<div style="text-align:center;padding:40px;color:var(--ink4)"><div style="font-size:48px;margin-bottom:8px">📋</div><div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:1px">Henüz İş Emri Yok</div><div style="font-size:12px;margin-top:4px">Yeni iş emri oluşturmak için + butonunu kullanın</div></div>';
+    return;
+  }
+
+  el.innerHTML = liste.map(function(ie){
+    var mevcutAsama = ie.mevcut_asama || 'kabul';
+    var mevcutIdx = IE_ASAMALAR.findIndex(function(a){return a.kod===mevcutAsama;});
+    if(mevcutIdx<0) mevcutIdx=0;
+    var asamaRenk = IE_ASAMALAR[mevcutIdx].renk;
+
+    // Progress noktaları
+    var dots = IE_ASAMALAR.map(function(a, i){
+      var tamamlandi = false;
+      var aktifMi = false;
+      if(ie.asamalar){
+        var as = ie.asamalar.find(function(x){return x.kod===a.kod;});
+        if(as && as.bitis) tamamlandi = true;
+        else if(as && as.baslangic && !as.bitis) aktifMi = true;
+      }
+      if(ie.durum==='tamamlandi') tamamlandi = true;
+      var bg = tamamlandi ? '#10b981' : (aktifMi ? a.renk : '#374151');
+      var shadow = aktifMi ? 'box-shadow:0 0 0 4px '+a.renk+'33;animation:iePulse 1.5s infinite' : '';
+      return '<div title="'+a.ad+'" style="width:14px;height:14px;border-radius:50%;background:'+bg+';'+shadow+';display:flex;align-items:center;justify-content:center;font-size:7px;color:#fff;transition:all .3s">'
+        +(tamamlandi?'✓':(aktifMi?'●':''))+'</div>';
+    }).join('<div style="flex:1;height:2px;background:#374151;position:relative"><div style="position:absolute;inset:0;background:'+(mevcutIdx>0?'linear-gradient(90deg,#10b981,'+asamaRenk+')':'#374151')+';width:'+(ie.durum==='tamamlandi'?'100%':Math.round((mevcutIdx/5)*100)+'%')+';border-radius:2px"></div></div>');
+
+    // Süre sayacı
+    var sureText = '';
+    if(ie.durum==='tamamlandi'){
+      sureText = (ie.toplam_sure||0)+' dk';
+    } else if(ie.baslangic_zamani){
+      var dk = Math.round((Date.now()-new Date(ie.baslangic_zamani).getTime())/60000);
+      if(dk<60) sureText = dk+' dk';
+      else sureText = Math.floor(dk/60)+'s '+dk%60+'dk';
+    }
+
+    return '<div onclick="isEmriDetayModal(''+ie.id+'')" style="background:var(--w);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .25s;box-shadow:0 2px 8px rgba(0,0,0,.06);border:1px solid var(--bd)" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 25px rgba(0,0,0,.12)'" onmouseout="this.style.transform='none';this.style.boxShadow='0 2px 8px rgba(0,0,0,.06)'">'
+      +'<div style="height:4px;background:linear-gradient(90deg,'+asamaRenk+','+asamaRenk+'88)"></div>'
+      +'<div style="padding:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">'
+        +'<div style="flex:0 0 auto">'
+          +'<div style="background:linear-gradient(135deg,'+asamaRenk+'22,'+asamaRenk+'11);border:1.5px solid '+asamaRenk+'44;border-radius:10px;padding:6px 12px;font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;color:'+asamaRenk+'">'+(ie.plaka||'—')+'</div>'
+          +'<div style="font-size:12px;font-weight:600;color:var(--ink);margin-top:6px">'+(ie.musteri||'—')+'</div>'
+          +'<div style="font-size:10px;color:var(--ink4);margin-top:2px">'+(ie.hizmet||'—')+'</div>'
+        +'</div>'
+        +'<div style="flex:1;min-width:180px;display:flex;align-items:center;gap:4px;padding:0 8px">'+dots+'</div>'
+        +'<div style="flex:0 0 auto;text-align:right">'
+          +'<div style="font-family:Bebas Neue,sans-serif;font-size:13px;letter-spacing:1px;color:'+asamaRenk+'">'+IE_ASAMALAR[mevcutIdx].ikon+' '+IE_ASAMALAR[mevcutIdx].ad+'</div>'
+          +(sureText?'<div style="font-size:11px;color:var(--ink4);margin-top:2px">⏱ '+sureText+'</div>':'')
+          +'<button onclick="event.stopPropagation();isEmriDetayModal(''+ie.id+'')" style="margin-top:6px;padding:5px 14px;border:1.5px solid '+asamaRenk+'44;background:transparent;border-radius:8px;font-size:10px;font-weight:600;color:'+asamaRenk+';cursor:pointer;transition:all .2s;font-family:Outfit,sans-serif" onmouseover="this.style.background=''+asamaRenk+'11'" onmouseout="this.style.background='transparent'">Detay →</button>'
+        +'</div>'
+      +'</div>'
+    +'</div>';
+  }).join('');
+}
+
+// ── 4. Filtre ──
+function isEmriFiltre(tip){
+  IE_FILTRE = tip;
+  // Tab aktif güncelle
+  document.querySelectorAll('.ie-tab').forEach(function(t){
+    t.classList.remove('ie-tab-aktif');
+    t.style.background='transparent';
+    t.style.color='var(--ink3)';
+  });
+  var btnMap = {'tumu':0,'aktif':1,'tamamlandi':2};
+  var tabs = document.querySelectorAll('.ie-tab');
+  if(tabs[btnMap[tip]]){
+    tabs[btnMap[tip]].classList.add('ie-tab-aktif');
+    tabs[btnMap[tip]].style.background='var(--ink)';
+    tabs[btnMap[tip]].style.color='#fff';
+  }
+  isEmriKartlariCiz(IE_DATA);
+}
+
+// ── 5. Detay Modal ──
+async function isEmriDetayModal(id){
+  try{
+    var r = await fetch('/api/is-emri?id='+encodeURIComponent(id),{credentials:'same-origin'});
+    var d = await r.json();
+    if(!d.success){toast('İş emri bulunamadı','red');return;}
+    var ie = d.data;
+    isEmriDetayModalGoster(ie);
+  }catch(e){
+    // Offline: local data'dan bul
+    var ie = IE_DATA.find(function(x){return x.id===id;});
+    if(ie) isEmriDetayModalGoster(ie);
+    else toast('İş emri bulunamadı','red');
+  }
+}
+
+function isEmriDetayModalGoster(ie){
+  var mevcutIdx = IE_ASAMALAR.findIndex(function(a){return a.kod===(ie.mevcut_asama||'kabul');});
+  if(mevcutIdx<0)mevcutIdx=0;
+
+  // Timeline
+  var timeline = IE_ASAMALAR.map(function(a,i){
+    var as = (ie.asamalar||[]).find(function(x){return x.kod===a.kod;});
+    var tamamlandi = as && as.bitis;
+    var aktifMi = as && as.baslangic && !as.bitis;
+    var bekliyor = !as || (!as.baslangic && !as.bitis);
+    if(ie.durum==='tamamlandi') { tamamlandi=true; aktifMi=false; bekliyor=false; }
+
+    var icon = tamamlandi
+      ? '<div style="width:32px;height:32px;border-radius:50%;background:#10b981;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700">✓</div>'
+      : aktifMi
+        ? '<div style="width:32px;height:32px;border-radius:50%;background:'+a.renk+';display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;animation:iePulse 1.5s infinite">'+a.ikon+'</div>'
+        : '<div style="width:32px;height:32px;border-radius:50%;background:var(--bg);border:2px solid var(--bd);display:flex;align-items:center;justify-content:center;color:var(--ink4);font-size:14px">'+a.ikon+'</div>';
+
+    var zaman = '';
+    if(tamamlandi && as){
+      var bs = as.baslangic ? new Date(as.baslangic).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}) : '';
+      var bt = as.bitis ? new Date(as.bitis).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}) : '';
+      var sure = as.baslangic && as.bitis ? Math.round((new Date(as.bitis)-new Date(as.baslangic))/60000)+' dk' : '';
+      zaman = '<div style="font-size:10px;color:#10b981">'+bs+(bt?' → '+bt:'')+(sure?' ('+sure+')':'')+'</div>';
+    } else if(aktifMi && as){
+      var bs2 = as.baslangic ? new Date(as.baslangic).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}) : '';
+      zaman = '<div style="font-size:10px;color:'+a.renk+'">'+bs2+' — devam ediyor</div>';
+    }
+
+    // Çizgi (son eleman hariç)
+    var line = i < IE_ASAMALAR.length-1
+      ? '<div style="position:absolute;left:15px;top:36px;width:2px;height:calc(100% - 32px);background:'+(tamamlandi?'#10b981':'var(--bd)')+'"></div>'
+      : '';
+
+    // Aktif aşamada butonlar
+    var butonlar = '';
+    if(aktifMi && ie.durum!=='tamamlandi'){
+      butonlar = '<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">'
+        +'<button onclick="isEmriAsamaTamamla(''+ie.id+'',''+a.kod+'')" style="padding:5px 12px;border:none;border-radius:6px;background:#10b981;color:#fff;font-size:10px;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif">✅ Tamamla</button>'
+        +'<button onclick="isEmriNotEklePrompt(''+ie.id+'',''+a.kod+'')" style="padding:5px 12px;border:none;border-radius:6px;background:var(--bg);color:var(--ink);font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--bd);font-family:Outfit,sans-serif">📝 Not Ekle</button>'
+      +'</div>';
+    }
+    // Bekleyen aşamada Başlat butonu (sadece bir sonraki aşamaysa)
+    if(bekliyor && ie.durum!=='tamamlandi' && i===mevcutIdx+1){
+      butonlar = '<div style="margin-top:8px"><button onclick="isEmriAsamaIlerle(''+ie.id+'',''+a.kod+'')" style="padding:5px 12px;border:none;border-radius:6px;background:'+a.renk+';color:#fff;font-size:10px;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif">▶ Başlat</button></div>';
+    }
+    // İlk aşama ve hiç başlamamışsa
+    if(bekliyor && ie.durum!=='tamamlandi' && i===0 && !ie.baslangic_zamani){
+      butonlar = '<div style="margin-top:8px"><button onclick="isEmriAsamaIlerle(''+ie.id+'',''+a.kod+'')" style="padding:5px 12px;border:none;border-radius:6px;background:'+a.renk+';color:#fff;font-size:10px;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif">▶ Başlat</button></div>';
+    }
+
+    // Not varsa göster
+    var notlar = '';
+    if(as && as.notlar && as.notlar.length){
+      notlar = '<div style="margin-top:6px">' + as.notlar.map(function(n){
+        return '<div style="font-size:10px;color:var(--ink4);background:var(--bg);border-radius:4px;padding:3px 6px;margin-top:2px">📝 '+n+'</div>';
+      }).join('') + '</div>';
+    }
+
+    return '<div style="position:relative;padding-left:48px;padding-bottom:'+(i<IE_ASAMALAR.length-1?'24':'0')+'px;min-height:40px">'
+      +'<div style="position:absolute;left:0;top:0">'+icon+'</div>'
+      +line
+      +'<div style="padding-top:4px">'
+        +'<div style="font-weight:600;font-size:13px;color:'+(tamamlandi?'#10b981':(aktifMi?a.renk:'var(--ink4)'))+'">'+a.ad+'</div>'
+        +zaman
+        +notlar
+        +butonlar
+      +'</div>'
+    +'</div>';
+  }).join('');
+
+  // Toplam süre
+  var topSure = '';
+  if(ie.toplam_sure) topSure = ie.toplam_sure+' dk';
+  else if(ie.baslangic_zamani){
+    var dk2 = Math.round((Date.now()-new Date(ie.baslangic_zamani).getTime())/60000);
+    topSure = dk2<60 ? dk2+' dk' : Math.floor(dk2/60)+'s '+dk2%60+'dk';
+  }
+
+  var modalHtml = '<div id="ie-detay-ovl" style="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn .2s" onclick="if(event.target===this)this.remove()">'
+    +'<div style="background:var(--w);border-radius:20px;width:100%;max-width:520px;max-height:90vh;overflow:auto;box-shadow:0 25px 60px rgba(0,0,0,.3);animation:cardIn .3s cubic-bezier(.34,1.56,.64,1)">'
+      // Header
+      +'<div style="background:linear-gradient(135deg,#0f172a,#1e40af);padding:24px;border-radius:20px 20px 0 0">'
+        +'<div style="font-family:Bebas Neue,sans-serif;font-size:24px;letter-spacing:3px;color:#fff">'+(ie.plaka||'—')+'</div>'
+        +'<div style="font-size:13px;color:#94a3b8;margin-top:2px">'+(ie.musteri||'—')+' — '+(ie.hizmet||'—')+'</div>'
+        +(ie.durum==='tamamlandi'?'<div style="display:inline-block;margin-top:8px;padding:3px 10px;border-radius:20px;background:#10b98122;color:#10b981;font-size:10px;font-weight:700;letter-spacing:.5px">✅ TAMAMLANDI</div>':'')
+      +'</div>'
+      // Timeline
+      +'<div style="padding:24px">'+timeline+'</div>'
+      // Alt bar
+      +'<div style="padding:0 24px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">'
+        +'<div>'
+          +(topSure?'<div style="font-size:12px;color:var(--ink4)">⏱ Toplam: <strong>'+topSure+'</strong></div>':'')
+        +'</div>'
+        +'<div style="display:flex;gap:6px">'
+          +(ie.tel?'<button onclick="isEmriTakipGonder(''+ie.id+'',''+ie.tel+'')" style="padding:6px 14px;border:1.5px solid #25d366;background:transparent;border-radius:8px;font-size:10px;font-weight:600;color:#25d366;cursor:pointer;font-family:Outfit,sans-serif">📤 Takip Linki</button>':'')
+          +'<button onclick="document.getElementById('ie-detay-ovl').remove()" style="padding:6px 14px;border:1.5px solid var(--bd);background:transparent;border-radius:8px;font-size:10px;font-weight:600;color:var(--ink4);cursor:pointer;font-family:Outfit,sans-serif">Kapat</button>'
+        +'</div>'
+      +'</div>'
+    +'</div>'
+  +'</div>';
+
+  // Var olan modal'ı kaldır
+  var eski = document.getElementById('ie-detay-ovl');
+  if(eski) eski.remove();
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+// ── 6. Aşama İlerlet ──
+async function isEmriAsamaIlerle(id, asamaKod){
+  try{
+    var r = await fetch('/api/is-emri',{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'same-origin',
+      body:JSON.stringify({id:id, aksiyon:'asama_baslat', asama:asamaKod})
+    });
+    var d = await r.json();
+    if(d.success){
+      toast(asamaKod.charAt(0).toUpperCase()+asamaKod.slice(1)+' aşaması başlatıldı','green');
+      await isEmriSayfasiYukle();
+      isEmriDetayModal(id);
+    } else { toast(d.error||'Hata oluştu','red'); }
+  }catch(e){toast('Bağlantı hatası','red');}
+}
+
+// ── 7. Aşama Tamamla ──
+async function isEmriAsamaTamamla(id, asamaKod){
+  try{
+    var r = await fetch('/api/is-emri',{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'same-origin',
+      body:JSON.stringify({id:id, aksiyon:'asama_tamamla', asama:asamaKod})
+    });
+    var d = await r.json();
+    if(d.success){
+      toast(asamaKod.charAt(0).toUpperCase()+asamaKod.slice(1)+' tamamlandı ✅','green');
+      await isEmriSayfasiYukle();
+      isEmriDetayModal(id);
+    } else { toast(d.error||'Hata oluştu','red'); }
+  }catch(e){toast('Bağlantı hatası','red');}
+}
+
+// ── 8. Yeni İş Emri Modal ──
+async function isEmriYeniModal(){
+  // Bugünün randevularını çek
+  var bugun = new Date().toISOString().slice(0,10);
+  var rdvListe = (typeof RANDEVULAR!=='undefined'?RANDEVULAR:[]).filter(function(r){
+    return r.tarih===bugun && r.durum!=='iptal';
+  });
+  // Zaten iş emri olan randevuları çıkar
+  var mevcutPlakalar = IE_DATA.map(function(ie){return ie.plaka;});
+  rdvListe = rdvListe.filter(function(r){return mevcutPlakalar.indexOf(r.plaka)===-1;});
+
+  var kartlar = rdvListe.length
+    ? rdvListe.map(function(r,i){
+        return '<div onclick="isEmriOlustur('+i+')" style="padding:14px;border:1.5px solid var(--bd);border-radius:12px;cursor:pointer;transition:all .2s;margin-bottom:8px" onmouseover="this.style.borderColor='#3b82f6';this.style.background='#3b82f611'" onmouseout="this.style.borderColor='var(--bd)';this.style.background='transparent'">'
+          +'<div style="display:flex;justify-content:space-between;align-items:center">'
+            +'<div>'
+              +'<div style="font-weight:700;font-size:14px">'+r.plaka+'</div>'
+              +'<div style="font-size:12px;color:var(--ink4)">'+r.isim+' — '+(Array.isArray(r.hizmetler)?r.hizmetler.join(', '):r.hizmet||'')+'</div>'
+            +'</div>'
+            +'<div style="font-size:11px;color:var(--ink4)">'+(r.saat||'')+'</div>'
+          +'</div>'
+        +'</div>';
+      }).join('')
+    : '<div style="text-align:center;padding:20px;color:var(--ink4)">Bugün için uygun randevu bulunamadı</div>';
+
+  var html = '<div id="ie-yeni-ovl" style="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn .2s" onclick="if(event.target===this)this.remove()">'
+    +'<div style="background:var(--w);border-radius:20px;width:100%;max-width:440px;max-height:80vh;overflow:auto;box-shadow:0 25px 60px rgba(0,0,0,.3);animation:cardIn .3s cubic-bezier(.34,1.56,.64,1)">'
+      +'<div style="padding:24px 24px 16px">'
+        +'<div style="font-family:Bebas Neue,sans-serif;font-size:22px;letter-spacing:2px;color:var(--ink)">YENİ İŞ EMRİ</div>'
+        +'<div style="font-size:11px;color:var(--ink4);margin-top:2px">Randevu seçerek iş emri oluşturun</div>'
+      +'</div>'
+      +'<div style="padding:0 24px 24px" id="ie-yeni-rdv-liste">'+kartlar+'</div>'
+      +'<div style="padding:0 24px 20px;text-align:right"><button onclick="document.getElementById('ie-yeni-ovl').remove()" style="padding:6px 16px;border:1.5px solid var(--bd);background:transparent;border-radius:8px;font-size:11px;font-weight:600;color:var(--ink4);cursor:pointer;font-family:Outfit,sans-serif">İptal</button></div>'
+    +'</div>'
+  +'</div>';
+
+  var eski = document.getElementById('ie-yeni-ovl');
+  if(eski)eski.remove();
+  // Store for isEmriOlustur
+  window._ieYeniRdvListe = rdvListe;
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+// ── 9. İş Emri Oluştur ──
+async function isEmriOlustur(rdvIdx){
+  var rdv = window._ieYeniRdvListe && window._ieYeniRdvListe[rdvIdx];
+  if(!rdv){toast('Randevu bulunamadı','red');return;}
+  try{
+    var r = await fetch('/api/is-emri',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
+      body:JSON.stringify({
+        plaka:rdv.plaka,
+        musteri:rdv.isim,
+        tel:rdv.tel||'',
+        hizmet:Array.isArray(rdv.hizmetler)?rdv.hizmetler.join(', '):(rdv.hizmet||''),
+        tarih:rdv.tarih,
+        randevu_idx:rdv.idx!==undefined?rdv.idx:rdvIdx
+      })
+    });
+    var d = await r.json();
+    if(d.success){
+      toast('İş emri oluşturuldu ✅','green');
+      var ovl = document.getElementById('ie-yeni-ovl');
+      if(ovl) ovl.remove();
+      await isEmriSayfasiYukle();
+    } else { toast(d.error||'Hata','red'); }
+  }catch(e){toast('Bağlantı hatası','red');}
+}
+
+// ── 10. WhatsApp Takip Linki ──
+function isEmriTakipGonder(id, tel){
+  if(!tel){toast('Telefon numarası yok','red');return;}
+  var temiz = tel.replace(/\D/g,'');
+  if(temiz.startsWith('0')) temiz = '90'+temiz.slice(1);
+  else if(!temiz.startsWith('90')) temiz = '90'+temiz;
+  var link = window.location.origin+'/takip/'+id;
+  var msg = encodeURIComponent('Merhaba, aracınızın iş emri takip linki: '+link);
+  window.open('https://wa.me/'+temiz+'?text='+msg,'_blank');
+  toast('WhatsApp açılıyor...','green');
+}
+
+// ── Not Ekle Prompt ──
+function isEmriNotEklePrompt(id, asamaKod){
+  var not = prompt('Not ekleyin:');
+  if(!not || !not.trim()) return;
+  isEmriNotEkle(id, asamaKod, not.trim());
+}
+async function isEmriNotEkle(id, asamaKod, not){
+  try{
+    var r = await fetch('/api/is-emri',{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'same-origin',
+      body:JSON.stringify({id:id, aksiyon:'not_ekle', asama:asamaKod, not:not})
+    });
+    var d = await r.json();
+    if(d.success){
+      toast('Not eklendi 📝','green');
+      await isEmriSayfasiYukle();
+      isEmriDetayModal(id);
+    } else { toast(d.error||'Hata','red'); }
+  }catch(e){toast('Bağlantı hatası','red');}
+}
+
+// ── CSS: Pulse animasyonu ──
+(function(){
+  if(document.getElementById('ie-pulse-css')) return;
+  var st = document.createElement('style');
+  st.id='ie-pulse-css';
+  st.textContent='@keyframes iePulse{0%,100%{box-shadow:0 0 0 0 currentColor}50%{box-shadow:0 0 0 6px transparent}}'
+    +'.ie-tab-aktif{background:var(--ink)!important;color:#fff!important}';
+  document.head.appendChild(st);
+})();
+// ====== İŞ EMRİ SİSTEMİ SON ======
+
 
 // ─── REFERANS & SADAKAT PUAN SİSTEMİ ───
 // ====== REFERANS & SADAKAT PUAN SISTEMI ======
