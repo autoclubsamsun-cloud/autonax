@@ -164,25 +164,77 @@ var d=await r.json();if(d.success){toast(kod+' tamamlandi!','green');var o=docum
 async function isEmriYeniModal(){
 try{var r=await fetch('/api/randevular',{credentials:'same-origin'});var d=await r.json();
 if(!d.success){toast('Randevular yuklenemedi','red');return;}var rl=d.data||[];if(!rl.length){toast('Randevu bulunmuyor','orange');return;}
+// Gelecek randevulari filtrele ve en yakin tarihe gore sirala
+var bugun=new Date();bugun.setHours(0,0,0,0);
+rl=rl.filter(function(rv){
+  if(!rv.tarih)return true;
+  var parts=rv.tarih.split('.');
+  var rvDate=parts.length===3?new Date(parts[2],parseInt(parts[1])-1,parts[0]):new Date(rv.tarih);
+  return rvDate>=bugun;
+});
+rl.sort(function(a,b){
+  var parseDate=function(rv){
+    if(!rv.tarih)return new Date(9999,0);
+    var p=rv.tarih.split('.');
+    if(p.length===3)return new Date(p[2],parseInt(p[1])-1,p[0]);
+    return new Date(rv.tarih);
+  };
+  return parseDate(a)-parseDate(b);
+});
+if(!rl.length){toast('Gelecek randevu bulunmuyor','orange');return;}
 var eski=document.getElementById('ie-yeni-ovl');if(eski)eski.remove();
 window._ieRdvListe=rl;
 var ovl=document.createElement('div');ovl.id='ie-yeni-ovl';
 ovl.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
 ovl.onclick=function(e){if(e.target===ovl)ovl.remove()};
-var m=document.createElement('div');m.style.cssText='width:100%;max-width:500px;max-height:80vh;background:var(--w);border-radius:20px;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,.25)';
-m.innerHTML='<div style="padding:20px;border-bottom:1px solid var(--bd)"><div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:var(--ink)">RANDEVUDAN IS EMRI OLUSTUR</div><div style="font-size:11px;color:var(--ink4);margin-top:2px">Bir randevu secin</div></div>';
+var m=document.createElement('div');m.style.cssText='width:100%;max-width:520px;max-height:85vh;background:var(--w);border-radius:20px;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,.25)';
+// Header
+var header=document.createElement('div');
+header.style.cssText='background:linear-gradient(135deg,#0f172a,#1e40af);padding:20px 24px;border-radius:20px 20px 0 0';
+header.innerHTML='<div style="font-family:Bebas Neue,sans-serif;font-size:20px;letter-spacing:3px;color:#fff">\u{1F4CB} RANDEVUDAN \u0130\u015E EMR\u0130</div><div style="font-size:11px;color:#94a3b8;margin-top:4px">Gelecek randevular \u2022 En yak\u0131n tarihten s\u0131ral\u0131</div>';
+m.appendChild(header);
+// Grup: Tarihe gore
+var sonTarih='';
 rl.forEach(function(rv,idx){
-var item=document.createElement('div');
-item.dataset.ieAksiyon='rdv-sec';item.dataset.ieIdx=idx;
-item.style.cssText='padding:12px 16px;border-bottom:1px solid var(--bd);cursor:pointer;transition:background .15s';
-item.onmouseover=function(){this.style.background='var(--bg2)'};item.onmouseout=function(){this.style.background='transparent'};
-item.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:600;font-size:13px;color:var(--ink)">'+(rv.musteri||'\u2014')+' \u2014 '+(rv.plaka||'')+'</div><div style="font-size:11px;color:var(--ink4);margin-top:2px">'+(rv.hizmet||'')+'</div></div><div style="font-size:11px;color:var(--ink4)">'+(rv.tarih||'')+' '+(rv.saat||'')+'</div></div>';
-m.appendChild(item);
+  var tarih=rv.tarih||'Tarihsiz';
+  if(tarih!==sonTarih){
+    var sep=document.createElement('div');
+    sep.style.cssText='padding:10px 20px 4px;background:var(--bg2);font-size:10px;font-weight:700;color:var(--ink3);letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;gap:8px';
+    // Tarih formatlama
+    var parts=tarih.split('.');
+    var gunAd='';
+    if(parts.length===3){
+      var dt=new Date(parts[2],parseInt(parts[1])-1,parts[0]);
+      var gunler=['Pazar','Pazartesi','Sal\u0131','\u00c7ar\u015famba','Per\u015fembe','Cuma','Cumartesi'];
+      gunAd=gunler[dt.getDay()];
+      var now=new Date();now.setHours(0,0,0,0);
+      var diff=Math.round((dt-now)/(1000*60*60*24));
+      if(diff===0)gunAd='BUG\u00dcN';
+      else if(diff===1)gunAd='YARIN';
+    }
+    sep.innerHTML='\u{1F4C5} '+tarih+(gunAd?' \u2014 '+gunAd:'');
+    m.appendChild(sep);
+    sonTarih=tarih;
+  }
+  var item=document.createElement('div');
+  item.dataset.ieAksiyon='rdv-sec';item.dataset.ieIdx=idx;
+  item.style.cssText='padding:14px 20px;border-bottom:1px solid var(--bd);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:14px';
+  item.onmouseover=function(){this.style.background='var(--bg2)';this.style.paddingLeft='24px'};
+  item.onmouseout=function(){this.style.background='transparent';this.style.paddingLeft='20px'};
+  var hizmetText=Array.isArray(rv.hizmetler)?rv.hizmetler.join(', '):(rv.hizmet||'');
+  var saatBadge=rv.saat?'<div style="padding:3px 8px;border-radius:6px;background:linear-gradient(135deg,#3b82f622,#2563eb11);border:1px solid #3b82f633;font-family:Bebas Neue,sans-serif;font-size:13px;letter-spacing:1px;color:#3b82f6">'+rv.saat+'</div>':'';
+  var plakaBadge=rv.plaka?'<div style="display:inline-block;padding:2px 8px;border-radius:4px;background:#f1f5f9;border:1px solid #e2e8f0;font-family:Bebas Neue,sans-serif;font-size:11px;letter-spacing:1px;color:#475569;margin-top:4px">'+rv.plaka+'</div>':'';
+  item.innerHTML='<div style="flex:0 0 auto">'+saatBadge+'</div><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(rv.musteri||'\u2014')+'</div>'+(hizmetText?'<div style="font-size:10px;color:var(--ink4);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+hizmetText+'</div>':'')+(plakaBadge?plakaBadge:'')+'</div><div style="flex:0 0 auto"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink4)" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></div>';
+  m.appendChild(item);
 });
+// Footer - randevu sayisi
+var foot=document.createElement('div');
+foot.style.cssText='padding:12px 20px;text-align:center;font-size:10px;color:var(--ink4);border-top:1px solid var(--bd)';
+foot.textContent=rl.length+' gelecek randevu';
+m.appendChild(foot);
 ovl.appendChild(m);document.body.appendChild(ovl);
 }catch(e){toast('Hata: '+e.message,'red');}
 }
-
 async function isEmriOlusturFromModal(idx){
 var rdv=window._ieRdvListe[idx];if(!rdv)return;
 try{var r=await fetch('/api/is-emri',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({musteri:rdv.musteri,tel:rdv.tel||'',plaka:rdv.plaka||'',arac:rdv.arac||'',hizmet:Array.isArray(rdv.hizmetler)?rdv.hizmetler.join(', '):(rdv.hizmet||''),tutar:rdv.tutar||0,randevu_id:rdv.id})});
@@ -202,7 +254,19 @@ var t=(tel||'').replace(/\D/g,'');
 if(t.startsWith('0'))t='90'+t.substring(1);
 else if(t.startsWith('5')&&t.length===10)t='90'+t;
 var link='https://autonax.com.tr/is-takip?kod='+(ie?ie.takip_kodu:'');
-var msg='\u{1F514} Arac Durumu \u2014 AutoClub Samsun%0A%0A\u{1F697} '+(ie?ie.plaka:'')+'%0A\u{1F4CB} '+(ie?ie.hizmet:'')+'%0A%0ACanli takip:%0A\u{1F449} '+link;
+var asama=ie?ie.mevcut_asama:'';
+var asamaAd='';var asamaIkon='';
+if(ie){IE_ASAMALAR.forEach(function(a){if(a.kod===asama){asamaAd=a.ad;asamaIkon=a.ikon;}});}
+var msg='*\u{1F3C1} AUTOCLUB SAMSUN*%0A'
++'\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500%0A%0A'
++'Merhaba '+(ie?ie.musteri:'')+' \u{1F44B}%0A%0A'
++'Arac\u0131n\u0131z\u0131n is emri olusturuldu ve sureci canli takip edebilirsiniz.%0A%0A'
++'\u{1F697} *Plaka:* '+(ie?ie.plaka:'')+'%0A'
++'\u{1F4CB} *Hizmet:* '+(ie?ie.hizmet:'')+'%0A'
++(asamaAd?asamaIkon+' *Durum:* '+asamaAd+'%0A':'')
++'%0A\u{1F517} *Canli Takip Linki:*%0A'+link+'%0A%0A'
++'\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500%0A'
++'\u{1F4CD} _AutoClub Samsun PPF & Detailing_';
 window.open('https://wa.me/'+t+'?text='+msg,'_blank');
 }
 
