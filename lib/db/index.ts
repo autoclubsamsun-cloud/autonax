@@ -64,8 +64,10 @@ export async function initDB() {
     asamalar JSONB DEFAULT '[]',
     toplam_sure INTEGER DEFAULT 0,
     olusturma TIMESTAMPTZ DEFAULT NOW(),
-    tamamlanma TIMESTAMPTZ
+    tamamlanma TIMESTAMPTZ,
+    guncelleme TIMESTAMPTZ DEFAULT NOW()
   )`;
+  await sql`ALTER TABLE is_emirleri ADD COLUMN IF NOT EXISTS guncelleme TIMESTAMPTZ DEFAULT NOW()`;
   await sql`CREATE INDEX IF NOT EXISTS idx_ie_takip ON is_emirleri(takip_kodu)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_ie_durum ON is_emirleri(durum)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_ie_rdv ON is_emirleri(randevu_id)`;

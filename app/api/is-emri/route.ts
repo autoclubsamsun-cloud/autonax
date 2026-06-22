@@ -140,7 +140,8 @@ export async function PUT(req: NextRequest) {
       if (personel) asama.personel = personel;
 
       await sql`UPDATE is_emirleri SET asamalar = ${JSON.stringify(asamalar)}, mevcut_asama = ${asama_kod}, guncelleme = NOW() WHERE id = ${id}`;
-      return NextResponse.json({ success: true, mevcut_asama: asama_kod });
+      const updated1 = await sql`SELECT * FROM is_emirleri WHERE id = ${id}`;
+      return NextResponse.json({ success: true, mevcut_asama: asama_kod, data: updated1[0] });
     }
 
     if (aksiyon === 'asama_tamamla') {
@@ -185,7 +186,8 @@ export async function PUT(req: NextRequest) {
 
       await sql`UPDATE is_emirleri SET asamalar = ${JSON.stringify(asamalar)}, mevcut_asama = ${yeniMevcutAsama}, durum = ${durum}, toplam_sure = ${toplamSure}, tamamlanma = ${tamamlanma}, guncelleme = NOW() WHERE id = ${id}`;
       
-      return NextResponse.json({ success: true, mevcut_asama: yeniMevcutAsama, durum, toplam_sure: toplamSure });
+      const updated2 = await sql`SELECT * FROM is_emirleri WHERE id = ${id}`;
+      return NextResponse.json({ success: true, mevcut_asama: yeniMevcutAsama, durum, toplam_sure: toplamSure, data: updated2[0] });
     }
 
     if (aksiyon === 'fotograf_ekle') {
