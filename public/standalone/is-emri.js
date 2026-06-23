@@ -139,7 +139,7 @@ if(dn){ds='background:rgba(34,197,94,.15);border:2px solid #22c55e;color:#22c55e
 else if(ac){ds='background:rgba(59,130,246,.15);border:2px solid #3b82f6;color:#3b82f6;animation:iePulse 2s infinite';nc='#3b82f6';lc='#3b82f6';}
 else{ds='background:var(--bg2);border:2px solid var(--bd);color:var(--ink4)';nc='var(--ink4)';lc='var(--bd)';}
 var zm='';
-if(dn){var bs=ieSaat(as.baslama);var bt=ieSaat(as.bitis);var sr=as.sure_dk?as.sure_dk+' dk':'';zm='<div style="font-size:10px;color:#10b981">'+bs+(bt?' \u2192 '+bt:'')+(sr?' ('+sr+')':'')+'</div>';}
+if(dn){var bs=ieSaat(as.baslama);var bt=ieSaat(as.bitis);zm='<div style="font-size:10px;color:#10b981">'+bs+(bt?' \u2192 '+bt:'')+'</div>';}
 else if(ac&&as.baslama){zm='<div style="font-size:10px;color:#3b82f6">'+ieSaat(as.baslama)+' \u2014 devam ediyor</div>';}
 // Saat duzenleme (admin ayarlardan acik ise)
 var saatEdit='';
@@ -154,7 +154,7 @@ var nt='';if(as.not){nt='<div style="margin-top:6px;padding:6px 10px;background:
 var ls=idx<asamalar.length-1?'position:absolute;left:17px;top:42px;bottom:-14px;width:2px;background:'+lc:'';
 tl+='<div style="display:flex;gap:14px;padding:14px 0;position:relative">'+(ls?'<div style="'+ls+'"></div>':'')+'<div style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;z-index:1;'+ds+'">'+(dn?'\u2713':a.ikon)+'</div><div style="flex:1"><div style="font-family:Bebas Neue,sans-serif;font-size:15px;letter-spacing:1px;color:'+nc+'">'+a.ad+'</div>'+zm+saatEdit+btn+nt+'</div></div>';
 });
-var ts='';if(ie.toplam_sure){var dk=ie.toplam_sure;ts=dk<60?dk+'dk':Math.floor(dk/60)+'s '+dk%60+'dk';}
+var ts='';
 var hc=ie.durum==='tamamlandi'?'#059669':ar;
 var ovl=document.createElement('div');ovl.id='ie-detay-ovl';
 ovl.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
