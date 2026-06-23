@@ -1266,6 +1266,40 @@ const AuthManager = {
     return _sessionLoadPromise;
   },
 
+  async register(ad, soyad, tel, email, sifre){
+    if(!ad || !email || !tel || !sifre){
+      return { ok: false, hata: 'Tüm alanları doldurun' };
+    }
+    if(sifre.length < 8){
+      return { ok: false, hata: 'Şifre en az 8 karakter olmalı' };
+    }
+    try{
+      const res = await fetch('/api/musteri/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          action: 'register',
+          ad: (ad||'').trim(),
+          soyad: (soyad||'').trim(),
+          tel: (tel||'').trim(),
+          email: (email||'').toLowerCase().trim(),
+          sifre
+        })
+      });
+      const d = await res.json();
+      if(!d || !d.success){
+        return { ok: false, hata: (d && d.error) || 'Kayıt başarısız' };
+      }
+      _currentUser = d.user;
+      _sessionLoaded = true;
+      return { ok: true, user: d.user };
+    } catch(e){
+      console.error('[Auth] register hata:', e);
+      return { ok: false, hata: 'Sunucuya ulaşılamıyor.' };
+    }
+  },
+
   async login(emailOrTel, sifre){
     const girdi = (emailOrTel || '').trim();
     if(!girdi || !sifre){
@@ -2658,8 +2692,12 @@ function _loginOverlayGoster(){
               <input id="reg-name" type="text" placeholder="Adınız Soyadınız" style="width:100%;background:#eaf1fb;border:1.5px solid transparent;border-radius:12px;padding:14px;font-size:15px;font-family:'Outfit',sans-serif;color:#111;outline:none;box-sizing:border-box;font-weight:500">
             </div>
             <div style="margin-bottom:14px">
-              <div style="font-size:11px;font-weight:700;color:#8a7a7d;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;margin-left:4px">E-posta Veya Telefon</div>
-              <input id="reg-email" type="text" placeholder="E-posta / Telefon" style="width:100%;background:#eaf1fb;border:1.5px solid transparent;border-radius:12px;padding:14px;font-size:15px;font-family:'Outfit',sans-serif;color:#111;outline:none;box-sizing:border-box;font-weight:500">
+              <div style="font-size:11px;font-weight:700;color:#8a7a7d;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;margin-left:4px">E-posta</div>
+              <input id="reg-email" type="email" placeholder="E-posta Adresiniz" style="width:100%;background:#eaf1fb;border:1.5px solid transparent;border-radius:12px;padding:14px;font-size:15px;font-family:'Outfit',sans-serif;color:#111;outline:none;box-sizing:border-box;font-weight:500">
+            </div>
+            <div style="margin-bottom:14px">
+              <div style="font-size:11px;font-weight:700;color:#8a7a7d;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;margin-left:4px">Telefon</div>
+              <input id="reg-tel" type="tel" placeholder="05XX XXX XX XX" style="width:100%;background:#eaf1fb;border:1.5px solid transparent;border-radius:12px;padding:14px;font-size:15px;font-family:'Outfit',sans-serif;color:#111;outline:none;box-sizing:border-box;font-weight:500">
             </div>
             <div style="margin-bottom:24px">
               <div style="font-size:11px;font-weight:700;color:#8a7a7d;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;margin-left:4px">Şifre</div>
@@ -2718,16 +2756,49 @@ function _loginOverlayGoster(){
     }
   };
 
-  window._panelRegister = function() {
-    // Mock register logic
+    window._panelRegister = async function() {
+    const err = document.getElementById('login-err');
+    if(err) err.style.display = 'none';
+
+    const adSoyad = document.getElementById('reg-name')?.value || '';
     const email = document.getElementById('reg-email')?.value || '';
+    const tel = document.getElementById('reg-tel')?.value || '';
+    const sifre = document.getElementById('reg-sifre')?.value || '';
+    
+    var adParcalar = adSoyad.trim().split(/\s+/);
+    var adKisim = adParcalar[0] || '';
+    var soyadKisim = adParcalar.slice(1).join(' ') || '';
+
     const btnSubmit = document.getElementById('btn-submit');
-    btnSubmit.innerText = 'KAYIT OLUŞTURULUYOR...';
-    setTimeout(() => {
-        document.getElementById('lov-email').value = email;
-        document.getElementById('lov-sifre').value = document.getElementById('reg-sifre')?.value || '';
-        _panelLogin();
-    }, 800);
+    const eskiText = btnSubmit ? btnSubmit.textContent : '';
+    if(btnSubmit){ btnSubmit.disabled = true; btnSubmit.textContent = 'KAYIT OLUŞTURULUYOR...'; btnSubmit.style.opacity = '.7'; }
+
+    try {
+      const r = await AuthManager.register(adKisim, soyadKisim, tel, email, sifre);
+      if(!r.ok){
+         if(err){ err.textContent = r.hata; err.style.display = 'block'; setTimeout(()=>err.style.display='none', 3500); }
+         return;
+      }
+      
+      const ovl = document.getElementById('login-ovl');
+      if(ovl) ovl.style.opacity = '0';
+      setTimeout(async ()=>{
+        if(ovl) ovl.remove();
+        kullanici = AuthManager.getUser();
+        kullaniciGoster();
+        sepetBadgeGoster();
+        const hbgMob = document.querySelector('.hbg-mob');
+        if(hbgMob) hbgMob.style.display = window.innerWidth <= 767 ? 'block' : 'none';
+        await aracListesiYukle();
+        randevularYukle();
+        if(typeof odemelerimSessizYukle === 'function') odemelerimSessizYukle();
+      }, 300);
+      
+    } catch(e){
+      if(err){ err.textContent = 'Sunucuya ulaşılamıyor. Lütfen tekrar deneyin.'; err.style.display = 'block'; setTimeout(()=>err.style.display='none', 3500); }
+    } finally {
+      if(btnSubmit){ btnSubmit.disabled = false; btnSubmit.textContent = eskiText || 'ÜYE OL'; btnSubmit.style.opacity = ''; }
+    }
   };
 }
 async function _panelLogin(){
