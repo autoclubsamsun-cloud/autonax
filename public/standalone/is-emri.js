@@ -34,6 +34,22 @@ var IE_ASAMALAR=[
 {kod:'teslim',ad:'Teslim',ikon:'\u{1F697}',renk:'#10b981'}
 ];
 var IE_DATA=[],IE_FILTRE='tumu';
+
+// Saat formatlama - UTC+3 (Turkiye)
+function ieSaat(iso){
+if(!iso)return '';
+try{var d=new Date(iso);if(isNaN(d.getTime()))return '';
+var h=d.getUTCHours()+3;if(h>=24)h-=24;
+var m=d.getUTCMinutes();
+return (h<10?'0':'')+h+':'+(m<10?'0':'')+m;}catch(e){return '';}
+}
+function ieLocalVal(iso){
+if(!iso)return '';
+try{var d=new Date(iso);if(isNaN(d.getTime()))return '';
+d=new Date(d.getTime()+3*3600000);
+return d.toISOString().slice(0,16);}catch(e){return '';}
+}
+
 (function(){if(document.getElementById('ie-pulse-css'))return;var s=document.createElement('style');s.id='ie-pulse-css';s.textContent='@keyframes iePulse{0%,100%{opacity:1}50%{opacity:.4}}@keyframes spin{to{transform:rotate(360deg)}}';document.head.appendChild(s)})();
 
 // Global click delegation
