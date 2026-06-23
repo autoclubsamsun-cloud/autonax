@@ -109,6 +109,7 @@ isEmriKartlariCiz(IE_DATA);
 async function isEmriDetayModal(id){var cached=IE_DATA.find(function(x){return x.id===id});if(cached)isEmriDetayModalGoster(cached);try{var r=await fetch('/api/is-emri?id='+encodeURIComponent(id),{credentials:'same-origin'});var d=await r.json();if(d.success&&d.data){var ci=IE_DATA.findIndex(function(x){return x.id===id});if(ci>-1)IE_DATA[ci]=d.data;isEmriDetayModalGoster(d.data);}}catch(e){if(!cached)toast('Detay yuklenemedi','red');}}
 
 function isEmriDetayModalGoster(ie){
+try{
 var eski=document.getElementById('ie-detay-ovl');if(eski)eski.remove();
 var asamalar=ie.asamalar||[];var mi=0;
 IE_ASAMALAR.forEach(function(a,i){if(a.kod===ie.mevcut_asama)mi=i});
@@ -146,6 +147,7 @@ var m=document.createElement('div');
 m.style.cssText='width:100%;max-width:480px;max-height:90vh;background:var(--w);border-radius:20px;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,.25)';
 m.innerHTML='<div style="background:linear-gradient(135deg,'+hc+','+hc+'cc);padding:20px;text-align:center"><div style="font-family:Bebas Neue,sans-serif;font-size:28px;letter-spacing:3px;color:#fff">'+(ie.plaka||'\u2014')+'</div><div style="font-size:12px;color:rgba(255,255,255,.8);margin-top:2px">'+(ie.musteri||'\u2014')+'</div><div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px">'+(ie.hizmet||'\u2014')+'</div>'+(ie.durum==='tamamlandi'?'<div style="display:inline-block;margin-top:8px;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.2);font-size:10px;font-weight:700;color:#fff">\u2705 TAMAMLANDI</div>':'')+'<div style="font-size:9px;color:rgba(255,255,255,.5);margin-top:6px">Takip: '+ie.takip_kodu+'</div></div><div style="padding:20px">'+tl+'<div style="border-top:1px solid var(--bd);padding-top:14px;margin-top:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'+(ts?'<div style="font-size:12px;color:var(--ink4)">\u23F1 Toplam: <strong>'+ts+'</strong></div>':'')+'<div style="display:flex;gap:6px;flex-wrap:wrap">'+(IE_AYARLAR&&IE_AYARLAR.saat_mudahalesi?'<button data-ie-aksiyon="saat-kaydet" data-ie-id="'+ie.id+'" style="padding:6px 14px;border:1.5px solid #f59e0b;border-radius:8px;background:transparent;color:#d97706;font-size:10px;font-weight:600;cursor:pointer">\u{23F0} Saatleri Kaydet</button>':'')+(ie.tel?'<button data-ie-aksiyon="takip" data-ie-id="'+ie.id+'" data-ie-tel="'+ie.tel+'" style="padding:6px 14px;border:1.5px solid #25D366;border-radius:8px;background:transparent;color:#128C7E;font-size:10px;font-weight:600;cursor:pointer">\u{1F4F1} Takip Link Gonder</button>':'')+'<button data-ie-aksiyon="sil" data-ie-id="'+ie.id+'" style="padding:6px 14px;border:1.5px solid #ef4444;border-radius:8px;background:transparent;color:#ef4444;font-size:10px;font-weight:600;cursor:pointer">\u{1F5D1} Sil</button><button data-ie-aksiyon="kapat" style="padding:6px 14px;border:1.5px solid var(--bd);border-radius:8px;background:transparent;color:var(--ink);font-size:10px;font-weight:600;cursor:pointer">Kapat</button></div></div></div>';
 ovl.appendChild(m);document.body.appendChild(ovl);
+}catch(err){console.error('IE Detay Modal Hata:',err);toast('Modal acilamadi: '+err.message,'red');}
 }
 
 async function isEmriAsamaIlerle(id,kod){var btn=document.querySelector('[data-ie-aksiyon="baslat"][data-ie-id="'+id+'"]');if(btn){btn.disabled=true;btn.style.opacity='.5';btn.textContent='\u23F3 Baslatiliyor...';}try{var r=await fetch('/api/is-emri',{method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,aksiyon:'asama_baslat',asama_kod:kod})});var d=await r.json();if(d.success){toast(kod+' baslatildi','green');if(d.data){var ci=IE_DATA.findIndex(function(x){return x.id===id});if(ci>-1)IE_DATA[ci]=d.data;}var o=document.getElementById('ie-detay-ovl');if(o)o.remove();isEmriDetayModal(id);}else{toast(d.error||'Hata','red');if(btn){btn.disabled=false;btn.style.opacity='1';}}}catch(e){toast('Baglanti hatasi','red');if(btn){btn.disabled=false;btn.style.opacity='1';}}}
@@ -352,8 +354,8 @@ ieAyarlariYukle();
 var origAyarYukle=window.ayarlarSayfasiYukle;
 window.ayarlarSayfasiYukle=function(){
 if(typeof origAyarYukle==='function')origAyarYukle();
-// isemri sekmesi icin icerigi doldur
-setTimeout(function(){ieAyarlariSayfasiCiz();},100);
+// isemri: once API'den guncel ayarlari cek, sonra ciz
+ieAyarlariYukle().then(function(){ieAyarlariSayfasiCiz();});
 };
 })();
 
