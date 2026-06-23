@@ -4151,8 +4151,8 @@ function rdvDuzenle(idx){
   // ═══ ÖDEME GEÇMİŞİ ═══
   var odemeHist=r.odemeGecmisi||[];
   var toplamOdenen=(r.odenenToplam||0);
-  var mevcutTutar=r.tutar||0;
-  var mevcutKalan=Math.max(0, mevcutTutar-toplamOdenen);
+  var mevcutTutar=(r.tutar||0)+(r.indirim||0); // Brüt fiyat = net + indirim (çift indirim bug fix)
+  var mevcutKalan=Math.max(0, (r.tutar||0)-toplamOdenen); // Kalan = net tutar - ödenen
 
   var odemeListesi='';
   if(odemeHist.length===0){
