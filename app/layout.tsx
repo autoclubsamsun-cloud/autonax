@@ -1,6 +1,14 @@
 import type { Metadata } from 'next';
 import '@/styles/globals.css';
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+};
+
 export const metadata: Metadata = {
   title: 'Autonax Admin Panel',
   description: 'Autonax Premium Araç Koruma — Yönetim Paneli',
