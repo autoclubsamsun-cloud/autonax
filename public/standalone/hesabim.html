@@ -570,6 +570,12 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 <script>window.onerror=function(msg,url,line,col,err){console.error("Autonax Global Error:",msg,"at",url+":"+line+":"+col);return false;};</script>
 </head>
 <body>
+<div id="initial-app-loader" style="position:fixed;inset:0;z-index:9999999;background:#1a1516;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.4s">
+  <div style="width:44px;height:44px;border:4px solid rgba(185,32,51,0.2);border-top-color:#b92033;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+  <div style="margin-top:20px;color:#8a7a7d;font-family:'Outfit',sans-serif;font-size:13px;letter-spacing:2px;font-weight:600;">AUTONAX YÜKLENİYOR...</div>
+  <style>@keyframes spin{to{transform:rotate(360deg);}}</style>
+</div>
+
 
 <!-- ══ HEADER ══ -->
 <div class="header">
@@ -1475,11 +1481,22 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   await AuthManager.loadSession();
   kullanici = AuthManager.getUser();
 
+  const appLoader = document.getElementById('initial-app-loader');
+
   if(!kullanici){
-    // Giriş yapılmamış — login overlay göster
     _loginOverlayGoster();
+    if(appLoader){
+      appLoader.style.opacity = '0';
+      setTimeout(()=>appLoader.remove(), 400);
+    }
     return;
   }
+  
+  if(appLoader){
+    appLoader.style.opacity = '0';
+    setTimeout(()=>appLoader.remove(), 400);
+  }
+
 
   // 2) UI'ı hemen göster (kullanıcı bekletmeden)
   kullaniciGoster();
