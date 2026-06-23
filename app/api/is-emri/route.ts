@@ -120,7 +120,7 @@ export async function PUT(req: NextRequest) {
   try {
     await ensureDB();
     const body = await req.json();
-    const { id, aksiyon, asama_kod, not: notText, fotograf, personel } = body;
+    const { id, aksiyon, asama_kod, not: notText, fotograf, personel, saatler } = body;
 
     if (!id) return NextResponse.json({ success: false, error: 'ID zorunlu' });
 
@@ -207,6 +207,34 @@ export async function PUT(req: NextRequest) {
       
       await sql`UPDATE is_emirleri SET asamalar = ${JSON.stringify(asamalar)}, guncelleme = NOW() WHERE id = ${id}`;
       return NextResponse.json({ success: true });
+    }
+
+    
+    if (aksiyon === 'saat_guncelle') {
+      // Manuel saat düzenleme (admin)
+      const { saatler } = body; // [{kod:'kabul',baslama:'2026-06-23T09:00',bitis:'2026-06-23T09:15'}, ...]
+      if (!Array.isArray(saatler)) return NextResponse.json({ success: false, error: 'saatler dizisi zorunlu' });
+      
+      saatler.forEach((s: Record<string, string>) => {
+        const asama = asamalar.find((a: Record<string, unknown>) => a.kod === s.kod);
+        if (!asama) return;
+        if (s.baslama) asama.baslama = new Date(s.baslama).toISOString();
+        if (s.bitis) asama.bitis = new Date(s.bitis).toISOString();
+        // Süre yeniden hesapla
+        if (asama.baslama && asama.bitis) {
+          asama.sure_dk = Math.round((new Date(asama.bitis as string).getTime() - new Date(asama.baslama as string).getTime()) / 60000);
+        }
+      });
+
+      // Toplam süre yeniden hesapla
+      let toplamSure = 0;
+      asamalar.forEach((a: Record<string, unknown>) => {
+        if (a.sure_dk) toplamSure += a.sure_dk as number;
+      });
+
+      await sql`UPDATE is_emirleri SET asamalar = ${JSON.stringify(asamalar)}, toplam_sure = ${toplamSure}, guncelleme = NOW() WHERE id = ${id}`;
+      const updated = await sql`SELECT * FROM is_emirleri WHERE id = ${id}`;
+      return NextResponse.json({ success: true, data: updated[0] });
     }
 
     return NextResponse.json({ success: false, error: 'Geçersiz aksiyon' });

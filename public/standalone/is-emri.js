@@ -47,6 +47,7 @@ else if(ak==='not'){e.stopPropagation();isEmriNotEklePrompt(id,kod);}
 else if(ak==='takip'){e.stopPropagation();isEmriTakipGonder(id,tel);}
 else if(ak==='kapat'){var o=document.getElementById('ie-detay-ovl');if(o)o.remove();}
 else if(ak==='yeni-modal')isEmriYeniModal();
+else if(ak==='saat-kaydet'){e.stopPropagation();isEmriSaatKaydet(id);}
 else if(ak==='sil'){e.stopPropagation();isEmriSil(id);}
 else if(ak==='rdv-sec'){e.stopPropagation();isEmriOlusturFromModal(parseInt(t.dataset.ieIdx));}
 });
@@ -123,12 +124,19 @@ else{ds='background:var(--bg2);border:2px solid var(--bd);color:var(--ink4)';nc=
 var zm='';
 if(dn){var bs=as.baslama?new Date(as.baslama).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}):'';var bt=as.bitis?new Date(as.bitis).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}):'';var sr=as.sure_dk?as.sure_dk+' dk':'';zm='<div style="font-size:10px;color:#10b981">'+bs+(bt?' \u2192 '+bt:'')+(sr?' ('+sr+')':'')+'</div>';}
 else if(ac&&as.baslama){zm='<div style="font-size:10px;color:#3b82f6">'+new Date(as.baslama).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'})+' \u2014 devam ediyor</div>';}
+// Saat duzenleme (admin ayarlardan acik ise)
+var saatEdit='';
+if(IE_AYARLAR&&IE_AYARLAR.saat_mudahalesi&&(dn||ac)){
+var bsVal=as.baslama?new Date(as.baslama).toISOString().slice(0,16):'';
+var btVal=as.bitis?new Date(as.bitis).toISOString().slice(0,16):'';
+saatEdit='<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap"><input type="datetime-local" data-ie-saat-baslama="'+a.kod+'" value="'+bsVal+'" style="font-size:9px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:4px;width:140px"><input type="datetime-local" data-ie-saat-bitis="'+a.kod+'" value="'+btVal+'" style="font-size:9px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:4px;width:140px"></div>';
+}
 var btn='';
 if(ac){btn='<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><button data-ie-aksiyon="tamamla" data-ie-id="'+ie.id+'" data-ie-kod="'+a.kod+'" style="padding:5px 12px;border:none;border-radius:6px;background:#22c55e;color:#fff;font-size:10px;font-weight:600;cursor:pointer">\u2705 Tamamla</button><button data-ie-aksiyon="not" data-ie-id="'+ie.id+'" data-ie-kod="'+a.kod+'" style="padding:5px 12px;border:none;border-radius:6px;background:#3b82f6;color:#fff;font-size:10px;font-weight:600;cursor:pointer">\u{1F4DD} Not</button></div>';}
 else if(!dn&&((idx>0&&asamalar[idx-1]&&asamalar[idx-1].durum==='tamamlandi')||idx===0)){btn='<div style="margin-top:8px"><button data-ie-aksiyon="baslat" data-ie-id="'+ie.id+'" data-ie-kod="'+a.kod+'" style="padding:5px 12px;border:1px solid '+a.renk+';border-radius:6px;background:transparent;color:'+a.renk+';font-size:10px;font-weight:600;cursor:pointer">\u25B6 Baslat</button></div>';}
 var nt='';if(as.not){nt='<div style="margin-top:6px;padding:6px 10px;background:var(--bg2);border-radius:6px;font-size:10px;color:var(--ink3)">\u{1F4DD} '+as.not+'</div>';}
 var ls=idx<asamalar.length-1?'position:absolute;left:17px;top:42px;bottom:-14px;width:2px;background:'+lc:'';
-tl+='<div style="display:flex;gap:14px;padding:14px 0;position:relative">'+(ls?'<div style="'+ls+'"></div>':'')+'<div style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;z-index:1;'+ds+'">'+(dn?'\u2713':a.ikon)+'</div><div style="flex:1"><div style="font-family:Bebas Neue,sans-serif;font-size:15px;letter-spacing:1px;color:'+nc+'">'+a.ad+'</div>'+zm+btn+nt+'</div></div>';
+tl+='<div style="display:flex;gap:14px;padding:14px 0;position:relative">'+(ls?'<div style="'+ls+'"></div>':'')+'<div style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;z-index:1;'+ds+'">'+(dn?'\u2713':a.ikon)+'</div><div style="flex:1"><div style="font-family:Bebas Neue,sans-serif;font-size:15px;letter-spacing:1px;color:'+nc+'">'+a.ad+'</div>'+zm+saatEdit+btn+nt+'</div></div>';
 });
 var ts='';if(ie.toplam_sure){var dk=ie.toplam_sure;ts=dk<60?dk+'dk':Math.floor(dk/60)+'s '+dk%60+'dk';}
 var hc=ie.durum==='tamamlandi'?'#059669':ar;
@@ -137,7 +145,7 @@ ovl.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999
 ovl.onclick=function(e){if(e.target===ovl)ovl.remove()};
 var m=document.createElement('div');
 m.style.cssText='width:100%;max-width:480px;max-height:90vh;background:var(--w);border-radius:20px;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,.25)';
-m.innerHTML='<div style="background:linear-gradient(135deg,'+hc+','+hc+'cc);padding:20px;text-align:center"><div style="font-family:Bebas Neue,sans-serif;font-size:28px;letter-spacing:3px;color:#fff">'+(ie.plaka||'\u2014')+'</div><div style="font-size:12px;color:rgba(255,255,255,.8);margin-top:2px">'+(ie.musteri||'\u2014')+'</div><div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px">'+(ie.hizmet||'\u2014')+'</div>'+(ie.durum==='tamamlandi'?'<div style="display:inline-block;margin-top:8px;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.2);font-size:10px;font-weight:700;color:#fff">\u2705 TAMAMLANDI</div>':'')+'<div style="font-size:9px;color:rgba(255,255,255,.5);margin-top:6px">Takip: '+ie.takip_kodu+'</div></div><div style="padding:20px">'+tl+'<div style="border-top:1px solid var(--bd);padding-top:14px;margin-top:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'+(ts?'<div style="font-size:12px;color:var(--ink4)">\u23F1 Toplam: <strong>'+ts+'</strong></div>':'')+'<div style="display:flex;gap:6px;flex-wrap:wrap">'+(ie.tel?'<button data-ie-aksiyon="takip" data-ie-id="'+ie.id+'" data-ie-tel="'+ie.tel+'" style="padding:6px 14px;border:1.5px solid #25D366;border-radius:8px;background:transparent;color:#128C7E;font-size:10px;font-weight:600;cursor:pointer">\u{1F4F1} Takip Link Gonder</button>':'')+'<button data-ie-aksiyon="sil" data-ie-id="'+ie.id+'" style="padding:6px 14px;border:1.5px solid #ef4444;border-radius:8px;background:transparent;color:#ef4444;font-size:10px;font-weight:600;cursor:pointer">\u{1F5D1} Sil</button><button data-ie-aksiyon="kapat" style="padding:6px 14px;border:1.5px solid var(--bd);border-radius:8px;background:transparent;color:var(--ink);font-size:10px;font-weight:600;cursor:pointer">Kapat</button></div></div></div>';
+m.innerHTML='<div style="background:linear-gradient(135deg,'+hc+','+hc+'cc);padding:20px;text-align:center"><div style="font-family:Bebas Neue,sans-serif;font-size:28px;letter-spacing:3px;color:#fff">'+(ie.plaka||'\u2014')+'</div><div style="font-size:12px;color:rgba(255,255,255,.8);margin-top:2px">'+(ie.musteri||'\u2014')+'</div><div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px">'+(ie.hizmet||'\u2014')+'</div>'+(ie.durum==='tamamlandi'?'<div style="display:inline-block;margin-top:8px;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.2);font-size:10px;font-weight:700;color:#fff">\u2705 TAMAMLANDI</div>':'')+'<div style="font-size:9px;color:rgba(255,255,255,.5);margin-top:6px">Takip: '+ie.takip_kodu+'</div></div><div style="padding:20px">'+tl+'<div style="border-top:1px solid var(--bd);padding-top:14px;margin-top:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'+(ts?'<div style="font-size:12px;color:var(--ink4)">\u23F1 Toplam: <strong>'+ts+'</strong></div>':'')+'<div style="display:flex;gap:6px;flex-wrap:wrap">'+(IE_AYARLAR&&IE_AYARLAR.saat_mudahalesi?'<button data-ie-aksiyon="saat-kaydet" data-ie-id="'+ie.id+'" style="padding:6px 14px;border:1.5px solid #f59e0b;border-radius:8px;background:transparent;color:#d97706;font-size:10px;font-weight:600;cursor:pointer">\u{23F0} Saatleri Kaydet</button>':'')+(ie.tel?'<button data-ie-aksiyon="takip" data-ie-id="'+ie.id+'" data-ie-tel="'+ie.tel+'" style="padding:6px 14px;border:1.5px solid #25D366;border-radius:8px;background:transparent;color:#128C7E;font-size:10px;font-weight:600;cursor:pointer">\u{1F4F1} Takip Link Gonder</button>':'')+'<button data-ie-aksiyon="sil" data-ie-id="'+ie.id+'" style="padding:6px 14px;border:1.5px solid #ef4444;border-radius:8px;background:transparent;color:#ef4444;font-size:10px;font-weight:600;cursor:pointer">\u{1F5D1} Sil</button><button data-ie-aksiyon="kapat" style="padding:6px 14px;border:1.5px solid var(--bd);border-radius:8px;background:transparent;color:var(--ink);font-size:10px;font-weight:600;cursor:pointer">Kapat</button></div></div></div>';
 ovl.appendChild(m);document.body.appendChild(ovl);
 }
 
@@ -302,14 +310,15 @@ return {
   wa_sablon: '*\u{1F3C1} {{firma_adi}}*\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\nMerhaba {{musteri}} \u{1F44B}\n\nArac\u0131n\u0131z\u0131n i\u015f emri olu\u015fturuldu ve s\u00fcreci canl\u0131 takip edebilirsiniz.\n\n\u{1F697} *Plaka:* {{plaka}}\n\u{1F4CB} *Hizmet:* {{hizmet}}\n{{durum_satiri}}\n\u{1F517} *Canl\u0131 Takip Linki:*\n{{takip_link}}\n\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\u{1F4CD} _{{firma_adi}} {{firma_slogan}}_',
   takip_renk: '#1e40af',
   takip_bg: '#0f172a',
-  takip_logo: ''
+  takip_logo: '',
+saat_mudahalesi: true
 };
 }
 
 function ieAyarlariSayfasiCiz(){
 var el=document.getElementById('ie-ayarlar-konteyner');if(!el)return;
 var ay=IE_AYARLAR||ieVarsayilanAyarlar();
-el.innerHTML='<div class="g2"><div class="k"><div class="kh"><div class="kt">\u{1F4AC} WhatsApp Mesaj \u015Eablonu</div></div><div class="kb"><div class="ff"><label>Firma Ad\u0131</label><input id="ie-ay-firma" type="text" value="'+(ay.firma_adi||'')+'"></div><div class="ff"><label>Firma Slogan</label><input id="ie-ay-slogan" type="text" value="'+(ay.firma_slogan||'')+'"></div><div class="ff"><label>Mesaj \u015Eablonu</label><div style="font-size:9px;color:var(--ink4);margin-bottom:4px">De\u011fi\u015fkenler: {{firma_adi}} {{firma_slogan}} {{musteri}} {{plaka}} {{hizmet}} {{durum_satiri}} {{takip_link}}</div><textarea id="ie-ay-sablon" rows="12" style="font-family:monospace;font-size:11px;width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--ink);resize:vertical">'+(ay.wa_sablon||'').replace(/</g,'&lt;')+'</textarea></div><button class="btn-p" style="margin-top:8px" onclick="ieAyarlariOnizle()">\u{1F441} \u00d6nizle</button><div id="ie-ay-onizle" style="margin-top:12px"></div></div></div><div class="k"><div class="kh"><div class="kt">\u{1F3A8} Takip Sayfas\u0131 G\u00f6r\u00fcn\u00fcm</div></div><div class="kb"><div class="ff"><label>Ana Renk (HEX)</label><div style="display:flex;gap:8px;align-items:center"><input id="ie-ay-renk" type="color" value="'+(ay.takip_renk||'#1e40af')+'" style="width:50px;height:36px;border:none;cursor:pointer"><input id="ie-ay-renk-text" type="text" value="'+(ay.takip_renk||'#1e40af')+'" style="flex:1" oninput="document.getElementById(\'ie-ay-renk\').value=this.value"></div></div><div class="ff"><label>Arka Plan Rengi</label><div style="display:flex;gap:8px;align-items:center"><input id="ie-ay-bg" type="color" value="'+(ay.takip_bg||'#0f172a')+'" style="width:50px;height:36px;border:none;cursor:pointer"><input id="ie-ay-bg-text" type="text" value="'+(ay.takip_bg||'#0f172a')+'" style="flex:1" oninput="document.getElementById(\'ie-ay-bg\').value=this.value"></div></div><div class="ff"><label>Logo URL (opsiyonel)</label><input id="ie-ay-logo" type="text" value="'+(ay.takip_logo||'')+'" placeholder="https://..."></div></div></div></div><div style="margin-top:16px;text-align:right"><button class="btn-p" onclick="ieAyarlariKaydet()">\u{1F4BE} Ayarlar\u0131 Kaydet</button></div>';
+el.innerHTML='<div class="g2"><div class="k"><div class="kh"><div class="kt">\u{1F4AC} WhatsApp Mesaj \u015Eablonu</div></div><div class="kb"><div class="ff"><label>Firma Ad\u0131</label><input id="ie-ay-firma" type="text" value="'+(ay.firma_adi||'')+'"></div><div class="ff"><label>Firma Slogan</label><input id="ie-ay-slogan" type="text" value="'+(ay.firma_slogan||'')+'"></div><div class="ff"><label>Mesaj \u015Eablonu</label><div style="font-size:9px;color:var(--ink4);margin-bottom:4px">De\u011fi\u015fkenler: {{firma_adi}} {{firma_slogan}} {{musteri}} {{plaka}} {{hizmet}} {{durum_satiri}} {{takip_link}}</div><textarea id="ie-ay-sablon" rows="12" style="font-family:monospace;font-size:11px;width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--ink);resize:vertical">'+(ay.wa_sablon||'').replace(/</g,'&lt;')+'</textarea></div><button class="btn-p" style="margin-top:8px" onclick="ieAyarlariOnizle()">\u{1F441} \u00d6nizle</button><div id="ie-ay-onizle" style="margin-top:12px"></div></div></div><div class="k"><div class="kh"><div class="kt">\u{1F3A8} Takip Sayfas\u0131 G\u00f6r\u00fcn\u00fcm</div></div><div class="kb"><div class="ff"><label>Ana Renk (HEX)</label><div style="display:flex;gap:8px;align-items:center"><input id="ie-ay-renk" type="color" value="'+(ay.takip_renk||'#1e40af')+'" style="width:50px;height:36px;border:none;cursor:pointer"><input id="ie-ay-renk-text" type="text" value="'+(ay.takip_renk||'#1e40af')+'" style="flex:1" oninput="document.getElementById(\'ie-ay-renk\').value=this.value"></div></div><div class="ff"><label>Arka Plan Rengi</label><div style="display:flex;gap:8px;align-items:center"><input id="ie-ay-bg" type="color" value="'+(ay.takip_bg||'#0f172a')+'" style="width:50px;height:36px;border:none;cursor:pointer"><input id="ie-ay-bg-text" type="text" value="'+(ay.takip_bg||'#0f172a')+'" style="flex:1" oninput="document.getElementById(\'ie-ay-bg\').value=this.value"></div></div><div class="ff"><label>Logo URL (opsiyonel)</label><input id="ie-ay-logo" type="text" value="'+(ay.takip_logo||'')+'" placeholder="https://..."></div><div class="ff"><label>\u23F0 Manuel Saat M\u00fcdahalesi</label><div style="display:flex;align-items:center;gap:10px"><label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px"><input type="checkbox" id="ie-ay-saat" '+(ay.saat_mudahalesi?'checked':'')+' style="width:18px;height:18px;cursor:pointer"> Aktif</label><div style="font-size:9px;color:var(--ink4)">A\u00e7\u0131kken detay modalda a\u015fama saatlerini d\u00fczenleyebilirsiniz</div></div></div></div></div></div><div style="margin-top:16px;text-align:right"><button class="btn-p" onclick="ieAyarlariKaydet()">\u{1F4BE} Ayarlar\u0131 Kaydet</button></div>';
 }
 
 function ieAyarlariOnizle(){
@@ -328,7 +337,8 @@ firma_slogan:document.getElementById('ie-ay-slogan').value,
 wa_sablon:document.getElementById('ie-ay-sablon').value,
 takip_renk:document.getElementById('ie-ay-renk').value,
 takip_bg:document.getElementById('ie-ay-bg').value,
-takip_logo:document.getElementById('ie-ay-logo').value
+takip_logo:document.getElementById('ie-ay-logo').value,
+saat_mudahalesi:document.getElementById('ie-ay-saat').checked
 };
 try{var r=await fetch('/api/ayarlar',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:'is_emri_ayarlar',value:ay})});
 var d=await r.json();if(d.success){toast('Is Emri ayarlari kaydedildi','green');IE_AYARLAR=ay;}else toast(d.error||'Hata','red');
@@ -347,3 +357,20 @@ if(typeof origAyarYukle==='function')origAyarYukle();
 setTimeout(function(){ieAyarlariSayfasiCiz();},100);
 };
 })();
+
+
+async function isEmriSaatKaydet(id){
+var inputs=document.querySelectorAll('[data-ie-saat-baslama],[data-ie-saat-bitis]');
+var map={};
+inputs.forEach(function(inp){
+  var kod=inp.dataset.ieSaatBaslama||inp.dataset.ieSaatBitis;
+  if(!map[kod])map[kod]={kod:kod};
+  if(inp.dataset.ieSaatBaslama&&inp.value)map[kod].baslama=inp.value;
+  if(inp.dataset.ieSaatBitis&&inp.value)map[kod].bitis=inp.value;
+});
+var saatler=Object.values(map).filter(function(s){return s.baslama||s.bitis});
+if(!saatler.length){toast('Degistirilecek saat bulunamadi','orange');return;}
+try{var r=await fetch('/api/is-emri',{method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,aksiyon:'saat_guncelle',saatler:saatler})});
+var d=await r.json();if(d.success){toast('Saatler guncellendi','green');if(d.data){var ci=IE_DATA.findIndex(function(x){return x.id===id});if(ci>-1)IE_DATA[ci]=d.data;}var o=document.getElementById('ie-detay-ovl');if(o)o.remove();isEmriDetayModal(id);}else toast(d.error||'Hata','red');
+}catch(e){toast('Baglanti hatasi','red');}
+}
