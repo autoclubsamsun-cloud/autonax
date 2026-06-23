@@ -218,7 +218,7 @@ export async function PUT(req: NextRequest) {
       saatler.forEach((s: Record<string, string>) => {
         const asama = asamalar.find((a: Record<string, unknown>) => a.kod === s.kod);
         if (!asama) return;
-        if (s.baslama) asama.baslama = new Date(s.baslama).toISOString();
+        if (s.baslama) { var bVal = s.baslama.length <= 16 ? s.baslama + ':00+03:00' : s.baslama; asama.baslama = new Date(bVal).toISOString(); }
       });
 
       // Bitiş saatlerini otomatik hesapla: her aşamanın bitişi = sonraki aşamanın başlangıcı

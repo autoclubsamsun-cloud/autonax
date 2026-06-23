@@ -122,7 +122,7 @@ if(event&&event.target){event.target.classList.add('ie-tab-aktif');event.target.
 isEmriKartlariCiz(IE_DATA);
 }
 
-async function isEmriDetayModal(id){var cached=IE_DATA.find(function(x){return x.id===id});if(cached)isEmriDetayModalGoster(cached);try{var r=await fetch('/api/is-emri?id='+encodeURIComponent(id),{credentials:'same-origin'});var d=await r.json();if(d.success&&d.data){var ci=IE_DATA.findIndex(function(x){return x.id===id});if(ci>-1)IE_DATA[ci]=d.data;isEmriDetayModalGoster(d.data);}}catch(e){if(!cached)toast('Detay yuklenemedi','red');}}
+async function isEmriDetayModal(id){if(!IE_AYARLAR)await ieAyarlariYukle();var cached=IE_DATA.find(function(x){return x.id===id});if(cached)isEmriDetayModalGoster(cached);try{var r=await fetch('/api/is-emri?id='+encodeURIComponent(id),{credentials:'same-origin'});var d=await r.json();if(d.success&&d.data){var ci=IE_DATA.findIndex(function(x){return x.id===id});if(ci>-1)IE_DATA[ci]=d.data;isEmriDetayModalGoster(d.data);}}catch(e){if(!cached)toast('Detay yuklenemedi','red');}}
 
 function isEmriDetayModalGoster(ie){
 try{
