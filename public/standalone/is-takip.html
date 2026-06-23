@@ -221,12 +221,11 @@ function render(ie){
     var ikon = ASAMA_IKONLARI[a.kod] || '⚪';
     var timeText = '';
     if(a.durum==='tamamlandi'){
-      var bs = formatSaat(a.baslama);
-      var bt = formatSaat(a.bitis);
-      timeText = bs + (bt ? ' — ' + bt : '') + (a.sure_dk ? ' (' + formatSure(a.sure_dk) + ')' : '');
+      var bs = formatSaatTarih(a.baslama);
+      var bt = formatSaatTarih(a.bitis);
+      timeText = bs + (bt ? ' — ' + bt : '');
     } else if(a.durum==='devam'){
-      var bs2 = formatSaat(a.baslama);
-      timeText = bs2 + ' — devam ediyor';
+      timeText = formatSaatTarih(a.baslama) + ' — devam ediyor';
     }
 
     var badgeHTML = '';
@@ -245,21 +244,7 @@ function render(ie){
   });
   timelineHTML += '</div>';
 
-  // Tahmini
   var estimateHTML = '';
-  if(ie.durum==='aktif'){
-    var tamamlanan = asamalar.filter(function(a){return a.durum==='tamamlandi';}).length;
-    var topSure = asamalar.reduce(function(t,a){return t+(a.sure_dk||0);},0);
-    if(tamamlanan>0 && topSure>0){
-      var ortSure = topSure/tamamlanan;
-      var kalanAsama = asamalar.length - tamamlanan - 1;
-      var kalanDk = Math.round(ortSure * kalanAsama);
-      estimateHTML = '<div class="estimate"><span class="estimate-label">⏱ Tahmini kalan süre</span><span class="estimate-value">~'+formatSure(kalanDk)+'</span></div>';
-    }
-  } else if(ie.durum==='tamamlandi'){
-    var topSure2 = asamalar.reduce(function(t,a){return t+(a.sure_dk||0);},0);
-    estimateHTML = '<div class="estimate"><span class="estimate-label">⏱ Toplam süre</span><span class="estimate-value">'+formatSure(topSure2)+'</span></div>';
-  }
 
   document.getElementById('sonuc').innerHTML = ''
     +'<div class="card">'
@@ -272,6 +257,25 @@ function render(ie){
       +timelineHTML
       +estimateHTML
     +'</div>';
+}
+
+// Saat + tarih (farkli gun ise tarih goster)
+function formatSaatTarih(iso){
+  if(!iso) return '';
+  var d = new Date(iso);
+  var h = d.getUTCHours()+3; if(h>=24) h-=24;
+  var m = d.getUTCMinutes();
+  var saat = (h<10?'0':'')+h+':'+(m<10?'0':'')+m;
+  // Bugunun tarihi
+  var bugun = new Date();
+  var bugunStr = bugun.getDate()+'.'+(bugun.getMonth()+1)+'.'+bugun.getFullYear();
+  var tarih = d.getUTCDate()+'.'+(d.getUTCMonth()+1)+'.'+d.getUTCFullYear();
+  if(tarih !== bugunStr){
+    // Farkli gun — tarih + saat goster
+    var dd = d.getUTCDate(); var mm = d.getUTCMonth()+1;
+    return (dd<10?'0':'')+dd+'.'+(mm<10?'0':'')+mm+' '+saat;
+  }
+  return saat;
 }
 
 function formatSure(dk){
