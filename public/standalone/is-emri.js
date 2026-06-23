@@ -314,7 +314,7 @@ var IE_AYARLAR = null;
 
 async function ieAyarlariYukle(){
 try{var r=await fetch('/api/ayarlar?key=is_emri_ayarlar',{credentials:'same-origin'});var d=await r.json();
-if(d.success && d.value) IE_AYARLAR = d.value;
+if(d.success && d.data && d.data.is_emri_ayarlar) IE_AYARLAR = d.data.is_emri_ayarlar;
 else IE_AYARLAR = ieVarsayilanAyarlar();
 }catch(e){IE_AYARLAR = ieVarsayilanAyarlar();}
 return IE_AYARLAR;
@@ -357,7 +357,7 @@ takip_bg:document.getElementById('ie-ay-bg').value,
 takip_logo:document.getElementById('ie-ay-logo').value,
 saat_mudahalesi:document.getElementById('ie-ay-saat').checked
 };
-try{var r=await fetch('/api/ayarlar',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:'is_emri_ayarlar',value:ay})});
+try{var r=await fetch('/api/ayarlar',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({is_emri_ayarlar:ay})});
 var d=await r.json();if(d.success){toast('Is Emri ayarlari kaydedildi','green');IE_AYARLAR=ay;}else toast(d.error||'Hata','red');
 }catch(e){toast('Baglanti hatasi','red');}
 }

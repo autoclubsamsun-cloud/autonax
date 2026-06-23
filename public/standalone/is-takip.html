@@ -118,7 +118,7 @@ var TAKIP_AYAR = null;
   fetch('/api/ayarlar?key=is_emri_ayarlar')
     .then(function(r){return r.json();})
     .then(function(d){
-      if(d.success && d.value){
+      if(d.success && d.data && d.data.is_emri_ayarlar){ d.value = d.data.is_emri_ayarlar;
         TAKIP_AYAR = d.value;
         // Renkleri uygula
         if(d.value.takip_renk) document.documentElement.style.setProperty('--ana-renk', d.value.takip_renk);
