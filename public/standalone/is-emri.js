@@ -122,14 +122,13 @@ if(dn){ds='background:rgba(34,197,94,.15);border:2px solid #22c55e;color:#22c55e
 else if(ac){ds='background:rgba(59,130,246,.15);border:2px solid #3b82f6;color:#3b82f6;animation:iePulse 2s infinite';nc='#3b82f6';lc='#3b82f6';}
 else{ds='background:var(--bg2);border:2px solid var(--bd);color:var(--ink4)';nc='var(--ink4)';lc='var(--bd)';}
 var zm='';
-if(dn){var bs=as.baslama?new Date(as.baslama).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}):'';var bt=as.bitis?new Date(as.bitis).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}):'';var sr=as.sure_dk?as.sure_dk+' dk':'';zm='<div style="font-size:10px;color:#10b981">'+bs+(bt?' \u2192 '+bt:'')+(sr?' ('+sr+')':'')+'</div>';}
-else if(ac&&as.baslama){zm='<div style="font-size:10px;color:#3b82f6">'+new Date(as.baslama).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'})+' \u2014 devam ediyor</div>';}
+if(dn){var bs=ieSaat(as.baslama);var bt=ieSaat(as.bitis);var sr=as.sure_dk?as.sure_dk+' dk':'';zm='<div style="font-size:10px;color:#10b981">'+bs+(bt?' \u2192 '+bt:'')+(sr?' ('+sr+')':'')+'</div>';}
+else if(ac&&as.baslama){zm='<div style="font-size:10px;color:#3b82f6">'+ieSaat(as.baslama)+' \u2014 devam ediyor</div>';}
 // Saat duzenleme (admin ayarlardan acik ise)
 var saatEdit='';
 if(IE_AYARLAR&&IE_AYARLAR.saat_mudahalesi&&(dn||ac)){
-var bsVal=as.baslama?new Date(as.baslama).toISOString().slice(0,16):'';
-var btVal=as.bitis?new Date(as.bitis).toISOString().slice(0,16):'';
-saatEdit='<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap"><input type="datetime-local" data-ie-saat-baslama="'+a.kod+'" value="'+bsVal+'" style="font-size:9px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:4px;width:140px"><input type="datetime-local" data-ie-saat-bitis="'+a.kod+'" value="'+btVal+'" style="font-size:9px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:4px;width:140px"></div>';
+var bsVal=ieLocalVal(as.baslama);
+saatEdit='<div style="margin-top:4px"><input type="datetime-local" data-ie-saat-baslama="'+a.kod+'" value="'+bsVal+'" style="font-size:10px;padding:3px 6px;border:1px solid #e2e8f0;border-radius:5px;width:180px"></div>';
 }
 var btn='';
 if(ac){btn='<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><button data-ie-aksiyon="tamamla" data-ie-id="'+ie.id+'" data-ie-kod="'+a.kod+'" style="padding:5px 12px;border:none;border-radius:6px;background:#22c55e;color:#fff;font-size:10px;font-weight:600;cursor:pointer">\u2705 Tamamla</button><button data-ie-aksiyon="not" data-ie-id="'+ie.id+'" data-ie-kod="'+a.kod+'" style="padding:5px 12px;border:none;border-radius:6px;background:#3b82f6;color:#fff;font-size:10px;font-weight:600;cursor:pointer">\u{1F4DD} Not</button></div>';}
@@ -360,15 +359,11 @@ setTimeout(function(){ieAyarlariSayfasiCiz();},100);
 
 
 async function isEmriSaatKaydet(id){
-var inputs=document.querySelectorAll('[data-ie-saat-baslama],[data-ie-saat-bitis]');
-var map={};
+var inputs=document.querySelectorAll('[data-ie-saat-baslama]');
+var saatler=[];
 inputs.forEach(function(inp){
-  var kod=inp.dataset.ieSaatBaslama||inp.dataset.ieSaatBitis;
-  if(!map[kod])map[kod]={kod:kod};
-  if(inp.dataset.ieSaatBaslama&&inp.value)map[kod].baslama=inp.value;
-  if(inp.dataset.ieSaatBitis&&inp.value)map[kod].bitis=inp.value;
+  if(inp.value){saatler.push({kod:inp.dataset.ieSaatBaslama,baslama:inp.value});}
 });
-var saatler=Object.values(map).filter(function(s){return s.baslama||s.bitis});
 if(!saatler.length){toast('Degistirilecek saat bulunamadi','orange');return;}
 try{var r=await fetch('/api/is-emri',{method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,aksiyon:'saat_guncelle',saatler:saatler})});
 var d=await r.json();if(d.success){toast('Saatler guncellendi','green');if(d.data){var ci=IE_DATA.findIndex(function(x){return x.id===id});if(ci>-1)IE_DATA[ci]=d.data;}var o=document.getElementById('ie-detay-ovl');if(o)o.remove();isEmriDetayModal(id);}else toast(d.error||'Hata','red');

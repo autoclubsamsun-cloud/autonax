@@ -211,22 +211,29 @@ export async function PUT(req: NextRequest) {
 
     
     if (aksiyon === 'saat_guncelle') {
-      // Manuel saat düzenleme (admin)
-      const { saatler } = body; // [{kod:'kabul',baslama:'2026-06-23T09:00',bitis:'2026-06-23T09:15'}, ...]
+      // Manuel saat düzenleme — sadece başlama saatleri gelir
       if (!Array.isArray(saatler)) return NextResponse.json({ success: false, error: 'saatler dizisi zorunlu' });
       
+      // Önce tüm başlama saatlerini güncelle
       saatler.forEach((s: Record<string, string>) => {
         const asama = asamalar.find((a: Record<string, unknown>) => a.kod === s.kod);
         if (!asama) return;
         if (s.baslama) asama.baslama = new Date(s.baslama).toISOString();
-        if (s.bitis) asama.bitis = new Date(s.bitis).toISOString();
-        // Süre yeniden hesapla
-        if (asama.baslama && asama.bitis) {
-          asama.sure_dk = Math.round((new Date(asama.bitis as string).getTime() - new Date(asama.baslama as string).getTime()) / 60000);
-        }
       });
 
-      // Toplam süre yeniden hesapla
+      // Bitiş saatlerini otomatik hesapla: her aşamanın bitişi = sonraki aşamanın başlangıcı
+      for (let i = 0; i < asamalar.length; i++) {
+        const cur = asamalar[i] as Record<string, unknown>;
+        if (cur.durum !== 'tamamlandi') continue;
+        if (i < asamalar.length - 1) {
+          const next = asamalar[i + 1] as Record<string, unknown>;
+          if (next.baslama) cur.bitis = next.baslama;
+        }
+        if (cur.baslama && cur.bitis) {
+          cur.sure_dk = Math.round((new Date(cur.bitis as string).getTime() - new Date(cur.baslama as string).getTime()) / 60000);
+        }
+      }
+
       let toplamSure = 0;
       asamalar.forEach((a: Record<string, unknown>) => {
         if (a.sure_dk) toplamSure += a.sure_dk as number;
