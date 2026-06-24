@@ -10439,11 +10439,12 @@ igBackendCek(function(){ igTumRender(); });
       if (mbnavAna) {
         mbnavAna.onclick = function() {
           document.querySelectorAll('.nav-links .nl').forEach(el => el.classList.remove('on'));
-          // Anasayfa'da sadece Hero, Markalar ve PPF kalsın (çok uzun olmaması için)
+          // Anasayfa'da tüm hizmetler görünmeli (kullanıcının ürünleri sepete ekleyebilmesi için)
           sectionsToToggle.forEach(sel => {
-            document.querySelectorAll(sel).forEach(el => el.style.display = 'none');
+            document.querySelectorAll(sel).forEach(el => el.style.display = '');
           });
-          document.querySelectorAll('#bolum-ppf').forEach(el => el.style.display = '');
+          // Dinamik bölümler varsa onları da göster
+          document.querySelectorAll('#dinamik-bolumler').forEach(el => el.style.display = '');
           window.scrollTo({top: 0, behavior: 'instant'});
         };
       }
