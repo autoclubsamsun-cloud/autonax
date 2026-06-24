@@ -10391,21 +10391,31 @@ igBackendCek(function(){ igTumRender(); });
   const initNativeApp = () => {
       document.body.classList.add('is-native-app');
       
-      // Sadece Anasayfa'da (veya diğer sekmelere geçildiğinde gizlenecek) uzun bölümler
-      const sectionsToToggle = [
+      // Sekmeler (Tablar) arası geçişte gizlenip gösterilecek ana bloklar
+      const hizmetBloklari = [
         '#bolum-ppf',
         '#bolum-seramik',
         '#bolum-cam',
         '#bolum-detailing',
-        '#bolum-boya',
-        '.ai-robot-wrap',
-        '.vid-sec',
-        '.promos',
-        '#dinamik-bolumler'
+        '#bolum-boya'
+      ];
+      
+      // Anasayfada veya herhangi bir sekmede HİÇ görünmemesi gereken alt kısımlar
+      const herZamanGizlenecekler = [
+        '.promos',            // Robot ve Video
+        '#dinamik-bolumler',  // Ekstra/eski dinamik kısımlar
+        '.igbar'              // Instagram şeridi
       ];
 
-      // İLK AÇILIŞTA (ANASAYFA): İstenmeyen bölümleri gizle. Sadece Hero, Markalar ve Popüler Araç Hizmet Paketleri (.brand-sec) kalacak.
-      sectionsToToggle.forEach(sel => {
+      // İLK AÇILIŞTA (ANASAYFA): 
+      // Hizmet blokları VE .brand-sec (Popüler Paketler) GÖRÜNECEK.
+      // Sadece .brand-sec'ten SONRAKİ her şey gizlenecek.
+      hizmetBloklari.forEach(sel => {
+        document.querySelectorAll(sel).forEach(el => el.style.display = '');
+      });
+      document.querySelectorAll('.brand-sec').forEach(el => el.style.display = '');
+      
+      herZamanGizlenecekler.forEach(sel => {
         document.querySelectorAll(sel).forEach(el => el.style.display = 'none');
       });
       
@@ -10415,8 +10425,14 @@ igBackendCek(function(){ igTumRender(); });
         document.querySelectorAll('.nav-links .nl').forEach(el => el.classList.remove('on'));
         if(btn) btn.classList.add('on');
         
-        // Önce tüm bölümleri gizle
-        sectionsToToggle.forEach(sel => {
+        // Önce tüm hizmetleri ve brand-sec'i gizle
+        hizmetBloklari.forEach(sel => {
+          document.querySelectorAll(sel).forEach(el => el.style.display = 'none');
+        });
+        document.querySelectorAll('.brand-sec').forEach(el => el.style.display = 'none');
+        
+        // Alt kısımlar zaten gizli kalacak
+        herZamanGizlenecekler.forEach(sel => {
           document.querySelectorAll(sel).forEach(el => el.style.display = 'none');
         });
         
@@ -10428,14 +10444,14 @@ igBackendCek(function(){ igTumRender(); });
         else if (kat === 'boya') hedef = '#bolum-boya';
         
         if (hedef) {
-          // Spesifik kategori tıklandığında sadece o kategori gösterilsin
+          // Spesifik kategori tıklandığında SADECE o kategori gösterilsin
           document.querySelectorAll(hedef).forEach(el => el.style.display = '');
         } else if (kat === 'tum') {
-          // "Tüm Hizmetler" butonuna basılırsa ne olacak? 
-          // Orijinal tasarımda tüm hizmetler görünüyordu. Burada da her şeyi açalım.
-          sectionsToToggle.forEach(sel => {
+          // Tüm Hizmetler (Anasayfa mantığı)
+          hizmetBloklari.forEach(sel => {
             document.querySelectorAll(sel).forEach(el => el.style.display = '');
           });
+          document.querySelectorAll('.brand-sec').forEach(el => el.style.display = '');
         }
         
         window.scrollTo({top: 0, behavior: 'instant'});
@@ -10447,8 +10463,13 @@ igBackendCek(function(){ igTumRender(); });
         mbnavAna.onclick = function() {
           document.querySelectorAll('.nav-links .nl').forEach(el => el.classList.remove('on'));
           
-          // Anasayfa'da sadece Hero, Markalar ve Popüler Paketler kalsın, sonrasını gizle.
-          sectionsToToggle.forEach(sel => {
+          // Anasayfa'da TÜM HİZMETLER ve POPÜLER PAKETLER GÖRÜNSÜN, kalanı gizlensin.
+          hizmetBloklari.forEach(sel => {
+            document.querySelectorAll(sel).forEach(el => el.style.display = '');
+          });
+          document.querySelectorAll('.brand-sec').forEach(el => el.style.display = '');
+          
+          herZamanGizlenecekler.forEach(sel => {
             document.querySelectorAll(sel).forEach(el => el.style.display = 'none');
           });
           
