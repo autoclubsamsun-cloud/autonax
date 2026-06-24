@@ -10379,5 +10379,99 @@ igBackendCek(function(){ igTumRender(); });
   }).catch(function(){});
 })();
 </script>
+
+<!-- ============================================== -->
+<!-- 📱 CAPACITOR APP SHELL ENTEGRASYONU 📱 -->
+<!-- ============================================== -->
+<script>
+(function(){
+  // Capacitor (Mobil Uygulama) tespiti
+  const isApp = window.Capacitor !== undefined || /autonax-app/i.test(navigator.userAgent);
+  
+  if (isApp) {
+    document.documentElement.classList.add('is-native-app');
+    
+    window.addEventListener('DOMContentLoaded', () => {
+      document.body.classList.add('is-native-app');
+      
+      const sectionsToToggle = [
+        '#bolum-ppf',
+        '#bolum-seramik',
+        '#bolum-cam',
+        '#bolum-detailing',
+        '#bolum-boya',
+        '.ai-robot-wrap',
+        '.vid-sec'
+      ];
+      
+      // navKatSec fonksiyonunu geçersiz kıl (Scroll yerine Tab SPA mantığı)
+      const originalNavKatSec = window.navKatSec;
+      window.navKatSec = function(btn, kat) {
+        document.querySelectorAll('.nav-links .nl').forEach(el => el.classList.remove('on'));
+        if(btn) btn.classList.add('on');
+        
+        // Önce tüm bölümleri gizle
+        sectionsToToggle.forEach(sel => {
+          document.querySelectorAll(sel).forEach(el => el.style.display = 'none');
+        });
+        
+        let hedef = null;
+        if (kat === 'ppf') hedef = '#bolum-ppf';
+        else if (kat === 'seramik') hedef = '#bolum-seramik';
+        else if (kat === 'cam') hedef = '#bolum-cam';
+        else if (kat === 'detailing') hedef = '#bolum-detailing';
+        else if (kat === 'boya') hedef = '#bolum-boya';
+        
+        if (hedef) {
+          document.querySelectorAll(hedef).forEach(el => el.style.display = '');
+        } else if (kat === 'tum') {
+          // Tümünü göster
+          sectionsToToggle.forEach(sel => {
+            document.querySelectorAll(sel).forEach(el => el.style.display = '');
+          });
+        }
+        
+        window.scrollTo({top: 0, behavior: 'instant'});
+      };
+
+      // Alt Menüdeki "Anasayfa" butonunu SPA için güncelle
+      const mbnavAna = document.querySelector('.mbnav .mbi:first-child');
+      if (mbnavAna) {
+        mbnavAna.onclick = function() {
+          document.querySelectorAll('.nav-links .nl').forEach(el => el.classList.remove('on'));
+          // Anasayfa'da sadece Hero, Markalar ve PPF kalsın (çok uzun olmaması için)
+          sectionsToToggle.forEach(sel => {
+            document.querySelectorAll(sel).forEach(el => el.style.display = 'none');
+          });
+          document.querySelectorAll('#bolum-ppf').forEach(el => el.style.display = '');
+          window.scrollTo({top: 0, behavior: 'instant'});
+        };
+      }
+    });
+  }
+})();
+</script>
+<style>
+/* Sadece mobil uygulamada çalışacak CSS'ler */
+html.is-native-app, body.is-native-app {
+  overscroll-behavior-y: none !important;
+  background-color: var(--ink) !important;
+}
+body.is-native-app .footer,
+body.is-native-app .seo-hub,
+body.is-native-app .topbar,
+body.is-native-app #cerez-banner {
+  display: none !important;
+}
+body.is-native-app .header {
+  position: fixed !important;
+  top: 0;
+  width: 100%;
+}
+body.is-native-app .main-content {
+  padding-top: 60px; /* Header boşluğu */
+}
+</style>
+
 </body>
 </html>
