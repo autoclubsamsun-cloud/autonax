@@ -10383,5 +10383,19 @@ igBackendCek(function(){ igTumRender(); });
 <!-- ============================================== -->
 
 
+
+<script>
+function mbnavHesabimClick() {
+  if (typeof AuthManager !== 'undefined' && AuthManager.getUser && AuthManager.getUser()) {
+    window.location.href = '/hesabim';
+  } else {
+    if (typeof openAuth === 'function') {
+      openAuth('giris');
+    } else {
+      window.location.href = '/hesabim';
+    }
+  }
+}
+</script>
 </body>
 </html>
