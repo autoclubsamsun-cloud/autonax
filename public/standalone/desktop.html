@@ -10388,12 +10388,10 @@ igBackendCek(function(){ igTumRender(); });
   // Capacitor (Mobil Uygulama) tespiti
   const isApp = window.Capacitor !== undefined || /autonax-app|wv|Capacitor/i.test(navigator.userAgent);
   
-  if (isApp) {
-    document.documentElement.classList.add('is-native-app');
-    
-    const initNativeApp = () => {
+  const initNativeApp = () => {
       document.body.classList.add('is-native-app');
       
+      // Sadece Anasayfa'da (veya diğer sekmelere geçildiğinde gizlenecek) uzun bölümler
       const sectionsToToggle = [
         '#bolum-ppf',
         '#bolum-seramik',
@@ -10401,8 +10399,15 @@ igBackendCek(function(){ igTumRender(); });
         '#bolum-detailing',
         '#bolum-boya',
         '.ai-robot-wrap',
-        '.vid-sec'
+        '.vid-sec',
+        '.promos',
+        '#dinamik-bolumler'
       ];
+
+      // İLK AÇILIŞTA (ANASAYFA): İstenmeyen bölümleri gizle. Sadece Hero, Markalar ve Popüler Araç Hizmet Paketleri (.brand-sec) kalacak.
+      sectionsToToggle.forEach(sel => {
+        document.querySelectorAll(sel).forEach(el => el.style.display = 'none');
+      });
       
       // navKatSec fonksiyonunu geçersiz kıl (Scroll yerine Tab SPA mantığı)
       const originalNavKatSec = window.navKatSec;
@@ -10423,9 +10428,11 @@ igBackendCek(function(){ igTumRender(); });
         else if (kat === 'boya') hedef = '#bolum-boya';
         
         if (hedef) {
+          // Spesifik kategori tıklandığında sadece o kategori gösterilsin
           document.querySelectorAll(hedef).forEach(el => el.style.display = '');
         } else if (kat === 'tum') {
-          // Tümünü göster
+          // "Tüm Hizmetler" butonuna basılırsa ne olacak? 
+          // Orijinal tasarımda tüm hizmetler görünüyordu. Burada da her şeyi açalım.
           sectionsToToggle.forEach(sel => {
             document.querySelectorAll(sel).forEach(el => el.style.display = '');
           });
@@ -10439,25 +10446,26 @@ igBackendCek(function(){ igTumRender(); });
       if (mbnavAna) {
         mbnavAna.onclick = function() {
           document.querySelectorAll('.nav-links .nl').forEach(el => el.classList.remove('on'));
-          // Anasayfa'da tüm hizmetler görünmeli (kullanıcının ürünleri sepete ekleyebilmesi için)
+          
+          // Anasayfa'da sadece Hero, Markalar ve Popüler Paketler kalsın, sonrasını gizle.
           sectionsToToggle.forEach(sel => {
-            document.querySelectorAll(sel).forEach(el => el.style.display = '');
+            document.querySelectorAll(sel).forEach(el => el.style.display = 'none');
           });
-          // Dinamik bölümler varsa onları da göster
-          document.querySelectorAll('#dinamik-bolumler').forEach(el => el.style.display = '');
+          
           window.scrollTo({top: 0, behavior: 'instant'});
         };
       }
-    };
+  };
     
-    // Hali hazırda yüklendiyse direkt çalıştır, yoksa bekle
+  if (isApp) {
+    document.documentElement.classList.add('is-native-app');
     if (document.readyState === 'loading') {
       window.addEventListener('DOMContentLoaded', initNativeApp);
     } else {
       initNativeApp();
     }
   } else {
-    // DEV TEST ICIN (Sadece test etmek isterseniz URL sonuna ?app=1 ekleyebilirsiniz)
+    // DEV TEST ICIN
     if (window.location.search.includes('app=1')) {
       document.documentElement.classList.add('is-native-app');
       if (document.readyState === 'loading') {
