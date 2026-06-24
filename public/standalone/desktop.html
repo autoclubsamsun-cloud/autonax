@@ -10386,12 +10386,12 @@ igBackendCek(function(){ igTumRender(); });
 <script>
 (function(){
   // Capacitor (Mobil Uygulama) tespiti
-  const isApp = window.Capacitor !== undefined || /autonax-app/i.test(navigator.userAgent);
+  const isApp = window.Capacitor !== undefined || /autonax-app|wv|Capacitor/i.test(navigator.userAgent);
   
   if (isApp) {
     document.documentElement.classList.add('is-native-app');
     
-    window.addEventListener('DOMContentLoaded', () => {
+    const initNativeApp = () => {
       document.body.classList.add('is-native-app');
       
       const sectionsToToggle = [
@@ -10447,7 +10447,24 @@ igBackendCek(function(){ igTumRender(); });
           window.scrollTo({top: 0, behavior: 'instant'});
         };
       }
-    });
+    };
+    
+    // Hali hazırda yüklendiyse direkt çalıştır, yoksa bekle
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', initNativeApp);
+    } else {
+      initNativeApp();
+    }
+  } else {
+    // DEV TEST ICIN (Sadece test etmek isterseniz URL sonuna ?app=1 ekleyebilirsiniz)
+    if (window.location.search.includes('app=1')) {
+      document.documentElement.classList.add('is-native-app');
+      if (document.readyState === 'loading') {
+        window.addEventListener('DOMContentLoaded', initNativeApp);
+      } else {
+        initNativeApp();
+      }
+    }
   }
 })();
 </script>
