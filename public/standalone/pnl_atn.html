@@ -6891,23 +6891,19 @@ function waGonderRandevuManuel(idx){
   if(t.startsWith('0')) t='90'+t.substring(1);
   else if(t.startsWith('5')&&t.length===10) t='90'+t;
 
-  // Google Calendar URL Olusturma
+  // Universal Takvim Linki (Apple + Android uyumlu ICS)
   var calLink = "";
   if(r.tarih){
-     var tarihP = r.tarih.split('.'); // DD.MM.YYYY
-     if(tarihP.length===3){
-        var yy=tarihP[2], mm=tarihP[1], dd=tarihP[0];
-        var saatP = (r.saat||'09:00').split(':');
-        var hh=saatP[0], mmin=saatP[1];
-        
-        var dStart = new Date(yy, parseInt(mm)-1, dd, hh, mmin, 0);
-        var dEnd = new Date(dStart.getTime() + 2*60*60*1000); // +2 saat
-        
-        var formatCal = function(dt){
-           return dt.toISOString().replace(/-|:|.\d+/g,"");
-        };
-        calLink = "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent("AutoClub Samsun Randevu ("+r.plaka+")") + "&dates=" + formatCal(dStart) + "/" + formatCal(dEnd) + "&details=" + encodeURIComponent("Araç: "+r.plaka+"\nHizmet: "+(r.hizmet||'')) + "&location=" + encodeURIComponent(WA_MANUEL_AYAR.mapsUrl||'');
-     }
+     var calBaslik = "AutoClub Samsun Randevu (" + r.plaka + ")";
+     var calAciklama = "Arac: " + r.plaka + "\nHizmet: " + (r.hizmet||'') + "\nMusteri: " + (r.musteri||'');
+     var calKonum = WA_MANUEL_AYAR.mapsUrl || '';
+     calLink = "https://autonax.com.tr/api/takvim?"
+       + "baslik=" + encodeURIComponent(calBaslik)
+       + "&tarih=" + encodeURIComponent(r.tarih)
+       + "&saat=" + encodeURIComponent(r.saat||'09:00')
+       + "&sure=120"
+       + "&aciklama=" + encodeURIComponent(calAciklama)
+       + "&konum=" + encodeURIComponent(calKonum);
   }
 
   var f_net = parseFloat(r.tutar)||0;
