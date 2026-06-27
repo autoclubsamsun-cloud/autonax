@@ -6772,8 +6772,8 @@ function nidojpSessionTemizle(){
   }).catch(function(e){toast('Hata: '+e.message,'red');});
 }
 var WA_MANUEL_AYAR = { 
-  sablon: "Merhaba *{{musteri}}*,\nAutoClub Samsun'dan randevunuz oluşturulmuştur \u2705\n\n\u{1F698} *Plaka:* {{plaka}}\n\u{1F6E0} *Hizmet:* {{hizmet}}\n\u{1F4B0} *Tutar:* {{fiyat}} TL\n\u{1F4C5} *Tarih:* {{tarih}} \u00B7 {{saat}}\n\n\u23F0 *Takvime Ekle:*\n{{takvim_linki}}\n\n\u{1F4CD} *Konum:* {{konum_linki}}\n\u2B50 *Yorum Yap:* {{yorum_linki}}\n\nSizi aramızda görmek için sabırsızlanıyoruz!", 
-  mapsUrl: "https://maps.app.goo.gl/", 
+  sablon: "", 
+  mapsUrl: "", 
   yorumUrl: "", 
   resim1Url: "", 
   resim2Url: "" 
@@ -6789,6 +6789,41 @@ var WA_MANUEL_AYAR = {
     nidojpAyarYukle();
   }).catch(function(){});
 })();
+
+function waManuelResimYukle(input, urlId, btnId){
+  var file = input.files[0];
+  if(!file) return;
+  if(file.size > 2*1024*1024){ toast("2MB'den kucuk resim secin", "red"); return; }
+  var fd = new FormData();
+  fd.append('file', file);
+  fd.append('klasor', 'ayarlar');
+  var btn = document.getElementById(btnId);
+  var oldText = btn ? btn.textContent : '';
+  if(btn){ btn.textContent = '\u23F3 Yukleniyor...'; btn.disabled = true; }
+  fetch('/api/resim', {method:'POST', body:fd, credentials:'same-origin'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(btn) btn.disabled = false;
+      if(d.success && d.url){
+        var urlEl = document.getElementById(urlId);
+        if(urlEl) urlEl.value = d.url;
+        if(btn) btn.textContent = '\u2705 ' + (d.fileName || 'Yuklendi');
+        // Onizleme goster
+        var onizId = urlId === 'wa-manuel-resim1-url' ? 'wa-gorsel1-onizleme' : 'wa-gorsel2-onizleme';
+        var oniz = document.getElementById(onizId);
+        if(oniz) oniz.innerHTML = '<img src="'+d.url+'" style="max-width:100%;max-height:80px;border-radius:6px;object-fit:cover">';
+        // Otomatik kaydet
+        if(typeof waManuelAyarKaydet === 'function') waManuelAyarKaydet();
+      } else {
+        toast('Resim yuklenemedi: ' + (d.error||''), 'red');
+        if(btn) btn.textContent = oldText;
+      }
+    })
+    .catch(function(e){
+      if(btn){ btn.textContent = '\u274C Hata'; btn.disabled = false; }
+      toast('Resim yukleme hatasi', 'red');
+    });
+}
 
 function waManuelAyarYukle(){
   var s=document.getElementById('wa-manuel-sablon');
