@@ -2295,12 +2295,27 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 
               <hr style="border:none;border-top:1px solid var(--bd);margin:0">
 
+              
+<style>
+#wa-resim-toggle:checked + span { background: #25D366 !important; }
+#wa-resim-toggle:checked ~ #wa-resim-toggle-dot,
+#wa-resim-toggle:checked + span + span { left: 22px !important; }
+</style>
               <!-- Görseller -->
               <div>
                 <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">
                   <span style="font-size:14px">📸</span>
-                  <label style="font-size:13px;font-weight:700;color:var(--ink);letter-spacing:.3px">İŞ YERİ GÖRSELLERİ</label>
+                  <label style="font-size:13px;font-weight:700;color:var(--ink);letter-spacing:.3px;flex:1">İŞ YERİ GÖRSELLERİ</label>
+                  <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
+                    <span id="wa-resim-durum-text" style="font-size:11px;color:#25D366;font-weight:600">AKTİF</span>
+                    <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
+                      <input type="checkbox" id="wa-resim-toggle" checked onchange="waResimToggleDegisti()" style="opacity:0;width:0;height:0">
+                      <span style="position:absolute;inset:0;background:#ccc;border-radius:24px;transition:.3s"></span>
+                      <span id="wa-resim-toggle-dot" style="position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></span>
+                    </label>
+                  </div>
                 </div>
+                <div id="wa-resim-icerik">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
                   <!-- Görsel 1 -->
                   <div style="border:1.5px dashed var(--bd);border-radius:10px;padding:16px;text-align:center;transition:border-color .2s;background:#fafafa" id="wa-gorsel1-kutu">
@@ -2318,6 +2333,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
                     <button type="button" id="wa-manuel-resim2-btn" onclick="document.getElementById('wa-manuel-resim2-file').click()" style="padding:10px 16px;border:1.5px solid #25D366;border-radius:8px;background:rgba(37,211,102,.06);cursor:pointer;font-size:12px;font-weight:600;color:#128C7E;width:100%">📷 Görsel 2 Seç</button>
                     <div style="font-size:10px;color:var(--ink4);margin-top:6px">Opsiyonel · JPG/PNG max 2MB</div>
                   </div>
+                </div>
                 </div>
               </div>
 
@@ -6825,6 +6841,15 @@ function waManuelResimYukle(input, urlId, btnId){
     });
 }
 
+function waResimToggleDegisti(){
+  var cb = document.getElementById('wa-resim-toggle');
+  var aktif = cb ? cb.checked : true;
+  var icerik = document.getElementById('wa-resim-icerik');
+  var txt = document.getElementById('wa-resim-durum-text');
+  if(icerik) icerik.style.display = aktif ? 'block' : 'none';
+  if(txt){ txt.textContent = aktif ? 'AKTİF' : 'PASİF'; txt.style.color = aktif ? '#25D366' : '#999'; }
+}
+
 function waManuelAyarYukle(){
   var s=document.getElementById('wa-manuel-sablon');
   var m=document.getElementById('wa-manuel-maps-url');
@@ -6852,6 +6877,9 @@ function waManuelAyarYukle(){
   // Son kayıt bilgisi
   var sonEl=document.getElementById('wa-son-kayit');
   if(sonEl && WA_MANUEL_AYAR._sonKayit) { sonEl.style.display='block'; sonEl.textContent='Son kayıt: '+WA_MANUEL_AYAR._sonKayit; }
+  // Resim toggle durumu
+  var rToggle=document.getElementById('wa-resim-toggle');
+  if(rToggle && WA_MANUEL_AYAR.resimGoster===false){ rToggle.checked=false; waResimToggleDegisti(); }
 }
 
 function waManuelAyarKaydet(){
@@ -6865,6 +6893,8 @@ function waManuelAyarKaydet(){
   WA_MANUEL_AYAR.yorumUrl=(y?y.value:'').trim();
   WA_MANUEL_AYAR.resim1Url=(r1?r1.value:'').trim();
   WA_MANUEL_AYAR.resim2Url=(r2?r2.value:'').trim();
+  var rToggle=document.getElementById('wa-resim-toggle');
+  WA_MANUEL_AYAR.resimGoster=rToggle?rToggle.checked:true;
   WA_MANUEL_AYAR._sonKayit=new Date().toLocaleString('tr-TR');
   fetch('/api/ayarlar',{
     method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
@@ -6953,8 +6983,15 @@ function waGonderRandevuManuel(idx){
     .replace(/{{takvim_linki}}/g, calLink)
     .replace(/{{konum_linki}}/g, WA_MANUEL_AYAR.mapsUrl||'')
     .replace(/{{yorum_linki}}/g, WA_MANUEL_AYAR.yorumUrl||'')
-    .replace(/{{resim1}}/g, WA_MANUEL_AYAR.resim1Url||'')
-    .replace(/{{resim2}}/g, WA_MANUEL_AYAR.resim2Url||'');
+    .replace(/{{resim1}}/g, WA_MANUEL_AYAR.resimGoster===false ? '' : (WA_MANUEL_AYAR.resim1Url||''))
+    .replace(/{{resim2}}/g, WA_MANUEL_AYAR.resimGoster===false ? '' : (WA_MANUEL_AYAR.resim2Url||''));
+
+  // Resim pasifse "İş Yerimizden" satırlarını temizle
+  if(WA_MANUEL_AYAR.resimGoster===false){
+    msg = msg.replace(/\n*📸[^\n]*/g, '').replace(/\n*İş Yerimizden[^\n]*/gi, '');
+  }
+  // Ardışık boş satırları temizle
+  msg = msg.replace(/\n{3,}/g, '\n\n').trim();
 
   var isMobile=/Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   var isApp = window.Capacitor !== undefined || window.cordova !== undefined || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
