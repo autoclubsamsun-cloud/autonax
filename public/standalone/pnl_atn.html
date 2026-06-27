@@ -4249,7 +4249,7 @@ function rdvDuzenle(idx){
       +'<div style="padding:14px 20px;border-top:1.5px solid var(--bd);display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap">'
         +(typeof kullaniciAdmin==='function' && kullaniciAdmin()
           ? '<button onclick="rdvIptalEt('+idx+')" style="flex:1;min-width:130px;min-height:44px;padding:11px 10px;border:1.5px solid #d97706;border-radius:8px;background:#fff;color:#d97706;font-family:Bebas Neue,sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;font-weight:700">🚫 İPTAL ET</button>'
-            +'<button onclick="waGonderRandevuModal('+idx+')" style="flex:1;min-width:110px;min-height:44px;padding:11px 10px;border:1.5px solid #25D366;border-radius:8px;background:#fff;color:#128C7E;font-family:Bebas Neue,sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;font-weight:700">📱 WHATSAPP</button>'
+            +'<button onclick="waGonderRandevuManuel('+idx+')" style="flex:1;min-width:140px;min-height:44px;padding:11px 10px;border:1.5px solid #25D366;border-radius:8px;background:#fff;color:#128C7E;font-family:Bebas Neue,sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;font-weight:700">📲 WHATSAPP İLE İLET</button>'
             +'<button onclick="rdvSil('+idx+')" style="flex:1;min-width:110px;min-height:44px;padding:11px 10px;border:1.5px solid #dc2626;border-radius:8px;background:#fff;color:#dc2626;font-family:Bebas Neue,sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;font-weight:700">🗑 SİL</button>'
           : '')
         +'<button onclick="document.getElementById(&quot;rdv-duzenle-ovl&quot;).remove()" style="flex:1;min-width:90px;min-height:44px;padding:11px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;font-family:Bebas Neue,sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer">KAPAT</button>'
@@ -6664,105 +6664,100 @@ function nidojpSessionTemizle(){
     else toast('Hata: '+(d.error||''),'red');
   }).catch(function(e){toast('Hata: '+e.message,'red');});
 }
-var WATI_AYAR = { apiUrl:'', apiToken:'', googleMapsUrl:'https://maps.google.com/?q=41.2867,36.3370', aktif:true, otoBildirim:true };
+var WA_MANUEL_AYAR = { 
+  sablon: "Merhaba *{{musteri}}* 👋,\nAutoClub Samsun'dan randevunuz başarıyla oluşturulmuştur.\n\n🚘 *Araç Plakası:* {{plaka}}\n🛠️ *Seçilen Hizmet:* {{hizmet}}\n💳 *Tutar:* {{fiyat}} TL\n\n📅 *Randevu Tarihi:* {{tarih}} - {{saat}}\n⏰ *Takvime Ekle & Hatırlatıcı Kur:*\n{{takvim_linki}}\n\n📍 *Konumumuz:*\n{{konum_linki}}\n\n⭐ *Bizi Değerlendirin:*\nSizlere daha iyi hizmet verebilmemiz için yorumunuz bizim için çok değerli!\n👉 {{yorum_linki}}\n\n📸 *İş Yerimizden Kareler:*\n{{resim1}}\n{{resim2}}\n\nSizi aramızda görmek için sabırsızlanıyoruz!", 
+  mapsUrl: "https://maps.app.goo.gl/", 
+  yorumUrl: "", 
+  resim1Url: "https://autonax.com.tr/hero-banner-desktop.jpg", 
+  resim2Url: "" 
+};
 
 (function(){
   fetch('/api/ayarlar',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
     var wa = d && d.data && d.data.whatsapp_ayar;
-    if(wa && typeof wa==='object') Object.assign(WATI_AYAR, wa);
-    watiAyarYukle();
+    if(wa && typeof wa==='object') Object.assign(WA_MANUEL_AYAR, wa);
+    waManuelAyarYukle();
     var nj = d && d.data && d.data.nidojp_ayar;
     if(nj && typeof nj==='object') Object.assign(NIDOJP_AYAR, nj);
     nidojpAyarYukle();
   }).catch(function(){});
 })();
 
-function watiAyarYukle(){
-  var u=document.getElementById('wati-api-url');
-  var t=document.getElementById('wati-api-token');
-  var m=document.getElementById('wati-maps-url');
-  var o=document.getElementById('wati-oto-bildirim');
-  var b=document.getElementById('wati-durum-badge');
-  if(u) u.value=WATI_AYAR.apiUrl||'';
-  if(t) t.value=WATI_AYAR.apiToken||'';
-  if(m) m.value=WATI_AYAR.googleMapsUrl||'https://maps.google.com/?q=41.2867,36.3370';
-  if(o) o.checked=WATI_AYAR.otoBildirim!==false;
-  if(b){
-    if(WATI_AYAR.apiUrl && WATI_AYAR.apiToken){
-      b.style.background='#dcfce7'; b.style.color='#166534'; b.textContent='🟢 Yapılandırıldı';
-    } else {
-      b.style.background='#fee2e2'; b.style.color='#991b1b'; b.textContent='🔴 Bağlı Değil';
-    }
-  }
+function waManuelAyarYukle(){
+  var s=document.getElementById('wa-manuel-sablon');
+  var m=document.getElementById('wa-manuel-maps');
+  var y=document.getElementById('wa-manuel-yorum');
+  var r1=document.getElementById('wa-manuel-resim1');
+  var r2=document.getElementById('wa-manuel-resim2');
+  if(s) s.value=WA_MANUEL_AYAR.sablon||'';
+  if(m) m.value=WA_MANUEL_AYAR.mapsUrl||'';
+  if(y) y.value=WA_MANUEL_AYAR.yorumUrl||'';
+  if(r1) r1.value=WA_MANUEL_AYAR.resim1Url||'';
+  if(r2) r2.value=WA_MANUEL_AYAR.resim2Url||'';
 }
 
-function watiAyarKaydet(){
-  var u=document.getElementById('wati-api-url');
-  var t=document.getElementById('wati-api-token');
-  var m=document.getElementById('wati-maps-url');
-  var o=document.getElementById('wati-oto-bildirim');
-  WATI_AYAR.apiUrl=(u?u.value:'').trim().replace(/\/+$/,'');
-  WATI_AYAR.apiToken=(t?t.value:'').trim();
-  WATI_AYAR.googleMapsUrl=(m?m.value:'').trim()||'https://maps.google.com/?q=41.2867,36.3370';
-  WATI_AYAR.aktif=true;
-  WATI_AYAR.otoBildirim=o?o.checked:true;
+function waManuelAyarKaydet(){
+  var s=document.getElementById('wa-manuel-sablon');
+  var m=document.getElementById('wa-manuel-maps');
+  var y=document.getElementById('wa-manuel-yorum');
+  var r1=document.getElementById('wa-manuel-resim1');
+  var r2=document.getElementById('wa-manuel-resim2');
+  WA_MANUEL_AYAR.sablon=(s?s.value:'').trim();
+  WA_MANUEL_AYAR.mapsUrl=(m?m.value:'').trim();
+  WA_MANUEL_AYAR.yorumUrl=(y?y.value:'').trim();
+  WA_MANUEL_AYAR.resim1Url=(r1?r1.value:'').trim();
+  WA_MANUEL_AYAR.resim2Url=(r2?r2.value:'').trim();
   fetch('/api/ayarlar',{
     method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
-    body:JSON.stringify({whatsapp_ayar:WATI_AYAR})
+    body:JSON.stringify({whatsapp_ayar:WA_MANUEL_AYAR})
   }).then(function(r){return r.json();}).then(function(d){
-    if(d.success){ toast('✅ WATI ayarları kaydedildi','green'); watiAyarYukle(); }
+    if(d.success){ toast('✔️ WhatsApp ayarları kaydedildi','green'); waManuelAyarYukle(); }
     else toast('❌ Hata: '+(d.error||''),'red');
   }).catch(function(e){ toast('❌ Bağlantı hatası','red'); });
 }
 
-function watiTestBaglanti(){
-  var u=document.getElementById('wati-api-url');
-  var t=document.getElementById('wati-api-token');
-  if(!u||!u.value||!t||!t.value){ toast('API URL ve Token giriniz','orange'); return; }
-  toast('🔌 Test ediliyor...','blue');
-  fetch('/api/whatsapp/gonder',{
-    method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
-    body:JSON.stringify({test:true,apiUrl:u.value.trim(),apiToken:t.value.trim()})
-  }).then(function(r){return r.json();}).then(function(d){
-    if(d.success) toast('✅ WATI bağlantısı başarılı!','green');
-    else toast('❌ Bağlantı başarısız: '+(d.error||''),'red');
-  }).catch(function(){ toast('❌ Sunucu hatası','red'); });
-}
-
-function watiTestMesaj(){
-  var tel=prompt('Test mesajı gönderilecek telefon numarası (05XX):');
-  if(!tel) return;
-  toast('📨 Mesaj gönderiliyor...','blue');
-  fetch('/api/whatsapp/gonder',{
-    method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
-    body:JSON.stringify({testMesaj:'Autonax-AutoClub Samsun Merkez WATI test mesajı. Bağlantı başarılı! ✅', telefon:tel})
-  }).then(function(r){return r.json();}).then(function(d){
-    if(d.success) toast('✅ Test mesajı gönderildi!','green');
-    else toast('❌ Gönderilemedi: '+(d.error||''),'red');
-  }).catch(function(){ toast('❌ Sunucu hatası','red'); });
-}
-
-function waGonderRandevuModal(idx){
+function waGonderRandevuManuel(idx){
   var r=RANDEVULAR[idx]; if(!r) return;
-  if(!WATI_AYAR.apiUrl || !WATI_AYAR.apiToken){ toast('WATI yapılandırılmamış. Ayarlar > WhatsApp','orange'); return; }
-  if(!r.tel || r.tel==='—'){ toast('Telefon bilgisi yok','red'); return; }
-  var s=prompt('Mesaj türü seçin:\n1: Randevu Oluşturma\n2: Randevu Onay\n3: Hatırlatma\n4: İptal\n5: Güncelleme','1');
-  var sablonlar={1:'appointment_created',2:'appointment_confirmed',3:'appointment_reminder',4:'appointment_cancelled',5:'appointment_updated'};
-  var sab=sablonlar[s]; if(!sab){ toast('Geçersiz seçim','orange'); return; }
-  waGonderRandevu(r.id, sab);
-}
+  if(!r.tel || r.tel==='-'){ toast('Telefon bilgisi yok','red'); return; }
+  
+  var t=(r.tel||'').replace(/\D/g,'');
+  if(t.startsWith('0')) t='90'+t.substring(1);
+  else if(t.startsWith('5')&&t.length===10) t='90'+t;
 
-function waGonderRandevu(randevuId, sablon){
-  if(!WATI_AYAR.apiUrl || !WATI_AYAR.apiToken){ toast('WATI yapılandırılmamış. Ayarlar > WhatsApp bölümünden ayarlayın.','orange'); return; }
-  sablon = sablon || 'appointment_created';
-  toast('📱 WhatsApp gönderiliyor...','blue');
-  fetch('/api/whatsapp/gonder',{
-    method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
-    body:JSON.stringify({randevuId:randevuId, sablon:sablon})
-  }).then(function(r){return r.json();}).then(function(d){
-    if(d.success) toast('✅ WhatsApp bildirimi gönderildi','green');
-    else toast('❌ Gönderilemedi: '+(d.error||''),'red');
-  }).catch(function(){ toast('❌ Sunucu hatası','red'); });
+  // Google Calendar URL Olusturma
+  var calLink = "";
+  if(r.tarih){
+     var tarihP = r.tarih.split('.'); // DD.MM.YYYY
+     if(tarihP.length===3){
+        var yy=tarihP[2], mm=tarihP[1], dd=tarihP[0];
+        var saatP = (r.saat||'09:00').split(':');
+        var hh=saatP[0], mmin=saatP[1];
+        
+        var dStart = new Date(yy, parseInt(mm)-1, dd, hh, mmin, 0);
+        var dEnd = new Date(dStart.getTime() + 2*60*60*1000); // +2 saat
+        
+        var formatCal = function(dt){
+           return dt.toISOString().replace(/-|:|.\d+/g,"");
+        };
+        calLink = "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent("AutoClub Samsun Randevu ("+r.plaka+")") + "&dates=" + formatCal(dStart) + "/" + formatCal(dEnd) + "&details=" + encodeURIComponent("Araç: "+r.plaka+"\nHizmet: "+(r.hizmet||'')) + "&location=" + encodeURIComponent(WA_MANUEL_AYAR.mapsUrl||'');
+     }
+  }
+
+  var msg = (WA_MANUEL_AYAR.sablon||'')
+    .replace(/{{musteri}}/g, r.musteri||'')
+    .replace(/{{plaka}}/g, r.plaka||'')
+    .replace(/{{hizmet}}/g, r.hizmet||'')
+    .replace(/{{fiyat}}/g, r.tutar||'')
+    .replace(/{{tarih}}/g, r.tarih||'')
+    .replace(/{{saat}}/g, r.saat||'')
+    .replace(/{{takvim_linki}}/g, calLink)
+    .replace(/{{konum_linki}}/g, WA_MANUEL_AYAR.mapsUrl||'')
+    .replace(/{{yorum_linki}}/g, WA_MANUEL_AYAR.yorumUrl||'')
+    .replace(/{{resim1}}/g, WA_MANUEL_AYAR.resim1Url||'')
+    .replace(/{{resim2}}/g, WA_MANUEL_AYAR.resim2Url||'');
+
+  var isMobile=/Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  window.open((isMobile?'https://api.whatsapp.com/send?phone=':'https://web.whatsapp.com/send?phone=')+t+'&text='+encodeURIComponent(msg),'_blank');
 }
 
 // ─── Taksit Gorsel Ayar ───
