@@ -6929,7 +6929,7 @@ function waGonderRandevuManuel(idx){
   // Takvim Linki - randevu ID ile kisa URL
   var calLink = "";
   if(r.id){
-     calLink = "https://autonax.com.tr/api/takvim?id=" + encodeURIComponent(r.id);
+     calLink = "https://autonax.com.tr/t/" + encodeURIComponent(r.id);
   }
 
   var f_net = parseFloat(r.tutar)||0;
