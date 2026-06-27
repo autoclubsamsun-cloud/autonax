@@ -2097,6 +2097,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
         <button class="siteayar-tab" data-stab="odeme">💳 Ödeme</button>
         <button class="siteayar-tab" data-stab="fatura">🧾 Fatura</button>
         <button class="siteayar-tab" data-stab="isemri">📋 İş Emri</button>
+        <button class="siteayar-tab" data-stab="wamanuel">📲 Randevu WA</button>
         <button class="siteayar-tab" data-stab="import">📥 Veri Aktar</button>
       </div>
 
@@ -2230,6 +2231,43 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
         <div style="text-align:center;padding:40px;color:var(--ink4)">Yükleniyor...</div>
       </div>
     </div>
+    
+      <div id="stab-wamanuel" style="display:none">
+        <div class="k">
+          <div class="kh"><div class="kt">📲 WhatsApp (Manuel) Gönderim Ayarları</div></div>
+          <div class="kb">
+            <div style="display:grid;gap:12px">
+              <div style="display:grid;gap:8px">
+                <label style="font-size:12px;font-weight:600;color:var(--ink3)">Mesaj Şablonu (Manuel gönderim için)</label>
+                <textarea id="wa-manuel-sablon" rows="8" style="padding:10px 12px;border:1.5px solid var(--bg);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none"></textarea>
+                <div style="font-size:11px;color:var(--ink4)">
+                  Değişkenler: <code>{{musteri}}</code>, <code>{{plaka}}</code>, <code>{{hizmet}}</code>, <code>{{fiyat}}</code>, <code>{{tarih}}</code>, <code>{{saat}}</code>, <code>{{takvim_linki}}</code>, <code>{{konum_linki}}</code>, <code>{{yorum_linki}}</code><br>
+                  <i>Not: Link önizlemesinin doğru çalışması için mesaja <b>https://autonax.com.tr/randevu</b> linkini de eklemeyi unutmayın!</i>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center">
+                <label style="font-size:12px;font-weight:600;color:var(--ink3)">Google Maps Konum URL</label>
+                <input type="text" id="wa-manuel-maps-url" placeholder="https://maps.google.com/..." style="padding:10px 12px;border:1.5px solid var(--bg);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none">
+              </div>
+              <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center">
+                <label style="font-size:12px;font-weight:600;color:var(--ink3)">Google Yorum URL</label>
+                <input type="text" id="wa-manuel-yorum-url" placeholder="https://g.page/r/..." style="padding:10px 12px;border:1.5px solid var(--bg);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none">
+              </div>
+              <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center">
+                <label style="font-size:12px;font-weight:600;color:var(--ink3)">İş Yeri Görsel 1 Linki (Önizleme İçin)</label>
+                <input type="text" id="wa-manuel-resim1-url" placeholder="https://site.com/resim1.jpg" style="padding:10px 12px;border:1.5px solid var(--bg);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none">
+              </div>
+              <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center">
+                <label style="font-size:12px;font-weight:600;color:var(--ink3)">İş Yeri Görsel 2 Linki</label>
+                <input type="text" id="wa-manuel-resim2-url" placeholder="https://site.com/resim2.jpg" style="padding:10px 12px;border:1.5px solid var(--bg);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none">
+              </div>
+              <div style="display:flex;gap:8px;margin-top:4px">
+                <button onclick="waManuelAyarKaydet()" class="btn-p" style="flex:1">💾 Ayarları Kaydet</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     <div id="stab-import" style="display:none"></div>
     </div>
 
