@@ -15798,23 +15798,3 @@ function markaSSSSil(idx){
 <script src="/standalone/is-emri.js"></script>
 </body>
 </html>
-
-function waManuelResimYukle(input, urlId, btnId){
-  var file = input.files[0]; if(!file) return;
-  if(file.size > 2*1024*1024){ toast("2MB'den küçük resim seçin", "red"); return; }
-  var fd = new FormData(); fd.append('file', file); fd.append('klasor', 'ayarlar');
-  var btn = document.getElementById(btnId);
-  var oldText = btn.textContent;
-  btn.textContent = '⏳ Yükleniyor...'; btn.disabled = true;
-  fetch('/api/resim', {method:'POST', body:fd,credentials:'same-origin'})
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      btn.disabled = false;
-      if(d.success){
-        document.getElementById(urlId).value = d.url;
-        btn.textContent = '✅ ' + d.fileName;
-        if(typeof waManuelAyarKaydet === 'function') waManuelAyarKaydet();
-      } else { toast('Resim yüklenemedi', 'red'); btn.textContent = oldText; }
-    })
-    .catch(function(){ btn.textContent = '❌ Hata'; btn.disabled = false; });
-}
