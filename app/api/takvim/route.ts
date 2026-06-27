@@ -15,19 +15,21 @@ export async function GET(req: NextRequest) {
   if (rid) {
     try {
       await initDB();
-      const rows = await sql`SELECT veri FROM randevular WHERE veri->>'id' = ${rid} LIMIT 1`;
+      const rows = await sql`SELECT tarih, saat, musteri, plaka, hizmet FROM randevular WHERE id = ${rid} LIMIT 1`;
       if (rows.length > 0) {
-        const r = rows[0].veri;
+        const r: any = rows[0];
         tarih = r.tarih || tarih;
         saat = r.saat || saat;
         baslik = 'AutoClub Samsun Randevu (' + (r.plaka || '') + ')';
-        aciklama = 'Arac: ' + (r.plaka||'') + ' - Hizmet: ' + (r.hizmet||'') + ' - Musteri: ' + (r.musteri||'');
+        aciklama = 'Arac: ' + (r.plaka || '') + ' - Hizmet: ' + (r.hizmet || '') + ' - Musteri: ' + (r.musteri || '');
       }
       const waRows = await sql`SELECT deger FROM site_ayarlar WHERE anahtar='whatsapp_ayar'`;
-      if (waRows.length > 0 && waRows[0].deger && waRows[0].deger.mapsUrl) {
-        konum = waRows[0].deger.mapsUrl;
+      if (waRows.length > 0 && (waRows[0] as any).deger && (waRows[0] as any).deger.mapsUrl) {
+        konum = (waRows[0] as any).deger.mapsUrl;
       }
-    } catch(e) {}
+    } catch (e) {
+      console.error('[TAKVIM] DB hatasi:', e);
+    }
   }
 
   if (!tarih) {
@@ -58,7 +60,7 @@ export async function GET(req: NextRequest) {
 
   const uid = 'randevu-' + Date.now() + '@autonax.com.tr';
 
-  const icsLines = [
+  const ics = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
     'PRODID:-//AutoClub Samsun//Randevu//TR',
@@ -95,7 +97,7 @@ export async function GET(req: NextRequest) {
     'END:VCALENDAR'
   ].join('\r\n');
 
-  return new NextResponse(icsLines, {
+  return new NextResponse(ics, {
     status: 200,
     headers: {
       'Content-Type': 'text/calendar; charset=utf-8',
