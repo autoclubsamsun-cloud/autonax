@@ -6962,8 +6962,8 @@ function waGonderRandevuManuel(idx){
     .replace(/{{takvim_linki}}/g, calLink)
     .replace(/{{konum_linki}}/g, 'https://autonax.com.tr/git/konum')
     .replace(/{{yorum_linki}}/g, 'https://autonax.com.tr/git/yorum')
-    .replace(/{{resim1}}/g, WA_MANUEL_AYAR.resim1Url||'')
-    .replace(/{{resim2}}/g, WA_MANUEL_AYAR.resim2Url||'');
+    .replace(/{{resim1}}/g, WA_MANUEL_AYAR.resim1Url ? 'https://autonax.com.tr/git/r1' : '')
+    .replace(/{{resim2}}/g, WA_MANUEL_AYAR.resim2Url ? 'https://autonax.com.tr/git/r2' : '');
 
   var isMobile=/Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   var isApp = window.Capacitor !== undefined || window.cordova !== undefined || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);

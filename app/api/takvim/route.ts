@@ -1,16 +1,37 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { sql, initDB } from '@/lib/db';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const baslik = searchParams.get('baslik') || 'Randevu';
-  const tarih = searchParams.get('tarih') || '';
-  const saat = searchParams.get('saat') || '09:00';
+
+  let tarih = searchParams.get('tarih') || '';
+  let saat = searchParams.get('saat') || '09:00';
+  let baslik = searchParams.get('baslik') || 'Randevu';
+  let aciklama = searchParams.get('aciklama') || '';
+  let konum = searchParams.get('konum') || '';
   const sure = parseInt(searchParams.get('sure') || '120');
-  const aciklama = searchParams.get('aciklama') || '';
-  const konum = searchParams.get('konum') || '';
+
+  const rid = searchParams.get('id');
+  if (rid) {
+    try {
+      await initDB();
+      const rows = await sql`SELECT veri FROM randevular WHERE veri->>'id' = ${rid} LIMIT 1`;
+      if (rows.length > 0) {
+        const r = rows[0].veri;
+        tarih = r.tarih || tarih;
+        saat = r.saat || saat;
+        baslik = 'AutoClub Samsun Randevu (' + (r.plaka || '') + ')';
+        aciklama = 'Arac: ' + (r.plaka||'') + ' - Hizmet: ' + (r.hizmet||'') + ' - Musteri: ' + (r.musteri||'');
+      }
+      const waRows = await sql`SELECT deger FROM site_ayarlar WHERE anahtar='whatsapp_ayar'`;
+      if (waRows.length > 0 && waRows[0].deger && waRows[0].deger.mapsUrl) {
+        konum = waRows[0].deger.mapsUrl;
+      }
+    } catch(e) {}
+  }
 
   if (!tarih) {
-    return NextResponse.json({ error: 'tarih parametresi gerekli' }, { status: 400 });
+    return NextResponse.json({ error: 'tarih gerekli' }, { status: 400 });
   }
 
   const parca = tarih.split('.');
