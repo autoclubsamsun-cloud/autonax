@@ -10,11 +10,11 @@ export async function generateMetadata(): Promise<Metadata> {
         resim1 = rows[0].deger.resim1Url;
     }
     return {
-        title: 'AutoClub Samsun - Randevunuz Onaylandý',
-        description: 'Araç kabul detaylarý, iþletme konumu ve müþteri fotoðraflarýmýz için týklayýn.',
+        title: 'AutoClub Samsun - Randevunuz Onaylandï¿½',
+        description: 'Araï¿½ kabul detaylarï¿½, iï¿½letme konumu ve mï¿½ï¿½teri fotoï¿½raflarï¿½mï¿½z iï¿½in tï¿½klayï¿½n.',
         openGraph: {
-            title: 'AutoClub Samsun - Randevunuz Onaylandý',
-            description: 'Araç kabul detaylarý, iþletme konumu ve müþteri fotoðraflarýmýz için týklayýn.',
+            title: 'AutoClub Samsun - Randevunuz Onaylandï¿½',
+            description: 'Araï¿½ kabul detaylarï¿½, iï¿½letme konumu ve mï¿½ï¿½teri fotoï¿½raflarï¿½mï¿½z iï¿½in tï¿½klayï¿½n.',
             images: [resim1],
         }
     };
