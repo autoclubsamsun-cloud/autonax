@@ -2233,45 +2233,105 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
     </div>
     
       <div id="stab-wamanuel" style="display:none">
-        <div class="k">
-          <div class="kh"><div class="kt">📲 WhatsApp (Manuel) Gönderim Ayarları</div></div>
-          <div class="kb">
-            <div style="display:grid;gap:12px">
-              <div style="display:grid;gap:8px">
-                <label style="font-size:12px;font-weight:600;color:var(--ink3)">Mesaj Şablonu (Manuel gönderim için)</label>
-                <textarea id="wa-manuel-sablon" rows="8" style="padding:10px 12px;border:1.5px solid var(--bg);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none"></textarea>
-                <div style="font-size:11px;color:var(--ink4)">
-                  Değişkenler: <code>{{musteri}}</code>, <code>{{telefon}}</code>, <code>{{plaka}}</code>, <code>{{model}}</code>, <code>{{hizmet}}</code>, <code>{{fiyat}}</code>, <code>{{indirim_tl}}</code>, <code>{{indirim_yuzde}}</code>, <code>{{net_tutar}}</code>, <code>{{tarih}}</code>, <code>{{saat}}</code>, <code>{{not}}</code>, <code>{{takvim_linki}}</code>, <code>{{konum_linki}}</code>, <code>{{yorum_linki}}</code><br>
-                  <i>Not: Link önizlemesinin doğru çalışması için mesaja <b>https://autonax.com.tr/randevu</b> linkini de eklemeyi unutmayın!</i>
+        <!-- Mesaj Şablonu Kartı -->
+        <div class="k" style="border:none;box-shadow:0 2px 12px rgba(0,0,0,.06);border-radius:14px;overflow:hidden">
+          <div class="kh" style="background:linear-gradient(135deg,#25D366 0%,#128C7E 100%);padding:16px 20px">
+            <div class="kt" style="color:#fff;font-size:15px;display:flex;align-items:center;gap:8px">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              Randevu WhatsApp Gönderim Ayarları
+            </div>
+          </div>
+          <div class="kb" style="padding:20px">
+            <div style="display:grid;gap:20px">
+              <!-- Mesaj Şablonu -->
+              <div>
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+                  <span style="font-size:14px">💬</span>
+                  <label style="font-size:13px;font-weight:700;color:var(--ink);letter-spacing:.3px">MESAJ ŞABLONU</label>
+                </div>
+                <textarea id="wa-manuel-sablon" rows="10" style="width:100%;padding:14px 16px;border:1.5px solid var(--bd);border-radius:10px;font-size:13px;font-family:'Outfit',sans-serif;outline:none;resize:vertical;line-height:1.6;transition:border-color .2s;box-sizing:border-box" onfocus="this.style.borderColor='#25D366'" onblur="this.style.borderColor=''"></textarea>
+                <div style="margin-top:8px;padding:10px 14px;background:rgba(37,211,102,.04);border:1px solid rgba(37,211,102,.15);border-radius:8px">
+                  <div style="font-size:10px;font-weight:700;color:#128C7E;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Kullanılabilir Değişkenler</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:4px">
+                    <code style="background:rgba(0,0,0,.04);padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer" onclick="waManuelDegiskenEkle(this.textContent)">{{musteri}}</code>
+                    <code style="background:rgba(0,0,0,.04);padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer" onclick="waManuelDegiskenEkle(this.textContent)">{{telefon}}</code>
+                    <code style="background:rgba(0,0,0,.04);padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer" onclick="waManuelDegiskenEkle(this.textContent)">{{plaka}}</code>
+                    <code style="background:rgba(0,0,0,.04);padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer" onclick="waManuelDegiskenEkle(this.textContent)">{{model}}</code>
+                    <code style="background:rgba(0,0,0,.04);padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer" onclick="waManuelDegiskenEkle(this.textContent)">{{hizmet}}</code>
+                    <code style="background:rgba(0,0,0,.04);padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer" onclick="waManuelDegiskenEkle(this.textContent)">{{fiyat}}</code>
+                    <code style="background:rgba(0,0,0,.04);padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer" onclick="waManuelDegiskenEkle(this.textContent)">{{indirim_tl}}</code>
+                    <code style="background:rgba(0,0,0,.04);padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer" onclick="waManuelDegiskenEkle(this.textContent)">{{indirim_yuzde}}</code>
+                    <code style="background:rgba(0,0,0,.04);padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer" onclick="waManuelDegiskenEkle(this.textContent)">{{net_tutar}}</code>
+                    <code style="background:rgba(0,0,0,.04);padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer" onclick="waManuelDegiskenEkle(this.textContent)">{{tarih}}</code>
+                    <code style="background:rgba(0,0,0,.04);padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer" onclick="waManuelDegiskenEkle(this.textContent)">{{saat}}</code>
+                    <code style="background:rgba(0,0,0,.04);padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer" onclick="waManuelDegiskenEkle(this.textContent)">{{not}}</code>
+                    <code style="background:rgba(0,0,0,.04);padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer" onclick="waManuelDegiskenEkle(this.textContent)">{{takvim_linki}}</code>
+                    <code style="background:rgba(0,0,0,.04);padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer" onclick="waManuelDegiskenEkle(this.textContent)">{{konum_linki}}</code>
+                    <code style="background:rgba(0,0,0,.04);padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer" onclick="waManuelDegiskenEkle(this.textContent)">{{yorum_linki}}</code>
+                  </div>
+                  <div style="font-size:10px;color:var(--ink4);margin-top:6px;font-style:italic">💡 Değişkene tıklayarak şablona ekleyebilirsiniz</div>
                 </div>
               </div>
-              <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center">
-                <label style="font-size:12px;font-weight:600;color:var(--ink3)">Google Maps Konum URL</label>
-                <input type="text" id="wa-manuel-maps-url" placeholder="https://maps.google.com/..." style="padding:10px 12px;border:1.5px solid var(--bg);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none">
-              </div>
-              <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center">
-                <label style="font-size:12px;font-weight:600;color:var(--ink3)">Google Yorum URL</label>
-                <input type="text" id="wa-manuel-yorum-url" placeholder="https://g.page/r/..." style="padding:10px 12px;border:1.5px solid var(--bg);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none">
-              </div>
-              <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center">
-                <label style="font-size:12px;font-weight:600;color:var(--ink3)">İş Yeri Görsel 1 Linki (Önizleme İçin)</label>
-                <div style="display:flex;align-items:center;gap:8px">
-                  <input type="file" id="wa-manuel-resim1-file" accept="image/*" onchange="waManuelResimYukle(this, 'wa-manuel-resim1-url', 'wa-manuel-resim1-btn')" style="display:none">
-                  <input type="hidden" id="wa-manuel-resim1-url">
-                  <button type="button" id="wa-manuel-resim1-btn" onclick="document.getElementById('wa-manuel-resim1-file').click()" style="padding:10px 12px;border:1.5px solid var(--bd);border-radius:8px;background:#f9fafb;cursor:pointer;font-size:12px;width:100%;text-align:left;color:var(--ink)">📷 Görsel 1 Seç (Önizleme İçin)</button>
+
+              <hr style="border:none;border-top:1px solid var(--bd);margin:0">
+
+              <!-- Konum & Yorum -->
+              <div>
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">
+                  <span style="font-size:14px">📍</span>
+                  <label style="font-size:13px;font-weight:700;color:var(--ink);letter-spacing:.3px">KONUM & YORUM LİNKLERİ</label>
+                </div>
+                <div style="display:grid;gap:10px">
+                  <div>
+                    <label style="font-size:11px;font-weight:600;color:var(--ink3);display:block;margin-bottom:4px">Google Maps Konum URL</label>
+                    <input type="text" id="wa-manuel-maps-url" placeholder="https://maps.app.goo.gl/..." style="width:100%;padding:11px 14px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor='#25D366'" onblur="this.style.borderColor=''">
+                  </div>
+                  <div>
+                    <label style="font-size:11px;font-weight:600;color:var(--ink3);display:block;margin-bottom:4px">Google Yorum URL</label>
+                    <input type="text" id="wa-manuel-yorum-url" placeholder="https://g.page/r/..." style="width:100%;padding:11px 14px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor='#25D366'" onblur="this.style.borderColor=''">
+                  </div>
                 </div>
               </div>
-              <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center">
-                <label style="font-size:12px;font-weight:600;color:var(--ink3)">İş Yeri Görsel 2 Linki</label>
-                <div style="display:flex;align-items:center;gap:8px">
-                  <input type="file" id="wa-manuel-resim2-file" accept="image/*" onchange="waManuelResimYukle(this, 'wa-manuel-resim2-url', 'wa-manuel-resim2-btn')" style="display:none">
-                  <input type="hidden" id="wa-manuel-resim2-url">
-                  <button type="button" id="wa-manuel-resim2-btn" onclick="document.getElementById('wa-manuel-resim2-file').click()" style="padding:10px 12px;border:1.5px solid var(--bd);border-radius:8px;background:#f9fafb;cursor:pointer;font-size:12px;width:100%;text-align:left;color:var(--ink)">📷 Görsel 2 Seç</button>
+
+              <hr style="border:none;border-top:1px solid var(--bd);margin:0">
+
+              <!-- Görseller -->
+              <div>
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">
+                  <span style="font-size:14px">📸</span>
+                  <label style="font-size:13px;font-weight:700;color:var(--ink);letter-spacing:.3px">İŞ YERİ GÖRSELLERİ</label>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                  <!-- Görsel 1 -->
+                  <div style="border:1.5px dashed var(--bd);border-radius:10px;padding:16px;text-align:center;transition:border-color .2s;background:#fafafa" id="wa-gorsel1-kutu">
+                    <input type="file" id="wa-manuel-resim1-file" accept="image/*" onchange="waManuelResimYukle(this, 'wa-manuel-resim1-url', 'wa-manuel-resim1-btn')" style="display:none">
+                    <input type="hidden" id="wa-manuel-resim1-url">
+                    <div id="wa-gorsel1-onizleme" style="margin-bottom:8px"></div>
+                    <button type="button" id="wa-manuel-resim1-btn" onclick="document.getElementById('wa-manuel-resim1-file').click()" style="padding:10px 16px;border:1.5px solid #25D366;border-radius:8px;background:rgba(37,211,102,.06);cursor:pointer;font-size:12px;font-weight:600;color:#128C7E;width:100%">📷 Görsel 1 Seç</button>
+                    <div style="font-size:10px;color:var(--ink4);margin-top:6px">Önizleme için · JPG/PNG max 2MB</div>
+                  </div>
+                  <!-- Görsel 2 -->
+                  <div style="border:1.5px dashed var(--bd);border-radius:10px;padding:16px;text-align:center;transition:border-color .2s;background:#fafafa" id="wa-gorsel2-kutu">
+                    <input type="file" id="wa-manuel-resim2-file" accept="image/*" onchange="waManuelResimYukle(this, 'wa-manuel-resim2-url', 'wa-manuel-resim2-btn')" style="display:none">
+                    <input type="hidden" id="wa-manuel-resim2-url">
+                    <div id="wa-gorsel2-onizleme" style="margin-bottom:8px"></div>
+                    <button type="button" id="wa-manuel-resim2-btn" onclick="document.getElementById('wa-manuel-resim2-file').click()" style="padding:10px 16px;border:1.5px solid #25D366;border-radius:8px;background:rgba(37,211,102,.06);cursor:pointer;font-size:12px;font-weight:600;color:#128C7E;width:100%">📷 Görsel 2 Seç</button>
+                    <div style="font-size:10px;color:var(--ink4);margin-top:6px">Opsiyonel · JPG/PNG max 2MB</div>
+                  </div>
                 </div>
               </div>
-              <div style="display:flex;gap:8px;margin-top:4px">
-                <button onclick="waManuelAyarKaydet()" class="btn-p" style="flex:1">💾 Ayarları Kaydet</button>
+
+              <hr style="border:none;border-top:1px solid var(--bd);margin:0">
+
+              <!-- Kaydet Butonu -->
+              <div style="display:flex;gap:10px">
+                <button onclick="waManuelAyarKaydet()" style="flex:1;padding:14px;border:none;border-radius:10px;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1.5px;cursor:pointer;box-shadow:0 4px 14px rgba(37,211,102,.3);transition:transform .15s,box-shadow .15s" onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform=''" onmouseleave="this.style.transform=''">💾 AYARLARI KAYDET</button>
+                <button onclick="waManuelOnizleme()" style="flex:0 0 auto;padding:14px 20px;border:1.5px solid #25D366;border-radius:10px;background:rgba(37,211,102,.04);color:#128C7E;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1.5px;cursor:pointer;transition:background .15s" onmouseover="this.style.background='rgba(37,211,102,.1)'" onmouseout="this.style.background='rgba(37,211,102,.04)'">👁️ ÖNİZLEME</button>
               </div>
+
+              <!-- Son Kayıt Bilgisi -->
+              <div id="wa-son-kayit" style="text-align:center;font-size:11px;color:var(--ink4);display:none"></div>
+
             </div>
           </div>
         </div>
@@ -6732,43 +6792,96 @@ var WA_MANUEL_AYAR = {
 
 function waManuelAyarYukle(){
   var s=document.getElementById('wa-manuel-sablon');
-  var m=document.getElementById('wa-manuel-maps');
-  var y=document.getElementById('wa-manuel-yorum');
-  var r1=document.getElementById('wa-manuel-resim1');
-  var r2=document.getElementById('wa-manuel-resim2');
+  var m=document.getElementById('wa-manuel-maps-url');
+  var y=document.getElementById('wa-manuel-yorum-url');
+  var r1=document.getElementById('wa-manuel-resim1-url');
+  var r2=document.getElementById('wa-manuel-resim2-url');
   if(s) s.value=WA_MANUEL_AYAR.sablon||'';
   if(m) m.value=WA_MANUEL_AYAR.mapsUrl||'';
   if(y) y.value=WA_MANUEL_AYAR.yorumUrl||'';
   if(r1) { 
     r1.value=WA_MANUEL_AYAR.resim1Url||''; 
     var btn1=document.getElementById('wa-manuel-resim1-btn');
-    if(btn1) btn1.textContent = WA_MANUEL_AYAR.resim1Url ? '✅ Görsel 1 Yüklendi' : '📷 Görsel 1 Seç (Önizleme İçin)';
+    if(btn1) btn1.textContent = WA_MANUEL_AYAR.resim1Url ? '✅ Görsel 1 Yüklendi' : '📷 Görsel 1 Seç';
+    // Önizleme göster
+    var oniz1=document.getElementById('wa-gorsel1-onizleme');
+    if(oniz1) oniz1.innerHTML = WA_MANUEL_AYAR.resim1Url ? '<img src="'+WA_MANUEL_AYAR.resim1Url+'" style="max-width:100%;max-height:80px;border-radius:6px;object-fit:cover">' : '';
   }
   if(r2) { 
     r2.value=WA_MANUEL_AYAR.resim2Url||''; 
     var btn2=document.getElementById('wa-manuel-resim2-btn');
     if(btn2) btn2.textContent = WA_MANUEL_AYAR.resim2Url ? '✅ Görsel 2 Yüklendi' : '📷 Görsel 2 Seç';
+    var oniz2=document.getElementById('wa-gorsel2-onizleme');
+    if(oniz2) oniz2.innerHTML = WA_MANUEL_AYAR.resim2Url ? '<img src="'+WA_MANUEL_AYAR.resim2Url+'" style="max-width:100%;max-height:80px;border-radius:6px;object-fit:cover">' : '';
   }
+  // Son kayıt bilgisi
+  var sonEl=document.getElementById('wa-son-kayit');
+  if(sonEl && WA_MANUEL_AYAR._sonKayit) { sonEl.style.display='block'; sonEl.textContent='Son kayıt: '+WA_MANUEL_AYAR._sonKayit; }
 }
 
 function waManuelAyarKaydet(){
   var s=document.getElementById('wa-manuel-sablon');
-  var m=document.getElementById('wa-manuel-maps');
-  var y=document.getElementById('wa-manuel-yorum');
-  var r1=document.getElementById('wa-manuel-resim1');
-  var r2=document.getElementById('wa-manuel-resim2');
+  var m=document.getElementById('wa-manuel-maps-url');
+  var y=document.getElementById('wa-manuel-yorum-url');
+  var r1=document.getElementById('wa-manuel-resim1-url');
+  var r2=document.getElementById('wa-manuel-resim2-url');
   WA_MANUEL_AYAR.sablon=(s?s.value:'').trim();
   WA_MANUEL_AYAR.mapsUrl=(m?m.value:'').trim();
   WA_MANUEL_AYAR.yorumUrl=(y?y.value:'').trim();
   WA_MANUEL_AYAR.resim1Url=(r1?r1.value:'').trim();
   WA_MANUEL_AYAR.resim2Url=(r2?r2.value:'').trim();
+  WA_MANUEL_AYAR._sonKayit=new Date().toLocaleString('tr-TR');
   fetch('/api/ayarlar',{
     method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
     body:JSON.stringify({whatsapp_ayar:WA_MANUEL_AYAR})
   }).then(function(r){return r.json();}).then(function(d){
-    if(d.success){ toast('✔️ WhatsApp ayarları kaydedildi','green'); waManuelAyarYukle(); }
+    if(d.success){ toast('✅ WhatsApp ayarları başarıyla kaydedildi!','green'); waManuelAyarYukle(); }
     else toast('❌ Hata: '+(d.error||''),'red');
   }).catch(function(e){ toast('❌ Bağlantı hatası','red'); });
+}
+
+function waManuelDegiskenEkle(degisken){
+  var ta=document.getElementById('wa-manuel-sablon');
+  if(!ta) return;
+  var pos=ta.selectionStart||ta.value.length;
+  ta.value=ta.value.substring(0,pos)+degisken+ta.value.substring(pos);
+  ta.focus();
+  ta.selectionStart=ta.selectionEnd=pos+degisken.length;
+}
+
+function waManuelOnizleme(){
+  var sablon=(document.getElementById('wa-manuel-sablon')||{value:''}).value;
+  var ornek=sablon
+    .replace(/{{musteri}}/g,'Ahmet Yılmaz')
+    .replace(/{{telefon}}/g,'0532 123 45 67')
+    .replace(/{{plaka}}/g,'55 AC 055')
+    .replace(/{{model}}/g,'BMW 5 Serisi')
+    .replace(/{{hizmet}}/g,'Full PPF Kaplama')
+    .replace(/{{fiyat}}/g,'85.000')
+    .replace(/{{indirim_tl}}/g,'5.000')
+    .replace(/{{indirim_yuzde}}/g,'6')
+    .replace(/{{net_tutar}}/g,'80.000')
+    .replace(/{{tarih}}/g,'28.06.2026')
+    .replace(/{{saat}}/g,'10:00')
+    .replace(/{{not}}/g,'Araç temiz gelecek')
+    .replace(/{{takvim_linki}}/g,'https://calendar.google.com/...')
+    .replace(/{{konum_linki}}/g,(document.getElementById('wa-manuel-maps-url')||{value:''}).value||'https://maps.app.goo.gl/...')
+    .replace(/{{yorum_linki}}/g,(document.getElementById('wa-manuel-yorum-url')||{value:''}).value||'https://g.page/r/...')
+    .replace(/{{resim1}}/g,WA_MANUEL_AYAR.resim1Url||'')
+    .replace(/{{resim2}}/g,WA_MANUEL_AYAR.resim2Url||'');
+  var ovl=document.createElement('div');
+  ovl.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px';
+  ovl.onclick=function(e){if(e.target===ovl)ovl.remove();};
+  ovl.innerHTML='<div style="background:#ECE5DD;border-radius:16px;max-width:420px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.3)">'
+    +'<div style="background:#075E54;color:#fff;padding:14px 18px;border-radius:16px 16px 0 0;font-size:14px;font-weight:700;display:flex;align-items:center;gap:10px">'
+    +'<svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>'
+    +'Mesaj Önizleme</div>'
+    +'<div style="padding:16px"><div style="background:#fff;border-radius:0 12px 12px 12px;padding:12px 16px;font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-word;box-shadow:0 1px 2px rgba(0,0,0,.1)">'+ornek.replace(/\n/g,'<br>').replace(/
+/g,'<br>')+'</div>'
+    +'<div style="text-align:right;margin-top:4px;font-size:10px;color:#999">Şimdi ✓✓</div></div>'
+    +'<div style="padding:12px 16px;text-align:center"><button onclick="this.closest(\047div[style]\047).remove()" style="padding:10px 28px;border:none;border-radius:8px;background:#075E54;color:#fff;font-size:13px;font-weight:600;cursor:pointer">Kapat</button></div>'
+    +'</div>';
+  document.body.appendChild(ovl);
 }
 
 function waGonderRandevuManuel(idx){
