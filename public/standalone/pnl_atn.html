@@ -2241,7 +2241,7 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
                 <label style="font-size:12px;font-weight:600;color:var(--ink3)">Mesaj Şablonu (Manuel gönderim için)</label>
                 <textarea id="wa-manuel-sablon" rows="8" style="padding:10px 12px;border:1.5px solid var(--bg);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none"></textarea>
                 <div style="font-size:11px;color:var(--ink4)">
-                  Değişkenler: <code>{{musteri}}</code>, <code>{{plaka}}</code>, <code>{{hizmet}}</code>, <code>{{fiyat}}</code>, <code>{{tarih}}</code>, <code>{{saat}}</code>, <code>{{takvim_linki}}</code>, <code>{{konum_linki}}</code>, <code>{{yorum_linki}}</code><br>
+                  Değişkenler: <code>{{musteri}}</code>, <code>{{telefon}}</code>, <code>{{plaka}}</code>, <code>{{model}}</code>, <code>{{hizmet}}</code>, <code>{{fiyat}}</code>, <code>{{indirim_tl}}</code>, <code>{{indirim_yuzde}}</code>, <code>{{net_tutar}}</code>, <code>{{tarih}}</code>, <code>{{saat}}</code>, <code>{{not}}</code>, <code>{{takvim_linki}}</code>, <code>{{konum_linki}}</code>, <code>{{yorum_linki}}</code><br>
                   <i>Not: Link önizlemesinin doğru çalışması için mesaja <b>https://autonax.com.tr/randevu</b> linkini de eklemeyi unutmayın!</i>
                 </div>
               </div>
@@ -2255,11 +2255,19 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
               </div>
               <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center">
                 <label style="font-size:12px;font-weight:600;color:var(--ink3)">İş Yeri Görsel 1 Linki (Önizleme İçin)</label>
-                <input type="text" id="wa-manuel-resim1-url" placeholder="https://site.com/resim1.jpg" style="padding:10px 12px;border:1.5px solid var(--bg);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <input type="file" id="wa-manuel-resim1-file" accept="image/*" onchange="waManuelResimYukle(this, 'wa-manuel-resim1-url', 'wa-manuel-resim1-btn')" style="display:none">
+                  <input type="hidden" id="wa-manuel-resim1-url">
+                  <button type="button" id="wa-manuel-resim1-btn" onclick="document.getElementById('wa-manuel-resim1-file').click()" style="padding:10px 12px;border:1.5px solid var(--bd);border-radius:8px;background:#f9fafb;cursor:pointer;font-size:12px;width:100%;text-align:left;color:var(--ink)">📷 Görsel 1 Seç (Önizleme İçin)</button>
+                </div>
               </div>
               <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center">
                 <label style="font-size:12px;font-weight:600;color:var(--ink3)">İş Yeri Görsel 2 Linki</label>
-                <input type="text" id="wa-manuel-resim2-url" placeholder="https://site.com/resim2.jpg" style="padding:10px 12px;border:1.5px solid var(--bg);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <input type="file" id="wa-manuel-resim2-file" accept="image/*" onchange="waManuelResimYukle(this, 'wa-manuel-resim2-url', 'wa-manuel-resim2-btn')" style="display:none">
+                  <input type="hidden" id="wa-manuel-resim2-url">
+                  <button type="button" id="wa-manuel-resim2-btn" onclick="document.getElementById('wa-manuel-resim2-file').click()" style="padding:10px 12px;border:1.5px solid var(--bd);border-radius:8px;background:#f9fafb;cursor:pointer;font-size:12px;width:100%;text-align:left;color:var(--ink)">📷 Görsel 2 Seç</button>
+                </div>
               </div>
               <div style="display:flex;gap:8px;margin-top:4px">
                 <button onclick="waManuelAyarKaydet()" class="btn-p" style="flex:1">💾 Ayarları Kaydet</button>
@@ -6730,8 +6738,16 @@ function waManuelAyarYukle(){
   if(s) s.value=WA_MANUEL_AYAR.sablon||'';
   if(m) m.value=WA_MANUEL_AYAR.mapsUrl||'';
   if(y) y.value=WA_MANUEL_AYAR.yorumUrl||'';
-  if(r1) r1.value=WA_MANUEL_AYAR.resim1Url||'';
-  if(r2) r2.value=WA_MANUEL_AYAR.resim2Url||'';
+  if(r1) { 
+    r1.value=WA_MANUEL_AYAR.resim1Url||''; 
+    var btn1=document.getElementById('wa-manuel-resim1-btn');
+    if(btn1) btn1.textContent = WA_MANUEL_AYAR.resim1Url ? '✅ Görsel 1 Yüklendi' : '📷 Görsel 1 Seç (Önizleme İçin)';
+  }
+  if(r2) { 
+    r2.value=WA_MANUEL_AYAR.resim2Url||''; 
+    var btn2=document.getElementById('wa-manuel-resim2-btn');
+    if(btn2) btn2.textContent = WA_MANUEL_AYAR.resim2Url ? '✅ Görsel 2 Yüklendi' : '📷 Görsel 2 Seç';
+  }
 }
 
 function waManuelAyarKaydet(){
@@ -6781,11 +6797,22 @@ function waGonderRandevuManuel(idx){
      }
   }
 
+  var f_net = parseFloat(r.tutar)||0;
+  var f_ind = parseFloat(r.indirim)||0;
+  var f_brut = f_net + f_ind;
+  var f_ind_yuzde = (f_brut>0 && f_ind>0) ? Math.round((f_ind / f_brut)*100) : 0;
+  
   var msg = (WA_MANUEL_AYAR.sablon||'')
     .replace(/{{musteri}}/g, r.musteri||'')
+    .replace(/{{telefon}}/g, r.tel||'')
     .replace(/{{plaka}}/g, r.plaka||'')
+    .replace(/{{model}}/g, r.arac||'')
+    .replace(/{{not}}/g, r.notlar||'')
     .replace(/{{hizmet}}/g, r.hizmet||'')
-    .replace(/{{fiyat}}/g, r.tutar||'')
+    .replace(/{{fiyat}}/g, f_brut)
+    .replace(/{{indirim_tl}}/g, f_ind)
+    .replace(/{{indirim_yuzde}}/g, f_ind_yuzde)
+    .replace(/{{net_tutar}}/g, f_net)
     .replace(/{{tarih}}/g, r.tarih||'')
     .replace(/{{saat}}/g, r.saat||'')
     .replace(/{{takvim_linki}}/g, calLink)
@@ -15771,3 +15798,23 @@ function markaSSSSil(idx){
 <script src="/standalone/is-emri.js"></script>
 </body>
 </html>
+
+function waManuelResimYukle(input, urlId, btnId){
+  var file = input.files[0]; if(!file) return;
+  if(file.size > 2*1024*1024){ toast("2MB'den küçük resim seçin", "red"); return; }
+  var fd = new FormData(); fd.append('file', file); fd.append('klasor', 'ayarlar');
+  var btn = document.getElementById(btnId);
+  var oldText = btn.textContent;
+  btn.textContent = '⏳ Yükleniyor...'; btn.disabled = true;
+  fetch('/api/resim', {method:'POST', body:fd,credentials:'same-origin'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      btn.disabled = false;
+      if(d.success){
+        document.getElementById(urlId).value = d.url;
+        btn.textContent = '✅ ' + d.fileName;
+        if(typeof waManuelAyarKaydet === 'function') waManuelAyarKaydet();
+      } else { toast('Resim yüklenemedi', 'red'); btn.textContent = oldText; }
+    })
+    .catch(function(){ btn.textContent = '❌ Hata'; btn.disabled = false; });
+}
