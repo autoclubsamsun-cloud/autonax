@@ -41,3 +41,10 @@ YEDEK_SPRINT1/
 *.yedek
 *.bak
 pnl_atn_YEDEK*
+
+# Capacitor native builds
+android/
+ios/
+assets/
+capacitor.config.ts
+*.bak.*
